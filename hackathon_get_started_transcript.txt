@@ -1,0 +1,146 @@
+0:00Hello everyone. Welcome to the agent assemble challenge. This is a quick start guide to help you get uh started on the competition.
+0:1010 secondsSo what I'm going to do is I'm going to walk you through the steps that you will need to complete to start building your uh application or your agent. I'm going
+0:1919 secondsto go first to app.prompt opinion.ai and I'm going to click on sign up and I'm going to fill in some details in
+0:2626 secondshere. After you have filled in the details, click on the create button.
+0:3232 secondsAnd at this point, what you need to do is select a model. So to get you started, what you can do is you can use Google AI studio. So you can actually click on this link to go to AI studio.
+0:4242 secondsUh you just need a Gmail account to get a studio account and you can go down here, click on get API key and then
+0:4949 secondscreate a new API key and then create the key uh which will create a new API key for you. And from there you can actually
+0:5757 secondscopy this key. I'm going to copy that key and come back in here. Click on load models. And what we recommend for the
+1:051 minute, 5 secondsconnector is to use the Gemini 3.1 flash light. Uh so I will go back in here. Uh
+1:151 minute, 15 secondsthis one again. You can choose a different one. I'll just give it a quick name.
+1:231 minute, 23 secondsAnd then what I can do is add the model.
+1:271 minute, 27 secondsSo with that your initial setup and uh is completed and you are ready to start um creating your first agent. So to get
+1:351 minute, 35 secondsstarted what you can do is you can just click on this configure an agent and turn on this agent which is available by default which is a general chat agent.
+1:431 minute, 43 secondsThis is not the agent that you will be submitting for the competition but you can use that for various testing scenarios. The next thing you would want
+1:501 minute, 50 secondsto do is basically have some patients in your system. So what we give you is you have different options. You can import some synthetic patients uh or you can
+2:002 minutesupload your own fire bundle or the simplest way is that you can actually go in here and we have a couple of patients uh you know loaded. So I can just go in
+2:082 minutes, 8 secondsthere and individually select a patient uh that will basically import some basic demographics and other data. And we're building on some more samples that we
+2:172 minutes, 17 secondswill be sharing. uh you could also manually add a patient and then one of the things that uh definitely recommend is that after you have added the patient
+2:252 minutes, 25 secondswhat you want to do is you basically want to go to the patient and upload some documents clinical notes or or
+2:322 minutes, 32 secondssomething because most of the scenarios that we are working with are around generative AI exploring clinical nodes.
+2:392 minutes, 39 secondsSo everyone will have a different scenario but uh anything that works for your use case upload those uh documents or any other data you want to kind of
+2:472 minutes, 47 secondsload for that patient. So I'm going to do that here quickly.
+2:542 minutes, 54 secondsOnce that is done I am basically ready to start creating my application for uh
+3:013 minutes, 1 secondyou know for the competition. So what we're going to do is we are going to go through three different scenarios so that you have. So you can basically
+3:093 minutes, 9 secondsapply for any one of them or you can submit multiple applications and I'm going to go through each one of them.
+3:153 minutes, 15 secondsThe first use case basically involves no code at all. So you can actually build an agent within prompt opinion workspace
+3:243 minutes, 24 secondsand uh publish it as what is known as A2A. What we're going to do in this scenario is that we're going to upload some sample policy documents of an
+3:333 minutes, 33 secondsorganization and we'll show how the agent basically responds based on those policy documents. Again, the idea here
+3:403 minutes, 40 secondsis to show you an example of what can be done without any coding within the system and then you can basically build
+3:473 minutes, 47 secondssomething accordingly uh based on the different scenarios that you're working on. So what I'll do is I'm going to go back to prompt opinion and I'm going to
+3:553 minutes, 55 secondsgo to configuration. I'm going to go to these collections and I'm going to create a new collection in here and I'll just call it my org policies.
+4:074 minutes, 7 secondsAnd then what I'm going to do is I'm going to go ahead and upload some documents to it. Uh these are just some policies that I've created locally that
+4:144 minutes, 14 secondsI can upload it in here. So let me do that.
+4:224 minutes, 22 secondsOnce I've uploaded these policies, I'm ready to basically build my first agent.
+4:284 minutes, 28 secondsSo for that, what I can do is I'll go to the agents tab to the build your own agents and I'm going to say that I'm going to configure my first agent in
+4:364 minutes, 36 secondshere. So I'm going to click on that agent. So what I'm going to be doing is I'm going to select patient in here because we will be testing this agent in
+4:444 minutes, 44 secondsthe context of a patient. And I'll give it some name and description. And then what I will do is I will basically say that this agent is going to use all its
+4:524 minutes, 52 secondsgrounding from the folder that we created. So that way all its answers will be grounded in those policies only.
+5:015 minutes, 1 secondWe do let you override the system prompt for the agents. But if you don't put any system prompt in here, the agents are
+5:095 minutes, 9 secondsconfigured to by default use the content that it has been given to them. Uh we will look at some of the other options in here. But the last option I need to
+5:175 minutes, 17 secondsdo for this is go to this A2A and enable this because this is how we will be testing this particular agent responding
+5:245 minutes, 24 secondsto another agent's request of you know with with the organization policies. Um so once I do that I also have the choice
+5:315 minutes, 31 secondsto enable the fire context. What that means is that if if I want my agent to be able to actually query for the
+5:395 minutes, 39 secondspatient data, I can actually select this. Um, we'll talk about how this happens in some of the advanced scenarios when you're writing code when
+5:475 minutes, 47 secondsyou are building an agent within prompt opinion. This is all taken care of you.
+5:505 minutes, 50 secondsBut if you need that, you can just turn it on here. And then the last thing is I need to basically define a skill. So skill in this case is very similar to
+5:595 minutes, 59 secondsyou know what this agent can do. So what I'm going to do is I'm going to put a quick name and description in here. And once I have done that, I can go ahead
+6:066 minutes, 6 secondsand save this. So with that, my first agent is basically configured. Now again, you will basically come up with
+6:146 minutes, 14 secondsscenarios that you feel are good uh for this particular scenarios. But to test this agent, what I can do is I can go
+6:216 minutes, 21 secondsback to my launchpad. I'm going to select my patient su here because I'm going to test this as a patient. I'm going to select a patient and then what
+6:306 minutes, 30 secondsI want to do is I want to select the general chat not the one that the agent I build because we're going to show how it actually works in an A2A scenario. So
+6:396 minutes, 39 secondsI'm going to select that particular agent and the first thing I can do is I can just chat with it something like summarize this patient. Um so this will
+6:476 minutes, 47 secondsbasically go and give me summary of the patient. Uh but then to test my agent that I have built, what I can do is I can say I want to consult with that
+6:566 minutes, 56 secondsagent and I will give it a prompt something like um
+7:067 minutes, 6 secondsso so basically what you'll see is that when I ask that question that particular
+7:167 minutes, 16 secondsagent connected to the new agent that we had created uh it was able to read the documents that I have uploaded to it u
+7:247 minutes, 24 secondschecked with the patient's conditions and then responded based on that what I can uh you know what I needed to so
+7:317 minutes, 31 secondsagain this is the very simple scenario of how you can build contentbased grounded agents uh within the prompt
+7:397 minutes, 39 secondsopinion framework uh as one of the options for submitting your to your competition. So I'm going to go back to
+7:477 minutes, 47 secondsmy drawing. So this was option one where you basically configured this agent within prompt opinion. It can be with
+7:557 minutes, 55 secondsyou know with basically content with some other system prompts however you want to configure it. And now we are going to go to the second scenario where
+8:038 minutes, 3 secondswe want to build an MCP server. So for the MCP server the way it works is that you will be building a set of tools. Um
+8:118 minutes, 11 secondsthese could be any tools that use the patient data and then return some you know responses back to the user agent
+8:188 minutes, 18 secondsthat will be developed. Uh and uh what we will also do is we can basically pass the fire context to it where the MCP
+8:268 minutes, 26 secondsserver will return receive a token that it can use to get that data. So don't worry if it sounds complicated because what we have done is we have actually
+8:348 minutes, 34 secondsbuilt some default repositories that you can use as a starting point. So for the MCP server you will be using this spoke
+8:418 minutes, 41 secondscommunity MCP and what I have is I've actually downloaded that repository to my local location uh so that I can run
+8:498 minutes, 49 secondsit from here and I can show you how you will be using it to test it but then you will be building your own tools in this to submit for your entry and we have
+8:588 minutes, 58 secondswhat we have done is we have basically built a couple of very basic tools that I'll show you but that will give you ideas to get started on your own uh
+9:069 minutes, 6 secondstools. Okay. So I already have this tool running on a local host. Uh but obviously to test with your application
+9:139 minutes, 13 secondsyou'll need to make it available through the internet. So what I'm going to do is I'm going to actually use enro and I'm going to create a port to map it to this particular port.
+9:339 minutes, 33 secondsSo once I have Enro running and I have copied the port, I can go back to my application and uh what I'm going to do
+9:409 minutes, 40 secondsis I'm going to go back to my workspace hub and I'm going to add the new MCP
+9:479 minutes, 47 secondsserver that we just added uh here. So what I need to do is just copy the URL.
+9:539 minutes, 53 secondsThis is my Enro URL and then forward/MCP. I'll give it a name my MCP
+10:0010 minutesum streamable HTTP. We don't have any authentication built on it by default.
+10:0510 minutes, 5 secondsSo you can obviously you know customize it and put keys in there. And then the important thing here is that I'm going to check this box. This is the box that
+10:1310 minutes, 13 secondswill tell that you know hey I need to pass in the token uh using which then that MCP server can actually make fire
+10:2110 minutes, 21 secondscalls back to the fire server and you know kind of return some uh data and other things. Uh and again all of this
+10:2910 minutes, 29 secondscode is available in the repo int net or in typescript. So we have both the samples in that repo that you can see.
+10:3510 minutes, 35 secondsSo I'm just going to go back in here and click uh first of all I'll just make test to make sure and you can see that it is returning these two tools. There
+10:4310 minutes, 43 secondsare very simple tools that just return a patient age. Uh but it will give you ideas to get started. And I'm just going
+10:5010 minutes, 50 secondsto click on save. Now to test the MCP server, what I can do is I can go back to the custom agent that I had created and I'm going to go into the edit there.
+11:0211 minutes, 2 secondsAnd what I'm going to say is that I want to actually use a tool in that particular uh sorry I'm going to use a tool uh within that particular agent.
+11:1011 minutes, 10 secondsAnd if I click on add, it will give me the tools that are in my system. And then I can select that tool and save it.
+11:1711 minutes, 17 secondsSo once I have this done, I can go back to the launchpad and again go same way select a patient but this time I'm
+11:2511 minutes, 25 secondsactually going to select this agent because what I'm trying to demo is the MCP server. So I'm going to select there and then what I'm going to go ahead and
+11:3311 minutes, 33 secondsjust says is like I'm just going to ask a question to uh
+11:4111 minutes, 41 secondsget the patient age. And what you can see is that it returned me a response.
+11:4611 minutes, 46 secondsUh but the way to check that it actually called the tool is that you can actually turn this on and you will see that the call was made to that particular tool.
+11:5411 minutes, 54 secondsUh if I had put a break point in here, I would have seen it. But I could actually go down the path and see that the call was made to this. Uh and that's kind of
+12:0212 minutes, 2 secondshow it uh you know worked. So again this was scenario number two. So in this case
+12:0812 minutes, 8 secondswe built an MCP server and we have added that MCP server and made that available so that it can be tested uh from an
+12:1712 minutes, 17 secondsagent within the prompt opinion workspace. Again this server this repository is to give you something to
+12:2412 minutes, 24 secondsstart with. Um you can add as many tools as many firewalls uh to kind of get that going. Uh I will also just remind uh
+12:3212 minutes, 32 secondshere is uh if I didn't before that uh uh when you create the workspace within prompt opinion it is actually a fire
+12:4112 minutes, 41 secondsserver. So you can pretty much make any fire server calls from that MCP server uh which will be kind of being made to your workspace.
+12:5012 minutes, 50 secondsSo the last option again what we have is in here is uh what we are going to do is to build a completely independent A2A
+12:5712 minutes, 57 secondsagent. So this is where if you have a scenario where you are building an agent using uh Google ADK or anything but the
+13:0413 minutes, 4 secondsagent can support A2A uh yourself. Uh then this is the option that you can build and then publish that agent. Again
+13:1113 minutes, 11 secondsto get you started with that what we have done is we have published two repositories. Uh both of them are based on Google ADK. They were actually wipe
+13:2013 minutes, 20 secondscoded from Google ADK. One is in Python and one is in Typescript. And uh depending on again your preference you can download each one of them and you
+13:2813 minutes, 28 secondscan see which one you know helps you and then based on that you can customize them for the scenarios that you are working on. I have already them
+13:3613 minutes, 36 secondsdownloaded in here and again uh if you will go into the code of that so let me just close off these latest changes. Uh
+13:4513 minutes, 45 secondsit has all the steps to get started. Uh the main thing I'm going to go in here so the readme file you can actually see how to go get started. But what I have
+13:5413 minutes, 54 secondsdone is I have already kind of running it. So this actually has three built-in agents. Uh we are only going to using one of them which is on running on port
+14:0214 minutes, 2 seconds801. And that's the one that we will use to test it. Now before we test this,
+14:0714 minutes, 7 secondsthere's a couple of things that we need to do. First is obviously we need to kind of put our enrog to this particular server. So let me do that really
+14:1614 minutes, 16 secondsquickly. Okay. So, I'm going to stop that my current enro server and then I'm going to basically point it towards
+14:2514 minutes, 25 seconds8081. I think that's the server which where the where the server is running.
+14:3114 minutes, 31 secondsUh or it is actually 8,0001 sorry.
+14:3614 minutes, 36 secondsOkay. So, and what then I also need to do is that I need to basically copy this particular URL. And then I need to go in
+14:4514 minutes, 45 secondsthere and copy this URL back into my environment variable. Uh because when the agent card is submitted, it needs to
+14:5314 minutes, 53 secondskind of know where the where the agent is running. Uh and it kind of needs to pick it up from there. Once I've done that, I will need to restart the
+15:0115 minutes, 1 secondapplication once if I already have it running. So, let me do that really quickly here. Okay. So the application is running again and it's basically
+15:0915 minutes, 9 secondspicked up that port. So now what I can do is I will go back to my application and uh now we are going to actually
+15:1715 minutes, 17 secondsconnect an external agent. So again what I'll do is I will go back to my workspace hub but this time I'm
+15:2415 minutes, 24 secondsbasically connecting an external agent and I'm going to go and say add connection and I'm going to paste the
+15:3115 minutes, 31 secondsURL u that is basically for that mro URL and then I can click on check. Uh what it will do at this point it is basically
+15:4015 minutes, 40 secondsconnecting to that particular agent and it's pulling the card of that agent. I can see that I have the skills uh other things that are available from that
+15:4815 minutes, 48 secondsagent. So I'm going to give it a name to say um my external agent just to kind of get started. And
+15:5715 minutes, 57 secondsthen the thing is that in this case we are actually uh you know it's telling me that this agent requires a key. Uh so we
+16:0416 minutes, 4 secondsdid this on purpose again while testing you can adjust it but because this agent will have your Gemini key or whatever you're using the model. Um so we have a security kind of sample built in there.
+16:1516 minutes, 15 secondsBut the way it is very simple. If I go into the middleware, I can just copy that key from there and bring it here
+16:2216 minutes, 22 secondsand just paste it here. Uh the other thing is that this agent will warn you that you know this agent requires fire context. So just like the MCP server, we
+16:3116 minutes, 31 secondscan actually pass fire context to the agent too and the agent can actually then you know get the fire data directly and make calls. Uh so I'm going to say
+16:4016 minutes, 40 secondsyes I do want to do that and then I'm going to just click save there to uh you know add that agent to my workspace. So
+16:4716 minutes, 47 secondsat this point again the you will be customizing your own agent but I have added that agent and that agent is available within my workspace. So
+16:5516 minutes, 55 secondsthere's one last thing left to test this agent with one of my own agents. So again I'm going to go back to the launchpad and I'm going to just select the same patient we have been selecting.
+17:0617 minutes, 6 secondsI'm just going to select the general agent because again we are testing an external agent. This is how the judges will be testing it too. And what I'm
+17:1417 minutes, 14 secondsgoing to do is I'm just going to select that external agent in here. And uh just again as an example I will just say ask
+17:2217 minutes, 22 secondsthe
+17:3317 minutes, 33 secondsand again this is a very very basic um you know command to show you kind of how the communication and the exchange
+17:4017 minutes, 40 secondshappens. uh obviously based on your own u you know agent scenarios this will be a lot more data but what you're seeing in here is that I I basically asked the
+17:4917 minutes, 49 secondsdemographics um this our agent made a call to the external agent the external agent pulled that data directly from the
+17:5717 minutes, 57 secondsfire returned that data and then our agent has summarized this um so this is how you can actually go into this particular agent and customize it and
+18:0618 minutes, 6 secondsbuild different A2A scenarios for healthcare and then bring them all together. So this was a very quick
+18:1318 minutes, 13 secondsoverview of what are the three different ways um you can basically submit an agent or an MCP server for your
+18:2218 minutes, 22 secondsapplication. Um as once you have done once you have built your agents or an MCP server and you have tested it uh
+18:3018 minutes, 30 secondsthere will be one additional step that you will have to do and we will be building a detailed video on that too.
+18:3718 minutes, 37 secondsBut what it basically will be is like any of these agents need to be published so that they can be tested by the judges
+18:4418 minutes, 44 secondsand uh you know for for the different scenarios and the way you will do that is you will just go to this marketplace studio at the bottom and depending on if
+18:5218 minutes, 52 secondsyou're submitting an MCP server uh or an agent uh you will just go in here and you can basically add the way you added
+19:0019 minutesyour MCP servers in here and you can publish them from here. Uh this step will be needed before the judging starts. Uh we will be doing a lot of
+19:0819 minutes, 8 secondsoffice hours and other discussions before that. So uh for now you can basically start testing your agents and contact us on discord if you have any other issues and uh we'll go from there.
+19:2019 minutes, 20 secondsThanks so much for uh listening. Bye.

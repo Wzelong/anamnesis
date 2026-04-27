@@ -1,11 +1,20 @@
 """Anamnesis FastAPI application entrypoint."""
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.routes import router as api_router
-from mcp_server.server import router as mcp_router
+from mcp_server.server import mcp
 
-app = FastAPI(title="Anamnesis", version="0.0.1")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    async with mcp.session_manager.run():
+        yield
+
+
+app = FastAPI(title="Anamnesis", version="0.0.1", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,9 +25,11 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
-app.include_router(mcp_router)
 
 
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "service": "anamnesis"}
+
+
+app.mount("/", mcp.streamable_http_app())

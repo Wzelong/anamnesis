@@ -1,0 +1,1492 @@
+{
+  "resourceType": "Bundle",
+  "id": "anamnesis-demo-james-lee",
+  "type": "transaction",
+  "timestamp": "2026-04-27T08:30:00-04:00",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:f9af3aaa-e1ca-5897-aafd-ed8a6f6f5607",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "bayside",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-organization"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Bayside Health (home health system)</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://bayside.health/org-id",
+            "value": "BAYSIDE-HQ"
+          }
+        ],
+        "active": true,
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                "code": "prov",
+                "display": "Healthcare Provider"
+              }
+            ],
+            "text": "Healthcare Provider"
+          }
+        ],
+        "name": "Bayside Health",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+1-617-555-0100",
+            "use": "work"
+          }
+        ],
+        "address": [
+          {
+            "line": [
+              "100 Bayside Drive"
+            ],
+            "city": "Boston",
+            "state": "MA",
+            "postalCode": "02110",
+            "country": "US"
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Organization"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:40b4a551-bbaf-5934-903f-2c4353015e87",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "riverside",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-organization"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Riverside Hospital (outside facility)</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://riverside.example.org/org-id",
+            "value": "RIVERSIDE-1"
+          }
+        ],
+        "active": true,
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                "code": "prov",
+                "display": "Healthcare Provider"
+              }
+            ],
+            "text": "Healthcare Provider"
+          }
+        ],
+        "name": "Riverside Hospital",
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+1-555-555-0200",
+            "use": "work"
+          }
+        ],
+        "address": [
+          {
+            "line": [
+              "500 Riverside Way"
+            ],
+            "city": "Cambridge",
+            "state": "MA",
+            "postalCode": "02139",
+            "country": "US"
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Organization"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "kim",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Dr. Anna Kim</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://hl7.org/fhir/sid/us-npi",
+            "value": "1234567890"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Kim",
+            "given": [
+              "Anna"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Practitioner"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:4c187cd2-4a3b-53ad-a6c8-d5cc9ea2a96a",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "park",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Dr. David Park</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://hl7.org/fhir/sid/us-npi",
+            "value": "2345678901"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Park",
+            "given": [
+              "David"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Practitioner"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:a5ccadbf-d109-5aac-b0ff-bfbb0b89c44d",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "brown",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Dr. Tom Brown</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://hl7.org/fhir/sid/us-npi",
+            "value": "3456789012"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Brown",
+            "given": [
+              "Tom"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Practitioner"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:a02fd159-c1ad-547c-86f2-956ca47a75fa",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "chen",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Dr. Lisa Chen</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://hl7.org/fhir/sid/us-npi",
+            "value": "4567890123"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Chen",
+            "given": [
+              "Lisa"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Practitioner"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "lee-james",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>James Lee, 67yo male, MRN BAY-0042-LEE</p></div>"
+        },
+        "extension": [
+          {
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2028-9",
+                  "display": "Asian"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Asian"
+              }
+            ],
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race"
+          },
+          {
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2186-5",
+                  "display": "Not Hispanic or Latino"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Not Hispanic or Latino"
+              }
+            ],
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity"
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "valueCode": "M"
+          }
+        ],
+        "identifier": [
+          {
+            "use": "usual",
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "MR",
+                  "display": "Medical Record Number"
+                }
+              ],
+              "text": "Medical Record Number"
+            },
+            "system": "http://bayside.health/mrn",
+            "value": "BAY-0042-LEE"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Lee",
+            "given": [
+              "James"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+1-617-555-0142",
+            "use": "home"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1958-11-15",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "12 Harborview Lane"
+            ],
+            "city": "Boston",
+            "state": "MA",
+            "postalCode": "02129",
+            "country": "US"
+          }
+        ],
+        "managingOrganization": {
+          "reference": "urn:uuid:f9af3aaa-e1ca-5897-aafd-ed8a6f6f5607",
+          "display": "Bayside Health"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Patient"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:ac1959b4-d568-5114-a512-60a900683084",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "htn",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Essential hypertension</p></div>"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ],
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "59621000",
+              "display": "Essential hypertension"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "I10",
+              "display": "Essential (primary) hypertension"
+            }
+          ],
+          "text": "Essential hypertension"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "onsetDateTime": "2016-03-15",
+        "recordedDate": "2016-03-15",
+        "recorder": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        },
+        "asserter": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:61579f98-8a2d-5dfb-a1ac-4a39fab3a08c",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "t2dm",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Type 2 diabetes mellitus</p></div>"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ],
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 diabetes mellitus"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus without complications"
+            }
+          ],
+          "text": "Type 2 diabetes mellitus"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "onsetDateTime": "2018-05-20",
+        "recordedDate": "2018-05-20",
+        "recorder": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        },
+        "asserter": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:24dc8290-bed9-5d37-97bf-8ab0fd65ce31",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "hld",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Hyperlipidemia</p></div>"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ],
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "55822004",
+              "display": "Hyperlipidemia"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E78.5",
+              "display": "Hyperlipidemia, unspecified"
+            }
+          ],
+          "text": "Hyperlipidemia"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "onsetDateTime": "2016-03-15",
+        "recordedDate": "2016-03-15",
+        "recorder": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        },
+        "asserter": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:a2970802-db1e-5586-a5f0-9da654810fe5",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "post-stroke-fatigue",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Chronic post-stroke fatigue (sequelae of minor ischemic stroke 2024)</p></div>"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ],
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "84229001",
+              "display": "Fatigue"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "I69.398",
+              "display": "Other sequelae of cerebral infarction"
+            }
+          ],
+          "text": "Chronic post-stroke fatigue (sequelae of minor ischemic stroke 2024)"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "onsetDateTime": "2024-04-15",
+        "recordedDate": "2024-05-10",
+        "recorder": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        },
+        "asserter": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:9d88aa72-a8b0-5269-aacd-04378e2fcecb",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "lisinopril-10",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Lisinopril 10 MG Oral Tablet — Take 1 tablet (10 mg) by mouth once daily</p></div>"
+        },
+        "status": "active",
+        "intent": "order",
+        "reportedBoolean": false,
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "314076",
+              "display": "Lisinopril 10 MG Oral Tablet"
+            }
+          ],
+          "text": "Lisinopril 10 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "authoredOn": "2024-08-01",
+        "requester": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1 tablet (10 mg) by mouth once daily",
+            "timing": {
+              "repeat": {
+                "frequency": 1,
+                "period": 1.0,
+                "periodUnit": "d"
+              }
+            },
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:8b10f509-9bac-5efc-8e7e-76a396b607e2",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "atorvastatin-40",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Atorvastatin 40 MG Oral Tablet — Take 1 tablet (40 mg) by mouth once daily</p></div>"
+        },
+        "status": "active",
+        "intent": "order",
+        "reportedBoolean": false,
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "617314",
+              "display": "Atorvastatin 40 MG Oral Tablet"
+            }
+          ],
+          "text": "Atorvastatin 40 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "authoredOn": "2024-08-01",
+        "requester": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1 tablet (40 mg) by mouth once daily",
+            "timing": {
+              "repeat": {
+                "frequency": 1,
+                "period": 1.0,
+                "periodUnit": "d"
+              }
+            },
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:f9c6738a-646d-5c85-9fa2-d45f0845f0f7",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "metformin-1000",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Metformin hydrochloride 1000 MG Oral Tablet — Take 1 tablet (1000 mg) by mouth twice daily</p></div>"
+        },
+        "status": "active",
+        "intent": "order",
+        "reportedBoolean": false,
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "861007",
+              "display": "Metformin hydrochloride 1000 MG Oral Tablet"
+            }
+          ],
+          "text": "Metformin hydrochloride 1000 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "authoredOn": "2024-08-01",
+        "requester": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1 tablet (1000 mg) by mouth twice daily",
+            "timing": {
+              "repeat": {
+                "frequency": 2,
+                "period": 1.0,
+                "periodUnit": "d"
+              }
+            },
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:a2826195-5279-5252-80b5-7e9d02dfdbc4",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "aspirin-81",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Aspirin 81 MG Oral Tablet — Take 1 tablet (81 mg) by mouth once daily</p></div>"
+        },
+        "status": "active",
+        "intent": "order",
+        "reportedBoolean": false,
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "243670",
+              "display": "Aspirin 81 MG Oral Tablet"
+            }
+          ],
+          "text": "Aspirin 81 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "authoredOn": "2024-08-01",
+        "requester": {
+          "reference": "urn:uuid:b9a8f522-627f-5324-b01b-ef84ea491451",
+          "display": "Dr. Anna Kim"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1 tablet (81 mg) by mouth once daily",
+            "timing": {
+              "repeat": {
+                "frequency": 1,
+                "period": 1.0,
+                "periodUnit": "d"
+              }
+            },
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:9cf8b7f2-32f3-517c-ae7a-72b365d33410",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "cardio-consult",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Cardiology Consultation, 2025-10-20</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://bayside.health/encounter-id",
+            "value": "ENC-CARDIO-CONSULT"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "11429006",
+                "display": "Consultation"
+              },
+              {
+                "system": "http://loinc.org",
+                "code": "11488-4",
+                "display": "Consult note"
+              }
+            ],
+            "text": "Cardiology Consultation"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "participant": [
+          {
+            "period": {
+              "start": "2025-10-20T10:30:00-04:00",
+              "end": "2025-10-20T11:42:00-04:00"
+            },
+            "individual": {
+              "reference": "urn:uuid:4c187cd2-4a3b-53ad-a6c8-d5cc9ea2a96a",
+              "display": "Dr. David Park"
+            }
+          }
+        ],
+        "period": {
+          "start": "2025-10-20T10:30:00-04:00",
+          "end": "2025-10-20T11:42:00-04:00"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "29857009",
+                "display": "Chest pain"
+              }
+            ],
+            "text": "Chest pain"
+          }
+        ],
+        "serviceProvider": {
+          "reference": "urn:uuid:f9af3aaa-e1ca-5897-aafd-ed8a6f6f5607"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:f49251fe-299f-52db-9333-c9beb844a754",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "ed-visit",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Emergency Department Visit, 2025-12-15</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://bayside.health/encounter-id",
+            "value": "ENC-ED-VISIT"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "EMER",
+          "display": "emergency"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "50849002",
+                "display": "Emergency room admission"
+              }
+            ],
+            "text": "Emergency Department Visit"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "participant": [
+          {
+            "period": {
+              "start": "2025-12-15T14:20:00-05:00",
+              "end": "2025-12-15T18:52:00-05:00"
+            },
+            "individual": {
+              "reference": "urn:uuid:a5ccadbf-d109-5aac-b0ff-bfbb0b89c44d",
+              "display": "Dr. Tom Brown"
+            }
+          }
+        ],
+        "period": {
+          "start": "2025-12-15T14:20:00-05:00",
+          "end": "2025-12-15T18:52:00-05:00"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "21522001",
+                "display": "Abdominal pain"
+              }
+            ],
+            "text": "Abdominal pain"
+          }
+        ],
+        "serviceProvider": {
+          "reference": "urn:uuid:40b4a551-bbaf-5934-903f-2c4353015e87"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:e514979c-4933-59db-9a9e-4477efaadbf1",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "neuro-followup",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Neurology Follow-up, 2026-02-23</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://bayside.health/encounter-id",
+            "value": "ENC-NEURO-FOLLOWUP"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "185349003",
+                "display": "Encounter for check up"
+              },
+              {
+                "system": "http://loinc.org",
+                "code": "11488-4",
+                "display": "Consult note"
+              }
+            ],
+            "text": "Neurology Follow-up"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "participant": [
+          {
+            "period": {
+              "start": "2026-02-23T10:00:00-05:00",
+              "end": "2026-02-23T10:51:00-05:00"
+            },
+            "individual": {
+              "reference": "urn:uuid:a02fd159-c1ad-547c-86f2-956ca47a75fa",
+              "display": "Dr. Lisa Chen"
+            }
+          }
+        ],
+        "period": {
+          "start": "2026-02-23T10:00:00-05:00",
+          "end": "2026-02-23T10:51:00-05:00"
+        },
+        "reasonCode": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "84229001",
+                "display": "Fatigue"
+              }
+            ],
+            "text": "Fatigue"
+          }
+        ],
+        "serviceProvider": {
+          "reference": "urn:uuid:f9af3aaa-e1ca-5897-aafd-ed8a6f6f5607"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:7075a785-9d6b-55ee-b54d-211984d30f1a",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "cardio-consult-note",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-documentreference"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Consult note, 2025-10-20</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://bayside.health/document-id",
+            "value": "DOC-CARDIO-CONSULT-NOTE"
+          }
+        ],
+        "status": "current",
+        "docStatus": "final",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Consult note"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category",
+                "code": "clinical-note",
+                "display": "Clinical Note"
+              }
+            ],
+            "text": "Clinical Note"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "date": "2025-10-20T11:00:00-04:00",
+        "author": [
+          {
+            "reference": "urn:uuid:4c187cd2-4a3b-53ad-a6c8-d5cc9ea2a96a",
+            "display": "Dr. David Park"
+          }
+        ],
+        "custodian": {
+          "reference": "urn:uuid:f9af3aaa-e1ca-5897-aafd-ed8a6f6f5607",
+          "display": "Bayside Health"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "en-US",
+              "data": "4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCiAgIEJBWVNJREUgSEVBTFRIICB8ICBERVBBUlRNRU5UIE9GIENBUkRJT0xPR1kKICAgT3V0cGF0aWVudCBDb25zdWx0YXRpb24gTm90ZQrilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAKClBhdGllbnQ6ICAgICAgICAgICBMRUUsIEpBTUVTCk1STjogICAgICAgICAgICAgICBCQVktMDA0Mi1MRUUKRE9COiAgICAgICAgICAgICAgIDExLzE1LzE5NTggICg2NiB5LCBNKQpFbmNvdW50ZXIgRGF0ZTogICAgMTAvMjAvMjAyNSAgMTA6MzAgRURUCkVuY291bnRlciBJRDogICAgICBFTkMtQ0FSRElPLUNPTlNVTFQKVmlzaXQgVHlwZTogICAgICAgIE91dHBhdGllbnQgQ29uc3VsdGF0aW9uLCBwb3N0LXByb2NlZHVyZQpTZXJ2aWNlOiAgICAgICAgICAgQ2FyZGlvbG9neQpBdHRlbmRpbmc6ICAgICAgICAgRGF2aWQgUGFyaywgTUQKUmVmZXJyaW5nOiAgICAgICAgIEFubmEgS2ltLCBNRCAgKEJheXNpZGUgRmFtaWx5IE1lZGljaW5lKQrilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAKCgpDSElFRiBDT01QTEFJTlQKRXhlcnRpb25hbCBjaGVzdCBwcmVzc3VyZTsgcG9zdC1jYXRoZXRlcml6YXRpb24gZm9sbG93LXVwIGFuZApmaW5hbGl6YXRpb24gb2YgbWVkaWNhbCBtYW5hZ2VtZW50IHBsYW4uCgoKSElTVE9SWSBPRiBQUkVTRU5UIElMTE5FU1MKTXIuIEphbWVzIExlZSBpcyBhIDY2LXllYXItb2xkIG1hbGUgd2l0aCBhIGhpc3Rvcnkgb2YgaHlwZXJ0ZW5zaW9uLAp0eXBlIDIgZGlhYmV0ZXMgbWVsbGl0dXMsIGh5cGVybGlwaWRlbWlhLCBhbmQgbWlub3IgaXNjaGVtaWMgc3Ryb2tlCigyMDI0KSB3aG8gd2FzIHJlZmVycmVkIGJ5IERyLiBBbm5hIEtpbSBvbiAwOS8xNS8yMDI1IGZvciBldmFsdWF0aW9uCm9mIGFwcHJveGltYXRlbHkgc2l4IHdlZWtzIG9mIHN1YnN0ZXJuYWwgY2hlc3QgcHJlc3N1cmUgb2NjdXJyaW5nCndpdGggbW9kZXJhdGUgZXhlcnRpb24gKGNsaW1iaW5nIHR3byBmbGlnaHRzIG9mIHN0YWlycywgd2Fsa2luZwpicmlza2x5IHVwaGlsbCkuIFN5bXB0b21zIGFyZSByZXByb2R1Y2libGUsIGxhc3QgMyB0byA1IG1pbnV0ZXMsCmFuZCByZXNvbHZlIGZ1bGx5IHdpdGggcmVzdC4gVGhlcmUgaGFzIGJlZW4gbm8gcHJvZ3Jlc3Npb24gdG8gcmVzdApvciBub2N0dXJuYWwgcGFpbiwgbm8gYXNzb2NpYXRlZCBkeXNwbmVhIGF0IHJlc3QsIG5vIHN5bmNvcGUsIGFuZApubyBwYWxwaXRhdGlvbnMuIENDUyBjbGFzcyBJSS4KClRoZSBwYXRpZW50IHdhcyBzZWVuIGZvciBpbml0aWFsIGNhcmRpb2xvZ3kgZXZhbHVhdGlvbiBvbiAwOS8yMi8yMDI1CihzZXBhcmF0ZSBub3RlKS4gUmVzdGluZyBFQ0cgZGVtb25zdHJhdGVkIG5vcm1hbCBzaW51cyByaHl0aG0gd2l0aApub24tc3BlY2lmaWMgbGF0ZXJhbCBULXdhdmUgZmxhdHRlbmluZzsgbm8gYWN1dGUgaXNjaGVtaWMgY2hhbmdlcy4KR2l2ZW4gdHlwaWNhbCBhbmdpbmFsIHBhdHRlcm4sIGludGVybWVkaWF0ZS10by1oaWdoIHByZXRlc3QKcHJvYmFiaWxpdHkgb2Ygb2JzdHJ1Y3RpdmUgZGlzZWFzZSwgYW5kIHByZXNlbmNlIG9mIG11bHRpcGxlIEFTQ1ZECnJpc2sgZmFjdG9ycywgdGhlIGRlY2lzaW9uIHdhcyBtYWRlIHRvIHByb2NlZWQgd2l0aCBkaWFnbm9zdGljCmNhcmRpYWMgY2F0aGV0ZXJpemF0aW9uLgoKRGlhZ25vc3RpYyBsZWZ0IGhlYXJ0IGNhdGhldGVyaXphdGlvbiB3YXMgcGVyZm9ybWVkIGJ5IHRoaXMgcHJvdmlkZXIKb24gMTAvMTUvMjAyNS4gUmVmZXIgdG8gcHJvY2VkdXJlIHJlcG9ydCBmb3IgZnVsbCBkZXRhaWxzLiBGaW5kaW5nczoKdHdvLXZlc3NlbCBjb3JvbmFyeSBhcnRlcnkgZGlzZWFzZSwgd2l0aCA2MCUgbWlkLUxBRCBzdGVub3NpcyBhbmQKNzAlIHByb3hpbWFsIFJDQSBzdGVub3Npcy4gTm8gbGVmdCBtYWluIGRpc2Vhc2UuIE5vIGhpZ2gtZ3JhZGUgb3IKc3ViLW9jY2x1c2l2ZSBsZXNpb25zLiBMVkVGIHByZXNlcnZlZCBhdCA1NSUuIFJpZ2h0IHJhZGlhbCBhY2Nlc3M7Cm5vIHByb2NlZHVyYWwgY29tcGxpY2F0aW9ucy4KClRoZSBwYXRpZW50IHJldHVybnMgdG9kYXkgZm9yIHJldmlldyBvZiBmaW5kaW5ncyBhbmQgZmluYWxpemF0aW9uCm9mIG1lZGljYWwgbWFuYWdlbWVudCBwbGFuLgoKClBBU1QgTUVESUNBTCBISVNUT1JZCi0gRXNzZW50aWFsIGh5cGVydGVuc2lvbiAoc2luY2UgMjAxNikKLSBUeXBlIDIgZGlhYmV0ZXMgbWVsbGl0dXMsIG9uIG1ldGZvcm1pbiAoc2luY2UgMjAxOCkKLSBIeXBlcmxpcGlkZW1pYSAoc2luY2UgMjAxNikKLSBNaW5vciBpc2NoZW1pYyBzdHJva2UgKDIwMjQpIHdpdGggY2hyb25pYyBwb3N0LXN0cm9rZSBmYXRpZ3VlCi0gTG9uZ3N0YW5kaW5nIHRvYmFjY28gdXNlCgoKUEFTVCBTVVJHSUNBTCBISVNUT1JZCk5vbmUuCgoKSE9NRSBNRURJQ0FUSU9OUyAgKHJldmlld2VkIGFuZCByZWNvbmNpbGVkKQotIExpc2lub3ByaWwgMTAgbWcgUE8gZGFpbHkKLSBBdG9ydmFzdGF0aW4gNDAgbWcgUE8gZGFpbHkKLSBNZXRmb3JtaW4gMTAwMCBtZyBQTyBCSUQKLSBBc3BpcmluIDgxIG1nIFBPIGRhaWx5CgoKQUxMRVJHSUVTCk5vIGtub3duIGRydWcgYWxsZXJnaWVzLgoKClNPQ0lBTCBISVNUT1JZCkxpdmVzIHdpdGggc3BvdXNlLiBJbmRlcGVuZGVudCBpbiBBRExzLiBUb2JhY2NvIHVzZSBvbmdvaW5nIHBlcgpwYXRpZW50OyBhbGNvaG9sIG9jY2FzaW9uYWw7IG5vIGlsbGljaXQgc3Vic3RhbmNlcy4gUmlzayBmYWN0b3IKbW9kaWZpY2F0aW9uIGRpc2N1c3NlZCB0b2RheS4KCgpSRVZJRVcgT0YgU1lTVEVNUwpBIGNvbXBsZXRlIDEwLXN5c3RlbSByZXZpZXcgd2FzIHBlcmZvcm1lZCBhbmQgaXMgbmVnYXRpdmUgZXhjZXB0CmFzIGRvY3VtZW50ZWQgaW4gdGhlIEhQSS4KCgpWSVRBTCBTSUdOUwpCUCAgMTQyLzg2ICAocmlnaHQgYXJtLCBzZWF0ZWQsIGFmdGVyIDUgbWluIHJlc3QpCkhSICA3MiAgcmVndWxhcgpSUiAgMTQKU3BPMiAgOTglICBvbiByb29tIGFpcgpUICAzNi44IEMKV3QgIDg0IGtnICAgICBIdCAgMTc1IGNtICAgICBCTUkgIDI3LjQKCgpQSFlTSUNBTCBFWEFNSU5BVElPTgpHZW5lcmFsOiBXZWxsLWFwcGVhcmluZywgaW4gbm8gYWN1dGUgZGlzdHJlc3MuCkhFRU5UOiAgIEF0cmF1bWF0aWMsIG5vcm1vY2VwaGFsaWMuIE5vIEpWRC4KQ1Y6ICAgICAgUmVndWxhciByYXRlIGFuZCByaHl0aG0uIE5vcm1hbCBTMSBhbmQgUzIuIE5vIFMzLCBTNCwKICAgICAgICAgbXVybXVyLCBydWIsIG9yIGdhbGxvcC4gUE1JIG5vbi1kaXNwbGFjZWQuClJlc3A6ICAgIENsZWFyIHRvIGF1c2N1bHRhdGlvbiBiaWxhdGVyYWxseS4gTm8gd2hlZXppbmcgb3IKICAgICAgICAgY3JhY2tsZXMuCkFiZDogICAgIFNvZnQsIG5vbi10ZW5kZXIsIG5vbi1kaXN0ZW5kZWQuIE5vIGJydWl0cy4KRXh0OiAgICAgTm8gcGVyaXBoZXJhbCBlZGVtYS4gRGlzdGFsIHB1bHNlcyAyKyBhbmQgc3ltbWV0cmljLgpBY2Nlc3M6ICBSaWdodCByYWRpYWwgY2F0aGV0ZXJpemF0aW9uIHNpdGUgaGVhbGluZyB3ZWxsOyBubwogICAgICAgICBoZW1hdG9tYSwgbm8gYnJ1aXQsIG5vIHB1bHNlIGRlZmljaXQuCgoKREFUQSBSRVZJRVcKRUNHIHRvZGF5ICgxMC8yMC8yMDI1KTogTlNSIHJhdGUgNzAsIG5vcm1hbCBheGlzLCBubyBhY3V0ZQogIFNULVQgY2hhbmdlcy4gQ29tcGFyZWQgdG8gMDkvMTUvMjAyNSwgdW5jaGFuZ2VkLgpSZWNlbnQgbGFicyAoMDkvMTUvMjAyNSk6IExETCA4OCwgSERMIDQyLCBURyAxNDIsIEExYyA3LjIlLAogIENyIDEuMDUsIGVHRlIgNzgsIEsgNC4xLCBIZ2IgMTMuOC4KQ2FyZGlhYyBjYXRoZXRlcml6YXRpb24gKDEwLzE1LzIwMjUpIOKAlCBzZWUgcHJvY2VkdXJlIHJlcG9ydDoKICB0d28tdmVzc2VsIENBRCBhcyBkZXRhaWxlZCBpbiBIUEk7IExWRUYgNTUlLgoKCkFTU0VTU01FTlQgQU5EIFBMQU4KCjEuIFN0YWJsZSBhbmdpbmEgcGVjdG9yaXMgaW4gdGhlIHNldHRpbmcgb2YgdHdvLXZlc3NlbCBjb3JvbmFyeQogICBhcnRlcnkgZGlzZWFzZSAoY2hyb25pYyBjb3JvbmFyeSBkaXNlYXNlKS4KICAgLSBObyBQQ0kgd2FzIHBlcmZvcm1lZCBhdCBjYXRoZXRlcml6YXRpb24gZ2l2ZW4gc3RhYmxlCiAgICAgc3ltcHRvbXMsIGFic2VuY2Ugb2YgaGlnaC1yaXNrIGFuYXRvbWljIGZlYXR1cmVzLCBhbmQgYW4KICAgICBJU0NIRU1JQS1hbGlnbmVkIG1lZGljYWwgbWFuYWdlbWVudCBzdHJhdGVneS4KICAgLSBDb250aW51ZSBhc3BpcmluIDgxIG1nIFBPIGRhaWx5IGZvciBzZWNvbmRhcnkgcHJldmVudGlvbi4KICAgLSBDb250aW51ZSBhdG9ydmFzdGF0aW4gNDAgbWcgUE8gZGFpbHk7IExETCBnb2FsIDwgNzAgbWcvZEwKICAgICBmb3IgQVNDVkQgc2Vjb25kYXJ5IHByZXZlbnRpb24uIExETCB0b2RheSA4OCDigJQgZGlzY3VzcwogICAgIGludGVuc2lmaWNhdGlvbiB3aXRoIFBDUCBpZiBub3QgYXQgZ29hbCBvbiByZXBlYXQuCiAgIC0gSU5JVElBVEUgbWV0b3Byb2xvbCBzdWNjaW5hdGUgMjUgbWcgUE8gb25jZSBkYWlseSBhcwogICAgIGFudGktYW5naW5hbCB0aGVyYXB5IGFuZCByYXRlIGNvbnRyb2wuIFRpdHJhdGUgdG8gcmVzdGluZwogICAgIGhlYXJ0IHJhdGUgb2YgNTUgdG8gNjAgYnBtIGFzIHRvbGVyYXRlZC4KICAgLSBTdWJsaW5ndWFsIG5pdHJvZ2x5Y2VyaW4gMC40IG1nIFBSTiBmb3IgYnJlYWt0aHJvdWdoCiAgICAgY2hlc3QgcGFpbjsgZWR1Y2F0aW9uIGFuZCBpbnN0cnVjdGlvbnMgcHJvdmlkZWQuIFJ4IHNlbnQuCiAgIC0gQ2FyZGlhYyByZWhhYmlsaXRhdGlvbiByZWZlcnJhbCBwbGFjZWQuCiAgIC0gREFQVCBub3QgaW5kaWNhdGVkOyBkaWFnbm9zdGljIGNhdGhldGVyaXphdGlvbiB3aXRob3V0CiAgICAgc3RlbnQgcGxhY2VtZW50LgoKMi4gSHlwZXJ0ZW5zaW9uLgogICAtIEJQIGVsZXZhdGVkIHRvZGF5IGF0IDE0Mi84Ni4gRGVmZXIgdGl0cmF0aW9uIHRvIFBDUCBmb3IKICAgICByb3V0aW5lIG91dHBhdGllbnQgbWFuYWdlbWVudC4KCjMuIFR5cGUgMiBkaWFiZXRlcyBtZWxsaXR1cy4KICAgLSBBMWMgNy4yJSDigJQgYXQgb3IgbmVhciBnb2FsLiBDb250aW51ZSBtZXRmb3JtaW4uCiAgIC0gRGVmZXIgU0dMVDIgaW5oaWJpdG9yIG9yIEdMUC0xIFJBIGNvbnNpZGVyYXRpb24gdG8gUENQCiAgICAgZ2l2ZW4gQVNDVkQtcG9zaXRpdmUgc3RhdHVzIHBlciBjdXJyZW50IGd1aWRlbGluZXMuCgo0LiBIeXBlcmxpcGlkZW1pYS4KICAgLSBPbiBoaWdoLWludGVuc2l0eSBzdGF0aW4uIERlZmVyIGZ1cnRoZXIgbGlwaWQgbWFuYWdlbWVudAogICAgIHRvIFBDUC4KCjUuIEhpc3Rvcnkgb2YgbWlub3IgaXNjaGVtaWMgc3Ryb2tlICgyMDI0KS4KICAgLSBDb250aW51ZSBzZWNvbmRhcnkgc3Ryb2tlIHByZXZlbnRpb247IGNvLW1hbmFnZWQgd2l0aAogICAgIG5ldXJvbG9neS4KCjYuIFRvYmFjY28gdXNlLgogICAtIENvdW5zZWxlZCBvbiBjZXNzYXRpb247IG5pY290aW5lIHJlcGxhY2VtZW50IG9wdGlvbnMgYW5kCiAgICAgYmVoYXZpb3JhbCBzdXBwb3J0IGRpc2N1c3NlZC4gUmVmZXJyYWwgdG8gUENQIGZvcgogICAgIGNlc3NhdGlvbiBwcm9ncmFtLgoKCkZPTExPVy1VUApSZXR1cm4gdG8gY2FyZGlvbG9neSBjbGluaWMgaW4gMyBtb250aHMgZm9yIHN5bXB0b20gYXNzZXNzbWVudAphbmQgdG9sZXJhYmlsaXR5IG9mIG5ldyBhbnRpLWFuZ2luYWwgdGhlcmFweS4gU29vbmVyIGZvciBhbnkKd29yc2VuaW5nIG9mIHN5bXB0b21zLCByZXN0IHBhaW4sIG9yIG5ldyBhc3NvY2lhdGVkIGZlYXR1cmVzLgoKClBBVElFTlQgRURVQ0FUSU9OClJldmlld2VkIG5hdHVyZSBvZiBjb3JvbmFyeSBhcnRlcnkgZGlzZWFzZSwgcmF0aW9uYWxlIGZvciBtZWRpY2FsCm1hbmFnZW1lbnQgc3RyYXRlZ3ksIGV4cGVjdGVkIGVmZmVjdHMgb2YgbWV0b3Byb2xvbCwgaW5kaWNhdGlvbnMKZm9yIHN1Ymxpbmd1YWwgbml0cm9nbHljZXJpbiwgYW5kIHdhcm5pbmcgc2lnbnMgcmVxdWlyaW5nIGVtZXJnZW50CmV2YWx1YXRpb24gKHJlc3QgcGFpbiwgcHJvbG9uZ2VkIHBhaW4sIGR5c3BuZWEsIHN5bmNvcGUpLiBQYXRpZW50CnZlcmJhbGl6ZWQgdW5kZXJzdGFuZGluZyBhbmQgc3RhdGVkIGFncmVlbWVudCB3aXRoIHRoZSBwbGFuLgoKCuKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKRGF2aWQgUGFyaywgTUQKQmF5c2lkZSBIZWFsdGggQ2FyZGlvbG9neQpOUEk6IDIzNDU2Nzg5MDEKRWxlY3Ryb25pY2FsbHkgc2lnbmVkOiAxMC8yMC8yMDI1ICAxMTo0MiBFRFQK",
+              "title": "Consult note"
+            },
+            "format": {
+              "system": "http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
+              "code": "urn:ihe:iti:xds:2017:mimeTypeSufficient",
+              "display": "mimeType Sufficient"
+            }
+          }
+        ],
+        "context": {
+          "encounter": [
+            {
+              "reference": "urn:uuid:9cf8b7f2-32f3-517c-ae7a-72b365d33410"
+            }
+          ],
+          "period": {
+            "start": "2025-10-20T11:00:00-04:00",
+            "end": "2025-10-20T11:00:00-04:00"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:f5b0fc0d-5658-5232-b6bc-657698e3c1ad",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "ed-discharge-summary",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-documentreference"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Discharge summary, 2025-12-15</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://bayside.health/document-id",
+            "value": "DOC-ED-DISCHARGE-SUMMARY"
+          }
+        ],
+        "status": "current",
+        "docStatus": "final",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18842-5",
+              "display": "Discharge summary"
+            }
+          ],
+          "text": "Discharge summary"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category",
+                "code": "clinical-note",
+                "display": "Clinical Note"
+              }
+            ],
+            "text": "Clinical Note"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "date": "2025-12-15T18:45:00-05:00",
+        "author": [
+          {
+            "reference": "urn:uuid:a5ccadbf-d109-5aac-b0ff-bfbb0b89c44d",
+            "display": "Dr. Tom Brown"
+          }
+        ],
+        "custodian": {
+          "reference": "urn:uuid:40b4a551-bbaf-5934-903f-2c4353015e87",
+          "display": "Riverside Hospital"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "en-US",
+              "data": "4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCiAgIFJJVkVSU0lERSBIT1NQSVRBTCAgfCAgRU1FUkdFTkNZIERFUEFSVE1FTlQKICAgRGlzY2hhcmdlIFN1bW1hcnkK4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCgpQYXRpZW50OiAgICAgICAgICAgTEVFLCBKQU1FUwpET0I6ICAgICAgICAgICAgICAgMTEvMTUvMTk1OCAgKDY3IHksIE0pClJpdmVyc2lkZSBNUk46ICAgICBSSVYtNDQ3ODIxCkhvbWUgTVJOIChyZXAnZCk6ICBCQVktMDA0Mi1MRUUgIChCYXlzaWRlIEhlYWx0aCkKRW5jb3VudGVyIERhdGU6ICAgIDEyLzE1LzIwMjUKQXJyaXZhbDogICAgICAgICAgIDE0OjIwIEVTVCAgICAgTW9kZTogd2Fsay1pbgpEaXNjaGFyZ2U6ICAgICAgICAgMTg6NDUgRVNUCkVuY291bnRlciBJRDogICAgICBSSVYtRUQtOTkxMgpFU0kgVHJpYWdlIExldmVsOiAgMwpBdHRlbmRpbmc6ICAgICAgICAgVG9tIEJyb3duLCBNRArilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAKCgpDSElFRiBDT01QTEFJTlQKRXBpZ2FzdHJpYyBhYmRvbWluYWwgcGFpbiB4IDIgZGF5cy4KCgpISVNUT1JZIE9GIFBSRVNFTlQgSUxMTkVTUwpNci4gSmFtZXMgTGVlIGlzIGEgNjcteWVhci1vbGQgbWFsZSBwcmVzZW50aW5nIHRvIHRoZSBSaXZlcnNpZGUKSG9zcGl0YWwgRUQgd2l0aCBhIDItZGF5IGhpc3Rvcnkgb2YgaW50ZXJtaXR0ZW50IGVwaWdhc3RyaWMKZGlzY29tZm9ydC4gVGhlIHBhdGllbnQgaXMgY3VycmVudGx5IHRyYXZlbGluZyBhbmQgdW5hYmxlIHRvIHJlYWNoCmhpcyBwcmltYXJ5IGNhcmUgdGVhbSBhdCBCYXlzaWRlIEhlYWx0aC4KCkhlIGRlc2NyaWJlcyB0aGUgcGFpbiBhcyBhIGR1bGwsIGJ1cm5pbmcgc2Vuc2F0aW9uLCA0IG91dCBvZiAxMCBpbgppbnRlbnNpdHksIHdvcnNlIGFmdGVyIG1lYWxzLCBhbmQgcGFydGlhbGx5IHJlbGlldmVkIGJ5IHNpdHRpbmcgdXAuCkFzc29jaWF0ZWQgbWlsZCBuYXVzZWEgd2l0aG91dCB2b21pdGluZy4gTm8gZmV2ZXJzLCBjaGlsbHMsIG1lbGVuYSwKaGVtYXRvY2hlemlhLCBvciBoZW1hdGVtZXNpcy4gTm8gY2hlc3QgcGFpbiwgZHlzcG5lYSwgcGFscGl0YXRpb25zLApvciBkaWFwaG9yZXNpcyBhdCBhbnkgdGltZS4gTm8gYmFjayBvciByYWRpYXRpbmcgcGFpbi4gTm8gdXJpbmFyeQpvciBib3dlbCBjaGFuZ2VzLiBIZSBoYXMgY29udGludWVkIGhpcyBob21lIG1lZGljYXRpb25zLgoKT2Ygbm90ZSwgdGhlIHBhdGllbnQgcmVwb3J0cyByZWNlbnQgY2FyZGlvbG9neSBldmFsdWF0aW9uIGZvcgpleGVydGlvbmFsIGNoZXN0IHBhaW4gd2l0aCB0d28tdmVzc2VsIENBRCBvbiBkaWFnbm9zdGljCmNhdGhldGVyaXphdGlvbiBpbiBPY3RvYmVyOyBoZSB3YXMgc3RhcnRlZCBvbiBhIG5ldyBoZWFydAptZWRpY2F0aW9uIGF0IHRoYXQgdGltZS4gR2l2ZW4gdGhlIHBhdGllbnQncyBrbm93biBjb3JvbmFyeSBkaXNlYXNlCmFuZCBhZ2UsIGF0eXBpY2FsIGFuZ2luYWwtZXF1aXZhbGVudCBwcmVzZW50YXRpb24gY2Fubm90IGJlCmV4Y2x1ZGVkIG9uIGhpc3RvcnkgYWxvbmUsIGFuZCBhIGNhcmRpYWMgd29ya3VwIHdhcyBpbml0aWF0ZWQuCgoKUEFTVCBNRURJQ0FMIEhJU1RPUlkgIChwZXIgcGF0aWVudCBhbmQgaG9tZSBtZWQgbGlzdCByZWNvbmNpbGlhdGlvbikKLSBIeXBlcnRlbnNpb24KLSBUeXBlIDIgZGlhYmV0ZXMgbWVsbGl0dXMKLSBIeXBlcmxpcGlkZW1pYQotIENvcm9uYXJ5IGFydGVyeSBkaXNlYXNlLCB0d28tdmVzc2VsIChwZXIgcmVjZW50IGNhcmRpb2xvZ3kgZXZhbCkKLSBNaW5vciBpc2NoZW1pYyBzdHJva2UgKDIwMjQpCgoKUEFTVCBTVVJHSUNBTCBISVNUT1JZCkRpYWdub3N0aWMgY2FyZGlhYyBjYXRoZXRlcml6YXRpb24gKDEwLzIwMjUpLCBubyBQQ0kuCgoKSE9NRSBNRURJQ0FUSU9OUyAgKHBlciBwYXRpZW50IHJlcG9ydCkKLSBMaXNpbm9wcmlsIDEwIG1nIFBPIGRhaWx5Ci0gQXRvcnZhc3RhdGluIDQwIG1nIFBPIGRhaWx5Ci0gTWV0Zm9ybWluIDEwMDAgbWcgUE8gQklECi0gQXNwaXJpbiA4MSBtZyBQTyBkYWlseQotIE1ldG9wcm9sb2wgc3VjY2luYXRlLCBkb3NlIHVuY2xlYXIgcGVyIHBhdGllbnQKCgpBTExFUkdJRVMKUEVOSUNJTExJTiDigJQgcGF0aWVudCByZXBvcnRzIGEgcmFzaCBhcyBhIGNoaWxkIGZvbGxvd2luZyBhbgpvcmFsIGFudGliaW90aWMgY291cnNlIChlc3RpbWF0ZWQgYWdlIDYgdG8gOCkuIEhlIGRlc2NyaWJlcyB0aGUKcmVhY3Rpb24gYXMgYSBub24tcHJ1cml0aWMsIG5vbi11cnRpY2FyaWFsIHJhc2ggdGhhdCByZXNvbHZlZAp3aXRob3V0IGludGVydmVudGlvbi4gTk8gaGlzdG9yeSBvZiBmYWNpYWwgc3dlbGxpbmcsIGxpcCBvciB0b25ndWUKc3dlbGxpbmcsIHRocm9hdCB0aWdodG5lc3MsIGJyZWF0aGluZyBkaWZmaWN1bHR5LCBoeXBvdGVuc2lvbiwgb3IKYW5hcGh5bGF4aXMuIEhlIGhhcyBhdm9pZGVkIHBlbmljaWxsaW4gYW5kIGFtb3hpY2lsbGluIHNpbmNlLgpObyBvdGhlciBrbm93biBkcnVnLCBmb29kLCBvciBlbnZpcm9ubWVudGFsIGFsbGVyZ2llcy4KCgpTT0NJQUwgSElTVE9SWQpNYXJyaWVkLCB0cmF2ZWxpbmcgZm9yIGZhbWlseSBldmVudC4gVG9iYWNjbyB1c2Ugb25nb2luZyBwZXIKcGF0aWVudC4gQWxjb2hvbCBvY2Nhc2lvbmFsLiBObyBpbGxpY2l0IHN1YnN0YW5jZXMuCgoKUkVWSUVXIE9GIFNZU1RFTVMKQ29uc3RpdHV0aW9uYWw6IE5vIGZldmVyLCBubyB3ZWlnaHQgbG9zcy4KQ2FyZGlhYzogICAgICAgIE5vIGNoZXN0IHBhaW4sIGR5c3BuZWEsIHBhbHBpdGF0aW9ucy4KUmVzcDogICAgICAgICAgIE5vIGNvdWdoLCBubyBzaG9ydG5lc3Mgb2YgYnJlYXRoLgpHSTogICAgICAgICAgICAgQXMgcGVyIEhQSS4gTm8gZGlhcnJoZWEsIGNvbnN0aXBhdGlvbiwgb3IKICAgICAgICAgICAgICAgIGJsb29keSBzdG9vbC4KR1U6ICAgICAgICAgICAgIE5vIGR5c3VyaWEsIGhlbWF0dXJpYSwgb3IgZmxhbmsgcGFpbi4KTmV1cm86ICAgICAgICAgIE5vIGhlYWRhY2hlLCB3ZWFrbmVzcywgb3IgZm9jYWwgc3ltcHRvbXMuCkFsbCBvdGhlciBzeXN0ZW1zIG5lZ2F0aXZlLgoKClZJVEFMIFNJR05TICAob24gYXJyaXZhbCkKQlAgICAgMTM4LzgyCkhSICAgIDc2LCByZWd1bGFyClJSICAgIDE2ClNwTzIgIDk4JSAgb24gcm9vbSBhaXIKVCAgICAgMzcuMCBDClBhaW4gIDQvMTAgIGVwaWdhc3RyaWMKCgpQSFlTSUNBTCBFWEFNSU5BVElPTgpHZW5lcmFsOiAgV2VsbC1hcHBlYXJpbmcsIGluIG5vIGFjdXRlIGRpc3RyZXNzLgpIRUVOVDogICAgQXRyYXVtYXRpYy4gTXVjb3VzIG1lbWJyYW5lcyBtb2lzdC4KQ1Y6ICAgICAgIFJlZ3VsYXIgcmF0ZSBhbmQgcmh5dGhtLiBObyBtdXJtdXJzLCBydWJzLCBvciBnYWxsb3BzLgogICAgICAgICAgTm8gSlZELgpSZXNwOiAgICAgQ2xlYXIgdG8gYXVzY3VsdGF0aW9uIGJpbGF0ZXJhbGx5LgpBYmQ6ICAgICAgU29mdCwgbm9uLWRpc3RlbmRlZC4gTWlsZCBlcGlnYXN0cmljIHRlbmRlcm5lc3MgdG8KICAgICAgICAgIGRlZXAgcGFscGF0aW9uIHdpdGhvdXQgZ3VhcmRpbmcsIHJlYm91bmQsIG9yIHJpZ2lkaXR5LgogICAgICAgICAgTXVycGh5IHNpZ24gbmVnYXRpdmUuIE5vIENWQSB0ZW5kZXJuZXNzLiBObyBwYWxwYWJsZQogICAgICAgICAgbWFzcyBvciBoZXBhdG9zcGxlbm9tZWdhbHkuIEJvd2VsIHNvdW5kcyBwcmVzZW50IGFuZAogICAgICAgICAgbm9ybWFsLgpFeHQ6ICAgICAgTm8gZWRlbWEuIERpc3RhbCBwdWxzZXMgMisgYmlsYXRlcmFsbHkuClNraW46ICAgICBXYXJtIGFuZCBkcnkuIE5vIHJhc2guCk5ldXJvOiAgICBBbGVydCBhbmQgb3JpZW50ZWQgeDMuIE5vIGZvY2FsIGRlZmljaXRzLgoKCkVEIENPVVJTRSBBTkQgSU5WRVNUSUdBVElPTlMKR2l2ZW4ga25vd24gQ0FEIGFuZCBhdHlwaWNhbCBwcmVzZW50YXRpb24gaW4gYSA2Ny15ZWFyLW9sZCBtYWxlLApjYXJkaWFjIGV0aW9sb2d5IHdhcyBpbnZlc3RpZ2F0ZWQgYWxvbmdzaWRlIHByaW1hcnkgR0kgd29ya3VwLgoKRUNHICgxNDozNSk6ICAgICAgICAgICBOU1IgYXQgNzQuIE5vIGFjdXRlIFNUIG9yIFQtd2F2ZSBjaGFuZ2VzLgogICAgICAgICAgICAgICAgICAgICAgIE5vIG5ldyBmaW5kaW5ncyBjb21wYXJlZCB3aXRoIHBhdGllbnQtcmVwb3J0ZWQKICAgICAgICAgICAgICAgICAgICAgICBvdXRwYXRpZW50IEVDRy4KVHJvcG9uaW4gSSAoMTU6MDUpOiAgICA8IDAuMDEyIG5nL21MICAobmVnYXRpdmUpClRyb3BvbmluIEkgKDE3OjMwKTogICAgPCAwLjAxMiBuZy9tTCAgKG5lZ2F0aXZlOyBzZXJpYWwpCkNCQzogICAgICAgICAgICAgICAgICAgV0JDIDcuNCwgSGdiIDEzLjYsIFBsdCAyMzIgICh3aXRoaW4gbm9ybWFsIGxpbWl0cykKQ01QOiAgICAgICAgICAgICAgICAgICBOYSAxMzksIEsgNC4wLCBDbCAxMDIsIENPMiAyNSwgQlVOIDE4LAogICAgICAgICAgICAgICAgICAgICAgIENyIDEuMDQsIGdsdWNvc2UgMTQyLCBBU1QgMjQsIEFMVCAyMiwKICAgICAgICAgICAgICAgICAgICAgICBBbGsgUGhvcyA3OCwgVC5iaWxpIDAuNwpMaXBhc2U6ICAgICAgICAgICAgICAgIDM0IFUvTCAgKG5vcm1hbCkKVXJpbmFseXNpczogICAgICAgICAgICBVbnJlbWFya2FibGUKQ1QgYWJkb21lbi9wZWx2aXMgd2l0aCBJViBjb250cmFzdCAoMTU6MjApOiBObyBhY3V0ZSBpbnRyYS1hYmRvbWluYWwKICAgICAgICAgICAgICAgICAgICAgICBwcm9jZXNzLiBObyBmcmVlIGFpciwgZnJlZSBmbHVpZCwgYm93ZWwKICAgICAgICAgICAgICAgICAgICAgICBvYnN0cnVjdGlvbiwgYXBwZW5kaWNpdGlzLCBvciBwYW5jcmVhdGljCiAgICAgICAgICAgICAgICAgICAgICAgaW5mbGFtbWF0aW9uLiBIZXBhdG9iaWxpYXJ5IHN5c3RlbSB3aXRob3V0CiAgICAgICAgICAgICAgICAgICAgICAgY2hvbGVsaXRoaWFzaXMgb3IgZHVjdGFsIGRpbGF0aW9uLiBJbmNpZGVudGFsCiAgICAgICAgICAgICAgICAgICAgICAgc21hbGwgc2ltcGxlIHJlbmFsIGN5c3QsIGxlZnQuCgpQYXRpZW50IHdhcyBtb25pdG9yZWQgb24gdGVsZW1ldHJ5IHRocm91Z2hvdXQgdGhlIEVEIGNvdXJzZS4KU3ltcHRvbXMgaW1wcm92ZWQgc3BvbnRhbmVvdXNseSBkdXJpbmcgb2JzZXJ2YXRpb24uIEhlIHRvbGVyYXRlZApvcmFsIGludGFrZSB3aXRob3V0IHJlY3VycmVuY2Ugb2YgcGFpbi4KCgpBU1NFU1NNRU5UCjEuIEVwaWdhc3RyaWMgYWJkb21pbmFsIHBhaW4sIHByZXN1bWVkIGdhc3RyaXRpcyBvciBub24tdWxjZXIKICAgZHlzcGVwc2lhLiBSZWFzc3VyaW5nIGhpc3RvcnksIGV4YW0sIGFuZCBpbWFnaW5nLgoyLiBBY3V0ZSBjb3JvbmFyeSBzeW5kcm9tZSBydWxlZCBvdXQ6IHR3byBuZWdhdGl2ZSBzZXJpYWwKICAgdHJvcG9uaW5zLCBub24taXNjaGVtaWMgRUNHLCBhdHlwaWNhbCBmZWF0dXJlcyBmb3IgQUNTLgozLiBQZW5pY2lsbGluIGFsbGVyZ3ksIGxvdy1zZXZlcml0eSBoaXN0b3JpY2FsIGxhYmVsIOKAlAogICByZWNvbW1lbmQgb3V0cGF0aWVudCBldmFsdWF0aW9uIGZvciBwb3NzaWJsZSBkZWxhYmVsaW5nLgoKCkRJU1BPU0lUSU9OCkRpc2NoYXJnZWQgaG9tZSBpbiBzdGFibGUgY29uZGl0aW9uLCBhbWJ1bGF0b3J5LCB0b2xlcmF0aW5nCm9yYWwgaW50YWtlLiBQYXRpZW50IHZlcmJhbGl6ZWQgdW5kZXJzdGFuZGluZyBvZiBkaWFnbm9zaXMsCmZvbGxvdy11cCBwbGFuLCBhbmQgcmV0dXJuIHByZWNhdXRpb25zLgoKCkRJU0NIQVJHRSBNRURJQ0FUSU9OUwotIENvbnRpbnVlIGFsbCBob21lIG1lZGljYXRpb25zIGFzIHByZXZpb3VzbHkgcHJlc2NyaWJlZC4KLSBOZXc6IG9tZXByYXpvbGUgMjAgbWcgUE8gb25jZSBkYWlseSBmb3IgMTQgZGF5cwogICAgICAgKGF2YWlsYWJsZSBvdmVyLXRoZS1jb3VudGVyKS4KLSBBbnRhY2lkIFBSTiBmb3IgYnJlYWt0aHJvdWdoIHN5bXB0b21zLgoKClJFVFVSTiBQUkVDQVVUSU9OUwpSZXR1cm4gdG8gdGhlIEVEIGltbWVkaWF0ZWx5IGZvcjoKLSBDaGVzdCBwYWluLCBwcmVzc3VyZSwgb3IgdGlnaHRuZXNzCi0gU2hvcnRuZXNzIG9mIGJyZWF0aCBhdCByZXN0Ci0gU2V2ZXJlIG9yIHdvcnNlbmluZyBhYmRvbWluYWwgcGFpbgotIFZvbWl0aW5nIGJsb29kIG9yIGNvZmZlZS1ncm91bmQgZW1lc2lzCi0gQmxhY2ssIHRhcnJ5LCBvciBibG9vZHkgc3Rvb2xzCi0gRmV2ZXIgYWJvdmUgMzguNSBDCi0gTGlnaHRoZWFkZWRuZXNzLCBzeW5jb3BlLCBvciBzdWRkZW4gd2Vha25lc3MKCgpGT0xMT1ctVVAKUHJpbWFyeSBjYXJlIHByb3ZpZGVyIChBbm5hIEtpbSwgTUQsIEJheXNpZGUgSGVhbHRoKSB3aXRoaW4KMSB0byAyIHdlZWtzIGZvciBzeW1wdG9tIHJlYXNzZXNzbWVudCBhbmQgcm91dGluZSBjYXJlLgpDb250aW51ZSBlc3RhYmxpc2hlZCBjYXJkaW9sb2d5IGZvbGxvdy11cCBhdCBCYXlzaWRlLgoKCklDRC0xMCAgKGZpbmFsKTogIEsyOS43MCAgR2FzdHJpdGlzLCB1bnNwZWNpZmllZCwgd2l0aG91dCBibGVlZGluZwogICAgICAgICAgICAgICAgICBSMTAuMTMgIEVwaWdhc3RyaWMgcGFpbgogICAgICAgICAgICAgICAgICBaODcuODkxIFBlcnNvbmFsIGhpc3Rvcnkgb2Ygbmljb3RpbmUgZGVwZW5kZW5jZQoKCuKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKVG9tIEJyb3duLCBNRApSaXZlcnNpZGUgSG9zcGl0YWwsIERlcGFydG1lbnQgb2YgRW1lcmdlbmN5IE1lZGljaW5lCk5QSTogMzQ1Njc4OTAxMgpFbGVjdHJvbmljYWxseSBzaWduZWQ6IDEyLzE1LzIwMjUgIDE4OjUyIEVTVAo=",
+              "title": "Discharge summary"
+            },
+            "format": {
+              "system": "http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
+              "code": "urn:ihe:iti:xds:2017:mimeTypeSufficient",
+              "display": "mimeType Sufficient"
+            }
+          }
+        ],
+        "context": {
+          "encounter": [
+            {
+              "reference": "urn:uuid:f49251fe-299f-52db-9333-c9beb844a754"
+            }
+          ],
+          "period": {
+            "start": "2025-12-15T18:45:00-05:00",
+            "end": "2025-12-15T18:45:00-05:00"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:39b09497-cfbf-51ff-bcba-692a0de05304",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "neuro-followup-note",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-documentreference"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Consult note, 2026-02-23</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://bayside.health/document-id",
+            "value": "DOC-NEURO-FOLLOWUP-NOTE"
+          }
+        ],
+        "status": "current",
+        "docStatus": "final",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Consult note"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category",
+                "code": "clinical-note",
+                "display": "Clinical Note"
+              }
+            ],
+            "text": "Clinical Note"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "date": "2026-02-23T10:45:00-05:00",
+        "author": [
+          {
+            "reference": "urn:uuid:a02fd159-c1ad-547c-86f2-956ca47a75fa",
+            "display": "Dr. Lisa Chen"
+          }
+        ],
+        "custodian": {
+          "reference": "urn:uuid:f9af3aaa-e1ca-5897-aafd-ed8a6f6f5607",
+          "display": "Bayside Health"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "en-US",
+              "data": "4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCiAgIEJBWVNJREUgSEVBTFRIICB8ICBERVBBUlRNRU5UIE9GIE5FVVJPTE9HWQogICBPdXRwYXRpZW50IEZvbGxvdy11cCBOb3RlCuKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkAoKUGF0aWVudDogICAgICAgICAgIExFRSwgSkFNRVMKTVJOOiAgICAgICAgICAgICAgIEJBWS0wMDQyLUxFRQpET0I6ICAgICAgICAgICAgICAgMTEvMTUvMTk1OCAgKDY3IHksIE0pCkVuY291bnRlciBEYXRlOiAgICAwMi8yMy8yMDI2ICAxMDowMCBFU1QKRW5jb3VudGVyIElEOiAgICAgIEVOQy1ORVVSTy1GT0xMT1dVUApWaXNpdCBUeXBlOiAgICAgICAgT3V0cGF0aWVudCBGb2xsb3ctdXAsIEVzdGFibGlzaGVkIFBhdGllbnQKU2VydmljZTogICAgICAgICAgIE5ldXJvbG9neSDigJQgU3Ryb2tlIENsaW5pYwpBdHRlbmRpbmc6ICAgICAgICAgTGlzYSBDaGVuLCBNRApQQ1A6ICAgICAgICAgICAgICAgQW5uYSBLaW0sIE1EICAoQmF5c2lkZSBGYW1pbHkgTWVkaWNpbmUpCuKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkAoKClJFQVNPTiBGT1IgVklTSVQKUm91dGluZSA2LW1vbnRoIGZvbGxvdy11cCBmb3IgY2hyb25pYyBwb3N0LXN0cm9rZSBmYXRpZ3VlLApzdGF0dXMtcG9zdCBtaW5vciBpc2NoZW1pYyBzdHJva2UgKDIwMjQpLiBMYXN0IHNlZW4gaW4gY2xpbmljCjA4LzE5LzIwMjUuCgoKSU5URVJWQUwgSElTVE9SWQpNci4gSmFtZXMgTGVlIHJldHVybnMgZm9yIHJvdXRpbmUgbmV1cm9sb2d5IGZvbGxvdy11cC4gSGUgY29udGludWVzCnRvIGV4cGVyaWVuY2UgbWlsZC10by1tb2RlcmF0ZSBkYXl0aW1lIGZhdGlndWUsIG1vc3QgcHJvbWluZW50IGluCnRoZSBlYXJseSBhZnRlcm5vb24sIHBhcnRpYWxseSBjb250cm9sbGVkIHdpdGggc3RydWN0dXJlZCBwYWNpbmcKYW5kIGFmdGVybm9vbiByZXN0LiBIZSBlc3RpbWF0ZXMgaGlzIGZhdGlndWUgaXMgbW9kZXJhdGVseSBpbXByb3ZlZApzaW5jZSBoaXMgbGFzdCB2aXNpdCwgd2hpY2ggaGUgYXR0cmlidXRlcyB0byBjb25zaXN0ZW50IHBhcnRpY2lwYXRpb24KaW4gb3V0cGF0aWVudCBvY2N1cGF0aW9uYWwgdGhlcmFweSAodHdpY2Ugd2Vla2x5IHggNCBtb250aHMsCm9uZ29pbmcpLgoKSGUgZGVuaWVzIHJlY3VycmVudCB0cmFuc2llbnQgb3IgcGVyc2lzdGVudCBmb2NhbCBuZXVyb2xvZ2ljYWwKc3ltcHRvbXM6IG5vIG5ldyB3ZWFrbmVzcywgc2Vuc29yeSBjaGFuZ2VzLCB2aXNpb24gY2hhbmdlcywgc3BlZWNoCmRpc3R1cmJhbmNlLCBnYWl0IGRpc3R1cmJhbmNlLCBvciBzZWl6dXJlLWxpa2UgYWN0aXZpdHkuIE5vIG5ldwpoZWFkYWNoZXMuIE5vIGNvZ25pdGl2ZSBjb21wbGFpbnRzOyB0aGUgcGF0aWVudCBhbmQgaGlzIHNwb3VzZSBib3RoCnJlcG9ydCBubyBuZXcgbWVtb3J5IG9yIGV4ZWN1dGl2ZSBjb25jZXJucy4KClNsZWVwIGlzIGFkZXF1YXRlIGF0IDcgdG8gOCBob3VycyBuaWdodGx5IHdpdGggbW9ybmluZyByZWZyZXNobWVudC4KTW9vZCBpcyBzdGFibGU7IG5vIGRlcHJlc3NpdmUgc3ltcHRvbXMuIFBIUS0yIHRvZGF5OiAwLgoKT2Ygbm90ZSwgdGhlIHBhdGllbnQgcmVwb3J0cyBzaWduaWZpY2FudCBpbnRlcnZhbCBjaGFuZ2VzOgoKICAtIFRvYmFjY28gY2Vzc2F0aW9uOiBIZSBzdWNjZXNzZnVsbHkgcXVpdCBzbW9raW5nIGFwcHJveGltYXRlbHkKICAgIDMgbW9udGhzIGFnbyAoZWFybHkgTm92ZW1iZXIgMjAyNSkgYW5kIHJlbWFpbnMgdG9iYWNjby1mcmVlLgogICAgSGUgaGFzIGFuIGVzdGltYXRlZCAzMCBwYWNrLXllYXIgaGlzdG9yeSAoYXBwcm94aW1hdGVseSAxCiAgICBwYWNrIHBlciBkYXkgeCAzMCB5ZWFycyBwcmlvciB0byBjZXNzYXRpb24pLiBIZSBpcyB1c2luZyBubwogICAgbmljb3RpbmUgcmVwbGFjZW1lbnQgYXQgdGhpcyB0aW1lLgoKICAtIENhcmRpb2xvZ3kgY2FyZTogSGUgd2FzIGV2YWx1YXRlZCBieSBjYXJkaW9sb2d5IGluIE9jdG9iZXIKICAgIDIwMjUgZm9yIGV4ZXJ0aW9uYWwgY2hlc3QgcGFpbiBhbmQgdW5kZXJ3ZW50IGRpYWdub3N0aWMKICAgIGNhcmRpYWMgY2F0aGV0ZXJpemF0aW9uLiBIZSByZXBvcnRzIGJlaW5nIHN0YXJ0ZWQgb24gYSBuZXcKICAgICJoZWFydCBtZWRpY2F0aW9uIiBhdCB0aGF0IHRpbWUgYnV0IGlzIHVuY2VydGFpbiBvZiB0aGUKICAgIG5hbWUgKHBlciBjaGFydDogbWV0b3Byb2xvbCBzdWNjaW5hdGUgMjUgbWcgZGFpbHkpLgoKICAtIEZhbWlseSBoaXN0b3J5OiBPbiBkZXRhaWxlZCByZS1pbnRlcnZpZXcgdG9kYXksIHRoZSBwYXRpZW50CiAgICByZXBvcnRzIHRoYXQgaGlzIGZhdGhlciBzdWZmZXJlZCBhIG15b2NhcmRpYWwgaW5mYXJjdGlvbiBhdAogICAgYWdlIDUyIGFuZCBzdXJ2aXZlZDsgaGlzIGZhdGhlciBzdWJzZXF1ZW50bHkgZGllZCBvZiBhbgogICAgdW5yZWxhdGVkIGNhdXNlIGF0IGFnZSA3MS4gTm8gcHJpb3Igc3Ryb2tlcyBpbiBpbW1lZGlhdGUKICAgIGZhbWlseS4gTW90aGVyIGFuZCBvbmUgc2lzdGVyIGFyZSBhbGl2ZSB3aXRob3V0IGtub3duCiAgICBjYXJkaW92YXNjdWxhciBvciBuZXVyb2xvZ2ljYWwgZGlzZWFzZS4KCgpQQVNUIE1FRElDQUwgSElTVE9SWQotIE1pbm9yIGlzY2hlbWljIHN0cm9rZSAoMjAyNCk7IHByZXN1bWVkIHNtYWxsLXZlc3NlbCBldGlvbG9neQogIHBlciBwcmlvciBldmFsdWF0aW9uCi0gQ2hyb25pYyBwb3N0LXN0cm9rZSBmYXRpZ3VlCi0gSHlwZXJ0ZW5zaW9uCi0gVHlwZSAyIGRpYWJldGVzIG1lbGxpdHVzCi0gSHlwZXJsaXBpZGVtaWEKLSBDb3JvbmFyeSBhcnRlcnkgZGlzZWFzZSwgdHdvLXZlc3NlbCAoY2FyZGlvbG9neSwgMTAvMjAyNSkKCgpIT01FIE1FRElDQVRJT05TICAocmV2aWV3ZWQgYW5kIHJlY29uY2lsZWQpCi0gTGlzaW5vcHJpbCAxMCBtZyBQTyBkYWlseQotIEF0b3J2YXN0YXRpbiA0MCBtZyBQTyBkYWlseQotIE1ldGZvcm1pbiAxMDAwIG1nIFBPIEJJRAotIEFzcGlyaW4gODEgbWcgUE8gZGFpbHkKLSBNZXRvcHJvbG9sIHN1Y2NpbmF0ZSAyNSBtZyBQTyBkYWlseSAgKG5ldyBzaW5jZSBsYXN0IHZpc2l0KQoKCkFMTEVSR0lFUwpQZW5pY2lsbGluIOKAlCBjaGlsZGhvb2QgcmFzaCwgbG93LXNldmVyaXR5IHBlciBFRCBkb2N1bWVudGF0aW9uCjEyLzIwMjUuIE5vIG90aGVyIGtub3duIGRydWcgYWxsZXJnaWVzLgoKClNPQ0lBTCBISVNUT1JZCkxpdmVzIHdpdGggc3BvdXNlLiBJbmRlcGVuZGVudCBpbiBBRExzIGFuZCBJQURMcy4gVG9iYWNjbzogZm9ybWVyCnNtb2tlciwgcXVpdCB+MyBtb250aHMgYWdvLCAzMCBwYWNrLXllYXIgaGlzdG9yeS4gQWxjb2hvbDogcmFyZSwKPCAxIGRyaW5rIHBlciB3ZWVrLiBObyBpbGxpY2l0IHN1YnN0YW5jZXMuIERyaXZlcyB3aXRob3V0CnJlc3RyaWN0aW9uLgoKCkZBTUlMWSBISVNUT1JZCi0gRmF0aGVyOiBteW9jYXJkaWFsIGluZmFyY3Rpb24gYXQgYWdlIDUyIChzdXJ2aXZlZCk7IGRlY2Vhc2VkCiAgYWdlIDcxIG9mIHVucmVsYXRlZCBjYXVzZS4KLSBNb3RoZXI6IGFsaXZlLCBubyBrbm93biBjYXJkaW92YXNjdWxhciBvciBuZXVyb2xvZ2ljYWwgZGlzZWFzZS4KLSBTaXN0ZXI6IGFsaXZlLCBubyBrbm93biBzaWduaWZpY2FudCBtZWRpY2FsIGhpc3RvcnkuCi0gTm8gZmFtaWx5IGhpc3Rvcnkgb2Ygc3Ryb2tlLCBkZW1lbnRpYSwgb3Igc2VpenVyZSBkaXNvcmRlci4KCgpSRVZJRVcgT0YgU1lTVEVNUwpOZXVyb2xvZ2ljYWw6IEFzIHBlciBIUEk7IG5vIG5ldyBmb2NhbCBzeW1wdG9tcywgbm8gaGVhZGFjaGUsIG5vCiAgICAgICAgICAgICAgY29nbml0aXZlIGNvbXBsYWludHMsIG5vIHNlaXp1cmUgYWN0aXZpdHkuCkNvbnN0aXR1dGlvbmFsOiBGYXRpZ3VlIGFzIGRvY3VtZW50ZWQ7IG90aGVyd2lzZSB3ZWxsLgpBbGwgb3RoZXIgc3lzdGVtczogbmVnYXRpdmUgb24gMTAtc3lzdGVtIHJldmlldy4KCgpWSVRBTCBTSUdOUwpCUCAgICAxNjgvOTUgICAocmlnaHQgYXJtLCBzZWF0ZWQsIGFmdGVyIDUgbWluIHJlc3QpCiAgICAgIDE2NC85MyAgIChyZXBlYXQsIGxlZnQgYXJtKQpIUiAgICA3OCwgcmVndWxhcgpSUiAgICAxNApTcE8yICA5OCUgIG9uIHJvb20gYWlyClQgICAgIDM2LjcgQwpXdCAgICA4NCBrZyAgICAgSHQgIDE3NSBjbSAgICAgQk1JICAyNy40CgoKUEhZU0lDQUwgRVhBTUlOQVRJT04KR2VuZXJhbDogICAgICAgIFdlbGwtYXBwZWFyaW5nLCBpbiBubyBhY3V0ZSBkaXN0cmVzcy4KTWVudGFsIFN0YXR1czogIEFsZXJ0LCBvcmllbnRlZCB4My4gRmx1ZW50IHNwZWVjaCB3aXRob3V0IGFwaGFzaWEKICAgICAgICAgICAgICAgIG9yIGR5c2FydGhyaWEuIE1vQ0Egc2NvcmUgMjcvMzAgKHN0YWJsZSBmcm9tIHByaW9yOwogICAgICAgICAgICAgICAgbG9zdCBwb2ludHMgb24gZGVsYXllZCByZWNhbGwgYW5kIHNlcmlhbCBzdWJ0cmFjdGlvbikuCkNyYW5pYWwgTmVydmVzOiBJSS1YSUkgaW50YWN0LiBWaXN1YWwgZmllbGRzIGZ1bGwgdG8gY29uZnJvbnRhdGlvbi4KICAgICAgICAgICAgICAgIEVPTXMgaW50YWN0IHdpdGhvdXQgbnlzdGFnbXVzLiBGYWNpYWwgc2Vuc2F0aW9uCiAgICAgICAgICAgICAgICBhbmQgc3RyZW5ndGggc3ltbWV0cmljLiBUb25ndWUgbWlkbGluZS4KTW90b3I6ICAgICAgICAgIDUvNSBzdHJlbmd0aCB0aHJvdWdob3V0LCBiaWxhdGVyYWxseSBzeW1tZXRyaWMuIE5vCiAgICAgICAgICAgICAgICBwcm9uYXRvciBkcmlmdC4gTm8gdHJlbW9yIG9yIGFzdGVyaXhpcy4KU2Vuc29yeTogICAgICAgIEludGFjdCB0byBsaWdodCB0b3VjaCwgcGlucHJpY2ssIHZpYnJhdGlvbiwgYW5kCiAgICAgICAgICAgICAgICBwcm9wcmlvY2VwdGlvbiBpbiBhbGwgZm91ciBleHRyZW1pdGllcy4KUmVmbGV4ZXM6ICAgICAgIDIrIGFuZCBzeW1tZXRyaWMgYXQgYmljZXBzLCB0cmljZXBzLCBwYXRlbGxhZSwKICAgICAgICAgICAgICAgIEFjaGlsbGVzLiBQbGFudGFyIHJlc3BvbnNlcyBkb3duZ29pbmcgYmlsYXRlcmFsbHkuCkNvb3JkaW5hdGlvbjogICBGaW5nZXItdG8tbm9zZSBhbmQgaGVlbC10by1zaGluIGludGFjdC4KICAgICAgICAgICAgICAgIFJhcGlkIGFsdGVybmF0aW5nIG1vdmVtZW50cyBub3JtYWwuCkdhaXQ6ICAgICAgICAgICBOb3JtYWwtYmFzZWQsIHN0ZWFkeS4gVGFuZGVtIGdhaXQgaW50YWN0LgogICAgICAgICAgICAgICAgUm9tYmVyZyBuZWdhdGl2ZS4KCgpEQVRBIFJFVklFVwpNb3N0IHJlY2VudCBicmFpbiBNUkkgKDA2LzIwMjQsIHBvc3Qtc3Ryb2tlKTogU21hbGwgY2hyb25pYwogIGxhY3VuYXIgaW5mYXJjdCBpbiB0aGUgcmlnaHQgY29yb25hIHJhZGlhdGEuIE5vIGFjdXRlIGZpbmRpbmdzLgogIE5vIG1pY3JvYmxlZWRzLiBNaWxkIGNocm9uaWMgc21hbGwtdmVzc2VsIGlzY2hlbWljIGNoYW5nZXMuCk1vc3QgcmVjZW50IGxhYnMgKEJheXNpZGUsIDA5LzIwMjUpOiBBMWMgNy4yJSwgTERMIDg4LCBDciAxLjA1LAogIGVHRlIgNzgsIEsgNC4xLgpFQ0cgKGNhcmRpb2xvZ3ksIDEwLzIwMjUpOiBOU1Igd2l0aCBub24tc3BlY2lmaWMgbGF0ZXJhbCBULXdhdmUKICBmbGF0dGVuaW5nOyBubyBhY3V0ZSBjaGFuZ2VzLgoKCkFTU0VTU01FTlQgQU5EIFBMQU4KCjEuIENocm9uaWMgcG9zdC1zdHJva2UgZmF0aWd1ZSDigJQgcGFydGlhbGx5IGNvbnRyb2xsZWQsIG1vZGVyYXRlbHkKICAgaW1wcm92ZWQgb24gY3VycmVudCBtYW5hZ2VtZW50LgogICAtIENvbnRpbnVlIG91dHBhdGllbnQgb2NjdXBhdGlvbmFsIHRoZXJhcHkgcHJvZ3JhbTsgcmVhc3Nlc3MKICAgICBmdW5jdGlvbmFsIHN0YXR1cyBhdCA2IG1vbnRocy4KICAgLSBSZWluZm9yY2Ugc2xlZXAgaHlnaWVuZSBhbmQgc3RydWN0dXJlZCBhY3Rpdml0eSBwYWNpbmcuCiAgIC0gTm8gbWVkaWNhdGlvbiBjaGFuZ2UgZm9yIGZhdGlndWUgYXQgdGhpcyB0aW1lLgoKMi4gSHlwZXJ0ZW5zaW9uIOKAlCB1bmNvbnRyb2xsZWQgaW4gY2xpbmljIHRvZGF5ICgxNjgvOTUsIGNvbmZpcm1lZAogICB3aXRoIHJlcGVhdCBtZWFzdXJlbWVudCAxNjQvOTMpLiBBYm92ZSBnb2FsIG9mIDwgMTMwLzgwIGZvcgogICBzZWNvbmRhcnkgc3Ryb2tlIHByZXZlbnRpb24uCiAgIC0gSW5jcmVhc2UgbGlzaW5vcHJpbCBmcm9tIDEwIG1nIHRvIDIwIG1nIFBPIG9uY2UgZGFpbHksIGluCiAgICAgY29vcmRpbmF0aW9uIHdpdGggUENQIGZvciBvbmdvaW5nIHRpdHJhdGlvbi4KICAgLSBSZWNvbW1lbmQgaG9tZSBCUCBtb25pdG9yaW5nIHdpdGggbG9nIHJldmlldyBhdCBQQ1AKICAgICBmb2xsb3ctdXAuCiAgIC0gUENQIGZvbGxvdy11cCB3aXRoaW4gNCB3ZWVrcyBmb3IgQlAgcmVjaGVjayBhbmQgZnVydGhlcgogICAgIHRpdHJhdGlvbiBpZiBuZWVkZWQ7IHNlY29uZC1saW5lIGFnZW50IChjYWxjaXVtIGNoYW5uZWwKICAgICBibG9ja2VyIG9yIHRoaWF6aWRlKSBzaG91bGQgYmUgY29uc2lkZXJlZCBpZiBub3QgYXQgZ29hbC4KCjMuIFRvYmFjY28gY2Vzc2F0aW9uIOKAlCBzdXN0YWluZWQgMyBtb250aHMsIDMwIHBhY2steWVhciBoaXN0b3J5LgogICAtIFJldmlld2VkIGhlYWx0aCBiZW5lZml0cyBvZiBjb250aW51ZWQgY2Vzc2F0aW9uLiBQb3NpdGl2ZQogICAgIHJlaW5mb3JjZW1lbnQgcHJvdmlkZWQuIEVuY291cmFnZWQgb25nb2luZyBhdm9pZGFuY2UgYW5kCiAgICAgb2ZmZXJlZCByZWZlcnJhbCB0byBiZWhhdmlvcmFsIGNlc3NhdGlvbiBzdXBwb3J0IGlmIGFueQogICAgIHJldHVybiBvZiBjcmF2aW5ncy4KCjQuIEZhbWlseSBoaXN0b3J5IG9mIHByZW1hdHVyZSBjb3JvbmFyeSBhcnRlcnkgZGlzZWFzZSDigJQKICAgZmF0aGVyIHdpdGggTUkgYXQgYWdlIDUyLgogICAtIFNpZ25pZmljYW50IGZvciByaXNrIHN0cmF0aWZpY2F0aW9uLiBDb29yZGluYXRlIHdpdGgKICAgICBjYXJkaW9sb2d5IGFuZCBQQ1AgZm9yIGFueSBpbXBsaWNhdGlvbnMgcmVnYXJkaW5nIGxpcGlkCiAgICAgdGFyZ2V0cyBhbmQgcHJpbWFyeSBwcmV2ZW50aW9uIG9mIGFkZGl0aW9uYWwgZXZlbnRzLgoKNS4gU2Vjb25kYXJ5IHN0cm9rZSBwcmV2ZW50aW9uLgogICAtIENvbnRpbnVlIGFzcGlyaW4gODEgbWcgZGFpbHkgYW5kIGhpZ2gtaW50ZW5zaXR5IHN0YXRpbgogICAgIChhdG9ydmFzdGF0aW4gNDAgbWcgZGFpbHkpLgogICAtIEJQIGNvbnRyb2wgYXMgYWJvdmUuCiAgIC0gQTFjIHJlbWFpbnMgbmVhciBnb2FsIGF0IDcuMiU7IGRlZmVyIGRpYWJldGVzCiAgICAgaW50ZW5zaWZpY2F0aW9uIHRvIFBDUCBwZXIgY3VycmVudCBBREEgZ3VpZGFuY2UgZm9yCiAgICAgQVNDVkQtcG9zaXRpdmUgcGF0aWVudHMuCgo2LiBDb3JvbmFyeSBhcnRlcnkgZGlzZWFzZSDigJQgY28tbWFuYWdlZCB3aXRoIGNhcmRpb2xvZ3kuCiAgIC0gQ29udGludWUgbWV0b3Byb2xvbCBzdWNjaW5hdGUgYXMgcHJlc2NyaWJlZCBieSBjYXJkaW9sb2d5LgogICAtIE5vIG5ldXJvbG9neS1zcGVjaWZpYyBjaGFuZ2VzLgoKCkZPTExPVy1VUApSZXR1cm4gdG8gbmV1cm9sb2d5IGluIDYgbW9udGhzIGZvciByb3V0aW5lIHBvc3Qtc3Ryb2tlIHN1cnZlaWxsYW5jZS4KU29vbmVyIGZvciBhbnkgbmV3IG5ldXJvbG9naWNhbCBzeW1wdG9tcywgcmVjdXJyZW50IHN0cm9rZS1saWtlCmV2ZW50cywgb3Igd29yc2VuaW5nIG9mIGZhdGlndWUuIFBhdGllbnQgaXMgYXdhcmUgb2Ygc3Ryb2tlIHdhcm5pbmcKc2lnbnMgKEZBU1QpIGFuZCB3YXMgcmVtaW5kZWQgdG8gY2FsbCA5MTEgZm9yIGFueSBhY3V0ZSBmb2NhbApkZWZpY2l0LgoKClBBVElFTlQgRURVQ0FUSU9OClJldmlld2VkIEJQIGdvYWwgb2YgPCAxMzAvODAgZm9yIHNlY29uZGFyeSBzdHJva2UgcHJldmVudGlvbiwKcmF0aW9uYWxlIGZvciBsaXNpbm9wcmlsIGRvc2UgaW5jcmVhc2UsIGltcG9ydGFuY2Ugb2YgbWVkaWNhdGlvbgphZGhlcmVuY2UgYW5kIGhvbWUgQlAgbW9uaXRvcmluZywgYW5kIGNvbnRpbnVlZCB0b2JhY2NvIGFic3RpbmVuY2UuCkRpc2N1c3NlZCBmYW1pbHkgaGlzdG9yeSBvZiBwcmVtYXR1cmUgQ0FEIGFuZCBpdHMgcmVsZXZhbmNlIHRvCm9uZ29pbmcgY2FyZGlvdmFzY3VsYXIgcmlzayBtYW5hZ2VtZW50LiBQYXRpZW50IHZlcmJhbGl6ZWQKdW5kZXJzdGFuZGluZyBhbmQgYWdyZWVtZW50IHdpdGggdGhlIHBsYW4uIFNwb3VzZSBwcmVzZW50IGFuZAplbmdhZ2VkIHRocm91Z2hvdXQuCgoK4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSACgpMaXNhIENoZW4sIE1ECkJheXNpZGUgSGVhbHRoIE5ldXJvbG9neSDigJQgU3Ryb2tlIENsaW5pYwpOUEk6IDQ1Njc4OTAxMjMKRWxlY3Ryb25pY2FsbHkgc2lnbmVkOiAwMi8yMy8yMDI2ICAxMDo1MSBFU1QK",
+              "title": "Consult note"
+            },
+            "format": {
+              "system": "http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
+              "code": "urn:ihe:iti:xds:2017:mimeTypeSufficient",
+              "display": "mimeType Sufficient"
+            }
+          }
+        ],
+        "context": {
+          "encounter": [
+            {
+              "reference": "urn:uuid:e514979c-4933-59db-9a9e-4477efaadbf1"
+            }
+          ],
+          "period": {
+            "start": "2026-02-23T10:45:00-05:00",
+            "end": "2026-02-23T10:45:00-05:00"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      }
+    }
+  ]
+}
