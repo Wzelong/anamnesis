@@ -1,0 +1,1 @@
+"""FHIR Provenance resource construction."""

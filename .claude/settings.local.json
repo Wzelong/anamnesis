@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/zewang/.claude/**)",
+      "Read(//c/Users/zewang/.claude/plugins/**)",
+      "Bash(xargs grep *)"
+    ]
+  }
+}
