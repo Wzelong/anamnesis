@@ -32,3 +32,8 @@ mcp._mcp_server.get_capabilities = _patched_get_capabilities
 mcp.tool(name="WhoIsPatient", description="Returns identifying info for the current patient.")(
     tools.who_is_patient
 )
+
+mcp.tool(
+    name="GetPatientContext",
+    description="Summary of the patient's existing FHIR record: counts of conditions, meds, allergies, observations, family history, procedures, encounters, and documents.",
+)(tools.get_patient_context)
