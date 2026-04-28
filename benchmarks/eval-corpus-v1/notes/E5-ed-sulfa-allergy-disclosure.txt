@@ -1,0 +1,122 @@
+GREENVALE COMMUNITY HOSPITAL
+Emergency Department - Encounter Note
+================================================================
+
+Patient: Malia Kahananui                   MRN: GVC-9918-MK
+DOB: 1986-09-05                            Age: 39
+Sex: Female                                Race: Native Hawaiian or Other Pacific Islander
+Ethnicity: Not Hispanic or Latino
+Arrival: 2026-03-22 10:45                  Discharge: 2026-03-22 14:10
+ESI: 4                                     Disposition: Home
+Attending: Samir Bhattacharya, MD          Service: Emergency Medicine
+
+================================================================
+
+CHIEF COMPLAINT
+Dysuria and urinary frequency x 2 days.
+
+HISTORY OF PRESENT ILLNESS
+Ms. Kahananui is a 39-year-old otherwise healthy woman who
+presents with 2 days of dysuria, urinary frequency, and
+suprapubic discomfort. She has had approximately 4 episodes of
+urgency per hour today, with burning on urination and a sense of
+incomplete emptying. No fever, flank pain, nausea, vomiting, or
+hematuria. She has had episodic uncomplicated UTIs in the past
+(~1-2 per year), most recently 14 months ago, all treated
+successfully with a short antibiotic course.
+
+No vaginal discharge or pruritus. She is sexually active with a
+single monogamous partner. LMP approximately 2 weeks ago, cycles
+regular. She is not currently pregnant per her recollection.
+
+PAST MEDICAL HISTORY
+- Recurrent uncomplicated urinary tract infection
+- Iron deficiency anemia (remote, resolved)
+
+SURGICAL HISTORY
+- None.
+
+HOME MEDICATIONS
+- Oral contraceptive (drospirenone/ethinyl estradiol)
+- Multivitamin with iron
+- Cranberry supplement (OTC)
+
+ALLERGIES
+During medication reconciliation today the patient reported a
+previously undocumented drug allergy. She stated: "I can't take
+Bactrim - I had a bad reaction a few years ago." On directed
+history, approximately 3 years ago (2023) she was prescribed
+sulfamethoxazole/trimethoprim for a sinus infection. Within 24
+hours of the second dose she developed widespread hives over her
+trunk and arms and facial swelling around her lips and eyes.
+She was seen in an urgent care clinic, received oral
+diphenhydramine and a tapered course of prednisone, and the
+reaction resolved over several days. She did not require
+epinephrine, intubation, or hospital admission. She has strictly
+avoided sulfa drugs since and has been asked to inform all future
+providers. She tolerated a non-sulfa antibiotic (nitrofurantoin)
+for an uncomplicated UTI last year without issue.
+
+This allergy was not present in her chart and has been added
+today.
+
+SOCIAL HISTORY
+Works as a public school teacher. Lives with partner. Never
+smoker. Occasional alcohol. No recreational drug use.
+
+FAMILY HISTORY
+Non-contributory.
+
+REVIEW OF SYSTEMS
+GU: as per HPI.
+Constitutional: no fever, no chills.
+All other systems reviewed and negative.
+
+VITAL SIGNS
+T 37.0 C   HR 78   BP 120/70   RR 14   SpO2 99% RA
+
+PHYSICAL EXAMINATION
+General: well-appearing, no distress.
+Abdomen: soft, mild suprapubic tenderness without rebound or
+guarding. No costovertebral angle tenderness bilaterally.
+Pelvic exam deferred; patient declined.
+
+DATA REVIEW
+Urinalysis (point-of-care): leukocyte esterase 2+, nitrites
+positive, WBC too numerous to count per high-power field, no
+squamous cells, trace blood.
+Urine culture sent.
+Urine pregnancy test negative.
+
+ASSESSMENT AND PLAN
+
+1. Uncomplicated urinary tract infection. Clinical picture and
+urinalysis consistent with acute cystitis in a non-pregnant,
+non-diabetic, immunocompetent adult female.
+   - Given documented sulfa drug allergy with prior angioedema
+     and generalized urticaria, sulfamethoxazole/trimethoprim is
+     contraindicated.
+   - Prescribed nitrofurantoin monohydrate/macrocrystals 100 mg
+     PO BID x 5 days.
+   - Hydration and symptomatic care counseled.
+   - Return if fever, flank pain, nausea/vomiting, or worsening
+     symptoms despite therapy.
+
+2. Drug allergy: sulfamethoxazole/trimethoprim ("sulfa").
+   - Added to chart as high-criticality allergy given history
+     of urticaria and angioedema after adult-onset exposure.
+   - Reviewed cross-sensitivity considerations with the patient,
+     particularly related to other sulfonamide-containing
+     antibiotics.
+   - Patient-held medical alert card recommended.
+
+FOLLOW-UP
+Primary care within 1 week; sooner for any worsening or systemic
+symptoms. Will call with culture results.
+
+================================================================
+Electronically signed: Samir Bhattacharya, MD
+Credentials: MD, FACEP
+NPI: 1987654302
+Signed: 2026-03-22 14:14
+================================================================

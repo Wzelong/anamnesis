@@ -1,0 +1,73 @@
+{
+  "note_id": "N3",
+  "filename": "N3-neurology-first-seizure-workup.txt",
+  "specialty": "neurology",
+  "tier": "messy",
+  "patient_pseudo_demographics": {
+    "age": 23,
+    "sex": "male",
+    "race": "black-or-african-american",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "N3-F1",
+      "category": "condition",
+      "verbatim_span": "First unprovoked generalized tonic-clonic seizure",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "91175000", "display": "Seizure (finding)"},
+        {"system": "ICD-10", "code": "R56.9", "display": "Unspecified convulsions"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "A/P",
+      "notes": "Single unprovoked seizure; does NOT meet criteria for epilepsy yet."
+    },
+    {
+      "id": "N3-F2",
+      "category": "procedure",
+      "verbatim_span": "CT head without contrast (2026-03-26, PCP ordered):\nno acute findings",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "303653007", "display": "Computed tomography of head (procedure)"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "performedDate": "2026-03-26"
+      },
+      "section": "Data",
+      "notes": "Completed CT head prior to neurology visit."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "N3-N1",
+      "trap_type": "hypothetical",
+      "verbatim_span": "Ordered outpatient routine EEG (to be scheduled next 2 wks)",
+      "should_not_produce": "Procedure: EEG (completed)",
+      "rationale": "EEG is ordered but not yet completed; should not generate a completed Procedure resource."
+    },
+    {
+      "id": "N3-N2",
+      "trap_type": "hypothetical",
+      "verbatim_span": "Ordered brain MRI with seizure protocol (gadolinium,\n     thin-slice through hippocampi) - expected within 3 weeks",
+      "should_not_produce": "Procedure: Brain MRI (completed)",
+      "rationale": "MRI ordered, not yet performed."
+    },
+    {
+      "id": "N3-N3",
+      "trap_type": "negation",
+      "verbatim_span": "does not meet criteria for epilepsy at this time",
+      "should_not_produce": "Condition: Epilepsy",
+      "rationale": "Explicit clinician statement that the single seizure does not constitute an epilepsy diagnosis."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 7,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

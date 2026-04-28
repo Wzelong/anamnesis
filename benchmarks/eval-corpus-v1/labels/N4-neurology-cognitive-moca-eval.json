@@ -1,0 +1,80 @@
+{
+  "note_id": "N4",
+  "filename": "N4-neurology-cognitive-moca-eval.txt",
+  "specialty": "neurology",
+  "tier": "messy",
+  "patient_pseudo_demographics": {
+    "age": 78,
+    "sex": "female",
+    "race": "white",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "N4-F1",
+      "category": "condition",
+      "verbatim_span": "Mild cognitive impairment, most consistent with amnestic\nsubtype",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "386805003", "display": "Mild cognitive impairment (disorder)"},
+        {"system": "ICD-10", "code": "G31.84", "display": "Mild cognitive impairment, so stated"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "A/P",
+      "notes": "Working diagnosis; the note does NOT commit to Alzheimer's yet."
+    },
+    {
+      "id": "N4-F2",
+      "category": "observation",
+      "verbatim_span": "Score 21/30",
+      "expected_codes": [
+        {"system": "LOINC", "code": "72133-2", "display": "Montreal Cognitive Assessment [MoCA]"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "survey",
+        "value": "21/30"
+      },
+      "section": "Cognitive screening",
+      "notes": "MoCA total score."
+    },
+    {
+      "id": "N4-F3",
+      "category": "family_member_history",
+      "verbatim_span": "mother with \"dementia\" in her late 80s",
+      "expected_codes": [],
+      "expected_attributes": {
+        "relationship": "mother",
+        "conditionCode": "dementia",
+        "onsetAge": "80s"
+      },
+      "section": "FHx",
+      "notes": "Family history entry; relationship and condition extractable."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "N4-N1",
+      "trap_type": "negation",
+      "verbatim_span": "No hx of head injury, no seizures, no\nhallucinations",
+      "should_not_produce": "Condition: TBI / seizures / hallucinations",
+      "rationale": "Negated histories in ROS."
+    },
+    {
+      "id": "N4-N2",
+      "trap_type": "hypothetical",
+      "verbatim_span": "raising concern for\nearly Alzheimer's-disease-related pathology",
+      "should_not_produce": "Condition: Alzheimer disease (confirmed)",
+      "rationale": "Clinician raises concern/differential; not a confirmed diagnosis at this visit."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 9,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

@@ -1,0 +1,158 @@
+CEDAR MESA MEDICAL CENTER
+Cardiology Clinic - Cardiovascular Risk Consultation
+================================================================
+
+Patient: Arjun Balasubramanian             MRN: CMM-5527-AB
+DOB: 1980-08-30                            Age: 45
+Sex: Male                                  Race: Asian
+Ethnicity: Not Hispanic or Latino
+Encounter Date: 2026-02-24                 Visit Type: Outpatient, consultation
+Provider: Elena Okafor, MD                 Service: Cardiology - Preventive
+
+================================================================
+
+CHIEF COMPLAINT
+Preventive cardiology consultation, evaluation of cardiovascular
+risk in the setting of a strong family history of premature
+coronary disease.
+
+HISTORY OF PRESENT ILLNESS
+Mr. Balasubramanian is a 45-year-old man referred by his primary
+care physician for formal cardiovascular risk stratification
+following the recent sudden death of his older brother at age
+49. He is currently asymptomatic - no chest pain, no dyspnea on
+exertion, no palpitations, no syncope or near-syncope. He walks
+briskly for 40 minutes five days per week and plays recreational
+cricket on weekends without symptoms. He is highly motivated to
+reduce his cardiovascular risk and understand his personal
+prognosis.
+
+He has known hypertension, diagnosed incidentally at a primary
+care visit in 2021, treated with a single agent with reasonable
+home blood pressure control (average home BP readings
+approximately 128/80). He has also been found to have
+hyperlipidemia on screening panels since 2022, treated with
+dietary counseling initially and, over the last six months, a
+moderate-intensity statin.
+
+PAST MEDICAL HISTORY
+- Essential hypertension, diagnosed 2021
+- Hyperlipidemia, diagnosed 2022
+- Mild obstructive sleep apnea (AHI 8), on CPAP since 2024
+- No history of diabetes, no prior ASCVD event.
+
+PAST SURGICAL HISTORY
+- Laparoscopic inguinal hernia repair, 2018
+
+HOME MEDICATIONS
+- Amlodipine 5 mg PO daily
+- Rosuvastatin 10 mg PO daily
+- CPAP nightly
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Married with two children. Works as a mechanical engineer.
+Never smoker. Alcohol: 1-2 drinks per week with meals. No
+recreational drug use. Vegetarian diet, moderate carbohydrate
+intake.
+
+FAMILY HISTORY (detailed, reason for referral)
+- Father, alive age 74, with coronary artery disease. Diagnosed
+  at age 58 during a workup for exertional chest pain; underwent
+  percutaneous coronary intervention with stent placement to the
+  mid-LAD that year. Hypertension since age 50. No subsequent
+  cardiac events.
+- Brother, deceased age 49 (February 2026), sudden cardiac death
+  while running. He had known hypertension and hyperlipidemia; a
+  pre-death treadmill stress test approximately six months before
+  his death had been reported as non-diagnostic. Autopsy
+  preliminarily attributed the death to a fatal arrhythmia in
+  the setting of underlying coronary atherosclerosis.
+- Maternal grandfather, deceased age 62, myocardial infarction.
+  He was a long-standing smoker and had type 2 diabetes. He
+  suffered a fatal MI at home.
+- Paternal uncle, alive age 70, with a history of coronary
+  artery bypass grafting at age 60 for three-vessel disease.
+- Mother, alive age 71, with hypothyroidism and osteoporosis;
+  no known cardiovascular disease.
+- One sister, alive age 42, with no known cardiovascular
+  disease; she had lipid testing after their brother's death
+  which was within normal limits.
+
+REVIEW OF SYSTEMS
+Constitutional: no fatigue, no unintentional weight change.
+Cardiovascular: no chest pain, no exertional dyspnea, no
+orthopnea, no syncope or pre-syncope.
+All other systems reviewed and negative.
+
+VITAL SIGNS
+BP 126/78 (two confirmatory readings)   HR 66   RR 14
+Temp 98.2 F   SpO2 98% RA
+Weight 76 kg   BMI 26.1
+
+PHYSICAL EXAMINATION
+General: well-appearing, in no distress.
+HEENT: no xanthelasma, no carotid bruits.
+Cardiac: regular rate and rhythm, normal S1/S2, no murmurs or
+gallops. PMI non-displaced.
+Respiratory: clear to auscultation bilaterally.
+Abdomen: soft, no bruits.
+Extremities: no edema, 2+ distal pulses, no tendinous xanthomas.
+Skin: no xanthomas.
+
+DATA REVIEW
+Lipid panel (2026-02-10): total cholesterol 202, LDL 112 (on
+rosuvastatin 10 mg), HDL 44, triglycerides 198, non-HDL
+cholesterol 158.
+Lp(a) (2026-02-10): 142 nmol/L (elevated).
+ApoB (2026-02-10): 98 mg/dL.
+HbA1c (2026-02-10): 5.7%.
+TSH (2026-02-10): 2.1.
+Coronary calcium score (2026-02-19): 52 (50th-75th percentile
+for his age).
+ECG (today in office): normal sinus rhythm, rate 64, no ST/T
+abnormalities, no Q waves.
+
+ASSESSMENT AND PLAN
+
+1. Essential hypertension, controlled on single agent.
+   - Continue amlodipine 5 mg PO daily. Reinforce DASH-style
+     dietary sodium moderation. Home BP log reviewed.
+
+2. Hyperlipidemia with elevated Lp(a) and a heavy family history
+of premature coronary events. LDL remains above target for a
+high-risk primary prevention patient.
+   - Intensify statin to rosuvastatin 20 mg PO daily.
+   - Discuss ezetimibe add-on if LDL remains > 70 mg/dL at
+     recheck.
+   - Elevated Lp(a) is a non-modifiable risk factor. Counseled
+     on cumulative lifetime risk and the additional weight this
+     places on optimizing all other modifiable factors.
+
+3. Strong family history of premature coronary artery disease
+and sudden cardiac death. The combination of the brother's SCD
+and the paternal family's coronary disease supports aggressive
+primary prevention.
+   - Discussed screening considerations with the patient's
+     sister (advised she seek her own evaluation).
+   - Patient reassured that his current coronary calcium score
+     and clinical status do not indicate acute disease; however,
+     the family history meaningfully increases his lifetime
+     risk.
+
+4. Obstructive sleep apnea, treated with CPAP. Continue.
+
+FOLLOW-UP
+Return in 3 months after statin escalation to recheck lipid
+panel and ALT. Earlier return for any new chest pain, dyspnea,
+palpitations, or syncope. Patient educated on warning symptoms
+in detail given his family history.
+
+================================================================
+Electronically signed: Elena Okafor, MD
+Credentials: MD, FACC
+NPI: 1234509817
+Signed: 2026-02-24 14:02
+================================================================

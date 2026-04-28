@@ -1,0 +1,126 @@
+PORT HALSTON HEALTH SYSTEM
+Neurology Clinic - Headache Follow-up
+================================================================
+
+Patient: Hana Sato                          MRN: PHH-5812-HS
+DOB: 1998-11-04                             Age: 27
+Sex: Female                                 Race: Asian
+Ethnicity: Not Hispanic or Latino
+Encounter Date: 2026-04-02                  Visit Type: Outpatient, follow-up
+Provider: Ingrid Lehmann, MD                Service: Neurology - Headache
+
+================================================================
+
+CHIEF COMPLAINT
+Four-month follow-up on chronic migraine, reviewing response to
+prophylactic therapy.
+
+HISTORY OF PRESENT ILLNESS
+Ms. Sato is a 27-year-old software engineer with a longstanding
+history of migraine without aura, initially diagnosed in her late
+teens, who was started on prophylactic topiramate at her last
+visit (2025-12-04) after worsening headache frequency over the
+prior year. At that visit she reported 12-14 headache days per
+month with approximately 6 migraines of disabling severity. She
+was started on topiramate 25 mg PO at bedtime with a planned
+titration to 50 mg PO BID over 6 weeks.
+
+She returns today having successfully titrated to 50 mg PO BID
+by mid-February. Over the past 8 weeks she estimates approximately
+5 headache days per month, of which 2 were disabling migraines
+requiring abortive therapy (sumatriptan 50 mg PO, taken at home
+with good effect). She has tolerated topiramate reasonably well,
+with mild paresthesias in the fingertips that have diminished
+over time, a decrease in appetite (she has lost 3 kg), and
+transient word-finding difficulty which she finds manageable at
+work. She denies visual changes, kidney stones, or mood changes.
+
+She uses a headache diary on her phone and reviewed the logs with
+me today. Her known triggers remain stress, disrupted sleep, and
+skipped meals; she has been more consistent with sleep and meals
+over the past 2 months.
+
+PAST MEDICAL HISTORY
+- Migraine without aura, chronic, diagnosed 2017
+- Iron deficiency anemia (2022, resolved with supplementation)
+- Acne vulgaris, mild
+
+PAST SURGICAL HISTORY
+- Tonsillectomy, age 8
+
+HOME MEDICATIONS
+- Topiramate 50 mg PO BID (prophylaxis)
+- Sumatriptan 50 mg PO PRN for acute migraine (max 2 doses in
+  24 hours, no more than 10 days per month)
+- Ferrous sulfate 325 mg PO daily (maintenance)
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Lives with partner. Works from home as a software engineer.
+Non-smoker. Alcohol: rare social use. No recreational drug use.
+Exercises 3x/week (yoga).
+
+FAMILY HISTORY
+Mother with migraine. Father healthy. One younger sister, healthy.
+
+REVIEW OF SYSTEMS
+Neurologic: as per HPI, intermittent fingertip paresthesias.
+Psych: no depression, no anxiety.
+All other systems reviewed and negative.
+
+VITAL SIGNS
+BP 112/68   HR 72   RR 14   Temp 98.0 F   SpO2 99% RA
+Weight 58.1 kg   BMI 21.2
+
+PHYSICAL EXAMINATION
+General: alert, no distress.
+Cranial nerves II-XII intact including fundoscopy (discs sharp,
+no papilledema).
+Motor: 5/5 throughout, normal tone.
+Sensory: symmetric to light touch and pinprick.
+Reflexes: 2+ symmetric, plantars downgoing.
+Coordination: finger-nose-finger and heel-knee-shin normal.
+Gait: steady with normal base and arm swing.
+
+DATA REVIEW
+Prior brain MRI (2024-06-12): unremarkable, no demyelinating
+lesions, no mass, no chronic small vessel disease.
+Headache diary reviewed today.
+
+ASSESSMENT AND PLAN
+
+1. Chronic migraine without aura, improved on topiramate at 100 mg
+total daily dose. Monthly migraine days decreased from ~14 to ~5,
+disabling migraines from ~6 to ~2, consistent with clinically
+meaningful response.
+   - Continue topiramate 50 mg PO BID.
+   - Continue sumatriptan PRN for acute migraine with current
+     medication-overuse limits reviewed.
+   - Reinforced lifestyle counseling: sleep consistency, meal
+     timing, hydration, caffeine moderation.
+   - Discussed CGRP monoclonal antibody options (e.g., erenumab)
+     as a future step if response plateaus or tolerability
+     worsens.
+
+2. Topiramate tolerability.
+   - Paresthesias mild and improving; continue to monitor.
+   - Weight change noted; discussed ensuring adequate caloric
+     intake. Will recheck weight next visit.
+
+3. Iron deficiency anemia, resolved.
+   - Continue maintenance ferrous sulfate; last ferritin at goal.
+
+FOLLOW-UP
+Return to clinic in 4 months. Headache diary to continue. Patient
+to contact clinic sooner for: new focal neurologic symptoms,
+escalation of migraine frequency, medication intolerance, or
+concern for medication-overuse headache.
+
+================================================================
+Electronically signed: Ingrid Lehmann, MD
+Credentials: MD, FAAN
+NPI: 1765432903
+Signed: 2026-04-02 11:18
+================================================================

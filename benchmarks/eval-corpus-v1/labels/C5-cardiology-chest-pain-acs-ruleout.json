@@ -1,0 +1,110 @@
+{
+  "note_id": "C5",
+  "filename": "C5-cardiology-chest-pain-acs-ruleout.txt",
+  "specialty": "cardiology",
+  "tier": "trap",
+  "patient_pseudo_demographics": {
+    "age": 52,
+    "sex": "female",
+    "race": "other",
+    "ethnicity": "hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "C5-F1",
+      "category": "condition",
+      "verbatim_span": "Chest pain, unspecified - working diagnosis of non-cardiac\nchest pain",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "29857009", "display": "Chest pain (finding)"},
+        {"system": "ICD-10", "code": "R07.9", "display": "Chest pain, unspecified"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Working dx after negative ACS workup; R07.9 per billing practice."
+    },
+    {
+      "id": "C5-F2",
+      "category": "condition",
+      "verbatim_span": "Costochondritis, likely contributing to and possibly the\nprimary driver",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "64109004", "display": "Costochondritis (disorder)"},
+        {"system": "ICD-10", "code": "M94.0", "display": "Chondrocostal junction syndrome [Tietze]"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Final working musculoskeletal diagnosis."
+    },
+    {
+      "id": "C5-F3",
+      "category": "condition",
+      "verbatim_span": "Gastroesophageal reflux disease, chronic",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "235595009", "display": "Gastroesophageal reflux disease (disorder)"},
+        {"system": "ICD-10", "code": "K21.9", "display": "Gastro-esophageal reflux disease without esophagitis"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Chronic GERD, contributes to atypical symptoms."
+    },
+    {
+      "id": "C5-F4",
+      "category": "procedure",
+      "verbatim_span": "coronary CT angiography on 2026-02-16",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "completed",
+        "performedDate": "2026-02-16"
+      },
+      "section": "HISTORY OF PRESENT ILLNESS",
+      "notes": "Advanced imaging procedure; negative result."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "C5-N1",
+      "trap_type": "ruled_out",
+      "verbatim_span": "No evidence of acute coronary syndrome",
+      "should_not_produce": "Condition: Acute coronary syndrome",
+      "rationale": "ACS explicitly ruled out after negative serial troponins, ECG, and coronary CTA."
+    },
+    {
+      "id": "C5-N2",
+      "trap_type": "ruled_out",
+      "verbatim_span": "NSTEMI, or\nSTEMI",
+      "should_not_produce": "Condition: NSTEMI / STEMI",
+      "rationale": "Both myocardial infarction subtypes ruled out."
+    },
+    {
+      "id": "C5-N3",
+      "trap_type": "ruled_out",
+      "verbatim_span": "no\nobstructive coronary artery disease, a calcium score of 0",
+      "should_not_produce": "Condition: Obstructive coronary artery disease",
+      "rationale": "Coronary CTA negative for obstructive disease; no Condition should be generated."
+    },
+    {
+      "id": "C5-N4",
+      "trap_type": "historical_resolved",
+      "verbatim_span": "acute onset substernal chest pressure with\ndiaphoresis and radiation into her left arm",
+      "should_not_produce": "Condition: Angina pectoris (current)",
+      "rationale": "Classic ACS-sounding HPI description that does not reflect the final diagnosis."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

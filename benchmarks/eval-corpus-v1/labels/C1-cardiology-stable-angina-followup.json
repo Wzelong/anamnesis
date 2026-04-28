@@ -1,0 +1,114 @@
+{
+  "note_id": "C1",
+  "filename": "C1-cardiology-stable-angina-followup.txt",
+  "specialty": "cardiology",
+  "tier": "clean",
+  "patient_pseudo_demographics": {
+    "age": 58,
+    "sex": "female",
+    "race": "black-or-african-american",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "C1-F1",
+      "category": "condition",
+      "verbatim_span": "Stable angina pectoris in the setting of single-vessel coronary\nartery disease",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "233819005", "display": "Stable angina (disorder)"},
+        {"system": "ICD-10", "code": "I20.9", "display": "Angina pectoris, unspecified"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary cardiology diagnosis; post-cath. Span captures anchor phrase."
+    },
+    {
+      "id": "C1-F2",
+      "category": "condition",
+      "verbatim_span": "single-vessel coronary\nartery disease involving the mid right coronary artery",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "53741008", "display": "Coronary arteriosclerosis (disorder)"},
+        {"system": "ICD-10", "code": "I25.10", "display": "Atherosclerotic heart disease of native coronary artery without angina pectoris"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Single-vessel CAD documented in RCA (75% stenosis). Dual-coded per corpus convention."
+    },
+    {
+      "id": "C1-F3",
+      "category": "procedure",
+      "verbatim_span": "diagnostic left heart catheterization on 2026-02-26",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "41976001", "display": "Cardiac catheterization (procedure)"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "performedDate": "2026-02-26"
+      },
+      "section": "HISTORY OF PRESENT ILLNESS",
+      "notes": "Procedure completed with specific date captured in HPI prose."
+    },
+    {
+      "id": "C1-F4",
+      "category": "medication_request",
+      "verbatim_span": "Initiate carvedilol 6.25 mg PO BID",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "20352", "display": "carvedilol"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "6.25 mg",
+        "frequency": "BID",
+        "route": "oral"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "New anti-anginal initiation this encounter."
+    },
+    {
+      "id": "C1-F5",
+      "category": "observation",
+      "verbatim_span": "preserved\nsystolic function with an estimated ejection fraction of 58%",
+      "expected_codes": [
+        {"system": "LOINC", "code": "10230-1", "display": "Left ventricular Ejection fraction"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "imaging",
+        "value": "58 %"
+      },
+      "section": "HISTORY OF PRESENT ILLNESS",
+      "notes": "LVEF from left ventriculogram at catheterization."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "C1-N1",
+      "trap_type": "negation",
+      "verbatim_span": "the left main, LAD, and circumflex were\nangiographically normal",
+      "should_not_produce": "Condition: Left main / LAD / circumflex coronary atherosclerosis",
+      "rationale": "Other vessels explicitly negated in HPI; only RCA is the diseased vessel."
+    },
+    {
+      "id": "C1-N2",
+      "trap_type": "negation",
+      "verbatim_span": "no evidence of left main\ndisease",
+      "should_not_produce": "Condition: Left main coronary artery disease",
+      "rationale": "Explicitly negated in Data Review."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

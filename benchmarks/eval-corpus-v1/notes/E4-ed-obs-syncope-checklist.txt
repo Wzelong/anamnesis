@@ -1,0 +1,45 @@
+GREENVALE COMMUNITY HOSPITAL - ED/OBS Discharge
+================================================================
+Pt: Winona Chasing-Hawk   MRN GVC-4406-WC   DOB 1962-08-19
+63F / AI-AN / Non-Hisp
+Arrival 2026-03-06 19:12   Dispo 2026-03-07 08:40 (Home)
+Attending: Jerome Whitfield, MD
+================================================================
+
+CC: Syncope (witnessed) at granddaughter's birthday party.
+
+HPI: 63F standing during cake-cutting, felt warm, diaphoretic,
+nauseated, lost consciousness approx 20 sec per witnesses, regained
+fully. No tongue bite, no incontinence, no injury. Felt fatigued
+afterward x 30 min then recovered. Has had 2 similar prodromal
+near-syncope episodes over past year in warm crowded settings.
+No CP, palpitations, HA, focal weakness.
+
+PMH: HTN, osteoarthritis. Meds: lisinopril 10 mg qd, acetaminophen
+PRN. NKDA. SH: never smoker.
+
+Obs unit course:
+- Continuous telemetry x 12 hrs: sinus rhythm throughout, no
+  arrhythmia, no pauses, HR 58-82.
+- Serial VS Q2H stable. No orthostatics (BP 128/78 supine, 124/76
+  standing after 3 min).
+- EKG on arrival: NSR 72, no acute ST/T, no QT prolongation.
+- Trop neg. CBC, BMP wnl. TSH wnl. Glucose 94.
+- No recurrent sx overnight.
+
+A/P: Vasovagal syncope, reflex-mediated, classic prodrome
+(warmth/diaphoresis/nausea upright), full recovery, no concerning
+features. Cardiac workup reassuring.
+
+- D/c home w/ PCP f/u in 1 wk.
+- Counseled on prodromal recognition and counter-pressure
+  maneuvers.
+- Driving restriction not indicated (clear prodrome, first
+  syncope of this severity; state threshold not met).
+
+================================================================
+Electronically signed: Jerome Whitfield, MD
+Credentials: MD
+NPI: 1762510309
+Signed: 2026-03-07 08:42
+================================================================

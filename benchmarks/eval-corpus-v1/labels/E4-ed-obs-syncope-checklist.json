@@ -1,0 +1,66 @@
+{
+  "note_id": "E4",
+  "filename": "E4-ed-obs-syncope-checklist.txt",
+  "specialty": "emergency_department",
+  "tier": "messy",
+  "patient_pseudo_demographics": {
+    "age": 63,
+    "sex": "female",
+    "race": "american-indian-or-alaska-native",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "E4-F1",
+      "category": "condition",
+      "verbatim_span": "Vasovagal syncope, reflex-mediated",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "398665005", "display": "Vasovagal syncope (disorder)"},
+        {"system": "ICD-10", "code": "R55", "display": "Syncope and collapse"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "A/P",
+      "notes": "Final diagnosis after obs unit workup."
+    },
+    {
+      "id": "E4-F2",
+      "category": "procedure",
+      "verbatim_span": "EKG on arrival",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "164847006", "display": "12 lead electrocardiogram (procedure)"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "performedDate": "2026-03-06"
+      },
+      "section": "Obs unit course",
+      "notes": "ECG performed on arrival."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "E4-N1",
+      "trap_type": "negation",
+      "verbatim_span": "no\n  arrhythmia, no pauses",
+      "should_not_produce": "Condition: Arrhythmia",
+      "rationale": "Telemetry negative; no arrhythmia to record."
+    },
+    {
+      "id": "E4-N2",
+      "trap_type": "negation",
+      "verbatim_span": "No orthostatics",
+      "should_not_produce": "Condition: Orthostatic hypotension",
+      "rationale": "Orthostatic changes screened and negative."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 6,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

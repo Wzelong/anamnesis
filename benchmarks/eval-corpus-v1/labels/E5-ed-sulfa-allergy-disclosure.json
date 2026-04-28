@@ -1,0 +1,89 @@
+{
+  "note_id": "E5",
+  "filename": "E5-ed-sulfa-allergy-disclosure.txt",
+  "specialty": "emergency_department",
+  "tier": "trap",
+  "patient_pseudo_demographics": {
+    "age": 39,
+    "sex": "female",
+    "race": "native-hawaiian-or-other-pacific-islander",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "E5-F1",
+      "category": "allergy_intolerance",
+      "verbatim_span": "Drug allergy: sulfamethoxazole/trimethoprim (\"sulfa\")",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "10831", "display": "sulfamethoxazole / trimethoprim"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "criticality": "high",
+        "severity": "moderate",
+        "onsetAge": "adult"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Adult-onset urticaria + angioedema reaction - high criticality per severity inference."
+    },
+    {
+      "id": "E5-F2",
+      "category": "condition",
+      "verbatim_span": "Uncomplicated urinary tract infection",
+      "expected_codes": [],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary ED encounter diagnosis."
+    },
+    {
+      "id": "E5-F3",
+      "category": "medication_request",
+      "verbatim_span": "nitrofurantoin monohydrate/macrocrystals 100 mg\n     PO BID x 5 days",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "100 mg",
+        "frequency": "BID",
+        "route": "oral",
+        "duration": "5 days"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Non-sulfa UTI antibiotic given sulfa allergy. RxNorm not seeded."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "E5-N1",
+      "trap_type": "severity_inference",
+      "verbatim_span": "I can't take\nBactrim - I had a bad reaction a few years ago",
+      "should_not_produce": "AllergyIntolerance: sulfa (criticality=low)",
+      "rationale": "Patient's initial casual phrasing could be mis-coded as low severity. Detailed history reveals urticaria + angioedema, mandating criticality=high."
+    },
+    {
+      "id": "E5-N2",
+      "trap_type": "negation",
+      "verbatim_span": "She did not require\nepinephrine, intubation, or hospital admission",
+      "should_not_produce": "AllergyIntolerance: sulfa (criticality=unable-to-assess or severity=mild)",
+      "rationale": "Absence of anaphylactic escalation does not downgrade criticality given angioedema + urticaria documentation."
+    },
+    {
+      "id": "E5-N3",
+      "trap_type": "historical_resolved",
+      "verbatim_span": "Iron deficiency anemia (remote, resolved)",
+      "should_not_produce": "Condition: Iron deficiency anemia (active)",
+      "rationale": "Historical resolved condition; should not appear as active."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

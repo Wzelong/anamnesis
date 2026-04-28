@@ -1,0 +1,125 @@
+GREENVALE COMMUNITY HOSPITAL
+Emergency Department - Encounter Note
+================================================================
+
+Patient: Yolanda Brooks                    MRN: GVC-7714-YB
+DOB: 1983-10-11                            Age: 42
+Sex: Female                                Race: Black or African American
+Ethnicity: Not Hispanic or Latino
+Arrival: 2026-02-07 02:18                  Discharge: 2026-02-07 06:22
+ESI: 3                                     Disposition: Home
+Attending: Hannah Reiter, MD               Service: Emergency Medicine
+
+================================================================
+
+CHIEF COMPLAINT
+Severe throbbing headache with nausea and photophobia, failed
+home abortive therapy.
+
+HISTORY OF PRESENT ILLNESS
+Ms. Brooks is a 42-year-old woman with a long-standing history
+of migraine without aura who presents in the early morning with
+a 10-hour episode of severe unilateral left-sided throbbing
+headache, associated with nausea, one episode of non-bloody
+emesis, photophobia, and phonophobia. The character and location
+are typical for her prior migraines but more severe and
+longer-lasting. She awoke with the headache yesterday evening
+and took her usual abortive regimen (rizatriptan 10 mg PO at
+home, followed by a second dose four hours later) with minimal
+relief. She rates her pain as 9/10 on arrival. No fever, neck
+stiffness, focal weakness, speech changes, visual disturbance
+beyond photophobia, or recent head trauma. She has never been
+told she has aura. No known triggers identified for this episode;
+she has been under increased work stress and slept poorly the
+prior two nights.
+
+She has presented to the ED for migraine approximately once
+yearly. She has no prior history of intracranial pathology. Last
+brain imaging was a CT in 2021 during a similar presentation
+and was unremarkable.
+
+PAST MEDICAL HISTORY
+- Migraine without aura, longstanding
+- Hypertension, well controlled
+- Asthma, mild intermittent
+
+MEDICATIONS (home)
+- Rizatriptan 10 mg PO PRN for acute migraine
+- Lisinopril 10 mg PO daily
+- Albuterol HFA PRN
+
+ALLERGIES
+Codeine - nausea (intolerance, not true allergy).
+
+SOCIAL HISTORY
+Lives with husband and teenage son. Works as a high-school math
+teacher. Non-smoker. Rare alcohol use. No illicit drugs.
+
+FAMILY HISTORY
+Mother with migraine. Sister with migraine. Father with
+hypertension.
+
+REVIEW OF SYSTEMS
+HEENT: as per HPI; no rhinorrhea, no tearing.
+Neurologic: no focal weakness, no sensory symptoms, no confusion.
+Cardiovascular, respiratory, GI: negative.
+All other systems reviewed and negative.
+
+VITAL SIGNS ON ARRIVAL
+T 36.8 C   HR 88   BP 148/86   RR 16   SpO2 99% RA
+Pain score 9/10.
+
+PHYSICAL EXAMINATION
+General: uncomfortable-appearing adult female, lying in a darkened
+bay with her arm over her eyes, cooperative.
+HEENT: pupils equal, reactive to light; EOMI. Fundi without
+papilledema (bedside exam). No sinus tenderness. Neck supple, no
+meningismus.
+Cardiac: RRR, no murmur.
+Respiratory: CTAB.
+Neuro: alert, oriented x 3. Cranial nerves II-XII intact. Motor
+5/5 throughout, sensory symmetric. Reflexes 2+ symmetric. Gait
+not formally tested due to patient preference.
+
+ED COURSE
+Patient treated in a darkened room. Received IV fluids (normal
+saline 1 L), IV ketorolac 30 mg, IV prochlorperazine 10 mg,
+and IV diphenhydramine 25 mg (to prevent akathisia). Pain
+improved from 9/10 to 2/10 over approximately 90 minutes.
+Blood pressure normalized to 128/78 after pain control. She
+tolerated oral intake, ambulated without difficulty, and felt
+ready for discharge.
+
+DATA REVIEW
+Finger-stick glucose: 104.
+No laboratory studies or imaging performed this visit - clinical
+presentation typical for her established migraine pattern with
+no concerning features warranting workup.
+
+ASSESSMENT AND PLAN
+
+1. Acute migraine without aura, severe, responsive to IV
+abortive therapy. Episode prolonged and more severe than her
+baseline pattern, but clinically consistent with migraine; no
+red flags identified on history or examination.
+   - Patient counseled on avoiding rizatriptan for the next
+     12 hours given doses taken today.
+   - Discharge with a short rescue course of prochlorperazine
+     10 mg PO every 6 hours PRN for 48 hours.
+   - Reinforced hydration, rest in a dark room, and follow-up
+     with her primary care physician within one week.
+   - Referral to neurology for consideration of prophylactic
+     therapy given escalation in episode severity.
+   - Return to ED for focal neurologic symptoms, fever, neck
+     stiffness, head trauma, or a headache that is qualitatively
+     different from her usual migraines.
+
+2. Hypertension, elevated on arrival likely pain-mediated,
+normalized with treatment. Continue home lisinopril.
+
+================================================================
+Electronically signed: Hannah Reiter, MD
+Credentials: MD
+NPI: 1876543204
+Signed: 2026-02-07 06:28
+================================================================

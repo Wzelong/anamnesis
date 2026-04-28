@@ -1,0 +1,128 @@
+CEDAR MESA MEDICAL CENTER
+Neurology Clinic - New Patient Consultation
+================================================================
+
+Patient: Everett Fitzgerald                MRN: CMM-7731-EF
+DOB: 1996-06-17                            Age: 29
+Sex: Male                                  Race: White
+Ethnicity: Not Hispanic or Latino
+Encounter Date: 2026-02-03                 Visit Type: Outpatient, new
+Provider: Yusuf Adelakun, MD               Service: Neurology - General
+
+================================================================
+
+CHIEF COMPLAINT
+Right-sided weakness and numbness, intermittent balance problems.
+
+HISTORY OF PRESENT ILLNESS
+Mr. Fitzgerald is a 29-year-old graphic designer referred by his
+primary care physician for a six-month history of fluctuating
+right-sided weakness and tingling, most notably in his right
+arm and leg, associated with a subjective sense of "walking off
+center." Symptoms started after a stressful work transition and
+the end of a long-term relationship. The weakness and tingling
+wax and wane over the course of a day, sometimes resolving
+completely for several hours and returning later. They do not
+track a particular vascular or dermatomal distribution by his
+description and are not accompanied by pain, temperature
+intolerance, or autonomic symptoms. He denies visual loss,
+diplopia, dysarthria, dysphagia, bowel or bladder dysfunction,
+or loss of consciousness.
+
+He has been seen in the emergency department twice during these
+episodes with full workups; he has been told each time that his
+imaging and labs were normal. His symptoms significantly affect
+his work (he has reduced his freelance commissions) and his
+sleep. He has developed considerable anxiety about the symptoms
+and has been reading extensively online about multiple sclerosis
+and stroke, about which he is very worried.
+
+PAST MEDICAL HISTORY
+- Generalized anxiety disorder (new diagnosis, 2025-09)
+- No prior neurologic disease.
+
+HOME MEDICATIONS
+- Sertraline 50 mg PO daily (started 2025-10)
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Lives alone. Works as a freelance graphic designer. Non-smoker.
+Occasional alcohol. No recreational drugs.
+
+FAMILY HISTORY
+No family history of multiple sclerosis, stroke, or other
+neurologic disease. Mother with anxiety.
+
+REVIEW OF SYSTEMS
+Neurologic: as per HPI.
+Psychiatric: anxiety, sleep disturbance.
+All other systems reviewed and negative.
+
+VITAL SIGNS
+BP 118/72   HR 74   RR 14   Temp 98.0 F   SpO2 99% RA
+
+PHYSICAL EXAMINATION (detailed)
+General: well-appearing, mildly anxious.
+Mental status: alert, oriented x 3, attentive, normal language.
+Cranial nerves II-XII intact, including visual acuity 20/20
+bilaterally, fundi sharp without papilledema, EOMI without
+nystagmus, and symmetric facial strength.
+Motor: 5/5 throughout on strict formal testing. Give-way
+weakness noted on right hip flexion when distracted; Hoover's
+test positive (contralateral leg demonstrates normal effort on
+crossed leg extension).
+Sensory: a non-dermatomal, splitting-at-midline pattern of
+reduced pinprick in the right face, trunk, and limbs was noted,
+inconsistent with any single lesion pattern.
+Reflexes: 2+ symmetric, plantars downgoing bilaterally.
+Coordination: finger-to-nose and heel-knee-shin intact; no
+dysmetria.
+Gait: narrow-based, non-ataxic, tandem intact; exaggerated
+effort suggestive of functional overlay, improved when
+distracted (asked to count backward from 20).
+
+DATA REVIEW
+Prior brain MRI (2025-11, outside facility): normal; no
+demyelinating lesions, no mass, no infarct, no microbleeds.
+Prior cervical and thoracic spine MRI (2025-11, outside
+facility): normal.
+Prior labs (2025-10, PCP): TSH, B12, folate, HIV, RPR, ANA,
+vitamin D, CBC, CMP all within normal limits.
+
+ASSESSMENT AND PLAN
+
+1. Functional neurological disorder (motor and sensory subtype).
+The patient's symptoms fluctuate, are non-dermatomal and
+non-vascular, demonstrate positive rule-in signs on examination
+(Hoover's sign positive for functional leg weakness, splitting
+at midline of sensory findings, distractibility of gait), and
+occur in the setting of normal advanced imaging and biomarker
+workup. No features of multiple sclerosis, stroke, or other
+organic neurologic disease are present.
+   - Diagnosis explained to the patient using the positive-signs
+     framework; emphasized that the diagnosis is based on what
+     was found, not on what was absent.
+   - Referral placed to FND-focused physical and occupational
+     therapy.
+   - Continued psychiatric care, with communication to treating
+     provider to continue sertraline and consider CBT.
+   - Patient-education handouts on FND provided.
+
+2. Generalized anxiety disorder, actively treated, contributing
+to symptom magnification and distress.
+   - Continue sertraline at current dose.
+   - Encouraged regular exercise and sleep hygiene.
+
+FOLLOW-UP
+Return to neurology in 8 weeks after initiation of specialist
+PT/OT. Earlier return for any truly persistent focal deficit,
+new seizure, or any symptom that is qualitatively different.
+
+================================================================
+Electronically signed: Yusuf Adelakun, MD
+Credentials: MD
+NPI: 1109832411
+Signed: 2026-02-03 13:55
+================================================================

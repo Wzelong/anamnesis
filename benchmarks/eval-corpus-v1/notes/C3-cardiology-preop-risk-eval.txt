@@ -1,0 +1,46 @@
+GREENVALE COMMUNITY HOSPITAL
+Cardiology Consult - Pre-op Risk Evaluation
+================================================================
+Patient: Mei-Lin Tran                    MRN: GVC-6643-MT
+DOB: 1960-02-28                          Age: 66
+Sex: F   Race: Asian   Eth: Non-Hispanic
+Date: 2026-02-11   Consult req by: Dr. Owens, Ortho
+Pre-op for: right total hip arthroplasty, scheduled 2026-02-25
+================================================================
+
+Consulted for cardiac clearance pre-THA. Known HTN, HLD, remote
+AFib (paroxysmal, now on rhythm-control strategy), no known
+ischemic heart dz, no hx MI or revasc. Functional capacity > 4
+METs - climbs two flights at home without sxs, gardens x 30 min
+without angina/dyspnea.
+
+PMH: HTN, HLD, paroxysmal AFib (on apixaban), hypothyroidism.
+Meds: lisinopril 20 mg daily, atorvastatin 40 mg daily, apixaban
+5 mg BID, levothyroxine 75 mcg daily. NKDA.
+SH: never smoker. Occ EtOH. Lives w/ husband.
+
+Exam today: BP 134/78, HR 72 reg, SpO2 98% RA. JVP flat. CV: RRR,
+no m/r/g. Lungs clear. Ext: no edema. Gait antalgic on right
+(expected, pre-op).
+
+Data: EKG today NSR, rate 68, no acute ST/T. TTE 2025-11 LVEF
+60%, no RWMA, mild MR. CBC/BMP wnl 2026-02-05. INR not applicable.
+
+A/P:
+1. RCRI = 1 point (major surgery). Low-intermediate risk for
+MACE. Functional capacity preserved.
+2. AFib anticoagulated w/ apixaban 5 mg BID. Per surgical team
+will hold 48h pre-op, resume POD1 per bleeding risk.
+3. HTN controlled. Continue lisinopril perioperatively per
+surgical team (hold AM of surgery).
+4. HLD stable. Continue statin.
+
+Cardiac clearance for planned right THA. No stress testing
+indicated given preserved functional capacity and low RCRI.
+Recs communicated to Dr. Owens.
+
+================================================================
+Electronically signed: Wendell Ashworth, MD, FACC
+NPI: 1432109806
+Signed: 2026-02-11 09:33
+================================================================

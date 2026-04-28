@@ -1,0 +1,101 @@
+{
+  "note_id": "N6",
+  "filename": "N6-neurology-tobacco-consolidation.txt",
+  "specialty": "neurology",
+  "tier": "trap",
+  "patient_pseudo_demographics": {
+    "age": 61,
+    "sex": "male",
+    "race": "white",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "N6-F1",
+      "category": "condition",
+      "verbatim_span": "Parkinson's disease, idiopathic, motor-stable on current\ndopaminergic regimen",
+      "expected_codes": [],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary movement-disorder diagnosis."
+    },
+    {
+      "id": "N6-F2",
+      "category": "observation",
+      "verbatim_span": "Currently smoking approximately half a pack per day, actively\nattempting cessation; total tobacco exposure approximately 25\npack-years",
+      "expected_codes": [
+        {"system": "LOINC", "code": "72166-2", "display": "Tobacco smoking status"},
+        {"system": "SNOMED", "code": "449868002", "display": "Smokes tobacco daily (finding)"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "social-history",
+        "value": "Current smoker, 25 pack-years, actively attempting cessation"
+      },
+      "section": "SOCIAL HISTORY",
+      "notes": "Single consolidated smoking-status observation. Patient is CURRENTLY a smoker (not former) despite tapering attempt. Pack-year value 25 (NOT 30)."
+    },
+    {
+      "id": "N6-F3",
+      "category": "medication_request",
+      "verbatim_span": "Continue carbidopa/levodopa 25/100 mg PO QID",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "25/100 mg",
+        "frequency": "QID",
+        "route": "oral"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary PD medication."
+    },
+    {
+      "id": "N6-F4",
+      "category": "family_member_history",
+      "verbatim_span": "Father with Parkinson's disease, diagnosed in his late 70s,\ndied age 82",
+      "expected_codes": [],
+      "expected_attributes": {
+        "relationship": "father",
+        "conditionCode": "Parkinson's disease",
+        "onsetAge": "late 70s",
+        "deceasedAge": "82"
+      },
+      "section": "FAMILY HISTORY",
+      "notes": "Late-onset paternal PD; contextually relevant for the patient's diagnosis."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "N6-N1",
+      "trap_type": "multi_section_consolidation",
+      "verbatim_span": "down to about half a pack per day",
+      "should_not_produce": "Observation: Tobacco smoking status (duplicate, HPI section)",
+      "rationale": "The HPI mention is one of three places smoking appears in the note. Must consolidate to ONE Observation per patient, not three."
+    },
+    {
+      "id": "N6-N2",
+      "trap_type": "multi_section_consolidation",
+      "verbatim_span": "Counseled on smoking\n     cessation including behavioral strategies",
+      "should_not_produce": "Observation: Tobacco smoking status (duplicate, A&P section)",
+      "rationale": "Third section mentioning smoking; still one consolidated status."
+    },
+    {
+      "id": "N6-N3",
+      "trap_type": "negation",
+      "verbatim_span": "actively\nattempting cessation",
+      "should_not_produce": "Observation: Former smoker",
+      "rationale": "Patient is CURRENTLY a smoker (half pack/day). Quit date is March 1, 2026 - not yet reached. Do not classify as former smoker."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

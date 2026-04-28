@@ -1,0 +1,143 @@
+ASHFORD CHILDREN'S HOSPITAL
+Pediatric Emergency Department - Encounter Note
+================================================================
+
+Patient: Elias Morales-Bennett              MRN: ACH-1142-EM
+DOB: 2017-11-19                             Age: 8 years
+Sex: Male                                   Race: Black or African American
+Ethnicity: Hispanic or Latino
+Arrival: 2026-04-05 21:34                   Discharge: 2026-04-06 00:50
+ESI: 3                                      Disposition: Home with close follow-up
+Attending: Rosa Delgado-Pinto, MD           Service: Pediatric Emergency Medicine
+
+Historian: Mother (primary caregiver, present throughout visit)
+
+================================================================
+
+CHIEF COMPLAINT
+Worsening cough and wheezing; increased work of breathing over
+the past two days.
+
+HISTORY OF PRESENT ILLNESS
+Elias is an 8-year-old previously healthy boy, known to our
+service for mild intermittent asthma since age 4, who presents
+with two days of progressively worsening cough, wheezing, and
+exercise intolerance. Symptoms began after a school trip to an
+outdoor farm on 2026-04-03. His mother reports he has been using
+his albuterol inhaler approximately every 3-4 hours for the past
+36 hours with diminishing relief. Tonight he became noticeably
+more tachypneic and could not finish sentences without a pause,
+prompting ED presentation. No fever, no URI symptoms this week
+beyond mild rhinorrhea, no chest pain, no cyanotic episodes.
+
+Past asthma exacerbations have been managed at home or with a
+short course of oral corticosteroids in primary care; he has
+never been admitted or intubated.
+
+During history-taking, his mother disclosed several family
+medical details relevant to the care team's understanding of
+his risk profile. His mother has type 1 diabetes mellitus,
+diagnosed at age 12, currently on an insulin pump. His father
+has moderate eczema and seasonal allergic rhinitis. An older
+sister (age 11) has mild intermittent asthma similar to Elias.
+No family history of cystic fibrosis, immunodeficiency, or
+sudden cardiac death.
+
+PAST MEDICAL HISTORY (patient)
+- Mild intermittent asthma, diagnosed at age 4
+- Atopic dermatitis, mild, well controlled with emollients
+- Full-term birth, uncomplicated neonatal course.
+
+IMMUNIZATIONS
+Up to date per pediatric schedule including annual influenza
+(2025-10) and age-appropriate COVID-19 vaccination.
+
+HOME MEDICATIONS
+- Albuterol HFA 90 mcg/actuation, 2 puffs PRN for wheezing
+- Fluticasone propionate 44 mcg HFA, 2 puffs BID (when in
+  "yellow zone" per asthma action plan; not currently)
+- Cetirizine 5 mg PO daily during pollen season
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Lives with both parents and one older sibling. Attends third
+grade in a public school. No smokers in the household. Has a
+family dog (present since infancy, no flare pattern).
+
+REVIEW OF SYSTEMS (age-appropriate)
+Constitutional: no fever, mild fatigue.
+Respiratory: cough, wheezing, tachypnea as above.
+ENT: mild rhinorrhea over the past 2 days; no otalgia.
+CV: no chest pain, no cyanosis.
+GI: normal appetite and intake until today.
+All other systems reviewed and negative.
+
+VITAL SIGNS ON ARRIVAL
+T 37.2 C   HR 124   RR 32   BP 108/66   SpO2 92% RA
+Weight 27 kg   Peak flow pre-treatment: 150 L/min (personal best
+~230 L/min, approximately 65% predicted today).
+
+PHYSICAL EXAMINATION
+General: alert, speaks in short phrases, mild accessory muscle
+use with subcostal retractions.
+HEENT: mild clear rhinorrhea. No pharyngeal erythema.
+Cardiac: tachycardic, regular, no murmurs.
+Respiratory: diffuse bilateral expiratory wheezing, prolonged
+expiratory phase, symmetric air entry, no focal crackles.
+Abdomen: soft, non-tender.
+Skin: no rash, old eczematous changes on antecubital fossae,
+not active.
+Neuro: alert, age-appropriate interaction with provider.
+
+ED COURSE
+Initial treatment per pediatric asthma exacerbation pathway:
+- Albuterol 5 mg + ipratropium 0.5 mg nebulizer, three back-to-
+  back treatments over 60 minutes.
+- Oral dexamethasone 0.6 mg/kg (single dose, 16 mg) administered.
+- Supplemental oxygen via nasal cannula at 2 L/min to maintain
+  SpO2 > 94%.
+After the third nebulizer, SpO2 improved to 96% RA, respiratory
+rate decreased to 24, and he was able to speak in full
+sentences. Peak flow improved to 210 L/min (~91% of personal
+best). He was observed for an additional 60 minutes off oxygen
+without decompensation and tolerated oral intake.
+
+DATA REVIEW
+No laboratory or imaging studies performed. Clinical picture and
+response to therapy consistent with moderate asthma exacerbation
+without alternative or complicating diagnosis suspected.
+
+ASSESSMENT AND PLAN
+
+1. Acute asthma exacerbation, moderate severity in a child with
+known mild intermittent asthma, responsive to standard
+bronchodilator and systemic corticosteroid therapy.
+   - Continue albuterol HFA 2 puffs via spacer every 4 hours
+     while awake for the next 48 hours, then PRN.
+   - Initiate fluticasone propionate 44 mcg 2 puffs BID as a
+     bridging controller for the next 4 weeks (given
+     exacerbation with need for systemic steroids).
+   - Dexamethasone as administered today - no home dose
+     required.
+   - Asthma action plan reviewed and updated with the mother.
+
+2. Mild atopic dermatitis, quiescent. Continue emollients.
+
+3. Trigger identification: recent farm exposure as likely
+trigger (possible pollen, animal dander). Counseled regarding
+environmental modification.
+
+FOLLOW-UP
+Pediatrician within 2-3 days (appointment scheduled before
+discharge). Return to ED immediately for increased work of
+breathing, failure to respond to albuterol, cyanosis, inability
+to speak in sentences, or any new concerning symptom.
+
+================================================================
+Electronically signed: Rosa Delgado-Pinto, MD
+Credentials: MD, FAAP
+NPI: 1765098312
+Signed: 2026-04-06 00:56
+================================================================

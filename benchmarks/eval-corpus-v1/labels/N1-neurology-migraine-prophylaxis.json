@@ -1,0 +1,96 @@
+{
+  "note_id": "N1",
+  "filename": "N1-neurology-migraine-prophylaxis.txt",
+  "specialty": "neurology",
+  "tier": "clean",
+  "patient_pseudo_demographics": {
+    "age": 27,
+    "sex": "female",
+    "race": "asian",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "N1-F1",
+      "category": "condition",
+      "verbatim_span": "Chronic migraine without aura",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "439729000", "display": "Chronic migraine (disorder)"},
+        {"system": "ICD-10", "code": "G43.709", "display": "Chronic migraine without aura, not intractable, without status migrainosus"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary neurologic diagnosis with chronic subtype."
+    },
+    {
+      "id": "N1-F2",
+      "category": "medication_request",
+      "verbatim_span": "Continue topiramate 50 mg PO BID",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "38404", "display": "topiramate"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "50 mg",
+        "frequency": "BID",
+        "route": "oral"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Prophylactic therapy continued at current titration."
+    },
+    {
+      "id": "N1-F3",
+      "category": "medication_request",
+      "verbatim_span": "Continue sumatriptan PRN for acute migraine",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "frequency": "PRN",
+        "route": "oral"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Abortive therapy continued. RxNorm code for sumatriptan not included in corpus seed; extractor should still identify the medication by name."
+    },
+    {
+      "id": "N1-F4",
+      "category": "observation",
+      "verbatim_span": "approximately\n5 headache days per month",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "final",
+        "category": "survey",
+        "value": "5 /month"
+      },
+      "section": "HISTORY OF PRESENT ILLNESS",
+      "notes": "Monthly headache frequency as patient-reported observation."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "N1-N1",
+      "trap_type": "negation",
+      "verbatim_span": "unremarkable, no demyelinating\nlesions, no mass, no chronic small vessel disease",
+      "should_not_produce": "Condition: Demyelinating disease / mass / small vessel disease",
+      "rationale": "Prior MRI findings explicitly negated. Imaging history, not a current condition."
+    },
+    {
+      "id": "N1-N2",
+      "trap_type": "hypothetical",
+      "verbatim_span": "Discussed CGRP monoclonal antibody options (e.g., erenumab)\n     as a future step",
+      "should_not_produce": "MedicationRequest: erenumab",
+      "rationale": "Discussed as future option only; not prescribed at this visit."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

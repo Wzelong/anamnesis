@@ -9,7 +9,20 @@
       "Bash(python -c \"import sys; sys.path.insert\\(0, '.'\\); from main import app; print\\('app ok:', app.title\\)\")",
       "Bash(pip install *)",
       "Bash(.venv/Scripts/python.exe -m pytest -q)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(python -m pytest tests/test_extraction.py -v)",
+      "WebFetch(domain:clinicaltables.nlm.nih.gov)",
+      "Bash(python -m scripts.run_stage2 --doc-id c4de7ffb)",
+      "WebFetch(domain:rxnav.nlm.nih.gov)",
+      "Bash(jq .document_id *)",
+      "WebFetch(domain:loinc.org)",
+      "WebFetch(domain:fhir.loinc.org)",
+      "Bash(python benchmarks/eval-corpus-v1/validate_corpus.py --only N1)",
+      "Bash(python -m pytest tests/test_telemetry.py tests/test_preprocess.py tests/test_extraction.py -v)",
+      "Bash(rm -rf .cache/stage2 .cache/stage2_output .cache/telemetry anamnesis.db)",
+      "Bash(python -m scripts.run_stage2)",
+      "Bash(python benchmarks/eval-corpus-v1/validate_corpus.py --only C2)",
+      "Bash(python benchmarks/eval-corpus-v1/validate_corpus.py --only E2)"
     ]
   }
 }

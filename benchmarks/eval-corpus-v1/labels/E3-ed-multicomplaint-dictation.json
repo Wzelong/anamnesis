@@ -1,0 +1,100 @@
+{
+  "note_id": "E3",
+  "filename": "E3-ed-multicomplaint-dictation.txt",
+  "specialty": "emergency_department",
+  "tier": "messy",
+  "patient_pseudo_demographics": {
+    "age": 48,
+    "sex": "male",
+    "race": "white",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "E3-F1",
+      "category": "condition",
+      "verbatim_span": "Chest pain, non-cardiac",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "29857009", "display": "Chest pain (finding)"},
+        {"system": "ICD-10", "code": "R07.9", "display": "Chest pain, unspecified"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "A/P",
+      "notes": "Non-cardiac chest pain coded as R07.9 per billing practice."
+    },
+    {
+      "id": "E3-F2",
+      "category": "condition",
+      "verbatim_span": "Chronic venous insufficiency of the right lower extremity",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "302828002", "display": "Venous insufficiency (disorder)"},
+        {"system": "ICD-10", "code": "I87.2", "display": "Venous insufficiency (chronic) (peripheral)"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "A/P",
+      "notes": "Known chronic condition, stable this visit."
+    },
+    {
+      "id": "E3-F3",
+      "category": "condition",
+      "verbatim_span": "Tension-type headache",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "398057008", "display": "Tension-type headache (disorder)"},
+        {"system": "ICD-10", "code": "G44.209", "display": "Tension-type headache, unspecified, not intractable"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "A/P",
+      "notes": "Third complaint resolved as tension-type."
+    },
+    {
+      "id": "E3-F4",
+      "category": "observation",
+      "verbatim_span": "current\nsmoker 15 pk-yr",
+      "expected_codes": [
+        {"system": "LOINC", "code": "72166-2", "display": "Tobacco smoking status"},
+        {"system": "SNOMED", "code": "77176002", "display": "Smoker (finding)"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "social-history",
+        "value": "Current smoker, 15 pack-years"
+      },
+      "section": "SH",
+      "notes": "Current smoker, 15 pack-year quantification."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "E3-N1",
+      "trap_type": "ruled_out",
+      "verbatim_span": "No\nevidence of ACS - EKG nl, trop neg",
+      "should_not_produce": "Condition: Acute coronary syndrome",
+      "rationale": "ACS ruled out by negative workup."
+    },
+    {
+      "id": "E3-N2",
+      "trap_type": "ruled_out",
+      "verbatim_span": "No signs of DVT, D-dimer negative",
+      "should_not_produce": "Condition: Deep vein thrombosis",
+      "rationale": "DVT screened for and ruled out."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 7,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

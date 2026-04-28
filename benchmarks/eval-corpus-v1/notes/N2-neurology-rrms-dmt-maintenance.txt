@@ -1,0 +1,135 @@
+PORT HALSTON HEALTH SYSTEM
+Neurology Clinic - Multiple Sclerosis Program
+================================================================
+
+Patient: Valentina Rivera-Ortiz         MRN: PHH-1904-VR
+DOB: 1994-12-03                         Age: 31
+Sex: Female                             Race: White
+Ethnicity: Hispanic or Latino
+Encounter Date: 2026-03-17              Visit Type: Outpatient, annual
+Provider: Tobias Nakano, MD             Service: Neurology - MS Clinic
+
+================================================================
+
+CHIEF COMPLAINT
+Annual multiple sclerosis follow-up; no new neurologic symptoms.
+
+HISTORY OF PRESENT ILLNESS
+Ms. Rivera-Ortiz is a 31-year-old right-handed graphic designer
+with relapsing-remitting multiple sclerosis diagnosed in 2022
+after an episode of right optic neuritis followed by a brainstem
+syndrome. She has been on ocrelizumab since 2023 and returns for
+her annual review and pre-infusion visit.
+
+Since her last assessment in March 2025 she has had no clinical
+relapses, no subacute focal neurologic symptoms, no new sensory
+changes, no gait difficulty, no bowel or bladder dysfunction,
+and no cognitive complaints beyond occasional word-finding
+difficulty when fatigued. She completed her fall-2025 ocrelizumab
+600 mg IV infusion on schedule and tolerated it without infusion
+reaction. She is due for her spring 2026 infusion in approximately
+6 weeks.
+
+She continues to work full-time without accommodation. She
+exercises regularly (cycling, pilates 2x/week) and reports her
+baseline fatigue as unchanged and manageable. Heat sensitivity
+(Uhthoff phenomenon) is mild and controlled with environmental
+adjustments in warm months.
+
+PAST MEDICAL HISTORY
+- Relapsing-remitting multiple sclerosis, diagnosed 2022
+- History of optic neuritis (right eye), 2022, residual minimal
+  red desaturation in the right eye only
+- Vitamin D insufficiency, on replacement
+
+PAST SURGICAL HISTORY
+- Laparoscopic appendectomy, 2016
+
+HOME MEDICATIONS
+- Ocrelizumab 600 mg IV every 6 months (next dose due April 2026)
+- Vitamin D3 4000 IU PO daily
+- Oral contraceptive (ethinyl estradiol/norethindrone)
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Lives with partner. Graphic designer, works hybrid. Non-smoker.
+Alcohol: 1-2 glasses of wine per week. No recreational drug use.
+
+FAMILY HISTORY
+No family history of MS or other demyelinating disease. Maternal
+aunt with rheumatoid arthritis.
+
+REVIEW OF SYSTEMS
+Neurologic: as per HPI.
+Ophthalmologic: stable residual mild red desaturation in the right
+eye; no new visual loss or diplopia.
+All other systems reviewed and negative.
+
+VITAL SIGNS
+BP 116/70   HR 68   RR 14   Temp 98.0 F   SpO2 99% RA
+Weight 62 kg
+
+PHYSICAL EXAMINATION
+General: well-appearing, no distress.
+Cranial nerves: visual acuity 20/20 OS, 20/25 OD with subjective
+mild red desaturation on the right; EOMI, no nystagmus, no INO.
+Fundi sharp bilaterally. Facial sensation and strength symmetric.
+Palate rises symmetrically; tongue midline.
+Motor: 5/5 throughout all major muscle groups.
+Sensory: intact to light touch, pinprick, vibration, and
+proprioception in all four extremities.
+Reflexes: 2+ symmetric in upper and lower extremities, plantars
+downgoing.
+Coordination: finger-to-nose and heel-knee-shin intact; no
+dysmetria.
+Gait: steady, normal base, tandem gait intact, Romberg negative.
+EDSS estimated at 1.0.
+
+DATA REVIEW
+Brain MRI with and without gadolinium (2026-02-28, outside
+facility report reviewed): stable T2/FLAIR periventricular and
+juxtacortical lesions; no new lesions compared to 2025 comparison
+study; no enhancing lesions.
+Cervical/thoracic spine MRI (2026-02-28): stable cord lesions, no
+new disease, no enhancement.
+Labs (2026-03-01): CBC, CMP, LFTs, hepatitis B/C screen, JCV
+antibody negative. IgG quantitative at lower end of normal, IgM
+within range. Vitamin D 38 ng/mL.
+
+ASSESSMENT AND PLAN
+
+1. Relapsing-remitting multiple sclerosis, clinically and
+radiographically stable on ocrelizumab.
+   - Continue ocrelizumab 600 mg IV every 6 months. Spring 2026
+     infusion scheduled.
+   - Pre-infusion labs reviewed and within parameters.
+   - Annual MRI surveillance to continue per program schedule.
+   - Counseled regarding infection prevention given B-cell
+     depletion; vaccinations reviewed and up to date except
+     herpes zoster, which will be offered prior to her next
+     infusion.
+
+2. History of right optic neuritis with minimal residual red
+desaturation.
+   - Continue annual ophthalmology examination (last 2025-11).
+
+3. Vitamin D maintenance.
+   - Continue vitamin D3 4000 IU daily. Level at goal.
+
+4. Reproductive health counseling.
+   - Discussed family planning considerations with ocrelizumab;
+     patient not currently planning pregnancy. Will revisit if
+     goals change.
+
+FOLLOW-UP
+Infusion clinic in 6 weeks for ocrelizumab. Return to MS clinic
+in 6 months or sooner for any new focal neurologic symptoms.
+
+================================================================
+Electronically signed: Tobias Nakano, MD
+Credentials: MD, FAAN
+NPI: 1654321805
+Signed: 2026-03-17 13:42
+================================================================

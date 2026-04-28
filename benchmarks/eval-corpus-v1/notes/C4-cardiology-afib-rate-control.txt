@@ -1,0 +1,49 @@
+CEDAR MESA MEDICAL CENTER - Cardiology Clinic F/u
+================================================================
+Pt: Roland Becker  MRN CMM-8820-RB  DOB 1951-06-22  M/W/NH
+Visit: 2026-04-09  outpatient rechk  Priya Venkataraman, MD
+================================================================
+
+74M w/ persistent AFib (dx 2022, rate-control strategy since
+failed cardioversion x2), HTN, HLD, prior TIA 2019, returning for
+routine 3-mo f/u. Feels well. Denies palpitations, DOE, chest
+pain, syncope. Ambulates w/o limitation - walks to mailbox and
+back (~0.25 mi) w/o sx. Takes meds reliably per daily pill box.
+
+CHA2DS2-VASc = 4 (age 74, HTN, prior TIA, male) - warrants
+anticoagulation. On apixaban since 2022, no bleeding issues, no
+hematuria/melena.
+
+PMH: persistent AFib, HTN, HLD, TIA (2019, no residual deficits),
+BPH.
+Meds: metoprolol tartrate 50 mg PO BID, apixaban 5 mg PO BID,
+lisinopril 20 mg PO daily, atorvastatin 40 mg PO daily, tamsulosin
+0.4 mg PO daily.
+NKDA. SH: former smoker (quit 2005), rare EtOH.
+
+Exam: BP 126/76, HR 78 irreg. CV: irreg irreg rhythm, no m/g. Ext
+no edema. Lungs CTA. Rest of exam unremarkable.
+
+Data: EKG in office today - AFib, ventricular rate 74, no acute
+ST changes. Basic labs 2026-04-02: CBC, CMP, LFTs wnl. eGFR 68.
+
+A/P:
+1. Persistent AFib, rate-controlled. Ventricular rate at office
+today 74, at-home monitoring average 72. Continue metoprolol
+tartrate 50 mg BID.
+2. CHA2DS2-VASc 4, on apixaban 5 mg BID. No dose reduction
+required (age <80, Cr <1.5, weight >60 kg). Continue.
+3. HTN controlled on lisinopril.
+4. HLD stable.
+5. TIA 2019 - no recurrent cerebrovascular events, no current
+symptoms of stroke.
+
+F/u 3 months. Continue home BP and HR log. Return precautions
+discussed.
+
+================================================================
+Electronically signed: Priya Venkataraman, MD
+Credentials: MD, FACC
+NPI: 1234567801
+Signed: 2026-04-09 11:02
+================================================================

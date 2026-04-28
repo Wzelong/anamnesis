@@ -1,0 +1,60 @@
+PORT HALSTON HEALTH SYSTEM - Neurology Consult
+================================================================
+Pt: Kwame Adjei  MRN PHH-3317-KA  DOB 2003-04-14  M/Black/NH
+Date: 2026-03-30  Seen in outpatient neurology clinic
+Provider: Faisal Qureshi, MD
+================================================================
+
+23M, referral from PCP, c/o single witnessed generalized tonic-
+clonic seizure approx 5 days ago. Witnessed by roommate: pt
+slumped from chair mid-conversation, GTC activity lasting ~60-90
+sec per roommate's stopwatch estimate, postictal confusion x 15
+min, bit tongue, no incontinence noted. No prior seizure hx. Pt
+had slept ~4 hrs/night for 3 nights prior (final exams). Denies
+EtOH or illicit drugs - corroborated by basic UDS at PCP visit
+(neg).
+
+No prior hx sz, no febrile sz as child per pt's mother. No hx
+HI. No CNS infection. No meds. No FHx epilepsy.
+
+PMH: healthy. Meds: none. NKDA. SH: college senior, non-smoker,
+occasional EtOH (2-3 drinks/mo), denies illicits. FHx: father
+HTN, mother healthy, no neuro dz.
+
+Exam: alert, fully oriented. VS 118/72, HR 66, afeb. CN II-XII
+intact including fundi. Motor 5/5 all four, tone nl. Sensory
+symmetric. DTRs 2+ symmetric, plantars down. No Hoffmann. Finger-
+nose-finger nl. Heel-knee-shin nl. Romberg neg. Gait nl including
+tandem. Minor superficial abrasion left lateral tongue edge
+consistent w/ sz bite, healing.
+
+Data: basic labs from PCP (2026-03-26): CBC, CMP, Mg, glucose all
+wnl. UDS neg. CT head without contrast (2026-03-26, PCP ordered):
+no acute findings, no mass, no hemorrhage.
+
+A/P:
+1. First unprovoked generalized tonic-clonic seizure in a 23yo
+male with sleep deprivation as contributory factor. Single-seizure
+presentation; does not meet criteria for epilepsy at this time
+(single unprovoked sz, nl imaging so far, pending EEG). Counseled
+that ~30-50% recurrence risk over 2 years.
+   - Ordered outpatient routine EEG (to be scheduled next 2 wks).
+   - Ordered brain MRI with seizure protocol (gadolinium,
+     thin-slice through hippocampi) - expected within 3 weeks.
+   - Antiseizure medication NOT initiated today per shared
+     decision-making; will reassess after EEG/MRI.
+   - Driving restriction discussed per state law (6 months
+     seizure-free required). Written restriction provided.
+   - Sleep hygiene and trigger avoidance reviewed.
+   - Safety precautions reviewed (no swimming alone, shower vs
+     bath, ladders/heights).
+
+F/u in 4 weeks to review EEG and MRI results. Urgent f/u for
+any recurrent seizure or new focal neurologic sx.
+
+================================================================
+Electronically signed: Faisal Qureshi, MD
+Credentials: MD
+NPI: 1329876508
+Signed: 2026-03-30 15:12
+================================================================

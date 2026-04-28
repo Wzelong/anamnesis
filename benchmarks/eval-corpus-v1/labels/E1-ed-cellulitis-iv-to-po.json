@@ -1,0 +1,117 @@
+{
+  "note_id": "E1",
+  "filename": "E1-ed-cellulitis-iv-to-po.txt",
+  "specialty": "emergency_department",
+  "tier": "clean",
+  "patient_pseudo_demographics": {
+    "age": 34,
+    "sex": "male",
+    "race": "white",
+    "ethnicity": "hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "E1-F1",
+      "category": "condition",
+      "verbatim_span": "Cellulitis of left lower limb",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "385627004", "display": "Cellulitis of lower limb (disorder)"},
+        {"system": "ICD-10", "code": "L03.116", "display": "Cellulitis of left lower limb"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary ED diagnosis with laterality."
+    },
+    {
+      "id": "E1-F2",
+      "category": "medication_request",
+      "verbatim_span": "IV ceftriaxone 2 g x 1 dose in the ED",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "2193", "display": "ceftriaxone"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "intent": "order",
+        "dose": "2 g",
+        "frequency": "once",
+        "route": "IV"
+      },
+      "section": "ED COURSE",
+      "notes": "Single IV dose administered in ED."
+    },
+    {
+      "id": "E1-F3",
+      "category": "medication_request",
+      "verbatim_span": "Discharge on cephalexin 500 mg PO QID x 10 days",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "2231", "display": "cephalexin"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "500 mg",
+        "frequency": "QID",
+        "route": "oral",
+        "duration": "10 days"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Oral step-down antibiotic for outpatient completion."
+    },
+    {
+      "id": "E1-F4",
+      "category": "observation",
+      "verbatim_span": "WBC 13.2 x 10^9/L",
+      "expected_codes": [
+        {"system": "LOINC", "code": "6690-2", "display": "Leukocytes [#/volume] in Blood by Automated count"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "laboratory",
+        "value": "13.2 10*9/L"
+      },
+      "section": "DATA REVIEW",
+      "notes": "Elevated WBC supporting infectious picture."
+    },
+    {
+      "id": "E1-F5",
+      "category": "observation",
+      "verbatim_span": "T 38.2 C",
+      "expected_codes": [
+        {"system": "LOINC", "code": "8310-5", "display": "Body temperature"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "vital-signs",
+        "value": "38.2 Cel"
+      },
+      "section": "VITAL SIGNS ON ARRIVAL",
+      "notes": "Febrile on arrival."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "E1-N1",
+      "trap_type": "negation",
+      "verbatim_span": "No signs of\nnecrotizing fasciitis (pain in excess of exam, bullae, skin\nanesthesia, or rapid progression) were noted",
+      "should_not_produce": "Condition: Necrotizing fasciitis",
+      "rationale": "Explicitly screened and negated on exam."
+    },
+    {
+      "id": "E1-N2",
+      "trap_type": "negation",
+      "verbatim_span": "No fluctuance, no\npurulent drainage, no crepitus",
+      "should_not_produce": "Condition: Abscess / gas gangrene",
+      "rationale": "Absence findings to rule out alternative diagnoses; not a fact."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

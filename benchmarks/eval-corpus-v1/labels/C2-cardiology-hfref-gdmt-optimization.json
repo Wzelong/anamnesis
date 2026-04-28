@@ -1,0 +1,150 @@
+{
+  "note_id": "C2",
+  "filename": "C2-cardiology-hfref-gdmt-optimization.txt",
+  "specialty": "cardiology",
+  "tier": "clean",
+  "patient_pseudo_demographics": {
+    "age": 71,
+    "sex": "male",
+    "race": "white",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "C2-F1",
+      "category": "condition",
+      "verbatim_span": "Heart failure with reduced ejection fraction, NYHA functional\nclass II",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "84114007", "display": "Heart failure (disorder)"},
+        {"system": "ICD-10", "code": "I50.22", "display": "Chronic systolic (congestive) heart failure"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary HF diagnosis with NYHA class."
+    },
+    {
+      "id": "C2-F2",
+      "category": "observation",
+      "verbatim_span": "LVEF 40%",
+      "expected_codes": [
+        {"system": "LOINC", "code": "10230-1", "display": "Left ventricular Ejection fraction"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "imaging",
+        "value": "40 %"
+      },
+      "section": "DATA REVIEW",
+      "notes": "Most recent echo LVEF."
+    },
+    {
+      "id": "C2-F3",
+      "category": "observation",
+      "verbatim_span": "NYHA functional\nclass II",
+      "expected_codes": [
+        {"system": "LOINC", "code": "93124-6", "display": "New York Heart Association Functional Classification"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "exam",
+        "value": "Class II"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Functional classification documented explicitly."
+    },
+    {
+      "id": "C2-F4",
+      "category": "medication_request",
+      "verbatim_span": "Continue sacubitril/valsartan 97/103 mg PO BID",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "1656339", "display": "sacubitril / valsartan"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "97/103 mg",
+        "frequency": "BID",
+        "route": "oral"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "ARNI - first pillar of GDMT."
+    },
+    {
+      "id": "C2-F5",
+      "category": "medication_request",
+      "verbatim_span": "Continue carvedilol 25 mg PO BID",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "20352", "display": "carvedilol"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "25 mg",
+        "frequency": "BID",
+        "route": "oral"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Beta-blocker - second pillar."
+    },
+    {
+      "id": "C2-F6",
+      "category": "medication_request",
+      "verbatim_span": "Continue spironolactone 25 mg PO daily",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "9997", "display": "spironolactone"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "25 mg",
+        "frequency": "daily",
+        "route": "oral"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "MRA - third pillar."
+    },
+    {
+      "id": "C2-F7",
+      "category": "medication_request",
+      "verbatim_span": "Continue dapagliflozin 10 mg PO daily",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "1488564", "display": "dapagliflozin"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "10 mg",
+        "frequency": "daily",
+        "route": "oral"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "SGLT2i - fourth pillar."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "C2-N1",
+      "trap_type": "negation",
+      "verbatim_span": "no peripheral edema",
+      "should_not_produce": "Condition: Peripheral edema",
+      "rationale": "Normal exam finding; should not generate a condition."
+    },
+    {
+      "id": "C2-N2",
+      "trap_type": "negation",
+      "verbatim_span": "No\northopnea, no PND",
+      "should_not_produce": "Condition: Orthopnea / paroxysmal nocturnal dyspnea",
+      "rationale": "Symptom screening negative; absence findings."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

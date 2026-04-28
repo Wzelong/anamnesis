@@ -1,0 +1,151 @@
+PORT HALSTON HEALTH SYSTEM
+Neurology Clinic - Movement Disorders
+================================================================
+
+Patient: Gregory Harrington                MRN: PHH-8834-GH
+DOB: 1964-07-02                            Age: 61
+Sex: Male                                  Race: White
+Ethnicity: Not Hispanic or Latino
+Encounter Date: 2026-01-28                 Visit Type: Outpatient, follow-up
+Provider: Ingrid Lehmann, MD               Service: Neurology - Movement Disorders
+
+================================================================
+
+CHIEF COMPLAINT
+Routine 4-month follow-up for Parkinson's disease, medication
+review and discussion of smoking cessation progress.
+
+HISTORY OF PRESENT ILLNESS
+Mr. Harrington is a 61-year-old retired postal worker with
+Parkinson's disease, diagnosed in 2023 after a 12-month history
+of asymmetric right hand tremor and right-sided bradykinesia.
+He returns today for routine review.
+
+Since his last visit in September 2025, motor symptoms have been
+well-controlled on his current carbidopa/levodopa regimen.
+Tremor is infrequent during the day and typically only at rest;
+bradykinesia is mild and does not limit activities of daily
+living. He has noticed that his "off" periods before the
+mid-afternoon dose last approximately 30 minutes, which he finds
+manageable. No freezing of gait, no falls since his last visit,
+no hallucinations, no impulse-control concerns, no significant
+changes in sleep or mood.
+
+The patient is also actively working on smoking cessation. He
+has smoked for decades and is trying to quit; he is currently
+down to about half a pack per day from his prior baseline of
+one pack per day. He has been using nicotine gum intermittently
+and reports a quit date set for March 1, 2026. He wants to
+discuss whether varenicline or bupropion would be advisable
+given his Parkinson's disease.
+
+PAST MEDICAL HISTORY
+- Parkinson's disease, idiopathic, diagnosed 2023
+- Essential hypertension
+- Hyperlipidemia
+- Benign prostatic hyperplasia
+
+PAST SURGICAL HISTORY
+- Knee arthroscopy, 2014
+
+HOME MEDICATIONS
+- Carbidopa/levodopa 25/100 mg PO four times daily (7am, 11am,
+  3pm, 7pm)
+- Rasagiline 1 mg PO daily
+- Lisinopril 10 mg PO daily
+- Atorvastatin 20 mg PO daily
+- Tamsulosin 0.4 mg PO daily
+- Nicotine gum 2 mg PRN (OTC)
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Retired, lives with wife. Drinks 2 glasses of wine per week.
+Currently smoking approximately half a pack per day, actively
+attempting cessation; total tobacco exposure approximately 25
+pack-years (one pack per day for 25 years prior to current
+tapering attempt). No illicit drug use. Exercises by walking 20
+minutes daily.
+
+FAMILY HISTORY
+Father with Parkinson's disease, diagnosed in his late 70s,
+died age 82 of pneumonia. Mother with hypertension. Two
+siblings without neurologic disease.
+
+REVIEW OF SYSTEMS
+Neurologic: as per HPI, tremor and bradykinesia well-controlled.
+No autonomic symptoms.
+Psychiatric: mood stable, no anhedonia, sleep maintenance is
+good.
+Respiratory: mild morning cough, unchanged; no hemoptysis, no
+dyspnea.
+All other systems reviewed and negative.
+
+VITAL SIGNS
+BP 132/78   HR 72   RR 14   Temp 98.0 F   SpO2 97% RA
+Weight 82 kg
+
+PHYSICAL EXAMINATION
+General: alert, pleasant, mildly reduced facial expression
+(hypomimia).
+Cranial nerves II-XII intact, including normal EOM without
+saccadic slowing.
+Motor: mild rigidity in the right upper extremity with cogwheel
+phenomenon; less pronounced on the left. Strength 5/5
+throughout. Mild right-sided bradykinesia on finger-tap and
+hand-open-close testing. Rest tremor of the right hand present
+briefly during distraction.
+Sensory: intact to all modalities.
+Reflexes: 2+ symmetric, plantars downgoing.
+Coordination: mildly slow right finger-to-nose but no dysmetria.
+Gait: narrow-based, slightly reduced right arm swing, turns en
+bloc but without freezing; posture slightly stooped but
+correctable.
+MDS-UPDRS Part III score: 18 (mild, stable from prior 19).
+
+DATA REVIEW
+Basic labs (2026-01-10): CBC, BMP, LFTs, TSH all wnl. B12 wnl.
+ECG (2025-10): NSR, no QT prolongation.
+
+ASSESSMENT AND PLAN
+
+1. Parkinson's disease, idiopathic, motor-stable on current
+dopaminergic regimen.
+   - Continue carbidopa/levodopa 25/100 mg PO QID.
+   - Continue rasagiline 1 mg PO daily.
+   - If "off" time escalates, will consider adding COMT inhibitor
+     or adjusting levodopa dose interval at next visit.
+   - Continued encouragement for regular exercise and balance
+     work.
+
+2. Tobacco use disorder, current smoker actively working toward
+cessation with a quit date of March 1, 2026. Approximate 25
+pack-year history.
+   - Strongly supported cessation efforts. Counseled on smoking
+     cessation including behavioral strategies.
+   - Offered pharmacotherapy options; reviewed varenicline
+     (neuropsychiatric monitoring emphasized) and bupropion
+     (caution with potential to lower seizure threshold; no
+     history of seizures). Patient elected to continue with
+     nicotine replacement therapy in the short term and will
+     decide about additional pharmacotherapy at next visit.
+   - Nicotine replacement: may escalate to patch + gum
+     combination if cravings persist after quit date.
+
+3. Hypertension and hyperlipidemia: continue current regimen.
+
+4. Benign prostatic hyperplasia: stable on tamsulosin.
+
+FOLLOW-UP
+Return in 4 months. Earlier return for worsening "off" periods,
+dyskinesia, falls, hallucinations, or any concerning change in
+smoking cessation pharmacotherapy if initiated before next
+visit.
+
+================================================================
+Electronically signed: Ingrid Lehmann, MD
+Credentials: MD, FAAN
+NPI: 1765432903
+Signed: 2026-01-28 10:25
+================================================================

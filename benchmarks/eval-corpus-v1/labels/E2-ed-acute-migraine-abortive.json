@@ -1,0 +1,118 @@
+{
+  "note_id": "E2",
+  "filename": "E2-ed-acute-migraine-abortive.txt",
+  "specialty": "emergency_department",
+  "tier": "clean",
+  "patient_pseudo_demographics": {
+    "age": 42,
+    "sex": "female",
+    "race": "black-or-african-american",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "E2-F1",
+      "category": "condition",
+      "verbatim_span": "Acute migraine without aura",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "37796009", "display": "Migraine (disorder)"},
+        {"system": "ICD-10", "code": "G43.909", "display": "Migraine, unspecified, not intractable, without status migrainosus"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary ED diagnosis."
+    },
+    {
+      "id": "E2-F2",
+      "category": "medication_request",
+      "verbatim_span": "IV ketorolac 30 mg",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "35827", "display": "ketorolac"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "intent": "order",
+        "dose": "30 mg",
+        "frequency": "once",
+        "route": "IV"
+      },
+      "section": "ED COURSE",
+      "notes": "IV abortive med administered."
+    },
+    {
+      "id": "E2-F3",
+      "category": "medication_request",
+      "verbatim_span": "IV prochlorperazine 10 mg",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "8704", "display": "prochlorperazine"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "intent": "order",
+        "dose": "10 mg",
+        "frequency": "once",
+        "route": "IV"
+      },
+      "section": "ED COURSE",
+      "notes": "Antiemetic abortive agent."
+    },
+    {
+      "id": "E2-F4",
+      "category": "medication_request",
+      "verbatim_span": "IV diphenhydramine 25 mg",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "3498", "display": "diphenhydramine"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "intent": "order",
+        "dose": "25 mg",
+        "frequency": "once",
+        "route": "IV"
+      },
+      "section": "ED COURSE",
+      "notes": "Given to prevent prochlorperazine-induced akathisia."
+    },
+    {
+      "id": "E2-F5",
+      "category": "observation",
+      "verbatim_span": "Pain score 9/10",
+      "expected_codes": [
+        {"system": "LOINC", "code": "72514-3", "display": "Pain severity - 0-10 verbal numeric rating"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "vital-signs",
+        "value": "9 /10"
+      },
+      "section": "VITAL SIGNS ON ARRIVAL",
+      "notes": "Initial pain severity on arrival."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "E2-N1",
+      "trap_type": "negation",
+      "verbatim_span": "No fever, neck\nstiffness, focal weakness, speech changes",
+      "should_not_produce": "Condition: Meningitis / stroke / focal deficit",
+      "rationale": "Red-flag symptoms explicitly negated to exclude serious secondary headache."
+    },
+    {
+      "id": "E2-N2",
+      "trap_type": "historical_resolved",
+      "verbatim_span": "Last\nbrain imaging was a CT in 2021 during a similar presentation\nand was unremarkable",
+      "should_not_produce": "Procedure: CT head (this encounter)",
+      "rationale": "Historical procedure, not performed at this visit."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 13,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

@@ -1,0 +1,608 @@
+{
+  "version": "1.0.0",
+  "verified_date": "2026-04-28",
+  "source_notes": "Codes verified against NLM Clinical Tables (ICD-10-CM), RxNav REST API (RxNorm), loinc.org, and SNOMED CT US Edition via demo bundle cross-reference. Well-established codes in wide clinical use.",
+  "codes": [
+    {
+      "id": "CR-001",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "233819005",
+      "display": "Stable angina (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=233819005"
+    },
+    {
+      "id": "CR-002",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "I20.9",
+      "display": "Angina pectoris, unspecified",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I20.9"
+    },
+    {
+      "id": "CR-003",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "53741008",
+      "display": "Coronary arteriosclerosis (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=53741008"
+    },
+    {
+      "id": "CR-004",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "I25.10",
+      "display": "Atherosclerotic heart disease of native coronary artery without angina pectoris",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I25.10"
+    },
+    {
+      "id": "CR-006",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "84114007",
+      "display": "Heart failure (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=84114007"
+    },
+    {
+      "id": "CR-007",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "I50.22",
+      "display": "Chronic systolic (congestive) heart failure",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I50.22"
+    },
+    {
+      "id": "CR-008",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "49436004",
+      "display": "Atrial fibrillation (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=49436004"
+    },
+    {
+      "id": "CR-009",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "I48.91",
+      "display": "Unspecified atrial fibrillation",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I48.91"
+    },
+    {
+      "id": "CR-010",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "37796009",
+      "display": "Migraine (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=37796009"
+    },
+    {
+      "id": "CR-011",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "G43.909",
+      "display": "Migraine, unspecified, not intractable, without status migrainosus",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G43.909"
+    },
+    {
+      "id": "CR-012",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "439729000",
+      "display": "Chronic migraine (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=439729000"
+    },
+    {
+      "id": "CR-013",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "G43.709",
+      "display": "Chronic migraine without aura, not intractable, without status migrainosus",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G43.709"
+    },
+    {
+      "id": "CR-014",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "385627004",
+      "display": "Cellulitis of lower limb (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=385627004"
+    },
+    {
+      "id": "CR-015",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "L03.116",
+      "display": "Cellulitis of left lower limb",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=L03.116"
+    },
+    {
+      "id": "CR-016",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "91175000",
+      "display": "Seizure (finding)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=91175000"
+    },
+    {
+      "id": "CR-017",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "R56.9",
+      "display": "Unspecified convulsions",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=R56.9"
+    },
+    {
+      "id": "CR-018",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "426373005",
+      "display": "Relapsing-remitting multiple sclerosis (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=426373005"
+    },
+    {
+      "id": "CR-019",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "G35",
+      "display": "Multiple sclerosis",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G35"
+    },
+    {
+      "id": "CR-020",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "15602001",
+      "display": "Conversion disorder (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=15602001",
+      "notes": "Used for functional neurological symptom disorder."
+    },
+    {
+      "id": "CR-021",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "F44.4",
+      "display": "Conversion disorder with motor symptom or deficit",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=F44.4"
+    },
+    {
+      "id": "CR-022",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "59621000",
+      "display": "Essential hypertension (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=59621000"
+    },
+    {
+      "id": "CR-023",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "I10",
+      "display": "Essential (primary) hypertension",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I10"
+    },
+    {
+      "id": "CR-024",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "55822004",
+      "display": "Hyperlipidemia (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=55822004"
+    },
+    {
+      "id": "CR-025",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "E78.5",
+      "display": "Hyperlipidemia, unspecified",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=E78.5"
+    },
+    {
+      "id": "CR-026",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "398057008",
+      "display": "Tension-type headache (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=398057008"
+    },
+    {
+      "id": "CR-027",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "G44.209",
+      "display": "Tension-type headache, unspecified, not intractable",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G44.209"
+    },
+    {
+      "id": "CR-028",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "302828002",
+      "display": "Venous insufficiency (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=302828002"
+    },
+    {
+      "id": "CR-029",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "I87.2",
+      "display": "Venous insufficiency (chronic) (peripheral)",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I87.2"
+    },
+    {
+      "id": "CR-030",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "398665005",
+      "display": "Vasovagal syncope (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=398665005"
+    },
+    {
+      "id": "CR-031",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "R55",
+      "display": "Syncope and collapse",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=R55"
+    },
+    {
+      "id": "CR-032",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "64109004",
+      "display": "Costochondritis (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=64109004"
+    },
+    {
+      "id": "CR-033",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "M94.0",
+      "display": "Chondrocostal junction syndrome [Tietze]",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=M94.0"
+    },
+    {
+      "id": "CR-034",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "29857009",
+      "display": "Chest pain (finding)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=29857009"
+    },
+    {
+      "id": "CR-035",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "R07.9",
+      "display": "Chest pain, unspecified",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=R07.9"
+    },
+    {
+      "id": "CR-036",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "386805003",
+      "display": "Mild cognitive impairment (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=386805003"
+    },
+    {
+      "id": "CR-037",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "G31.84",
+      "display": "Mild cognitive impairment, so stated",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G31.84"
+    },
+    {
+      "id": "CR-038",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "195967001",
+      "display": "Asthma (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=195967001"
+    },
+    {
+      "id": "CR-039",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "J45.901",
+      "display": "Unspecified asthma with (acute) exacerbation",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=J45.901"
+    },
+    {
+      "id": "CR-040",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "22298006",
+      "display": "Myocardial infarction (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=22298006"
+    },
+    {
+      "id": "CR-041",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "I21.9",
+      "display": "Acute myocardial infarction, unspecified",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I21.9"
+    },
+    {
+      "id": "CR-042",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "232717009",
+      "display": "Coronary artery bypass grafting (procedure)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=232717009"
+    },
+    {
+      "id": "CR-043",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "95281009",
+      "display": "Sudden cardiac death (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=95281009"
+    },
+    {
+      "id": "CR-046",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "235595009",
+      "display": "Gastroesophageal reflux disease (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=235595009"
+    },
+    {
+      "id": "CR-047",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "K21.9",
+      "display": "Gastro-esophageal reflux disease without esophagitis",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=K21.9"
+    },
+    {
+      "id": "CR-100",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "20352",
+      "display": "carvedilol",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/20352/properties.json"
+    },
+    {
+      "id": "CR-102",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "6918",
+      "display": "metoprolol",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/6918/properties.json"
+    },
+    {
+      "id": "CR-103",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "1488564",
+      "display": "dapagliflozin",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/1488564/properties.json"
+    },
+    {
+      "id": "CR-104",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "1656339",
+      "display": "sacubitril / valsartan",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/1656339/properties.json"
+    },
+    {
+      "id": "CR-105",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "9997",
+      "display": "spironolactone",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/9997/properties.json"
+    },
+    {
+      "id": "CR-106",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "1364430",
+      "display": "apixaban",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/1364430/properties.json"
+    },
+    {
+      "id": "CR-108",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "38404",
+      "display": "topiramate",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/38404/properties.json"
+    },
+    {
+      "id": "CR-110",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "1876366",
+      "display": "ocrelizumab",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/1876366/properties.json"
+    },
+    {
+      "id": "CR-111",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "2231",
+      "display": "cephalexin",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/2231/properties.json"
+    },
+    {
+      "id": "CR-112",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "2193",
+      "display": "ceftriaxone",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/2193/properties.json"
+    },
+    {
+      "id": "CR-113",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "35827",
+      "display": "ketorolac",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/35827/properties.json"
+    },
+    {
+      "id": "CR-114",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "8704",
+      "display": "prochlorperazine",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/8704/properties.json"
+    },
+    {
+      "id": "CR-115",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "10831",
+      "display": "sulfamethoxazole / trimethoprim",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/10831/properties.json"
+    },
+    {
+      "id": "CR-119",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "435",
+      "display": "albuterol",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/435/properties.json"
+    },
+    {
+      "id": "CR-121",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "3498",
+      "display": "diphenhydramine",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/3498/properties.json"
+    },
+    {
+      "id": "CR-200",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "72166-2",
+      "display": "Tobacco smoking status",
+      "source_url": "https://loinc.org/72166-2/"
+    },
+    {
+      "id": "CR-201",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "93124-6",
+      "display": "New York Heart Association Functional Classification",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/loinc_items/v3/search?terms=93124-6"
+    },
+    {
+      "id": "CR-202",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "72133-2",
+      "display": "Montreal Cognitive Assessment [MoCA]",
+      "source_url": "https://loinc.org/72133-2/"
+    },
+    {
+      "id": "CR-204",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "10230-1",
+      "display": "Left ventricular Ejection fraction",
+      "source_url": "https://loinc.org/10230-1/"
+    },
+    {
+      "id": "CR-205",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "72514-3",
+      "display": "Pain severity - 0-10 verbal numeric rating",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/loinc_items/v3/search?terms=72514-3"
+    },
+    {
+      "id": "CR-209",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "8310-5",
+      "display": "Body temperature",
+      "source_url": "https://loinc.org/8310-5/"
+    },
+    {
+      "id": "CR-210",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "29463-7",
+      "display": "Body weight",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/loinc_items/v3/search?terms=29463-7"
+    },
+    {
+      "id": "CR-211",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "6690-2",
+      "display": "Leukocytes [#/volume] in Blood by Automated count",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/loinc_items/v3/search?terms=6690-2"
+    },
+    {
+      "id": "CR-212",
+      "system_short": "LOINC",
+      "system": "http://loinc.org",
+      "code": "2708-6",
+      "display": "Oxygen saturation in Arterial blood",
+      "source_url": "https://loinc.org/2708-6/"
+    },
+    {
+      "id": "CR-250",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "8517006",
+      "display": "Former smoker (finding)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=8517006"
+    },
+    {
+      "id": "CR-251",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "77176002",
+      "display": "Smoker (finding)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=77176002"
+    },
+    {
+      "id": "CR-253",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "449868002",
+      "display": "Smokes tobacco daily (finding)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=449868002"
+    },
+    {
+      "id": "CR-300",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "41976001",
+      "display": "Cardiac catheterization (procedure)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=41976001"
+    },
+    {
+      "id": "CR-301",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "164847006",
+      "display": "12 lead electrocardiogram (procedure)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=164847006"
+    },
+    {
+      "id": "CR-302",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "241601008",
+      "display": "Magnetic resonance imaging of brain (procedure)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=241601008"
+    },
+    {
+      "id": "CR-304",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "303653007",
+      "display": "Computed tomography of head (procedure)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=303653007"
+    }
+  ]
+}

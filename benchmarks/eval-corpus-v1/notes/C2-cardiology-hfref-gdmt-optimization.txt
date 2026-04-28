@@ -1,0 +1,146 @@
+CEDAR MESA MEDICAL CENTER
+Cardiology Clinic - Heart Failure Follow-up
+================================================================
+
+Patient: Gordon Fairweather              MRN: CMM-3329-GF
+DOB: 1954-05-18                          Age: 71
+Sex: Male                                Race: White
+Ethnicity: Not Hispanic or Latino
+Encounter Date: 2026-03-26               Visit Type: Outpatient, follow-up
+Provider: Marcus Holloway, MD            Service: Cardiology - Heart Failure
+
+================================================================
+
+CHIEF COMPLAINT
+Six-month follow-up for heart failure with reduced ejection
+fraction.
+
+HISTORY OF PRESENT ILLNESS
+Mr. Fairweather is a 71-year-old retired electrician with HFrEF
+of ischemic etiology (diagnosed 2023 after anterior MI with
+subsequent revascularization) who returns for routine surveillance.
+Initial echocardiogram at diagnosis showed LVEF 30%; serial
+imaging has demonstrated reverse remodeling on guideline-directed
+medical therapy, with most recent echo (2026-02-18) showing LVEF
+40% with mildly dilated LV and no significant valvular disease.
+
+Since his last visit in October 2025 he has been clinically
+stable. He walks 30 minutes daily on a treadmill at moderate
+incline without symptom-limiting dyspnea. He describes mild
+dyspnea on exertion climbing two flights of stairs at a brisk
+pace, consistent with NYHA class II functional capacity. No
+orthopnea, no PND, no paroxysmal nocturnal cough. He reports
+stable weight (daily weights averaging 86 kg, no gains beyond
+his 1 kg threshold) and no lower extremity edema. He has not
+required any loop diuretic adjustments. No palpitations, syncope,
+or near-syncope.
+
+He denies any anginal equivalents and has had no ED visits or
+hospitalizations since his last follow-up. He is fully adherent
+to his regimen and reports no symptomatic hypotension or
+significant side effects.
+
+PAST MEDICAL HISTORY
+- Heart failure with reduced ejection fraction (HFrEF), ischemic
+  etiology, diagnosed 2023
+- Prior anterior ST-elevation myocardial infarction, 2023, treated
+  with PCI to proximal LAD
+- Essential hypertension
+- Hyperlipidemia
+- Chronic kidney disease stage 3a (baseline eGFR 52)
+- Type 2 diabetes mellitus, well controlled
+
+PAST SURGICAL HISTORY
+- Percutaneous coronary intervention, 2023
+- Right inguinal hernia repair, 2011
+
+HOME MEDICATIONS
+- Sacubitril/valsartan 97/103 mg PO BID
+- Carvedilol 25 mg PO BID
+- Spironolactone 25 mg PO daily
+- Dapagliflozin 10 mg PO daily
+- Aspirin 81 mg PO daily
+- Atorvastatin 80 mg PO daily
+- Metformin 1000 mg PO BID
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Retired electrician. Lives with wife. Former smoker, quit 2018,
+15 pack-year history. Alcohol: 1-2 beers per week. Independent
+in ADLs and IADLs.
+
+FAMILY HISTORY
+Father with coronary disease, CABG at age 68, died age 81 of
+unrelated cause. Mother with diabetes and breast cancer, died
+age 85.
+
+REVIEW OF SYSTEMS
+Constitutional: no fevers, no weight gain.
+Cardiovascular: as per HPI.
+Respiratory: no dyspnea at rest, no orthopnea.
+Renal: good urinary output.
+All other systems reviewed and negative.
+
+VITAL SIGNS
+BP 118/72   HR 62   RR 14   Temp 98.1 F   SpO2 97% RA
+Weight 86.4 kg   BMI 27.8
+
+PHYSICAL EXAMINATION
+General: well-appearing, no acute distress.
+Neck: JVP approximately 6 cm above sternal angle (normal).
+Cardiac: regular rate and rhythm, normal S1, soft S2, no S3
+or S4, no murmurs. PMI laterally displaced, non-sustained.
+Respiratory: clear to auscultation bilaterally, no crackles.
+Abdomen: soft, non-tender; no hepatomegaly.
+Extremities: no peripheral edema. 2+ distal pulses.
+Neuro: grossly intact.
+
+DATA REVIEW
+Echocardiogram (2026-02-18): LVEF 40% (up from 30% at baseline),
+mildly dilated LV, no significant valvular disease, no
+pericardial effusion.
+BMP (2026-03-20): Na 140, K 4.2, BUN 22, Cr 1.4 (eGFR 52, stable),
+Cl 102, HCO3 26.
+NT-proBNP (2026-03-20): 412 pg/mL (baseline at this visit level
+for several months).
+HbA1c (2026-03-20): 6.7%.
+Lipids (2026-03-20): LDL 62, HDL 48.
+
+ASSESSMENT AND PLAN
+
+1. Heart failure with reduced ejection fraction, NYHA functional
+class II, on four-pillar guideline-directed medical therapy with
+stable clinical course and reverse remodeling (LVEF 30% to 40%).
+   - Continue sacubitril/valsartan 97/103 mg PO BID.
+   - Continue carvedilol 25 mg PO BID.
+   - Continue spironolactone 25 mg PO daily.
+   - Continue dapagliflozin 10 mg PO daily.
+   - Reinforced daily weights, sodium moderation, and symptom
+     awareness. Patient has clear action plan for weight gain
+     beyond threshold.
+
+2. Chronic kidney disease stage 3a. eGFR stable at 52. Potassium
+normal. Continue current regimen.
+
+3. Type 2 diabetes mellitus, well controlled (HbA1c 6.7%).
+Continue metformin. Dapagliflozin providing dual benefit.
+
+4. Coronary artery disease with prior MI, status post PCI to
+proximal LAD. Continue aspirin and high-intensity statin.
+
+5. Prior MI as per history; currently no evidence of active
+ischemia; no anginal equivalents reported.
+
+FOLLOW-UP
+Return to heart failure clinic in 6 months. Labs in 3 months
+(BMP, NT-proBNP). No medication changes today. Patient reminded
+to obtain annual influenza vaccine.
+
+================================================================
+Electronically signed: Marcus Holloway, MD
+Credentials: MD, FACC
+NPI: 1345678902
+Signed: 2026-03-26 10:47
+================================================================

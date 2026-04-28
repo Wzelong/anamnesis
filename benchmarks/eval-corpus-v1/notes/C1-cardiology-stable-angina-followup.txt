@@ -1,0 +1,135 @@
+CEDAR MESA MEDICAL CENTER
+Cardiology Clinic - Post-Procedure Follow-up
+================================================================
+
+Patient: Deborah Washington                 MRN: CMM-4471-DW
+DOB: 1967-09-14                             Age: 58
+Sex: Female                                 Race: Black or African American
+Ethnicity: Not Hispanic or Latino
+Encounter Date: 2026-03-11                  Visit Type: Outpatient, follow-up
+Provider: Priya Venkataraman, MD            Service: Cardiology
+Referring: Marcus Holloway, MD (Cardiology)
+
+================================================================
+
+CHIEF COMPLAINT
+Follow-up after cardiac catheterization for exertional chest
+discomfort.
+
+HISTORY OF PRESENT ILLNESS
+Ms. Washington is a 58-year-old woman with a past medical history
+of essential hypertension and hyperlipidemia who was referred in
+January 2026 for evaluation of exertional chest pressure. Symptoms
+first emerged in late fall 2025 with retrosternal tightness on
+climbing two flights of stairs, consistently relieved within
+3-5 minutes of rest, no associated diaphoresis or radiation.
+Stress testing (exercise treadmill with nuclear imaging, 2026-02-04)
+was positive for a reversible inferior wall perfusion defect.
+She underwent diagnostic left heart catheterization on 2026-02-26
+which demonstrated a 75% focal stenosis in the mid right coronary
+artery with TIMI 3 flow; the left main, LAD, and circumflex were
+angiographically normal. Left ventriculogram showed preserved
+systolic function with an estimated ejection fraction of 58%. She
+elected optimal medical therapy rather than intervention after
+shared decision-making with the interventional team. She returns
+today to review the plan and begin anti-anginal therapy.
+
+She reports no chest discomfort at rest. She has had two brief
+episodes of pressure over the past ten days, both triggered by
+hurrying to catch a bus, relieved promptly with rest. No syncope,
+palpitations, orthopnea, or lower extremity edema. She walks
+approximately 0.5 miles daily without limitation.
+
+PAST MEDICAL HISTORY
+- Essential hypertension, diagnosed 2012, well controlled on ACEi
+- Hyperlipidemia, diagnosed 2015, on high-intensity statin
+- Vitamin D deficiency (resolved with supplementation)
+
+PAST SURGICAL HISTORY
+- Cholecystectomy, 2003
+- Cesarean section, 1998
+
+HOME MEDICATIONS
+- Lisinopril 20 mg PO daily
+- Atorvastatin 40 mg PO daily
+- Aspirin 81 mg PO daily
+- Vitamin D3 2000 IU PO daily
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Retired school librarian. Never smoker. Alcohol: two glasses of
+wine per week. No recreational drug use. Lives with spouse; widowed
+sister and adult daughter nearby. Ambulates without assistive
+device.
+
+FAMILY HISTORY
+Mother with hypertension (alive, age 82). Father deceased age 78
+from colon cancer. One sibling, healthy.
+
+REVIEW OF SYSTEMS
+Constitutional: no fevers, chills, weight loss.
+Cardiovascular: as per HPI; denies orthopnea, PND, or edema.
+Respiratory: no dyspnea at rest, no cough.
+GI/GU: unremarkable.
+Musculoskeletal: occasional knee stiffness without effusion.
+Neurologic: no focal deficits.
+
+VITAL SIGNS
+BP 128/74 mmHg   HR 64 bpm   RR 14   Temp 98.2 F   SpO2 98% RA
+Weight 72.3 kg   BMI 27.4
+
+PHYSICAL EXAMINATION
+General: well-appearing, no acute distress.
+HEENT: no JVD, no carotid bruits.
+Cardiac: regular rate and rhythm, normal S1/S2, no murmurs, rubs,
+or gallops. PMI non-displaced.
+Respiratory: clear to auscultation bilaterally.
+Abdomen: soft, non-tender, no bruits.
+Extremities: no edema, 2+ distal pulses bilaterally.
+Neuro: grossly intact.
+
+DATA REVIEW
+ECG (today, in-office): normal sinus rhythm at 62 bpm, normal axis,
+no ST-T changes, no Q waves.
+Lipid panel (2026-02-10): total cholesterol 162, LDL 84, HDL 54,
+triglycerides 118.
+HbA1c (2026-02-10): 5.6%.
+Catheterization report reviewed as above; no evidence of left main
+disease.
+
+ASSESSMENT AND PLAN
+
+1. Stable angina pectoris in the setting of single-vessel coronary
+artery disease involving the mid right coronary artery.
+   - Initiate carvedilol 6.25 mg PO BID, titrate to target over
+     4-6 weeks as tolerated.
+   - Continue aspirin 81 mg PO daily.
+   - Continue atorvastatin 40 mg PO daily; recheck lipids in
+     3 months.
+   - Patient educated on recognizing unstable symptoms (rest pain,
+     prolonged episodes, associated dyspnea or diaphoresis) and
+     instructed to present to the ED for evaluation if these occur.
+   - Sublingual nitroglycerin 0.4 mg prescribed for breakthrough
+     symptoms; use instructions reviewed.
+
+2. Essential hypertension, controlled. Continue lisinopril 20 mg
+PO daily. Home BP log reviewed, averaging 126/76.
+
+3. Hyperlipidemia, at goal. Continue atorvastatin.
+
+4. Preventive care: influenza vaccine documented this season;
+pneumococcal and shingles vaccinations up to date.
+
+FOLLOW-UP
+Return to cardiology clinic in 6 weeks for titration and symptom
+review. Urgent return precautions reviewed in writing. Cardiac
+rehabilitation referral placed.
+
+================================================================
+Electronically signed: Priya Venkataraman, MD
+Credentials: MD, FACC
+NPI: 1234567801
+Signed: 2026-03-11 14:27
+================================================================

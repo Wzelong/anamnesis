@@ -1,0 +1,144 @@
+{
+  "note_id": "E6",
+  "filename": "E6-ed-pediatric-parental-disclosure.txt",
+  "specialty": "emergency_department",
+  "tier": "trap",
+  "patient_pseudo_demographics": {
+    "age": 8,
+    "sex": "male",
+    "race": "black-or-african-american",
+    "ethnicity": "hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "E6-F1",
+      "category": "condition",
+      "verbatim_span": "Acute asthma exacerbation, moderate severity",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "195967001", "display": "Asthma (disorder)"},
+        {"system": "ICD-10", "code": "J45.901", "display": "Unspecified asthma with (acute) exacerbation"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Child's primary encounter diagnosis."
+    },
+    {
+      "id": "E6-F2",
+      "category": "medication_request",
+      "verbatim_span": "Albuterol 5 mg + ipratropium 0.5 mg nebulizer, three back-to-\n  back treatments",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "435", "display": "albuterol"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "intent": "order",
+        "dose": "5 mg (albuterol) + 0.5 mg (ipratropium)",
+        "route": "inhalation"
+      },
+      "section": "ED COURSE",
+      "notes": "Bronchodilator given in ED."
+    },
+    {
+      "id": "E6-F3",
+      "category": "observation",
+      "verbatim_span": "SpO2 92% RA",
+      "expected_codes": [
+        {"system": "LOINC", "code": "2708-6", "display": "Oxygen saturation in Arterial blood"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "vital-signs",
+        "value": "92 %"
+      },
+      "section": "VITAL SIGNS ON ARRIVAL",
+      "notes": "Hypoxemia on arrival."
+    },
+    {
+      "id": "E6-F4",
+      "category": "observation",
+      "verbatim_span": "Weight 27 kg",
+      "expected_codes": [
+        {"system": "LOINC", "code": "29463-7", "display": "Body weight"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "vital-signs",
+        "value": "27 kg"
+      },
+      "section": "VITAL SIGNS ON ARRIVAL",
+      "notes": "Pediatric weight for weight-based dosing."
+    },
+    {
+      "id": "E6-F5",
+      "category": "family_member_history",
+      "verbatim_span": "His mother has type 1 diabetes mellitus,\ndiagnosed at age 12",
+      "expected_codes": [],
+      "expected_attributes": {
+        "relationship": "mother",
+        "conditionCode": "type 1 diabetes mellitus",
+        "onsetAge": "12"
+      },
+      "section": "HISTORY OF PRESENT ILLNESS",
+      "notes": "Parental disclosure becomes FamilyMemberHistory for the child per locked-in decision (E6)."
+    },
+    {
+      "id": "E6-F6",
+      "category": "family_member_history",
+      "verbatim_span": "His father\nhas moderate eczema and seasonal allergic rhinitis",
+      "expected_codes": [],
+      "expected_attributes": {
+        "relationship": "father",
+        "conditionCode": "eczema; allergic rhinitis"
+      },
+      "section": "HISTORY OF PRESENT ILLNESS",
+      "notes": "Paternal history becomes FMH, not patient Condition."
+    },
+    {
+      "id": "E6-F7",
+      "category": "family_member_history",
+      "verbatim_span": "An older\nsister (age 11) has mild intermittent asthma",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "195967001", "display": "Asthma (disorder)"}
+      ],
+      "expected_attributes": {
+        "relationship": "sister",
+        "conditionCode": "asthma"
+      },
+      "section": "HISTORY OF PRESENT ILLNESS",
+      "notes": "Sibling asthma - atopic family pattern."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "E6-N1",
+      "trap_type": "wrong_subject",
+      "verbatim_span": "His mother has type 1 diabetes mellitus,\ndiagnosed at age 12",
+      "should_not_produce": "Condition: Type 1 diabetes (patient/child)",
+      "rationale": "Parent's condition disclosed during child's visit. Must not be attributed to the pediatric patient as a Condition."
+    },
+    {
+      "id": "E6-N2",
+      "trap_type": "wrong_subject",
+      "verbatim_span": "His father\nhas moderate eczema and seasonal allergic rhinitis",
+      "should_not_produce": "Condition: Eczema / allergic rhinitis (patient/child)",
+      "rationale": "Parent's condition; should not become child's Condition."
+    },
+    {
+      "id": "E6-N3",
+      "trap_type": "negation",
+      "verbatim_span": "No family history of cystic fibrosis, immunodeficiency, or\nsudden cardiac death",
+      "should_not_produce": "FamilyMemberHistory: CF / immunodeficiency / SCD",
+      "rationale": "Explicitly negated family histories."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 15,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

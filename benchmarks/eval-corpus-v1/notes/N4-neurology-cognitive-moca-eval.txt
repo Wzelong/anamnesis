@@ -1,0 +1,63 @@
+PORT HALSTON HEALTH SYSTEM - Cognitive Neurology
+================================================================
+Pt: Dorothy Pemberton   MRN PHH-6628-DP   DOB 1947-11-30
+78F / White / Non-Hispanic
+Visit: 2026-01-14   New patient eval
+Provider: Mira Delacroix, MD
+================================================================
+
+78F right-handed retired school principal, brought by adult
+daughter for progressive memory concerns x ~18 mo. Daughter
+describes repeated questions within a single conversation,
+misplaced items (reading glasses in the fridge), difficulty
+following long-standing recipes, increasing reliance on notebook
+for appointments. Pt herself aware she is more forgetful but
+feels daily function "fine." Declined highway driving recently.
+Daughter has managed finances since two missed utility payments
+last fall. Lives alone. No hx of head injury, no seizures, no
+hallucinations, no REM sleep behavior, no urinary incontinence,
+no falls, no parkinsonism. PHQ-2 negative.
+
+PMH: HTN, hyperlipidemia, osteoporosis, mild hearing loss.
+Meds: amlodipine 5 mg daily, atorvastatin 20 mg daily, calcium
+with vit D, alendronate weekly. NKDA. SH: widowed 6 yrs,
+non-smoker, no EtOH. FHx: mother with "dementia" in her late 80s,
+details unclear; father d. 70s heart disease.
+
+Exam: BP 132/74, HR 68. Alert, well-groomed. Language fluent,
+follows 2-step commands, asks for repetition of 3-step. Naming
+8/10 confrontation items. CN II-XII intact. Motor 5/5. No rigidity,
+tremor, or bradykinesia. Gait normal, turns in 3 steps.
+
+Cognitive screening: MoCA administered with hearing aids in place.
+Score 21/30. Deficits in delayed recall (1/5, improved to 3/5
+with cueing), orientation (-2: date, day), verbal fluency. Clock
+and cube intact.
+
+Data reviewed: Brain MRI 2025-10 (outside): mild generalized
+atrophy with disproportionate medial temporal atrophy. No
+infarcts, no microbleeds. Labs 2025-11: TSH, B12, treponemal
+screen, CBC/CMP all wnl.
+
+A/P:
+1. Mild cognitive impairment, most consistent with amnestic
+subtype, with medial temporal atrophy on MRI raising concern for
+early Alzheimer's-disease-related pathology. Counseled patient
+and daughter.
+   - Discussed biomarker options (CSF, PET, or blood amyloid);
+     referred for shared decision-making visit.
+   - Cognitive rehabilitation and safety planning.
+   - Driving evaluation referral.
+2. Safety planning: pill box with weekly check-ins; stove safety
+devices discussed.
+3. Hearing optimization: consistent hearing aid use; audiology
+re-fit.
+
+F/u 3 months or sooner after biomarker visit.
+
+================================================================
+Electronically signed: Mira Delacroix, MD
+Credentials: MD, FAAN
+NPI: 1876325410
+Signed: 2026-01-14 16:31
+================================================================

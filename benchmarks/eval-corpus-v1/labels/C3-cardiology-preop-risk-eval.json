@@ -1,0 +1,98 @@
+{
+  "note_id": "C3",
+  "filename": "C3-cardiology-preop-risk-eval.txt",
+  "specialty": "cardiology",
+  "tier": "messy",
+  "patient_pseudo_demographics": {
+    "age": 66,
+    "sex": "female",
+    "race": "asian",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "C3-F1",
+      "category": "condition",
+      "verbatim_span": "paroxysmal AFib",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "49436004", "display": "Atrial fibrillation (disorder)"},
+        {"system": "ICD-10", "code": "I48.91", "display": "Unspecified atrial fibrillation"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "PMH",
+      "notes": "Paroxysmal AFib on PMH, anticoagulated."
+    },
+    {
+      "id": "C3-F2",
+      "category": "condition",
+      "verbatim_span": "HTN",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "59621000", "display": "Essential hypertension (disorder)"},
+        {"system": "ICD-10", "code": "I10", "display": "Essential (primary) hypertension"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "PMH",
+      "notes": "Hypertension on problem list."
+    },
+    {
+      "id": "C3-F3",
+      "category": "medication_request",
+      "verbatim_span": "apixaban\n5 mg BID",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "1364430", "display": "apixaban"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "5 mg",
+        "frequency": "BID",
+        "route": "oral"
+      },
+      "section": "Meds",
+      "notes": "Anticoagulation for AFib."
+    },
+    {
+      "id": "C3-F4",
+      "category": "observation",
+      "verbatim_span": "RCRI = 1 point",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "final",
+        "category": "exam",
+        "value": "1 point"
+      },
+      "section": "A/P",
+      "notes": "Revised Cardiac Risk Index score; no widely-adopted LOINC in seed."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "C3-N1",
+      "trap_type": "hypothetical",
+      "verbatim_span": "Pre-op for: right total hip arthroplasty, scheduled 2026-02-25",
+      "should_not_produce": "Procedure: Right total hip arthroplasty (completed)",
+      "rationale": "Surgery is planned, not yet performed. Should not generate a completed Procedure resource."
+    },
+    {
+      "id": "C3-N2",
+      "trap_type": "negation",
+      "verbatim_span": "no known\nischemic heart dz, no hx MI or revasc",
+      "should_not_produce": "Condition: Ischemic heart disease / prior MI",
+      "rationale": "Explicitly negated history."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 8,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

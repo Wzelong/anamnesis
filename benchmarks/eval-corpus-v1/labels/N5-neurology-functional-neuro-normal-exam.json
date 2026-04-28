@@ -1,0 +1,73 @@
+{
+  "note_id": "N5",
+  "filename": "N5-neurology-functional-neuro-normal-exam.txt",
+  "specialty": "neurology",
+  "tier": "trap",
+  "patient_pseudo_demographics": {
+    "age": 29,
+    "sex": "male",
+    "race": "white",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "N5-F1",
+      "category": "condition",
+      "verbatim_span": "Functional neurological disorder (motor and sensory subtype)",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "15602001", "display": "Conversion disorder (disorder)"},
+        {"system": "ICD-10", "code": "F44.4", "display": "Conversion disorder with motor symptom or deficit"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "encounter-diagnosis"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Positive-sign diagnosis of FND; replaces differential of organic disease."
+    },
+    {
+      "id": "N5-F2",
+      "category": "procedure",
+      "verbatim_span": "Prior brain MRI (2025-11, outside facility): normal",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "241601008", "display": "Magnetic resonance imaging of brain (procedure)"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "performedDate": "2025-11"
+      },
+      "section": "DATA REVIEW",
+      "notes": "Historical completed procedure."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "N5-N1",
+      "trap_type": "ruled_out",
+      "verbatim_span": "No features of multiple sclerosis, stroke, or other\norganic neurologic disease are present",
+      "should_not_produce": "Condition: Multiple sclerosis / stroke / organic neuro disease",
+      "rationale": "All organic diagnoses explicitly ruled out in favor of the functional diagnosis."
+    },
+    {
+      "id": "N5-N2",
+      "trap_type": "ruled_out",
+      "verbatim_span": "six-month history of fluctuating\nright-sided weakness and tingling",
+      "should_not_produce": "Condition: Right-sided hemiparesis / paresthesia",
+      "rationale": "Subjective symptom description; a naive extractor might create organic weakness/paresthesia conditions, but the exam is normal and diagnosis is functional."
+    },
+    {
+      "id": "N5-N3",
+      "trap_type": "negation",
+      "verbatim_span": "no\ndemyelinating lesions, no mass, no infarct, no microbleeds",
+      "should_not_produce": "Condition: Demyelinating disease / mass / stroke",
+      "rationale": "Explicitly normal imaging; absence findings."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

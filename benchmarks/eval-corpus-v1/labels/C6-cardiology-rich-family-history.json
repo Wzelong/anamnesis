@@ -1,0 +1,156 @@
+{
+  "note_id": "C6",
+  "filename": "C6-cardiology-rich-family-history.txt",
+  "specialty": "cardiology",
+  "tier": "trap",
+  "patient_pseudo_demographics": {
+    "age": 45,
+    "sex": "male",
+    "race": "asian",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "C6-F1",
+      "category": "condition",
+      "verbatim_span": "Essential hypertension, controlled on single agent",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "59621000", "display": "Essential hypertension (disorder)"},
+        {"system": "ICD-10", "code": "I10", "display": "Essential (primary) hypertension"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Patient's own HTN, not family history."
+    },
+    {
+      "id": "C6-F2",
+      "category": "condition",
+      "verbatim_span": "Hyperlipidemia with elevated Lp(a)",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "55822004", "display": "Hyperlipidemia (disorder)"},
+        {"system": "ICD-10", "code": "E78.5", "display": "Hyperlipidemia, unspecified"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Patient's own HLD with Lp(a) elevation."
+    },
+    {
+      "id": "C6-F3",
+      "category": "family_member_history",
+      "verbatim_span": "Father, alive age 74, with coronary artery disease. Diagnosed\n  at age 58",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "53741008", "display": "Coronary arteriosclerosis (disorder)"}
+      ],
+      "expected_attributes": {
+        "relationship": "father",
+        "conditionCode": "coronary artery disease",
+        "onsetAge": "58"
+      },
+      "section": "FAMILY HISTORY",
+      "notes": "Father with CAD diagnosed at 58; onset age captured."
+    },
+    {
+      "id": "C6-F4",
+      "category": "family_member_history",
+      "verbatim_span": "Brother, deceased age 49 (February 2026), sudden cardiac death",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "95281009", "display": "Sudden cardiac death (disorder)"}
+      ],
+      "expected_attributes": {
+        "relationship": "brother",
+        "conditionCode": "sudden cardiac death",
+        "deceasedAge": "49"
+      },
+      "section": "FAMILY HISTORY",
+      "notes": "Brother's SCD; primary driver of referral."
+    },
+    {
+      "id": "C6-F5",
+      "category": "family_member_history",
+      "verbatim_span": "Maternal grandfather, deceased age 62, myocardial infarction",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "22298006", "display": "Myocardial infarction (disorder)"},
+        {"system": "ICD-10", "code": "I21.9", "display": "Acute myocardial infarction, unspecified"}
+      ],
+      "expected_attributes": {
+        "relationship": "maternal-grandfather",
+        "conditionCode": "myocardial infarction",
+        "deceasedAge": "62"
+      },
+      "section": "FAMILY HISTORY",
+      "notes": "Third FMH entry - deliberately not age 52 (demo uses that)."
+    },
+    {
+      "id": "C6-F6",
+      "category": "family_member_history",
+      "verbatim_span": "Paternal uncle, alive age 70, with a history of coronary\n  artery bypass grafting at age 60",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "232717009", "display": "Coronary artery bypass grafting (procedure)"}
+      ],
+      "expected_attributes": {
+        "relationship": "paternal-uncle",
+        "conditionCode": "coronary artery disease / CABG",
+        "onsetAge": "60"
+      },
+      "section": "FAMILY HISTORY",
+      "notes": "Fourth FMH entry."
+    },
+    {
+      "id": "C6-F7",
+      "category": "observation",
+      "verbatim_span": "Coronary calcium score (2026-02-19): 52",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "final",
+        "category": "imaging",
+        "value": "52 Agatston units"
+      },
+      "section": "DATA REVIEW",
+      "notes": "Risk-stratifying imaging result."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "C6-N1",
+      "trap_type": "family_attributed",
+      "verbatim_span": "Father, alive age 74, with coronary artery disease",
+      "should_not_produce": "Condition: Coronary artery disease (patient)",
+      "rationale": "Father's CAD must be FamilyMemberHistory, not patient Condition."
+    },
+    {
+      "id": "C6-N2",
+      "trap_type": "family_attributed",
+      "verbatim_span": "Brother, deceased age 49 (February 2026), sudden cardiac death",
+      "should_not_produce": "Condition: Sudden cardiac death (patient)",
+      "rationale": "Brother's SCD; cannot be attributed to living patient."
+    },
+    {
+      "id": "C6-N3",
+      "trap_type": "family_attributed",
+      "verbatim_span": "Maternal grandfather, deceased age 62, myocardial infarction",
+      "should_not_produce": "Condition: Myocardial infarction (patient)",
+      "rationale": "Grandfather's MI; family history only."
+    },
+    {
+      "id": "C6-N4",
+      "trap_type": "family_attributed",
+      "verbatim_span": "Paternal uncle, alive age 70, with a history of coronary\n  artery bypass grafting at age 60",
+      "should_not_produce": "Procedure: CABG (patient)",
+      "rationale": "Uncle's procedure; not a patient Procedure resource."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

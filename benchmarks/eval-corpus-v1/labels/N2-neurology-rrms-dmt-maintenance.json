@@ -1,0 +1,96 @@
+{
+  "note_id": "N2",
+  "filename": "N2-neurology-rrms-dmt-maintenance.txt",
+  "specialty": "neurology",
+  "tier": "clean",
+  "patient_pseudo_demographics": {
+    "age": 31,
+    "sex": "female",
+    "race": "white",
+    "ethnicity": "hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "N2-F1",
+      "category": "condition",
+      "verbatim_span": "Relapsing-remitting multiple sclerosis, clinically and\nradiographically stable",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "426373005", "display": "Relapsing-remitting multiple sclerosis (disorder)"},
+        {"system": "ICD-10", "code": "G35", "display": "Multiple sclerosis"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Primary MS diagnosis."
+    },
+    {
+      "id": "N2-F2",
+      "category": "medication_request",
+      "verbatim_span": "Continue ocrelizumab 600 mg IV every 6 months",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "1876366", "display": "ocrelizumab"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "600 mg",
+        "frequency": "every 6 months",
+        "route": "IV"
+      },
+      "section": "ASSESSMENT AND PLAN",
+      "notes": "Disease-modifying therapy, B-cell depletion."
+    },
+    {
+      "id": "N2-F3",
+      "category": "observation",
+      "verbatim_span": "EDSS estimated at 1.0",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "final",
+        "category": "exam",
+        "value": "1.0"
+      },
+      "section": "PHYSICAL EXAMINATION",
+      "notes": "Expanded Disability Status Scale; no widely-used LOINC code available in corpus seed."
+    },
+    {
+      "id": "N2-F4",
+      "category": "procedure",
+      "verbatim_span": "Brain MRI with and without gadolinium (2026-02-28",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "241601008", "display": "Magnetic resonance imaging of brain (procedure)"}
+      ],
+      "expected_attributes": {
+        "status": "completed",
+        "performedDate": "2026-02-28"
+      },
+      "section": "DATA REVIEW",
+      "notes": "Annual surveillance MRI, completed at outside facility."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "N2-N1",
+      "trap_type": "negation",
+      "verbatim_span": "no new lesions compared to 2025 comparison\nstudy; no enhancing lesions",
+      "should_not_produce": "Condition: New MS lesion / active demyelination",
+      "rationale": "MRI stability is the finding; there is no new or active disease to record as a condition."
+    },
+    {
+      "id": "N2-N2",
+      "trap_type": "family_attributed",
+      "verbatim_span": "Maternal\naunt with rheumatoid arthritis",
+      "should_not_produce": "Condition: Rheumatoid arthritis (patient)",
+      "rationale": "Family history; should map to FamilyMemberHistory, not patient Condition."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 14,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}

@@ -1,0 +1,124 @@
+GREENVALE COMMUNITY HOSPITAL
+Emergency Department - Discharge Summary
+================================================================
+
+Patient: Miguel Aguirre-Ramos             MRN: GVC-2208-MA
+DOB: 1991-07-22                           Age: 34
+Sex: Male                                 Race: White
+Ethnicity: Hispanic or Latino
+Arrival: 2026-01-18 16:42                 Discharge: 2026-01-18 22:10
+ESI: 3                                    Disposition: Home
+Attending: Samir Bhattacharya, MD         Service: Emergency Medicine
+
+================================================================
+
+CHIEF COMPLAINT
+Left lower leg redness, warmth, and pain x 3 days, worsening.
+
+HISTORY OF PRESENT ILLNESS
+Mr. Aguirre-Ramos is a 34-year-old otherwise healthy man who
+presents with 3 days of expanding erythema, warmth, and tenderness
+over the left anterior shin. Symptoms began as a small red patch
+after he scraped his shin on a garden stake while working outdoors
+on 2026-01-15. Over the subsequent 48 hours the redness has spread
+proximally and distally along the shin and he has developed
+low-grade fever (to 38.4 C at home) and mild malaise. He denies
+purulent drainage, fluctuance, cold intolerance, joint swelling,
+or dyspnea. He took ibuprofen at home with modest relief. No
+history of similar infections. No IVDU. No recent travel outside
+the region. He works as a landscaper.
+
+PAST MEDICAL HISTORY
+- Seasonal allergic rhinitis
+
+SURGICAL HISTORY
+- None.
+
+MEDICATIONS (home)
+- Loratadine 10 mg PO PRN
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Lives with partner and two children. Works outdoors (landscaper).
+Occasional alcohol use (1-2 beers/week). Non-smoker. No illicit
+drug use.
+
+FAMILY HISTORY
+Mother with type 2 diabetes. Father healthy. Non-contributory.
+
+REVIEW OF SYSTEMS
+Constitutional: low-grade fever, malaise. No chills, no rigors.
+Skin: as per HPI.
+Cardiovascular: no chest pain, no palpitations.
+Respiratory: no cough, no dyspnea.
+MSK: no joint pain elsewhere.
+All other systems reviewed and negative.
+
+VITAL SIGNS ON ARRIVAL
+T 38.2 C   HR 98   BP 132/78   RR 16   SpO2 99% RA   Weight 84 kg
+
+PHYSICAL EXAMINATION
+General: well-appearing adult male, non-toxic, alert and oriented.
+HEENT: unremarkable.
+Cardiac: RRR, no murmurs.
+Respiratory: CTAB, no respiratory distress.
+Skin/Extremities: left anterior shin with a well-demarcated area
+of erythema measuring approximately 12 x 8 cm, warm to touch,
+tender on palpation, with mild non-pitting edema. A 1 cm
+healing abrasion is present centrally. No fluctuance, no
+purulent drainage, no crepitus, no streaking proximally. No
+palpable lymphadenopathy in the inguinal region. No signs of
+necrotizing fasciitis (pain in excess of exam, bullae, skin
+anesthesia, or rapid progression) were noted.
+Right lower extremity: unremarkable.
+
+DATA REVIEW
+Labs drawn on arrival:
+- CBC: WBC 13.2 x 10^9/L with 82% neutrophils. Hgb 14.8. Plt 258.
+- BMP within normal limits; lactate 1.6 mmol/L.
+- CRP 47 mg/L.
+- Blood cultures x 2 drawn prior to antibiotics (pending at
+  discharge).
+
+ED COURSE
+Patient received IV ceftriaxone 2 g x 1 dose in the ED along with
+IV normal saline 1 L for mild hypovolemia. Fever defervesced to
+37.6 C after 3 hours. He tolerated oral intake and ambulated
+without difficulty. After a period of observation his erythema
+showed no proximal progression and he remained hemodynamically
+stable.
+
+ASSESSMENT AND PLAN
+
+1. Cellulitis of left lower limb, likely streptococcal or
+staphylococcal origin at an abrasion portal. Non-purulent,
+non-severe by IDSA criteria.
+   - Discharge on cephalexin 500 mg PO QID x 10 days.
+   - Demarcated and photographed at discharge; patient
+     instructed to return for expanding erythema beyond the
+     demarcation, worsening pain, new fever, streaking, or
+     systemic symptoms.
+   - Elevate the affected limb when possible; warm compresses.
+   - Follow up with primary care within 48-72 hours for clinical
+     re-check and review of pending blood cultures.
+
+2. Leukocytosis (WBC 13.2), consistent with acute bacterial
+infection; expected to downtrend with treatment.
+
+3. Mild hypovolemia, resolved with IV fluids.
+
+RETURN PRECAUTIONS
+Return to ED immediately for: fever > 38.5 C, severe pain, rapid
+spread of redness (beyond the demarcation), numbness over the
+affected area, blistering or darkening of the skin, drainage of
+pus, shortness of breath, confusion, or any symptom the patient
+finds concerning.
+
+================================================================
+Electronically signed: Samir Bhattacharya, MD
+Credentials: MD, FACEP
+NPI: 1987654302
+Signed: 2026-01-18 22:14
+================================================================

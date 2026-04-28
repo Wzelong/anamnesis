@@ -1,0 +1,46 @@
+{
+  "code_reference_size": 75,
+  "code_systems_used": [
+    "ICD-10",
+    "LOINC",
+    "RxNorm",
+    "SNOMED"
+  ],
+  "corpus_name": "Anamnesis Evaluation Corpus v1",
+  "creation_date": "2026-04-28",
+  "fact_categories": {
+    "allergy_intolerance": 1,
+    "condition": 25,
+    "family_member_history": 9,
+    "medication_request": 19,
+    "observation": 17,
+    "procedure": 6
+  },
+  "labeled_by": "Anamnesis project team",
+  "license": "CC-BY-4.0 (synthetic notes; no PHI)",
+  "specialty_distribution": {
+    "cardiology": 6,
+    "emergency_department": 6,
+    "neurology": 6
+  },
+  "tier_distribution": {
+    "clean": 6,
+    "messy": 6,
+    "trap": 6
+  },
+  "total_chars": 76684,
+  "total_facts": 77,
+  "total_non_facts": 45,
+  "total_notes": 18,
+  "trap_types": {
+    "family_attributed": 5,
+    "historical_resolved": 4,
+    "hypothetical": 5,
+    "multi_section_consolidation": 2,
+    "negation": 19,
+    "ruled_out": 7,
+    "severity_inference": 1,
+    "wrong_subject": 2
+  },
+  "version": "1.0.0"
+}

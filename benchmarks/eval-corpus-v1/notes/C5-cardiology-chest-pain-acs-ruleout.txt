@@ -1,0 +1,129 @@
+CEDAR MESA MEDICAL CENTER
+Cardiology Consultation (Inpatient to Outpatient Follow-up)
+================================================================
+
+Patient: Esperanza Jimenez                 MRN: CMM-2256-EJ
+DOB: 1973-10-25                            Age: 52
+Sex: Female                                Race: Other / Hispanic
+Ethnicity: Hispanic or Latino
+Encounter Date: 2026-02-19                 Visit Type: Outpatient, consultation
+Provider: Marcus Holloway, MD              Service: Cardiology
+
+================================================================
+
+CHIEF COMPLAINT
+Chest pain, evaluation for outpatient follow-up after recent ED
+presentation.
+
+HISTORY OF PRESENT ILLNESS
+Ms. Jimenez is a 52-year-old woman who presents for outpatient
+cardiology consultation after an ED visit 4 days ago (2026-02-15)
+for acute onset substernal chest pressure with
+diaphoresis and radiation into her left arm while moving boxes
+during a household move. Pain was "squeezing pressure" 7/10,
+lasted ~40 minutes, partially improved with rest. The initial
+clinical picture was concerning for acute coronary syndrome.
+
+In the ED she underwent a full ACS workup. ECG showed normal
+sinus rhythm with no ST-segment changes. Serial troponin I at
+0, 3, and 6 hours were all within normal limits. A chest
+radiograph was unremarkable. She was observed on telemetry for
+24 hours without recurrent pain or arrhythmia. She underwent
+coronary CT angiography on 2026-02-16, which demonstrated no
+obstructive coronary artery disease, a calcium score of 0, and
+no high-risk plaque features. She was discharged with a working
+diagnosis of non-cardiac chest pain.
+
+She returns today feeling well. She has had no recurrent chest
+pain since discharge. She reports mild reproducible tenderness
+over the left costochondral junctions when she presses firmly or
+lifts her arms overhead. She also notes occasional epigastric
+burning after large meals.
+
+PAST MEDICAL HISTORY
+- Essential hypertension, diagnosed 2019
+- Hyperlipidemia, diagnosed 2021
+- Anxiety disorder, GAD, diagnosed 2015
+- Gastroesophageal reflux disease, diagnosed 2020
+
+PAST SURGICAL HISTORY
+- Appendectomy, 1995
+
+HOME MEDICATIONS
+- Lisinopril 20 mg PO daily
+- Atorvastatin 20 mg PO daily
+- Escitalopram 10 mg PO daily
+- Omeprazole 20 mg PO daily
+- Multivitamin
+
+ALLERGIES
+NKDA.
+
+SOCIAL HISTORY
+Married, two adult children. Works as a medical records
+coordinator. Never smoker. Occasional wine on weekends. Walks
+30 minutes daily.
+
+FAMILY HISTORY
+Mother 78 with HTN and diabetes. Father d. 81 prostate cancer.
+No family history of premature coronary disease or SCD.
+
+REVIEW OF SYSTEMS
+Cardiovascular: no current chest pain, no dyspnea, no palpitations.
+Musculoskeletal: anterior chest wall tenderness as above.
+GI: occasional post-prandial epigastric burning.
+All other systems reviewed and negative.
+
+VITAL SIGNS
+BP 124/76   HR 72   RR 14   Temp 98.1 F   SpO2 99% RA
+Weight 74 kg
+
+PHYSICAL EXAMINATION
+General: well-appearing, in no distress.
+Cardiac: regular rate and rhythm, no murmurs.
+Respiratory: clear to auscultation.
+Chest wall: reproducible tenderness on palpation of the left
+second through fourth costochondral junctions, which recreates
+her presenting discomfort qualitatively. No swelling.
+Abdomen: soft, mild epigastric discomfort without rebound.
+Extremities: no edema.
+
+DATA REVIEW
+ECG in office (2026-02-19): normal sinus rhythm, rate 70, no
+ischemic changes, unchanged from ED tracing.
+Coronary CTA (2026-02-16) report reviewed: no obstructive coronary
+artery disease, Agatston calcium score 0, no high-risk plaque
+features.
+Serial troponins from ED admission all negative.
+
+ASSESSMENT AND PLAN
+
+1. Chest pain, unspecified - working diagnosis of non-cardiac
+chest pain. No evidence of acute coronary syndrome, NSTEMI, or
+STEMI on serial troponin, ECG, and coronary CTA. No obstructive
+coronary artery disease.
+   - Reassurance provided. Return precautions reviewed.
+
+2. Costochondritis, likely contributing to and possibly the
+primary driver of the index presentation given reproducible
+tenderness at the costochondral junctions.
+   - Topical diclofenac; activity modification x 2 weeks.
+
+3. Gastroesophageal reflux disease, chronic, with possible recent
+exacerbation contributing to atypical retrosternal discomfort.
+   - Continue omeprazole 20 mg daily.
+
+4. Generalized anxiety disorder, controlled. Continue regimen.
+
+5. HTN and HLD: controlled, no changes.
+
+FOLLOW-UP
+Return to cardiology in 6 months or sooner if concerning
+symptoms. PCP follow-up within 2 weeks.
+
+================================================================
+Electronically signed: Marcus Holloway, MD
+Credentials: MD, FACC
+NPI: 1345678902
+Signed: 2026-02-19 15:18
+================================================================

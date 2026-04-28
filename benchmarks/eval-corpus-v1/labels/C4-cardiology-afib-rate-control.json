@@ -1,0 +1,115 @@
+{
+  "note_id": "C4",
+  "filename": "C4-cardiology-afib-rate-control.txt",
+  "specialty": "cardiology",
+  "tier": "messy",
+  "patient_pseudo_demographics": {
+    "age": 74,
+    "sex": "male",
+    "race": "white",
+    "ethnicity": "non-hispanic"
+  },
+  "expected_facts": [
+    {
+      "id": "C4-F1",
+      "category": "condition",
+      "verbatim_span": "Persistent AFib, rate-controlled",
+      "expected_codes": [
+        {"system": "SNOMED", "code": "49436004", "display": "Atrial fibrillation (disorder)"},
+        {"system": "ICD-10", "code": "I48.91", "display": "Unspecified atrial fibrillation"}
+      ],
+      "expected_attributes": {
+        "clinicalStatus": "active",
+        "verificationStatus": "confirmed",
+        "category": "problem-list-item"
+      },
+      "section": "A/P",
+      "notes": "Persistent AFib diagnosis with rate-control strategy."
+    },
+    {
+      "id": "C4-F2",
+      "category": "medication_request",
+      "verbatim_span": "Continue metoprolol\ntartrate 50 mg BID",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "6918", "display": "metoprolol"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "50 mg",
+        "frequency": "BID",
+        "route": "oral"
+      },
+      "section": "A/P",
+      "notes": "Rate-control agent continued."
+    },
+    {
+      "id": "C4-F3",
+      "category": "medication_request",
+      "verbatim_span": "apixaban 5 mg PO BID",
+      "expected_codes": [
+        {"system": "RxNorm", "code": "1364430", "display": "apixaban"}
+      ],
+      "expected_attributes": {
+        "status": "active",
+        "intent": "order",
+        "dose": "5 mg",
+        "frequency": "BID",
+        "route": "oral"
+      },
+      "section": "Meds",
+      "notes": "Anticoagulation for AFib."
+    },
+    {
+      "id": "C4-F4",
+      "category": "observation",
+      "verbatim_span": "CHA2DS2-VASc = 4",
+      "expected_codes": [],
+      "expected_attributes": {
+        "status": "final",
+        "category": "exam",
+        "value": "4"
+      },
+      "section": "HPI",
+      "notes": "Stroke risk score; no widely-adopted LOINC in corpus seed."
+    },
+    {
+      "id": "C4-F5",
+      "category": "observation",
+      "verbatim_span": "former smoker (quit 2005)",
+      "expected_codes": [
+        {"system": "LOINC", "code": "72166-2", "display": "Tobacco smoking status"},
+        {"system": "SNOMED", "code": "8517006", "display": "Former smoker (finding)"}
+      ],
+      "expected_attributes": {
+        "status": "final",
+        "category": "social-history",
+        "value": "Former smoker"
+      },
+      "section": "SH",
+      "notes": "Quit 2005; former smoker Observation."
+    }
+  ],
+  "expected_non_facts": [
+    {
+      "id": "C4-N1",
+      "trap_type": "negation",
+      "verbatim_span": "no current\nsymptoms of stroke",
+      "should_not_produce": "Condition: Stroke (acute)",
+      "rationale": "Absence of stroke symptoms; not a condition."
+    },
+    {
+      "id": "C4-N2",
+      "trap_type": "historical_resolved",
+      "verbatim_span": "TIA 2019 - no recurrent cerebrovascular events, no current\nsymptoms of stroke",
+      "should_not_produce": "Condition: Acute TIA (this encounter)",
+      "rationale": "TIA is a historical event from 2019, not active at this visit."
+    }
+  ],
+  "metadata": {
+    "char_count": 0,
+    "section_count": 7,
+    "labeled_by": "team",
+    "labeled_date": "2026-04-28"
+  }
+}
