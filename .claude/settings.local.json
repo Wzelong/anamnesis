@@ -8,7 +8,8 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(python -c \"import sys; sys.path.insert\\(0, '.'\\); from main import app; print\\('app ok:', app.title\\)\")",
       "Bash(pip install *)",
-      "Bash(.venv/Scripts/python.exe -m pytest -q)"
+      "Bash(.venv/Scripts/python.exe -m pytest -q)",
+      "Bash(python3 *)"
     ]
   }
 }
