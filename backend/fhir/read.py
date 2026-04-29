@@ -84,11 +84,17 @@ async def read_documents(client: FhirClient, patient_id: str) -> list[Document]:
         authors = res.get("author") or []
         author = authors[0].get("display", "") if authors else ""
 
+        ctx = res.get("context") or {}
+        enc_refs = ctx.get("encounter") or []
+        enc_ref = enc_refs[0].get("reference", "") if enc_refs else ""
+        enc_id = enc_ref if enc_ref else None
+
         docs.append(Document(
             id=res.get("id", ""),
             type=type_label,
             date=res.get("date", ""),
             author=author,
             text=text,
+            encounter_id=enc_id or None,
         ))
     return docs

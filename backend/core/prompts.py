@@ -1,11 +1,11 @@
-"""Stage 2 prompts. Written outcome-first for GPT-5.x conventions.
+"""Stage 2 + Stage 3 prompts. Written outcome-first for GPT-5.x conventions.
 
 Structured Outputs carries the schema, so prompts do not describe field
 shapes. Prompts encode clinical decision rules only. Bump PROMPT_VERSION
 to invalidate the cache when any prompt changes.
 """
 
-PROMPT_VERSION = "2026-04-29.6"
+PROMPT_VERSION = "2026-04-29.8"
 
 
 PROMPT_SCAN = """\
@@ -431,3 +431,72 @@ PROMPTS_BY_TYPE: dict[str, str] = {
     "AllergyIntolerance": PROMPT_PARSE_ALLERGY,
     "FamilyMemberHistory": PROMPT_PARSE_FAMILY_HISTORY,
 }
+
+
+PROMPT_MERGE_ADJUDICATE = """\
+Role
+Clinical deduplication adjudicator for a single patient's chart across multiple clinical notes.
+
+Goal
+Decide which candidate groups describe the same clinical fact and should be merged, which are in the wrong FHIR resource type and should be reassigned, and which are distinct and should remain separate. Return only groups that need action.
+
+Rules
+- Two items are the same clinical fact when they name the same disease, substance, medication, test, or procedure — regardless of phrasing differences, abbreviations, or specificity.
+- Keep the more specific or complete item as the survivor (e.g. "two-vessel coronary artery disease" over "coronary artery disease").
+- Observations with different measured values (different BP readings, different lab dates) are distinct — keep separate.
+- Medications with different doses are distinct prescriptions — keep separate. Same drug + same dose = same prescription.
+- "tobacco use" (ongoing) and "tobacco cessation" (quit) are different statuses — keep separate.
+- Cross-type: diseases belong to Condition; measurements, scores, and social-history facts belong to Observation. Use "reassign" when an item is in the wrong type.
+- When uncertain, keep items separate.
+
+<example>
+Input:
+[1] Condition: "hypertension" (doc=abc, onset=None)
+[2] Condition: "essential hypertension" (doc=def, onset=since 2016)
+[3] Condition: "hypertension" (doc=ghi, severity=severe)
+Output: merge [1,2,3], survivor=2. Most specific name with onset.
+</example>
+
+<example>
+Input:
+[4] Observation: "BP" (value=142/86, doc=abc)
+[5] Observation: "BP" (value=168/95, doc=ghi)
+Output: keep both — different measured values.
+</example>
+
+<example>
+Input:
+[7] Condition: "chronic post-stroke fatigue" (doc=abc)
+[8] Condition: "daytime fatigue" (doc=ghi)
+Output: merge [7,8], survivor=7. Same syndrome, more precise name.
+</example>
+
+<example>
+Input:
+[9] Observation: "tobacco use" (value=ongoing, doc=abc)
+[10] Observation: "tobacco cessation" (value=quit, doc=ghi)
+Output: keep both — different clinical statuses.
+</example>
+
+Stop
+Return the structured output. Only include groups that need action (merge or reassign). Groups not mentioned are kept as-is.
+"""
+
+
+PROMPT_CODE_SELECT = """\
+Role
+Medical terminology coder.
+
+Goal
+Given a clinical term and a ranked list of {system} code candidates from vector search, select the single best matching code.
+
+Rules
+- Pick a code if its clinical meaning matches the input term. Synonyms, abbreviations, and specificity differences are acceptable.
+- Prefer more specific codes over generic ones when both match.
+- If no candidate is a reasonable match, return a refined_search_term that would yield better results.
+- Do not invent codes. Only return a code that appears in the candidate list.
+- Set exactly one of code or refined_search_term. Never both. Never neither.
+
+Stop
+Return the structured output.
+"""

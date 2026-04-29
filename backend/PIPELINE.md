@@ -6,105 +6,174 @@ under `backend/core/` (plus `backend/fhir/` for I/O). The pipeline is designed
 to be reusable by any MCP consumer — nothing here is demo-specific.
 
 ```
- FHIR server                                              FHIR server
+ FHIR server (or uploaded docs)                            FHIR server
      │                                                         ▲
      │ DocumentReference + existing chart          Resource + Provenance
      ▼                                                         │
- ┌───────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐  ┌───────────┐  ┌─────────┐  ┌──────────┐  ┌────────┐
- │ Load  │─▶│ Preproc. │─▶│ Extract  │─▶│ Cross-note │─▶│ Terminology│─▶│ Classify│─▶│ Assemble │─▶│ Review │
- │ chart │  │          │  │          │  │   dedupe   │  │   coding   │  │         │  │ proposal │  │ + write│
- └───────┘  └──────────┘  └──────────┘  └────────────┘  └───────────┘  └─────────┘  └──────────┘  └────────┘
-   fhir/       core/         core/          core/          core/         core/        core/       api/ +
-   read.py   preprocess.py  extraction.py  extraction.py  terminology.py classifier.py augment.py fhir/write.py
-                                                         + coding.py
+ ┌───────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐  ┌─────────┐  ┌──────────┐  ┌────────┐
+ │ Load  │─▶│ Preproc. │─▶│ Extract  │─▶│ Cross-note │─▶│Classify │─▶│ Assemble │─▶│ Review │
+ │ chart │  │          │  │          │  │   dedupe   │  │ vs chart│  │ proposal │  │ + write│
+ └───────┘  └──────────┘  └──────────┘  └────────────┘  └─────────┘  └──────────┘  └────────┘
+   fhir/       core/         core/          core/          core/        core/       api/ +
+   read.py   preprocess.py  extraction.py  extraction.py  classifier.py augment.py fhir/write.py
+   local_                                                 + diff.py
+   bundle.py
 ```
 
-## Stage 0 — Chart load (`fhir/read.py`, already built)
+Stages 5-6 in the diagram above correspond to the original stages 5-6 in
+the numbered list below.
+
+## Stage 0 — Chart load (`fhir/read.py` or `fhir/local_bundle.py`) ✅
 
 Pulls the inputs the pipeline reasons over.
 
-- `read_patient_context(fhir, patient_id)` → existing structured chart
-  (Condition, MedicationRequest, AllergyIntolerance, Observation,
-  FamilyMemberHistory, Procedure).
-- `read_documents(fhir, patient_id)` → DocumentReference list with attached
-  note text and encounter/date metadata.
+- `read_patient_context(fhir, patient_id)` → `PatientContext`: existing
+  structured chart (Condition, MedicationRequest, AllergyIntolerance,
+  Observation, FamilyMemberHistory, Procedure, Encounter).
+- `read_documents(fhir, patient_id)` → `list[Document]`: DocumentReference
+  list with decoded note text, encounter_id, and date metadata.
+- `local_bundle.load_demo_data()` → same types from a local bundle JSON,
+  used for offline dev and testing without a FHIR server.
+
+Each `Document` carries `encounter_id` extracted from
+`DocumentReference.context.encounter[0]`. When absent (uploaded docs with no
+FHIR link), downstream stages fall back to note date as encounter grouping key.
 
 Output is the only ground truth the pipeline uses. Nothing else re-reads FHIR
 until Stage 7.
 
-## Stage 1 — Preprocess (`core/preprocess.py`)
+## Stage 1 — Preprocess (`core/preprocess.py`) ✅
 
-Per note, in parallel.
+Per note, deterministic, no I/O.
 
 - Rule-based sentence split tuned for clinical text (titles, frequencies like
   `b.i.d`, decimals, inline list markers, section headers).
 - Build a `numbered_note` where every sentence is prefixed `[N]` — this number
   becomes the universal address used by every downstream LLM call.
-- Compute `sentence_positions`: `[N] → (start_char, end_char)` in the original
-  note. Used later to resolve source spans for provenance.
-- One LLM call extracts `NoteContext`: `note_date`, `admission_date`,
-  `discharge_date`. These anchors let later stages resolve relative dates
-  ("yesterday", "on discharge").
+- Each `SentenceSpan` records `(number, start_char, end_char, text)` with
+  exact byte offsets in the original note for provenance.
+- `encounter_id` passes through from Document to `PreprocessedNote`.
+
+`NoteContext` (note_date, admission_date, discharge_date) is extracted by the
+scanner in Stage 2, not in Stage 1.
 
 Singleton extraction (Patient/Encounter/etc.) is intentionally skipped —
 Anamnesis already has them from SHARP context and `DocumentReference.context`.
 
-## Stage 2 — Extract candidates (`core/extraction.py`)
+## Stage 2 — Extract candidates (`core/extraction.py`) ✅
 
-Scan → parse → clean, per note, in parallel. Adapted from text2fhir, trimmed.
+Scan → parse → clean, per note, all notes in parallel via `asyncio.gather`.
+Model: `gpt-5.4-mini` with `reasoning.effort="low"`.
 
-1. **Scan.** A single LLM call classifies which sentence numbers hold
-   clinical findings / interventions / planning content. Output is
-   sentence-number groups per target resource type (Condition, Observation,
-   MedicationRequest, Procedure, AllergyIntolerance, FamilyMemberHistory,
-   Goal, ServiceRequest).
-2. **Parse.** One LLM call per sentence group, per resource type, producing
-   Pydantic structured outputs. Each candidate carries its `source_sentences`
-   and a short `reasoning` field (why the model thinks this is a Condition,
-   not just text).
-3. **Clean.** One LLM call per resource type removes junk and de-duplicates
-   near-identical candidates within the note.
+1. **Scan.** One LLM call per note classifies which sentence numbers hold
+   clinical content. Output is sentence-number groups per resource type
+   (Condition, Observation, MedicationRequest, Procedure, AllergyIntolerance,
+   FamilyMemberHistory). Routing priority rules prevent cross-type leakage
+   (allergies → AllergyIntolerance only, family history → FamilyMemberHistory
+   only, tobacco → Observation only).
+2. **Parse.** One LLM call per sentence group per resource type, all
+   concurrent within a note. Produces Pydantic structured outputs. Each
+   candidate carries `source_sentences` and `reasoning`.
+3. **Clean.** One LLM call per resource type (within-note only) removes junk
+   and de-duplicates near-identical candidates.
 
 Parser prompts accept `NoteContext` so "started yesterday" becomes a real
-ISO date and carries a `_field_source` tag pointing back at the sentence that
-introduced the relative reference.
+ISO date. Prompts enforce strict exclusion rules: no pertinent negatives in
+Observations, no generic drug names in MedicationRequests, no ruled-out
+conditions, no billing-code duplicates.
 
-## Stage 3 — Cross-note dedupe (`core/extraction.py::merge_across_notes`)
+Output: `list[StageTwoOutput]` — one per note, each carrying `document_id`,
+`encounter_id`, `note_context`, and `candidates` grouped by resource type.
+Cached by `(note_hash, model, prompt_version)`.
 
-Candidates from different notes for the same fact are merged into a single
-candidate with multiple `source_refs` (one per `(DocumentReference, sentence
-span)` pair). Cross-type duplicates — e.g. "hypertension" extracted as both a
-Condition and an Observation — are collapsed using a light LLM arbitration
-call that picks the preferred FHIR type given the context.
+## Stage 3 — Cross-note dedupe (`core/extraction.py::merge_across_notes`) ✅
 
-## Stage 4 — Terminology coding (`core/terminology.py`, `core/coding.py`)
+Merges duplicate candidates across notes into single items with multi-document
+`source_refs`. Encounter-scoped: patient-level resources dedupe globally,
+encounter-level resources dedupe only within the same encounter.
 
-The smartest piece ported from text2fhir, generalized.
+**Resource scoping:**
 
-- `TerminologyClient` interface with pluggable providers:
-  - Prompt Opinion terminology service (if available at runtime)
-  - NLM Clinical Tables / RxNav (public, default fallback)
-  - Local Typesense + preloaded ValueSets (optional self-host)
-  - Pure-LLM code emission (last resort, stronger model, schema-validated)
-- Embedding backend is also pluggable: SapBERT from HuggingFace by default,
-  overridable via config. Loaded lazily — never at import — so MCP cold start
-  stays fast.
-- `RESOURCE_CODE_SYSTEMS` is config, not a Python literal
-  (`Condition → SNOMED + ICD-10`, `MedicationRequest → RxNorm`, `Observation
-  → LOINC`, …).
+| Scope | Types | Rationale |
+|-------|-------|-----------|
+| Patient-level | Condition, MedicationRequest, AllergyIntolerance, FamilyMemberHistory | Chart state — "hypertension" is one fact regardless of which visit mentions it |
+| Encounter-level | Observation, Procedure | Measurements and events — BP from cardio ≠ BP from neuro |
 
-Per candidate:
+**Encounter key derivation:** `encounter_id` (from DocumentReference) → note
+date (YYYY-MM-DD) → document_id (last resort). Two notes on the same day with
+no encounter_id are assumed to be the same encounter.
 
-1. Embed `item.name` (and any synonyms the parser proposed), search top-k in
-   the chosen code systems.
-2. LLM `CodeSelector` receives the term, its sentence context, and the
-   candidate list. It either picks a `conceptId` or emits a `refined_query`.
-3. Loop up to a small refinement budget (default 2). Cache by
-   `(term, code_system)` so re-runs are free.
-4. If every backend fails, fall back to the pure-LLM code path.
+**Two-phase algorithm:**
 
-IG adapters (`core/profiles/`) may short-circuit with a fixed code (e.g. the
-US Core BP panel pins LOINC 85354-9 without searching).
+1. **Deterministic exact-match merge** (zero LLM calls). Tag items with
+   `(resource_type, encounter_key, normalized_name, value/dose)`. Normalize:
+   lowercase, strip clinical-irrelevant prefixes (essential, chronic, acute,
+   mild, moderate, severe, minor). Group by key. Multi-doc exact matches
+   merge deterministically — pick the most complete item as survivor, union
+   all SourceRefs.
+
+2. **LLM adjudication** for fuzzy near-duplicates within the same scope.
+   All calls run in parallel via `asyncio.gather`:
+   - 1 call for patient-level ambiguous groups (e.g. "coronary artery
+     disease" vs "two-vessel coronary artery disease")
+   - 1 call per encounter for encounter-level ambiguous groups (if any)
+   
+   Model: `gpt-5.4-mini`, `reasoning.effort="low"`. The LLM returns
+   merge/reassign/keep decisions with reasoning. Unconsumed groups pass
+   through as singletons.
+
+**Output:** `StageThreeOutput` — a flat list of `MergedCandidate`, each with:
+- `resource_type`, `item` (dict), `source_refs` (multi-doc provenance)
+- `encounter_key` (for encounter-level items, None for patient-level)
+- `merge_reasoning` (audit trail)
+
+## Stage 4 — Terminology coding (`core/coding.py`, `core/code_candidates.py`) ✅
+
+FAISS vector search + LLM CodeSelector + US Core fixed-code short-circuits.
+Model: `gpt-5.4-mini` with `reasoning.effort="low"`.
+
+**Infrastructure:** Pre-computed SapBERT embeddings (dim 768) stored in
+four FAISS indexes under `data/indexes/`:
+
+| System | Rows | Index type |
+|--------|------|------------|
+| SNOMED | 527K | IndexIVFPQ |
+| RxNorm | 449K | IndexIVFPQ |
+| LOINC | 95K | IndexFlatIP |
+| ICD-10 | 23K | IndexFlatIP |
+
+Indexes and embedding model load lazily on first use. `EmbeddingModel` and
+`IndexStore` are thread-safe singletons in `core/coding.py`.
+
+**Per candidate flow:**
+
+1. **US Core short-circuit.** Observations matching known vital signs or
+   smoking status get fixed LOINC codes instantly — no vector search, no LLM
+   call. BP → 85354-9, tobacco → 72166-2, body weight → 29463-7, etc.
+2. **Cache check** by `(PROMPT_VERSION, normalized_term, code_system)`.
+   Hits return immediately.
+3. **Vector search** top-10 via FAISS inner product (cosine on unit vectors).
+4. **LLM CodeSelector** picks the best code from the candidate list, or
+   returns a `refined_search_term` for retry. Max 1 refinement retry.
+5. **Fallback:** text-only coding `[{"text": term}]` if all attempts fail.
+
+**Resource → code system routing:**
+
+| Resource type | Systems | Notes |
+|---|---|---|
+| Condition | SNOMED + ICD-10 | Dual coding, both in parallel |
+| Observation | LOINC or SNOMED | Routed by `codeset_hint` from parser |
+| MedicationRequest | RxNorm | |
+| Procedure | SNOMED | |
+| AllergyIntolerance | SNOMED | |
+| FamilyMemberHistory | SNOMED | Each condition coded separately |
+
+All candidates processed in parallel via `asyncio.gather`. Cached by
+`(term, code_system)` so re-runs are free.
+
+Output: `StageFourOutput` — same `MergedCandidate` list with `coding`
+field injected into each item dict. Structure mirrors FHIR
+`CodeableConcept.coding[]`: `[{system, code, display}]`.
 
 ## Stage 5 — Classify vs existing chart (`core/classifier.py`, `core/diff.py`)
 
@@ -184,16 +253,13 @@ Rejections and edits are audited too — every decision is recoverable.
 
 ```
 backend/core/
-  preprocess.py    # sentence splitter + NoteContext extractor
-  extraction.py    # scan → parse → clean → cross-note merge
-  terminology.py   # TerminologyClient interface + providers + cache
-  coding.py        # vector-search + LLM CodeSelector + fallback
-  diff.py          # retrieve-similar strategies per resource type
-  classifier.py    # NEW / UPDATING / CONFLICTING / DUPLICATE
-  augment.py       # assemble AugmentationProposal
-  profiles/        # IG adapters (US Core 6.1.0)
-    base.py
-    us_core/       # BP, smoking status, med-req, condition, allergy, fam-hx
+  preprocess.py       # sentence splitter + NoteContext extractor
+  extraction.py       # scan → parse → clean → cross-note merge
+  coding.py           # FAISS index store + SapBERT embedding model
+  code_candidates.py  # US Core fixed codes + LLM CodeSelector + cache
+  diff.py             # retrieve-similar strategies per resource type
+  classifier.py       # NEW / UPDATING / CONFLICTING / DUPLICATE
+  augment.py          # assemble AugmentationProposal
 ```
 
 ## Design invariants

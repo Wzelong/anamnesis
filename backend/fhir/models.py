@@ -9,6 +9,7 @@ class Document:
     date: str
     author: str
     text: str
+    encounter_id: str | None = None
 
 
 @dataclass

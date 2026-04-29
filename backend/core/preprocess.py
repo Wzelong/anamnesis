@@ -58,6 +58,7 @@ class PreprocessedNote:
     original_text: str
     sentences: tuple[SentenceSpan, ...]
     numbered_note: str
+    encounter_id: str | None = None
 
 
 def _is_list_marker(s: str) -> bool:
@@ -199,6 +200,7 @@ def preprocess_document(doc: Document) -> PreprocessedNote:
         original_text=doc.text,
         sentences=tuple(sentences),
         numbered_note=build_numbered_note(sentences),
+        encounter_id=doc.encounter_id,
     )
 
 

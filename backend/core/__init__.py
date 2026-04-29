@@ -1,13 +1,18 @@
 from core import telemetry
 from core.cache import JsonCache
+from core.code_candidates import StageFourOutput, code_candidates
+from core.coding import EmbeddingModel, IndexStore, SearchResult, search_code
 from core.pricing import estimate_cost
 from core.validation import FHIR_DATE_RE, validate_fhir_date
 from core.extraction import (
+    StageThreeOutput,
     StageTwoOutput,
     clean_candidates,
     extract_candidates,
     extract_candidates_batch,
+    merge_across_notes,
     parse_group,
+    parse_structured,
     scan_note,
 )
 from core.preprocess import (
@@ -29,16 +34,22 @@ from core.schemas import (
     ITEM_LIST_MODELS,
     MedicationDose,
     MedicationItem,
+    MergeAdjudicationResult,
+    MergedCandidate,
     NoteContext,
     ObservationItem,
     ProcedureItem,
     RESOURCE_TYPES,
     ScanResult,
+    SourceRef,
 )
 
 __all__ = [
     "AllergyItem",
+    "EmbeddingModel",
+    "IndexStore",
     "CleanerResult",
+    "code_candidates",
     "ConditionItem",
     "DatedField",
     "FamilyMemberCondition",
@@ -47,6 +58,8 @@ __all__ = [
     "JsonCache",
     "MedicationDose",
     "MedicationItem",
+    "MergeAdjudicationResult",
+    "MergedCandidate",
     "NoteContext",
     "ObservationItem",
     "PROMPT_VERSION",
@@ -54,15 +67,22 @@ __all__ = [
     "ProcedureItem",
     "RESOURCE_TYPES",
     "ScanResult",
+    "SearchResult",
     "SentenceSpan",
+    "StageFourOutput",
+    "SourceRef",
+    "StageThreeOutput",
     "StageTwoOutput",
     "build_numbered_note",
     "clean_candidates",
     "extract_candidates",
     "extract_candidates_batch",
+    "merge_across_notes",
     "parse_group",
+    "parse_structured",
     "preprocess_document",
     "preprocess_documents",
     "scan_note",
+    "search_code",
     "split_sentences",
 ]

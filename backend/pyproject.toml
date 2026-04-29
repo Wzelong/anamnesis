@@ -20,6 +20,10 @@ dependencies = [
     "mcp>=1.9",
     "pyjwt>=2.10",
     "fhir.resources>=7.1",
+    "faiss-cpu>=1.7.4",
+    "pyarrow>=15.0",
+    "sentence-transformers>=2.2",
+    "tqdm>=4.65",
 ]
 
 [project.optional-dependencies]

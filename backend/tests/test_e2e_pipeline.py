@@ -5,14 +5,17 @@ class. Stages 3-8 are stubs that skip until implemented.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 
 import pytest
 
 from core.preprocess import PreprocessedNote, preprocess_documents
-from core.extraction import StageTwoOutput
-from core.schemas import RESOURCE_TYPES
+from core.extraction import StageThreeOutput, StageTwoOutput, merge_across_notes
+from core.code_candidates import StageFourOutput, code_candidates
+from core.cache import JsonCache
+from core.schemas import RESOURCE_TYPES, MergedCandidate
 from fhir.local_bundle import load_demo_data
 from fhir.models import Document, PatientContext
 
@@ -70,13 +73,49 @@ def stage2_output(stage1_output) -> list[StageTwoOutput]:
 
 
 @pytest.fixture(scope="module")
-def stage3_output(stage2_output):
-    return stage2_output
+def stage3_output(stage2_output) -> StageThreeOutput:
+    cache_dir = Path(__file__).resolve().parent.parent / ".cache" / "stage3"
+    cache = JsonCache(cache_dir)
+    key = "e2e_stage3"
+    cached = cache.get(key)
+    if cached is not None:
+        try:
+            return StageThreeOutput.from_json(cached)
+        except Exception:
+            pass
+
+    from openai import AsyncOpenAI
+    from config import Settings
+    settings = Settings()
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    result = asyncio.get_event_loop().run_until_complete(
+        merge_across_notes(stage2_output, client, model=settings.openai_model_fast, cache=cache)
+    )
+    cache.put(key, result.to_json())
+    return result
 
 
 @pytest.fixture(scope="module")
-def stage4_output(stage3_output):
-    return stage3_output
+def stage4_output(stage3_output) -> StageFourOutput:
+    cache_dir = Path(__file__).resolve().parent.parent / ".cache" / "stage4"
+    cache = JsonCache(cache_dir)
+    key = "e2e_stage4"
+    cached = cache.get(key)
+    if cached is not None:
+        try:
+            return StageFourOutput.from_json(cached)
+        except Exception:
+            pass
+
+    from openai import AsyncOpenAI
+    from config import Settings
+    settings = Settings()
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    result = asyncio.get_event_loop().run_until_complete(
+        code_candidates(stage3_output, client, model=settings.openai_model_fast)
+    )
+    cache.put(key, result.to_json())
+    return result
 
 
 @pytest.fixture(scope="module")
@@ -314,32 +353,146 @@ class TestStage2ExtractCandidates:
 
 class TestStage3CrossNoteDedupe:
 
-    @pytest.mark.skip(reason="Stage 3 not implemented")
-    def test_duplicate_conditions_merged(self, stage3_output):
-        pass
+    def test_output_type(self, stage3_output):
+        assert isinstance(stage3_output, StageThreeOutput)
+        assert len(stage3_output.candidates) > 0
 
-    @pytest.mark.skip(reason="Stage 3 not implemented")
-    def test_merged_have_multiple_source_refs(self, stage3_output):
-        pass
+    def test_fewer_than_stage2(self, stage2_output, stage3_output):
+        s2_total = sum(
+            len(items) for out in stage2_output for items in out.candidates.values()
+        )
+        assert len(stage3_output.candidates) < s2_total
+
+    def test_all_have_source_refs(self, stage3_output):
+        for c in stage3_output.candidates:
+            assert c.source_refs, f"missing source_refs: {c.resource_type} {c.item.get('name', '?')}"
+            for ref in c.source_refs:
+                assert ref.document_id
+                assert ref.source_sentences
+
+    def test_valid_resource_types(self, stage3_output):
+        for c in stage3_output.candidates:
+            assert c.resource_type in RESOURCE_TYPES
+
+    def _find(self, stage3_output, rtype, substring):
+        return [
+            c for c in stage3_output.candidates
+            if c.resource_type == rtype
+            and substring in (c.item.get("name") or c.item.get("substance") or c.item.get("relationship") or "").lower()
+        ]
+
+    def test_hypertension_merged(self, stage3_output):
+        matches = self._find(stage3_output, "Condition", "hypertension")
+        assert len(matches) == 1
+        assert len(matches[0].source_refs) >= 2
+
+    def test_t2dm_merged(self, stage3_output):
+        matches = self._find(stage3_output, "Condition", "diabetes")
+        assert len(matches) == 1
+        assert len(matches[0].source_refs) >= 2
+
+    def test_hyperlipidemia_merged(self, stage3_output):
+        matches = self._find(stage3_output, "Condition", "hyperlipidemia")
+        assert len(matches) == 1
+        assert len(matches[0].source_refs) >= 2
+
+    def test_penicillin_merged(self, stage3_output):
+        matches = self._find(stage3_output, "AllergyIntolerance", "penicillin")
+        assert len(matches) == 1
+        assert len(matches[0].source_refs) >= 2
+
+    def test_aspirin_merged(self, stage3_output):
+        matches = self._find(stage3_output, "MedicationRequest", "aspirin")
+        assert len(matches) == 1
+        assert len(matches[0].source_refs) >= 2
+
+    def test_different_bp_separate(self, stage3_output):
+        bps = [
+            c for c in stage3_output.candidates
+            if c.resource_type == "Observation"
+            and (c.item.get("name") or "").lower() == "bp"
+        ]
+        assert len(bps) >= 2
+
+    def test_tobacco_statuses_separate(self, stage3_output):
+        tobacco = [
+            c for c in stage3_output.candidates
+            if c.resource_type == "Observation"
+            and "tobacco" in (c.item.get("name") or "").lower()
+        ]
+        assert len(tobacco) >= 2
 
 
 # ===================================================================
-# Stage 4 — Terminology Coding (stub)
+# Stage 4 — Terminology Coding
 # ===================================================================
 
 class TestStage4TerminologyCoding:
 
-    @pytest.mark.skip(reason="Stage 4 not implemented")
-    def test_conditions_have_snomed(self, stage4_output):
-        pass
+    def test_output_type(self, stage4_output, stage3_output):
+        assert isinstance(stage4_output, StageFourOutput)
+        assert len(stage4_output.candidates) == len(stage3_output.candidates)
 
-    @pytest.mark.skip(reason="Stage 4 not implemented")
+    def test_all_candidates_have_coding(self, stage4_output):
+        for c in stage4_output.candidates:
+            if c.resource_type == "FamilyMemberHistory":
+                for cond in c.item.get("conditions") or []:
+                    assert "coding" in cond, f"FMH condition missing coding: {cond}"
+            else:
+                assert "coding" in c.item, f"{c.resource_type} missing coding: {c.item.get('name')}"
+
+    def test_coding_structure(self, stage4_output):
+        for c in stage4_output.candidates:
+            codings = c.item.get("coding") or []
+            for entry in codings:
+                assert "system" in entry or "text" in entry
+
+    def test_conditions_have_codes(self, stage4_output):
+        conditions = [c for c in stage4_output.candidates if c.resource_type == "Condition"]
+        assert len(conditions) > 0
+        coded = 0
+        for cond in conditions:
+            codings = cond.item.get("coding", [])
+            has_real_code = any("code" in e for e in codings)
+            if has_real_code:
+                coded += 1
+        assert coded >= len(conditions) - 1, f"Too many conditions without codes: {coded}/{len(conditions)}"
+
+    def test_bp_has_fixed_loinc(self, stage4_output):
+        bps = [
+            c for c in stage4_output.candidates
+            if c.resource_type == "Observation"
+            and (c.item.get("name") or "").lower() in ("bp", "blood pressure")
+        ]
+        for bp in bps:
+            codings = bp.item.get("coding", [])
+            codes = {e.get("code") for e in codings}
+            assert "85354-9" in codes, f"BP missing fixed LOINC 85354-9: {codings}"
+
+    def test_tobacco_has_fixed_loinc(self, stage4_output):
+        tobacco = [
+            c for c in stage4_output.candidates
+            if c.resource_type == "Observation"
+            and "tobacco" in (c.item.get("name") or "").lower()
+        ]
+        assert len(tobacco) >= 1
+        for t in tobacco:
+            codings = t.item.get("coding", [])
+            codes = {e.get("code") for e in codings}
+            assert "72166-2" in codes, f"Tobacco missing fixed LOINC 72166-2: {codings}"
+
     def test_medications_have_rxnorm(self, stage4_output):
-        pass
+        meds = [c for c in stage4_output.candidates if c.resource_type == "MedicationRequest"]
+        assert len(meds) > 0
+        for med in meds:
+            codings = med.item.get("coding", [])
+            systems = {e.get("system") for e in codings if "system" in e}
+            assert "http://www.nlm.nih.gov/research/umls/rxnorm" in systems or "text" in codings[0], \
+                f"Med missing RxNorm: {med.item.get('name')}"
 
-    @pytest.mark.skip(reason="Stage 4 not implemented")
-    def test_observations_have_loinc(self, stage4_output):
-        pass
+    def test_source_refs_preserved(self, stage4_output, stage3_output):
+        for s4, s3 in zip(stage4_output.candidates, stage3_output.candidates):
+            assert len(s4.source_refs) == len(s3.source_refs)
 
 
 # ===================================================================

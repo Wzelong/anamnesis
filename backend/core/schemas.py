@@ -162,6 +162,36 @@ class CleanerResult(_Strict):
     deduplicate: list[DedupGroup] = Field(default_factory=list)
 
 
+class SourceRef(_Strict):
+    document_id: str
+    source_sentences: list[int]
+
+
+class MergedCandidate(_Strict):
+    resource_type: str
+    item: dict
+    source_refs: list[SourceRef]
+    encounter_key: str | None = None
+    merge_reasoning: str | None = None
+
+
+class CodeSelectorResult(_Strict):
+    code: str | None = None
+    refined_search_term: str | None = None
+
+
+class MergeDecision(_Strict):
+    action: Literal["merge", "reassign", "keep"]
+    group_ids: list[int]
+    survivor_group_id: int
+    target_resource_type: str | None = None
+    reasoning: str
+
+
+class MergeAdjudicationResult(_Strict):
+    decisions: list[MergeDecision] = Field(default_factory=list)
+
+
 RESOURCE_TYPES: tuple[str, ...] = (
     "Condition",
     "Observation",

@@ -22,7 +22,11 @@
       "Bash(rm -rf .cache/stage2 .cache/stage2_output .cache/telemetry anamnesis.db)",
       "Bash(python -m scripts.run_stage2)",
       "Bash(python benchmarks/eval-corpus-v1/validate_corpus.py --only C2)",
-      "Bash(python benchmarks/eval-corpus-v1/validate_corpus.py --only E2)"
+      "Bash(python benchmarks/eval-corpus-v1/validate_corpus.py --only E2)",
+      "Bash(rm -rf C:/Users/zewang/Documents/GitHub/anamnesis/backend/.cache/stage3/)",
+      "Bash(python -m pytest tests/test_e2e_pipeline.py::TestStage3CrossNoteDedupe -v)",
+      "Bash(python -c ' *)",
+      "Bash(python -m pytest tests/test_e2e_pipeline.py -v)"
     ]
   }
 }
