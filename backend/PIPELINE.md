@@ -207,30 +207,47 @@ resources).
 
 **Demo distribution:** 41 NEW, 7 DUPLICATE, 3 UPDATING, 2 CONFLICTING.
 
-## Stage 6 — Assemble proposal (`core/augment.py`)
+## Stage 6 — Assemble proposal (`core/augment.py`) ✅
 
-Builds the `AugmentationProposal` record persisted to the working DB
-(`backend/db/`). One row per proposal:
+Pure deterministic transform — no LLM calls, no I/O. Converts
+`StageFiveOutput` into clinician-reviewable `Proposal` records with valid
+FHIR R4 resource JSON and character-level source citations.
 
-```
-AugmentationProposal {
-  resource:                 # FHIR JSON built by core/profiles adapters
-  classification:           NEW | UPDATING | CONFLICTING
-  classification_reasoning: str
-  source_refs: [            # one entry per citation
-    { document_ref, sentence_range, char_span }
-  ]
-  extraction_reasoning:     str          # from parser
-  coding_reasoning:         str | None   # from CodeSelector
-  confidence: float         # composite: extract × code-match × classifier
-  conflicts_with: [ref]     # if CONFLICTING
-  supersedes:    [ref]      # if UPDATING
-  status: pending
-}
-```
+**Three jobs:**
+
+1. **Filter.** Drop DUPLICATEs (already in chart). Demo: 60 → 51 proposals.
+2. **Build FHIR resources.** One builder per resource type, emitting plain
+   dicts that conform to US Core R4. Key mapping: `item["coding"]` →
+   `CodeableConcept.coding[]`, `item["name"]` → `CodeableConcept.text`.
+   Special handling for BP (component-based), tobacco (valueCodeableConcept),
+   and onset age parsing for FamilyMemberHistory.
+3. **Resolve citations.** Sentence numbers → character spans via
+   `PreprocessedNote.sentences`. Contiguous sentences merge into one
+   `ResolvedCitation`; non-contiguous produce multiple.
+
+**Per-type assembly:**
+
+| Type | Code field | Subject field | Profile |
+|------|-----------|--------------|---------|
+| Condition | `code` | `subject` | us-core-condition-problems-health-concerns |
+| Observation | `code` | `subject` | varies by category (vital-signs, lab, smokingstatus) |
+| MedicationRequest | `medicationCodeableConcept` | `subject` | us-core-medicationrequest |
+| Procedure | `code` | `subject` | us-core-procedure |
+| AllergyIntolerance | `code` | `patient` | us-core-allergyintolerance |
+| FamilyMemberHistory | `relationship` | `patient` | (none) |
+
+**certainty → verificationStatus:** `definite` → confirmed, `probable` →
+provisional, `uncertain` → unconfirmed (Condition + AllergyIntolerance).
+
+**Output:** `Proposal` schema carrying:
+- `resource` (valid FHIR R4 dict), `resource_type`, `classification`
+- `citations` (list of `ResolvedCitation` with document_id, char_start/end, text)
+- `confidence_score`, `confidence_tier`, `flags` (carried from Stage 5)
+- `supersedes` (UPDATING), `conflicts_with` (CONFLICTING)
+- `classification_reasoning`, `extraction_reasoning`, `merge_reasoning`
 
 No FHIR write happens here. The resource JSON is pre-assembled and valid but
-sits in the working DB until a clinician acts.
+sits in the working DB (via `ProposalRecord` ORM model) until a clinician acts.
 
 ## Stage 7 — Review (`api/routes.py`, `mcp_server/tools.py`)
 
@@ -268,7 +285,7 @@ backend/core/
   coding.py           # FAISS index store + SapBERT embedding model
   code_candidates.py  # US Core fixed codes + LLM CodeSelector
   reconcile.py        # deterministic match + LLM adjudication → NEW/DUPLICATE/UPDATING/CONFLICTING
-  augment.py          # assemble AugmentationProposal
+  augment.py          # FHIR builders + citation resolution → Proposal assembly
 ```
 
 ## Confidence scoring (`core/reconcile.py::_compute_confidence`)

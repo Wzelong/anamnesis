@@ -143,8 +143,9 @@ def stage5_output(stage4_output, patient_context):
 
 
 @pytest.fixture(scope="module")
-def stage6_output(stage5_output):
-    return stage5_output
+def stage6_output(stage5_output, stage1_output, patient_context):
+    from core.augment import assemble_proposals
+    return assemble_proposals(stage5_output, stage1_output, patient_context)
 
 
 @pytest.fixture(scope="module")
@@ -686,13 +687,145 @@ class TestStage5Reconcile:
 
 class TestStage6AssembleProposal:
 
-    @pytest.mark.skip(reason="Stage 6 not implemented")
-    def test_eight_proposals(self, stage6_output):
-        pass
+    def test_duplicates_filtered(self, stage5_output, stage6_output):
+        n_dup = sum(1 for r in stage5_output.results if r.classification == "DUPLICATE")
+        assert len(stage6_output.proposals) == len(stage5_output.results) - n_dup
 
-    @pytest.mark.skip(reason="Stage 6 not implemented")
-    def test_proposals_have_provenance(self, stage6_output):
-        pass
+    def test_no_duplicate_proposals(self, stage6_output):
+        for p in stage6_output.proposals:
+            assert p.classification != "DUPLICATE"
+
+    def test_all_have_resource_type(self, stage6_output):
+        for p in stage6_output.proposals:
+            assert p.resource["resourceType"] == p.resource_type
+
+    def test_all_have_subject_or_patient(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.resource_type in ("AllergyIntolerance", "FamilyMemberHistory"):
+                assert "patient" in p.resource
+            else:
+                assert "subject" in p.resource
+
+    def test_all_have_code_field(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.resource_type == "MedicationRequest":
+                assert "medicationCodeableConcept" in p.resource
+            elif p.resource_type == "FamilyMemberHistory":
+                assert "relationship" in p.resource
+            else:
+                assert "code" in p.resource
+
+    def test_code_has_text(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.resource_type == "MedicationRequest":
+                cc = p.resource.get("medicationCodeableConcept", {})
+            elif p.resource_type == "FamilyMemberHistory":
+                cc = p.resource.get("relationship", {})
+            else:
+                cc = p.resource.get("code", {})
+            assert cc.get("text"), f"missing text on {p.resource_type}: {cc}"
+
+    def test_conditions_have_us_core_profile(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.resource_type == "Condition":
+                profiles = p.resource.get("meta", {}).get("profile", [])
+                assert any("us-core-condition" in pr for pr in profiles)
+
+    def test_conditions_have_category_and_verification(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.resource_type == "Condition":
+                assert "category" in p.resource
+                assert "verificationStatus" in p.resource
+
+    def test_observations_have_category_and_value(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.resource_type == "Observation":
+                assert "category" in p.resource
+                has_value = any(
+                    k in p.resource
+                    for k in ("valueQuantity", "valueCodeableConcept", "valueString", "component")
+                )
+                assert has_value, f"Observation missing value: {p.resource.get('code', {}).get('text')}"
+
+    def test_medication_requests_have_status_intent(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.resource_type == "MedicationRequest":
+                assert "status" in p.resource
+                assert "intent" in p.resource
+
+    def test_all_have_citations(self, stage6_output):
+        for p in stage6_output.proposals:
+            assert len(p.citations) >= 1, f"no citations for {p.resource_type}: {p.resource.get('code', {}).get('text')}"
+
+    def test_citations_have_valid_spans(self, stage6_output):
+        for p in stage6_output.proposals:
+            for c in p.citations:
+                assert c.char_start >= 0
+                assert c.char_end > c.char_start
+                assert len(c.text) > 0
+
+    def test_citations_text_matches_original(self, stage6_output, stage1_output):
+        notes_by_id = {n.document_id: n for n in stage1_output}
+        for p in stage6_output.proposals:
+            for c in p.citations:
+                note = notes_by_id.get(c.document_id)
+                if note:
+                    assert note.original_text[c.char_start:c.char_end] == c.text
+
+    def test_all_have_confidence(self, stage6_output):
+        for p in stage6_output.proposals:
+            assert 0.0 <= p.confidence_score <= 1.0
+            assert p.confidence_tier in ("CONFIDENT", "REVIEW", "ATTENTION")
+
+    def test_conflicting_have_conflicts_with(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.classification == "CONFLICTING":
+                assert len(p.conflicts_with) >= 1
+
+    def test_updating_have_supersedes(self, stage6_output):
+        for p in stage6_output.proposals:
+            if p.classification == "UPDATING":
+                assert len(p.supersedes) >= 1
+
+    def test_cad_is_new_condition(self, stage6_output):
+        cad = [p for p in stage6_output.proposals
+               if p.resource_type == "Condition"
+               and "coronary" in p.resource.get("code", {}).get("text", "").lower()]
+        assert len(cad) >= 1
+        assert cad[0].classification == "NEW"
+
+    def test_penicillin_is_conflicting(self, stage6_output):
+        pen = [p for p in stage6_output.proposals
+               if p.resource_type == "AllergyIntolerance"
+               and "penicillin" in p.resource.get("code", {}).get("text", "").lower()]
+        assert len(pen) >= 1
+        assert pen[0].classification == "CONFLICTING"
+
+    def test_lisinopril_is_updating(self, stage6_output):
+        lis = [p for p in stage6_output.proposals
+               if p.resource_type == "MedicationRequest"
+               and "lisinopril" in p.resource.get("medicationCodeableConcept", {}).get("text", "").lower()]
+        assert len(lis) >= 1
+        assert lis[0].classification == "UPDATING"
+
+    def test_bp_uses_components(self, stage6_output):
+        bp = [p for p in stage6_output.proposals
+              if p.resource_type == "Observation"
+              and any(c.get("code") == "85354-9"
+                      for c in p.resource.get("code", {}).get("coding", []))]
+        if bp:
+            assert "component" in bp[0].resource
+            assert "valueString" not in bp[0].resource
+
+    def test_serialization_roundtrip(self, stage6_output):
+        from core.augment import StageSixOutput
+        data = stage6_output.to_json()
+        restored = StageSixOutput.from_json(data)
+        assert len(restored.proposals) == len(stage6_output.proposals)
+        for orig, rest in zip(stage6_output.proposals, restored.proposals):
+            assert orig.id == rest.id
+            assert orig.resource == rest.resource
+            assert orig.classification == rest.classification
 
 
 # ===================================================================

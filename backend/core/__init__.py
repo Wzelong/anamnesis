@@ -1,4 +1,5 @@
 from core import telemetry
+from core.augment import StageSixOutput, assemble_proposals
 from core.cache import JsonCache
 from core.code_candidates import StageFourOutput, code_candidates
 from core.coding import EmbeddingModel, IndexStore, SearchResult, search_code
@@ -41,8 +42,10 @@ from core.schemas import (
     NoteContext,
     ObservationItem,
     ProcedureItem,
+    Proposal,
     ReconciliationResult,
     RESOURCE_TYPES,
+    ResolvedCitation,
     ScanResult,
     SourceRef,
 )
@@ -53,6 +56,7 @@ __all__ = [
     "EmbeddingModel",
     "IndexStore",
     "CleanerResult",
+    "assemble_proposals",
     "code_candidates",
     "ConditionItem",
     "DatedField",
@@ -69,13 +73,16 @@ __all__ = [
     "PROMPT_VERSION",
     "PreprocessedNote",
     "ProcedureItem",
+    "Proposal",
     "ReconciliationResult",
     "RESOURCE_TYPES",
+    "ResolvedCitation",
     "ScanResult",
     "SearchResult",
     "SentenceSpan",
     "StageFiveOutput",
     "StageFourOutput",
+    "StageSixOutput",
     "SourceRef",
     "StageThreeOutput",
     "StageTwoOutput",

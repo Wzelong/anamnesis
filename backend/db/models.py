@@ -57,3 +57,28 @@ class LLMCall(Base):
         Index("ix_llm_call_run_stage", "run_id", "stage"),
         Index("ix_llm_call_run_call_type", "run_id", "call_type"),
     )
+
+
+class ProposalRecord(Base):
+    __tablename__ = "proposal"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    run_id: Mapped[str] = mapped_column(
+        String(32), ForeignKey("pipeline_run.id", ondelete="CASCADE"), index=True
+    )
+    patient_id: Mapped[str] = mapped_column(String(128), index=True)
+    resource_type: Mapped[str] = mapped_column(String(32))
+    classification: Mapped[str] = mapped_column(String(16))
+    confidence_tier: Mapped[str] = mapped_column(String(16))
+    confidence_score: Mapped[Decimal] = mapped_column(Numeric(4, 3))
+    status: Mapped[str] = mapped_column(String(16), default="pending")
+    resource_json: Mapped[str] = mapped_column(Text)
+    citations_json: Mapped[str] = mapped_column(Text)
+    metadata_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column()
+    reviewed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    reviewed_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+
+    __table_args__ = (
+        Index("ix_proposal_patient_status", "patient_id", "status"),
+    )

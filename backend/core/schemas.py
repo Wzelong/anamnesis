@@ -176,6 +176,14 @@ class SourceRef(_Strict):
     source_sentences: list[int]
 
 
+class ResolvedCitation(_Strict):
+    document_id: str
+    sentence_numbers: list[int]
+    char_start: int
+    char_end: int
+    text: str
+
+
 class MergedCandidate(_Strict):
     resource_type: str
     item: dict
@@ -253,3 +261,20 @@ class LLMReconcileResult(_Strict):
 
 class LLMReconcileBatchResult(_Strict):
     decisions: list[LLMReconcileResult] = Field(default_factory=list)
+
+
+class Proposal(_Strict):
+    id: str
+    resource_type: str
+    resource: dict
+    classification: Literal["NEW", "UPDATING", "CONFLICTING"]
+    classification_reasoning: str
+    extraction_reasoning: str
+    merge_reasoning: str | None = None
+    citations: list[ResolvedCitation]
+    chart_matches: list[ChartMatch] = Field(default_factory=list)
+    confidence_score: float
+    confidence_tier: Literal["CONFIDENT", "REVIEW", "ATTENTION"]
+    flags: list[str] = Field(default_factory=list)
+    supersedes: list[str] = Field(default_factory=list)
+    conflicts_with: list[str] = Field(default_factory=list)
