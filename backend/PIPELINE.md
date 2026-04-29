@@ -73,7 +73,9 @@ Model: `gpt-5.4-mini` with `reasoning.effort="low"`.
    only, tobacco → Observation only).
 2. **Parse.** One LLM call per sentence group per resource type, all
    concurrent within a note. Produces Pydantic structured outputs. Each
-   candidate carries `source_sentences` and `reasoning`.
+   candidate carries `source_sentences`, `reasoning`, and `certainty`
+   (definite / probable / uncertain — how assertively the source text
+   states the fact).
 3. **Clean.** One LLM call per resource type (within-note only) removes junk
    and de-duplicates near-identical candidates.
 
@@ -268,6 +270,72 @@ backend/core/
   reconcile.py        # deterministic match + LLM adjudication → NEW/DUPLICATE/UPDATING/CONFLICTING
   augment.py          # assemble AugmentationProposal
 ```
+
+## Confidence scoring (`core/reconcile.py::_compute_confidence`)
+
+Every `ReconciliationResult` carries three confidence outputs:
+
+- `confidence_score: float` — 0.0–1.0, used for sort order
+- `confidence_tier: CONFIDENT | REVIEW | ATTENTION` — UI display tier
+- `flags: list[str]` — human-readable reasons the clinician can verify
+
+### Why not LLM confidence scores?
+
+LLMs are poorly calibrated at self-reported numeric confidence. They say
+0.85 whether they're right or wrong. Instead, we use one LLM **label** at
+extraction time (`certainty: definite | probable | uncertain` — the LLM
+*is* good at categorical language classification) and combine it with four
+**deterministic signals** from downstream stages that are more trustworthy.
+
+### Five factors
+
+| # | Factor | Weight | Source | Signal |
+|---|--------|--------|--------|--------|
+| 1 | Source evidence | 0.25 | Stage 3 | How many notes corroborate this fact (1→0.4, 2→0.7, 3+→1.0) |
+| 2 | Extraction certainty | 0.20 | Stage 2 | LLM label (definite→1.0, probable→0.6, uncertain→0.2) |
+| 3 | Coding quality | 0.25 | Stage 4 | Real terminology codes vs text-only fallback; multi-system bonus |
+| 4 | Reconciliation match | 0.20 | Stage 5 | Match type quality (exact_code > ingredient > display_text) |
+| 5 | Classification override | 0.10 | Stage 5 | Type penalty (CONFLICTING→0.0, ensures double-zero with factor 4) |
+
+**Source evidence** is the strongest signal: a fact in 3 independent notes
+is almost certainly real. **Coding quality** is next: if FAISS can't find
+a match from 1M+ terminology concepts, either the extraction is wrong or
+the concept is unusual. **Certainty** at 0.20 gives the LLM a voice
+without letting it dominate — if 3 notes mention something with real
+SNOMED codes, an "uncertain" label shouldn't override that.
+
+### Tier thresholds
+
+```
+CONFLICTING → ATTENTION  (hard override, no exceptions)
+composite ≥ 0.70 → CONFIDENT
+composite ≥ 0.40 → REVIEW
+composite < 0.40 → ATTENTION
+```
+
+CONFLICTING always forces ATTENTION regardless of score. This is a safety
+invariant — a clinical contradiction must never be auto-approved.
+
+### Flags (what clinicians actually see)
+
+The tier tells the clinician *how much attention* to pay. The flags tell
+them *where to look*. Each flag is derived from the same signals:
+
+- Source: "Mentioned in 3 notes" / "Single mention"
+- Certainty: "Stated assertively in source" / "Source language is uncertain"
+- Coding: "Coded in 2 systems (icd-10-cm, sct)" / "No terminology code found — verify manually"
+- Classification: "Already in chart" / "Conflicts with: No known drug allergy" / "Updates existing: dose 10→20"
+- Match: "Approximate match — verify"
+
+### Demo distribution (53 candidates)
+
+| Tier | Count | Typical examples |
+|------|-------|-----------------|
+| CONFIDENT | ~44 | Multi-doc conditions, new procedures, medications with codes |
+| REVIEW | ~5 | Single-mention probable items, tobacco cessation |
+| ATTENTION | ~4 | Penicillin/amoxicillin vs NKDA, text-only coded items |
+
+---
 
 ## Design invariants
 

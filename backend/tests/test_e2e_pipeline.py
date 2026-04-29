@@ -371,6 +371,15 @@ class TestStage2ExtractCandidates:
                         f"{out.document_id}/{rtype}: missing source_sentences"
                     )
 
+    def test_all_candidates_have_certainty(self, stage2_output):
+        valid = {"definite", "probable", "uncertain"}
+        for out in stage2_output:
+            for rtype, items in out.candidates.items():
+                for item in items:
+                    assert item.certainty in valid, (
+                        f"{out.document_id}/{rtype}: invalid certainty '{item.certainty}'"
+                    )
+
 
 # ===================================================================
 # Stage 3 — Cross-note Dedupe (stub)
@@ -640,6 +649,35 @@ class TestStage5Reconcile:
     def test_source_refs_preserved(self, stage5_output, stage4_output):
         for r, s4 in zip(stage5_output.results, stage4_output.candidates):
             assert len(r.candidate.source_refs) == len(s4.source_refs)
+
+    # -- Confidence --
+
+    def test_all_results_have_confidence(self, stage5_output):
+        for r in stage5_output.results:
+            assert 0.0 <= r.confidence_score <= 1.0
+            assert r.confidence_tier in ("CONFIDENT", "REVIEW", "ATTENTION")
+            assert len(r.flags) >= 1
+
+    def test_conflicting_is_attention(self, stage5_output):
+        for r in stage5_output.results:
+            if r.classification == "CONFLICTING":
+                assert r.confidence_tier == "ATTENTION"
+
+    def test_duplicate_is_confident(self, stage5_output):
+        for r in stage5_output.results:
+            if r.classification == "DUPLICATE":
+                assert r.confidence_tier == "CONFIDENT", (
+                    f"DUPLICATE should be CONFIDENT: {r.candidate.item.get('name', '?')} "
+                    f"got {r.confidence_tier} (score={r.confidence_score})"
+                )
+
+    def test_flags_describe_source_count(self, stage5_output):
+        for r in stage5_output.results:
+            n_docs = len({sr.document_id for sr in r.candidate.source_refs})
+            if n_docs >= 3:
+                assert any("3" in f and "note" in f for f in r.flags)
+            elif n_docs == 1:
+                assert any("Single" in f for f in r.flags)
 
 
 # ===================================================================

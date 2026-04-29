@@ -5,7 +5,7 @@ shapes. Prompts encode clinical decision rules only. Bump PROMPT_VERSION
 to invalidate the cache when any prompt changes.
 """
 
-PROMPT_VERSION = "2026-04-29.9"
+PROMPT_VERSION = "2026-04-29.10"
 
 
 PROMPT_SCAN = """\
@@ -179,6 +179,11 @@ Output: two items.
   - {name: "ischemic cardiomyopathy", category: "diagnosis", caused_by: [], source_sentences: [40]}
 </example>
 
+Certainty
+- definite: assertively stated ("diagnosed with", "confirmed", "has", "presents with").
+- probable: strongly implied but not explicit ("consistent with", "likely", continuation of known condition).
+- uncertain: hedged, vague, or secondhand ("? possible", "patient reports", "unconfirmed", "rule out").
+
 Stop
 Return the structured output. Do not deduplicate — the cleaner handles that.
 """
@@ -242,6 +247,11 @@ Snippet: [74] Most recent brain MRI (06/2024, post-stroke): ...
 Output: effective_date="2024-06" (preserve month+year; do not fabricate a day).
 </example>
 
+Certainty
+- definite: directly measured or reported with a specific value ("BP 142/86", "A1c 7.2%", "HR 72").
+- probable: value implied or approximate ("elevated blood pressure", "heart rate in the 70s").
+- uncertain: reported secondhand or hedged ("patient states occasional alcohol use", "per outside records").
+
 Stop
 Return the structured output.
 """
@@ -290,6 +300,11 @@ Snippet:
 Output: one item — omeprazole 20 mg PO. The "New:" tag is an explicit order action.
 </example>
 
+Certainty
+- definite: explicit order or active prescription ("start metoprolol 25 mg", "continue lisinopril", "new: omeprazole").
+- probable: medication mentioned in context implying use ("on aspirin", "home medications include").
+- uncertain: dose or drug unclear ("started on some beta blocker", "may have been on a statin").
+
 Stop
 Return the structured output.
 """
@@ -329,6 +344,11 @@ Snippet: [28] Diagnostic cardiac catheterization (10/2025), no PCI.
 Output: performed="2025-10" (month+year only; do not fabricate a day).
 </example>
 
+Certainty
+- definite: procedure clearly performed ("catheterization was performed", "CT obtained", "ECG showed").
+- probable: procedure referenced but details limited ("had a scan", "imaging consistent with").
+- uncertain: procedure mentioned vaguely or from outside records ("reportedly had surgery", "per outside records").
+
 Stop
 Return the structured output.
 """
@@ -358,6 +378,11 @@ Rules
 - `verification`: confirmed (explicit allergy testing), unconfirmed (historical label only), refuted (delabeled), entered-in-error.
 - If the snippet states "no known drug allergies" / "NKDA", do not emit an AllergyIntolerance item.
 
+Certainty
+- definite: confirmed allergy with documented reaction ("confirmed penicillin allergy — anaphylaxis").
+- probable: reported allergy with plausible history ("patient reports rash with amoxicillin as a child").
+- uncertain: vague or secondhand ("thinks they might be allergic", "family says patient had a reaction").
+
 Stop
 Return the structured output.
 """
@@ -381,6 +406,11 @@ Rules
   - "Father: healthy."
   - "No family history of cancer, stroke, or sudden cardiac death."
 - Emit an item only when the snippet names a relative paired with a specific condition the relative has or had.
+
+Certainty
+- definite: specific relative with specific condition ("father had MI at age 52").
+- probable: relative and condition named but details vague ("family history of heart disease").
+- uncertain: secondhand or vague ("patient thinks a grandparent may have had diabetes").
 
 Stop
 Return the structured output.

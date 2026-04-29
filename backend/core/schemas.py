@@ -39,9 +39,13 @@ class ScanResult(_Strict):
     medication_request: list[list[int]] = Field(default_factory=list)
 
 
+Certainty = Literal["definite", "probable", "uncertain"]
+
+
 class ConditionItem(_Strict):
     source_sentences: list[int]
     reasoning: str = ""
+    certainty: Certainty = "probable"
     category: Literal["diagnosis", "problem"]
     name: str
     severity: Literal["mild", "moderate", "severe"] | None = None
@@ -57,6 +61,7 @@ class ConditionItemList(_Strict):
 class ObservationItem(_Strict):
     source_sentences: list[int]
     reasoning: str = ""
+    certainty: Certainty = "probable"
     name: str
     full_name: str | None = None
     value: str
@@ -80,6 +85,7 @@ class MedicationDose(_Strict):
 class MedicationItem(_Strict):
     source_sentences: list[int]
     reasoning: str = ""
+    certainty: Certainty = "probable"
     name: str
     status: Literal[
         "active", "on-hold", "cancelled", "completed", "stopped", "draft", "unknown"
@@ -100,6 +106,7 @@ class MedicationItemList(_Strict):
 class ProcedureItem(_Strict):
     source_sentences: list[int]
     reasoning: str = ""
+    certainty: Certainty = "probable"
     name: str
     status: Literal[
         "preparation", "in-progress", "not-done", "on-hold",
@@ -119,6 +126,7 @@ class ProcedureItemList(_Strict):
 class AllergyItem(_Strict):
     source_sentences: list[int]
     reasoning: str = ""
+    certainty: Certainty = "probable"
     substance: str
     category: Literal["food", "medication", "environment", "biologic"] | None = None
     criticality: Literal["low", "high", "unable-to-assess"] | None = None
@@ -144,6 +152,7 @@ class FamilyMemberCondition(_Strict):
 class FamilyMemberHistoryItem(_Strict):
     source_sentences: list[int]
     reasoning: str = ""
+    certainty: Certainty = "probable"
     relationship: str
     conditions: list[FamilyMemberCondition] = Field(default_factory=list)
 
@@ -231,6 +240,9 @@ class ReconciliationResult(_Strict):
     classification: Literal["NEW", "DUPLICATE", "UPDATING", "CONFLICTING"]
     reasoning: str
     chart_matches: list[ChartMatch] = Field(default_factory=list)
+    confidence_score: float = 0.5
+    confidence_tier: Literal["CONFIDENT", "REVIEW", "ATTENTION"] = "REVIEW"
+    flags: list[str] = Field(default_factory=list)
 
 
 class LLMReconcileResult(_Strict):

@@ -474,6 +474,114 @@ class StageFiveOutput:
         )
 
 
+_CERTAINTY_SCORES = {"definite": 1.0, "probable": 0.6, "uncertain": 0.2}
+_CLASSIFICATION_SCORES = {"DUPLICATE": 1.0, "UPDATING": 0.7, "NEW": 0.5, "CONFLICTING": 0.0}
+
+_W_SOURCE = 0.25
+_W_CERTAINTY = 0.20
+_W_CODING = 0.25
+_W_MATCH = 0.20
+_W_CLASS = 0.10
+
+
+def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
+    item = result.candidate.item
+    refs = result.candidate.source_refs
+
+    n_docs = len({sr.document_id for sr in refs})
+    if n_docs >= 3:
+        source_score = 1.0
+    elif n_docs == 2:
+        source_score = 0.7
+    else:
+        source_score = 0.4
+
+    certainty = item.get("certainty", "probable")
+    certainty_score = _CERTAINTY_SCORES.get(certainty, 0.6)
+
+    codings = item.get("coding", [])
+    has_real_code = any("code" in c for c in codings)
+    if has_real_code:
+        coding_score = 0.7 + min(0.3, len([c for c in codings if "code" in c]) * 0.15)
+    else:
+        coding_score = 0.1
+
+    best_match_type = None
+    if result.chart_matches:
+        priority = {"exact_code": 3, "ingredient": 2, "display_text": 1}
+        best_match_type = max(result.chart_matches, key=lambda m: priority.get(m.match_type, 0)).match_type
+
+    cls = result.classification
+    if cls == "CONFLICTING":
+        match_score = 0.0
+    elif cls == "DUPLICATE":
+        match_score = 1.0 if best_match_type == "exact_code" else 0.8
+    elif cls == "UPDATING":
+        match_score = 0.9 if best_match_type in ("exact_code", "ingredient") else 0.6
+    else:
+        match_score = 0.5
+
+    class_score = _CLASSIFICATION_SCORES.get(cls, 0.5)
+
+    composite = (
+        source_score * _W_SOURCE
+        + certainty_score * _W_CERTAINTY
+        + coding_score * _W_CODING
+        + match_score * _W_MATCH
+        + class_score * _W_CLASS
+    )
+
+    if cls == "CONFLICTING":
+        tier = "ATTENTION"
+    elif composite >= 0.70:
+        tier = "CONFIDENT"
+    elif composite >= 0.40:
+        tier = "REVIEW"
+    else:
+        tier = "ATTENTION"
+
+    flags: list[str] = []
+
+    if n_docs >= 3:
+        flags.append(f"Mentioned in {n_docs} notes")
+    elif n_docs == 2:
+        flags.append("Mentioned in 2 notes")
+    else:
+        flags.append("Single mention")
+
+    if certainty == "uncertain":
+        flags.append("Source language is uncertain or secondhand")
+    elif certainty == "definite":
+        flags.append("Stated assertively in source")
+
+    if not has_real_code:
+        flags.append("No terminology code found — verify manually")
+    else:
+        systems = {c.get("system", "").split("/")[-1] for c in codings if "system" in c}
+        systems.discard("")
+        if len(systems) >= 2:
+            flags.append(f"Coded in {len(systems)} systems ({', '.join(sorted(systems))})")
+
+    if cls == "CONFLICTING":
+        displays = [m.display for m in result.chart_matches if m.display]
+        conflict_desc = displays[0] if displays else "existing chart record"
+        flags.append(f"Conflicts with: {conflict_desc}")
+    elif cls == "UPDATING":
+        change = result.reasoning.split(",", 1)[-1].strip() if "," in result.reasoning else result.reasoning
+        flags.append(f"Updates existing: {change}")
+    elif cls == "DUPLICATE":
+        flags.append("Already in chart")
+
+    if best_match_type == "display_text":
+        flags.append("Approximate match — verify")
+
+    return result.model_copy(update={
+        "confidence_score": round(composite, 3),
+        "confidence_tier": tier,
+        "flags": flags,
+    })
+
+
 async def reconcile(
     stage4_output: StageFourOutput,
     patient_context: PatientContext,
@@ -534,7 +642,7 @@ async def reconcile(
                     chart_matches=chart_matches,
                 )
 
-    results = [resolved[i] for i in range(len(stage4_output.candidates))]
+    results = [_compute_confidence(resolved[i]) for i in range(len(stage4_output.candidates))]
     n_by_class = {}
     for r in results:
         n_by_class[r.classification] = n_by_class.get(r.classification, 0) + 1
