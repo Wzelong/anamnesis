@@ -15,8 +15,8 @@
       "category": "condition",
       "verbatim_span": "Persistent AFib, rate-controlled",
       "expected_codes": [
-        {"system": "SNOMED", "code": "49436004", "display": "Atrial fibrillation (disorder)"},
-        {"system": "ICD-10", "code": "I48.91", "display": "Unspecified atrial fibrillation"}
+        {"system": "SNOMED", "code": "440059007", "display": "Persistent atrial fibrillation (disorder)"},
+        {"system": "ICD-10", "code": "I48.19", "display": "Other persistent atrial fibrillation"}
       ],
       "expected_attributes": {
         "clinicalStatus": "active",

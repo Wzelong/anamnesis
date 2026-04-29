@@ -47,7 +47,9 @@
       "id": "N1-F3",
       "category": "medication_request",
       "verbatim_span": "Continue sumatriptan PRN for acute migraine",
-      "expected_codes": [],
+      "expected_codes": [
+        {"system": "RxNorm", "code": "37418", "display": "sumatriptan"}
+      ],
       "expected_attributes": {
         "status": "active",
         "intent": "order",
@@ -55,7 +57,7 @@
         "route": "oral"
       },
       "section": "ASSESSMENT AND PLAN",
-      "notes": "Abortive therapy continued. RxNorm code for sumatriptan not included in corpus seed; extractor should still identify the medication by name."
+      "notes": "Abortive therapy continued."
     },
     {
       "id": "N1-F4",

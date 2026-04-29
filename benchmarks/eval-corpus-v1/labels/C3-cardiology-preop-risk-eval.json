@@ -15,8 +15,8 @@
       "category": "condition",
       "verbatim_span": "paroxysmal AFib",
       "expected_codes": [
-        {"system": "SNOMED", "code": "49436004", "display": "Atrial fibrillation (disorder)"},
-        {"system": "ICD-10", "code": "I48.91", "display": "Unspecified atrial fibrillation"}
+        {"system": "SNOMED", "code": "282825002", "display": "Paroxysmal atrial fibrillation (disorder)"},
+        {"system": "ICD-10", "code": "I48.0", "display": "Paroxysmal atrial fibrillation"}
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -62,12 +62,12 @@
     {
       "id": "C3-F4",
       "category": "observation",
-      "verbatim_span": "RCRI = 1 point",
+      "verbatim_span": "RCRI = 0 points",
       "expected_codes": [],
       "expected_attributes": {
         "status": "final",
         "category": "exam",
-        "value": "1 point"
+        "value": "0 points"
       },
       "section": "A/P",
       "notes": "Revised Cardiac Risk Index score; no widely-adopted LOINC in seed."

@@ -14,7 +14,10 @@
       "id": "N6-F1",
       "category": "condition",
       "verbatim_span": "Parkinson's disease, idiopathic, motor-stable on current\ndopaminergic regimen",
-      "expected_codes": [],
+      "expected_codes": [
+        {"system": "SNOMED", "code": "49049000", "display": "Parkinson's disease (disorder)"},
+        {"system": "ICD-10", "code": "G20.A2", "display": "Parkinson's disease without dyskinesia, with fluctuations"}
+      ],
       "expected_attributes": {
         "clinicalStatus": "active",
         "verificationStatus": "confirmed",
@@ -43,7 +46,9 @@
       "id": "N6-F3",
       "category": "medication_request",
       "verbatim_span": "Continue carbidopa/levodopa 25/100 mg PO QID",
-      "expected_codes": [],
+      "expected_codes": [
+        {"system": "RxNorm", "code": "103990", "display": "carbidopa / levodopa"}
+      ],
       "expected_attributes": {
         "status": "active",
         "intent": "order",
@@ -58,7 +63,9 @@
       "id": "N6-F4",
       "category": "family_member_history",
       "verbatim_span": "Father with Parkinson's disease, diagnosed in his late 70s,\ndied age 82",
-      "expected_codes": [],
+      "expected_codes": [
+        {"system": "SNOMED", "code": "49049000", "display": "Parkinson's disease (disorder)"}
+      ],
       "expected_attributes": {
         "relationship": "father",
         "conditionCode": "Parkinson's disease",

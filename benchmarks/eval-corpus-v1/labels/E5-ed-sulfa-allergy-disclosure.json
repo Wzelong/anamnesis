@@ -31,20 +31,25 @@
       "id": "E5-F2",
       "category": "condition",
       "verbatim_span": "Uncomplicated urinary tract infection",
-      "expected_codes": [],
+      "expected_codes": [
+        {"system": "SNOMED", "code": "68226007", "display": "Acute cystitis (disorder)"},
+        {"system": "ICD-10", "code": "N30.00", "display": "Acute cystitis without hematuria"}
+      ],
       "expected_attributes": {
         "clinicalStatus": "active",
         "verificationStatus": "confirmed",
         "category": "encounter-diagnosis"
       },
       "section": "ASSESSMENT AND PLAN",
-      "notes": "Primary ED encounter diagnosis."
+      "notes": "Primary ED encounter diagnosis; assessment text also documents acute cystitis in a non-pregnant adult."
     },
     {
       "id": "E5-F3",
       "category": "medication_request",
       "verbatim_span": "nitrofurantoin monohydrate/macrocrystals 100 mg\n     PO BID x 5 days",
-      "expected_codes": [],
+      "expected_codes": [
+        {"system": "RxNorm", "code": "7454", "display": "nitrofurantoin"}
+      ],
       "expected_attributes": {
         "status": "active",
         "intent": "order",
@@ -54,7 +59,7 @@
         "duration": "5 days"
       },
       "section": "ASSESSMENT AND PLAN",
-      "notes": "Non-sulfa UTI antibiotic given sulfa allergy. RxNorm not seeded."
+      "notes": "Non-sulfa UTI antibiotic given sulfa allergy."
     }
   ],
   "expected_non_facts": [

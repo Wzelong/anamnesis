@@ -5,7 +5,7 @@ shapes. Prompts encode clinical decision rules only. Bump PROMPT_VERSION
 to invalidate the cache when any prompt changes.
 """
 
-PROMPT_VERSION = "2026-04-28.3"
+PROMPT_VERSION = "2026-04-29.6"
 
 
 PROMPT_SCAN = """\
@@ -31,15 +31,17 @@ Exclude:
 
 <resource name="Observation">
 Include clinically actionable observations only:
-- Abnormal vitals (explicitly flagged as elevated, low, uncontrolled, out-of-range).
-- Labs the note calls out as at-goal, above-goal, elevated, abnormal, or that drive a decision.
-- Clinical scores and screenings: PHQ-2, MoCA, A1c, LDL, GCS, ESI, staging.
-- Imaging findings and pathology results.
+- Abnormal vitals explicitly flagged as elevated, low, uncontrolled, out-of-range.
+- Labs the note highlights as abnormal, at-goal, above-goal, or that drive a clinical decision.
+- Clinical scores and screenings: PHQ-2, MoCA, A1c, LDL, GCS, staging.
+- Imaging findings with clinical significance (positive findings, incidental findings).
 - Social-history status facts: smoking status, pack-years, alcohol use, drug use.
 Exclude:
-- Pertinent-negatives from a review-of-systems or physical exam.
-- Routine normal exam findings ("well-appearing", "2+ symmetric pulses", "Romberg negative", "clear to auscultation").
-- Vitals inside a normal-exam block unless the note references them clinically.
+- Pertinent-negatives from review-of-systems, physical exam, or social history (e.g. "no illicit substances", "denies fever"). If the value would be "absent" or "negative", do not include the sentence.
+- Routine normal exam findings ("well-appearing", "NSR", "clear to auscultation", "symmetric pulses", "normal axis").
+- Routine normal vitals not flagged by the clinician.
+- Bulk normal lab panels summarized as "within normal limits" — do not include individual normal values.
+- Care-plan targets ("goal < 130/80") — these are not measurements.
 - SDOH problem terms → Condition.
 - Family history → FamilyMemberHistory.
 </resource>
@@ -62,10 +64,10 @@ Output nested groups: each group is a list of sentence numbers that need each ot
 <resource name="MedicationRequest">
 Include drug names paired with an explicit treatment action: start, initiate, continue, hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate.
 Exclude:
-- Home-medication reconciliation lists ("HOME MEDICATIONS", "Home meds", "Medication reconciliation"). These are a passive snapshot of what the patient reports taking, not an order or a change.
-- If a drug appears only inside a reconciliation list and nowhere else in the note, do not emit it.
-- If the same drug also appears in a different sentence with an explicit action verb, group those sentences together — the reconciliation line may be included as context.
-Output nested groups: include sentences needed to resolve cross-references such as "same dose", "this medication", "restart".
+- Home-medication reconciliation lists ("HOME MEDICATIONS", "Home meds", "Medication reconciliation") and discharge-medication blocks that say "continue all home medications". These list what the patient takes — they are not new orders or changes.
+- Sentences like "continued his home medications" or "continue all home medications as previously prescribed" without naming a specific new drug action. These are blanket continuations, not individual medication requests.
+- If a drug appears only inside a reconciliation list or a blanket continuation and nowhere else with a specific action verb, do not include those sentences.
+Output nested groups: include sentences needed to resolve cross-references such as "same dose", "this medication", "restart". Do not group reconciliation-list sentences with new-order sentences.
 </resource>
 
 Grouping examples (Procedure / MedicationRequest)
@@ -94,9 +96,14 @@ Temporal anchors (note_context)
 - Every 4-digit year must appear verbatim in the cited sentence. If it does not, leave the field null.
 - Leave a date null if the note does not state it. Do not guess.
 
+Routing priority
+- If a sentence's primary content is an allergy or adverse reaction → allergy_intolerance only, not condition.
+- If a sentence describes a family member's medical history → family_member_history only, not condition.
+- If a sentence's primary content is tobacco use, smoking status, substance use, or alcohol → observation only, not condition.
+- A sentence may still appear under multiple types when it genuinely carries content for each (e.g. "started metoprolol for stable angina" → both medication_request and condition).
+
 Rules
 - Sentence numbers must match the [N] prefixes in the input verbatim.
-- A sentence may appear under multiple resource types.
 - Sort flat lists ascending; sort nested groups by first sentence number.
 - Return only resource keys that have matches; omit the rest.
 
@@ -129,7 +136,13 @@ One item per distinct condition stated in the snippet. A single sentence can yie
 Rules
 - Include only when the snippet names a disease, diagnosis, or problem AND uses assertive framing ("has", "diagnosed with", "history of", "presents with").
 - SDOH exception: social or behavioral problems (food insecurity, housing instability, medication underdosing, financial hardship) may be included without an assertive verb.
-- Exclude: staging (TNM, AJCC, grade), pathology or lab markers, findings without a diagnosis, uncertain or negated statements, family history, procedures.
+- Exclude: staging (TNM, AJCC, grade), pathology or lab markers, uncertain or negated statements, procedures.
+- Exclude ruled-out conditions: "ruled out", "excluded", "no evidence of", "negative workup for" — the condition was considered and rejected. Do not emit it.
+- Exclude anatomical findings from procedures (e.g. "60% mid-LAD stenosis", "70% proximal RCA stenosis") — these are quantitative Observations from a catheterization or imaging study, not standalone diagnoses. Only emit the named disease ("coronary artery disease"), not its component lesions.
+- Exclude allergies and intolerances ("allergic to penicillin", "NKDA", substance reactions) → these belong to AllergyIntolerance.
+- Exclude family members' conditions ("family history of CAD", "father had MI") → these belong to FamilyMemberHistory. The family member's disease is not a patient Condition.
+- Exclude tobacco use, smoking status, substance use, alcohol use → these are social-history Observations. Exception: only emit when the note frames it as a coded diagnosis (e.g. ICD line "F17.210 Nicotine dependence").
+- Exclude ICD-10 / billing code lines that merely relabel an already-extracted condition — do not create a second item from the billing summary.
 - Split linked conditions into separate items whenever the snippet names two distinct diagnoses. All of these phrasings signal a split — emit one item per named condition, and link them via `caused_by`:
   - "X due to Y"
   - "X in the setting of Y"
@@ -178,6 +191,27 @@ Clinical observation parser. Extract measurements, findings, and social-history 
 Goal
 One item per distinct observation. Separate numeric value from its unit whenever both are present.
 
+Include only observations that are clinically significant — abnormal, decision-driving, or specifically called out by the clinician:
+- Abnormal vitals explicitly flagged as elevated, uncontrolled, low, or out-of-range.
+- Labs the note highlights as abnormal, at-goal, above-goal, or that drive a clinical decision.
+- Clinical scores and screenings: PHQ-2, MoCA, A1c, LDL, GCS, staging.
+- Imaging findings with clinical significance (positive findings, incidental findings requiring follow-up).
+- Social-history status facts that affect care: smoking status, pack-years, substance use.
+
+Exclude — do not extract:
+- Administrative data: arrival time, triage level, ESI, bed assignment, disposition time.
+- Non-clinical social facts: marital status, travel status, occupation, living situation — unless the note explicitly ties them to a clinical decision.
+- Pertinent negatives: any finding where the value is "absent", "negative", "none", "unremarkable", "within normal limits", "no evidence of", "not seen", "denied". This is a hard rule — if the observation's value would be "absent" or "negative", do not emit it.
+- Routine normal exam findings: "well-appearing", "NSR", "clear to auscultation", "symmetric pulses", "normal axis", "oral intake tolerated".
+- Routine normal vitals: HR, RR, SpO2, Temp within normal range and not flagged by the clinician. A BP like 138/82 in an ED note where it is not called out as elevated is routine.
+- Bulk normal lab panels: when the note says a panel is "within normal limits" or "unremarkable", do not extract individual normal values. Only extract individual labs that are abnormal or that the note specifically discusses as decision-driving.
+- Duplicate representations of the same measurement (e.g. "Troponin < 0.012 ng/mL" and "Troponin negative" are the same — emit only the quantitative version). Similarly, "pain intensity 4" and "Pain 4/10" are the same — emit once.
+- Care-plan targets and goals: "BP goal < 130/80", "LDL target < 70" — these are treatment targets, not measured observations.
+- Procedures or events described as observations: "cardiac catheterization performed", "cardiology evaluation" — these belong to Procedure, not Observation.
+- Named diseases or diagnoses: "coronary artery disease: two-vessel" is a Condition, not an Observation. Quantitative measurements from that procedure (e.g. "60% stenosis", "LVEF 55%") are valid observations; the disease label is not.
+- Temporal references that are not measurements: "quit ~3 months ago" is context for the smoking status, not a separate observation.
+- Family history (belongs to FamilyMemberHistory).
+
 Rules
 - `name` preserves the exact token from the snippet, including abbreviations: "BP" stays "BP". Put the expansion in `full_name` ("blood pressure"). Same for "LDL", "A1c", "BMI", etc.
 - Value + unit: split into `value` and `unit` when a unit is stated. "BP 145/100 mmHg" → name="BP", value="145/100", unit="mmHg". For qualitative values ("positive", "normal", "stage 3A"), leave `unit` null.
@@ -185,8 +219,6 @@ Rules
 - Keep fractions and staging intact: "pT2N1M0", "2/26".
 - Use "positive" / "negative" for test results and "present" / "absent" for findings. Do not use "yes" / "no".
 - If both a qualitative finding and a quantitative measurement are present, emit separate items.
-- Include social history: smoking, alcohol, activity, mood, cognitive status.
-- Exclude family history (belongs to FamilyMemberHistory) and pure diagnoses (belong to Condition).
 - `codeset_hint`: "LOINC" for labs, vitals, panels, scores; "SNOMED" for symptoms, clinical findings, physical exam findings. Leave null if unsure.
 - `category`: vital-signs / laboratory / social-history / exam / imaging / survey. Leave null if unclear.
 
@@ -223,7 +255,9 @@ Goal
 One item per distinct medication. Preserve dose, frequency, and route. Reflect the action verb in `status` and `intent`.
 
 Rules
-- Only emit a medication when the snippet contains an explicit action verb (start, initiate, continue, hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate). A medication that appears only inside a home-medication reconciliation list, without any of these verbs in the snippet, must not yield an item.
+- Only emit a medication when the snippet contains an explicit, drug-specific action verb (start, initiate, continue [drug name], hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate). A blanket "continue all home medications" is not drug-specific — it must not yield items.
+- A valid item must name a specific identifiable drug (e.g. "metoprolol", "omeprazole", "lisinopril"). Generic references without a drug name — "home medications", "heart medication", "current regimen", "same meds" — must not yield items.
+- Home-medication reconciliation lists enumerate what the patient takes. They are not orders. If the snippet is a reconciliation block ("HOME MEDICATIONS - Lisinopril 10 mg, Atorvastatin 40 mg...") paired only with "continue all home medications", emit zero items — no individual drug was started, changed, or stopped.
 - `name` is the full clinical drug as stated: include strength and form when available ("lisinopril 20 mg oral tablet", "metoprolol succinate 25 mg"). Do not truncate to just the ingredient.
 - Action-verb mapping:
   - "start", "initiate", "begin", "prescribed", "ordered" → status=active, intent=order.
@@ -238,6 +272,23 @@ Rules
 - `reason` is the clinical indication if stated.
 - `source_sentences` lists every [N] the item draws from, including cross-referenced sentences.
 - `reasoning` names the trigger phrase ("increase lisinopril to 20 mg").
+
+Examples
+
+<example>
+Snippet:
+[23] He has continued his home medications.
+[29] HOME MEDICATIONS - Lisinopril 10 mg PO daily - Atorvastatin 40 mg PO daily - Metformin 1000 mg PO BID - Aspirin 81 mg PO daily
+[97] DISCHARGE MEDICATIONS - Continue all home medications as previously prescribed.
+Output: zero items. "Continue all home medications" is a blanket continuation. No individual drug was started, changed, or stopped.
+</example>
+
+<example>
+Snippet:
+[97] DISCHARGE MEDICATIONS - Continue all home medications as previously prescribed.
+[98] - New: omeprazole 20 mg PO once daily for 14 days.
+Output: one item — omeprazole 20 mg PO. The "New:" tag is an explicit order action.
+</example>
 
 Stop
 Return the structured output.

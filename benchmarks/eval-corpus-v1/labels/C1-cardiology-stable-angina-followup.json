@@ -16,7 +16,7 @@
       "verbatim_span": "Stable angina pectoris in the setting of single-vessel coronary\nartery disease",
       "expected_codes": [
         {"system": "SNOMED", "code": "233819005", "display": "Stable angina (disorder)"},
-        {"system": "ICD-10", "code": "I20.9", "display": "Angina pectoris, unspecified"}
+        {"system": "ICD-10", "code": "I20.89", "display": "Other forms of angina pectoris"}
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -32,7 +32,7 @@
       "verbatim_span": "single-vessel coronary\nartery disease involving the mid right coronary artery",
       "expected_codes": [
         {"system": "SNOMED", "code": "53741008", "display": "Coronary arteriosclerosis (disorder)"},
-        {"system": "ICD-10", "code": "I25.10", "display": "Atherosclerotic heart disease of native coronary artery without angina pectoris"}
+        {"system": "ICD-10", "code": "I25.118", "display": "Atherosclerotic heart disease of native coronary artery with other forms of angina pectoris"}
       ],
       "expected_attributes": {
         "clinicalStatus": "active",

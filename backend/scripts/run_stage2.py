@@ -171,7 +171,7 @@ DEMO_CHECKS = {
         "label": "neurology follow-up (2026-02-23)",
         "expected": [
             ("MedicationRequest", "lisinopril"),
-            ("Observation", "smok"),
+            ("Observation", "tobacco"),
             ("FamilyMemberHistory", "father"),
         ],
     },

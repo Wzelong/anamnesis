@@ -1,33 +1,12 @@
-import base64
-import json
-from pathlib import Path
-
 import pytest
 
 from core.preprocess import build_numbered_note, split_sentences
-
-BUNDLE_PATH = (
-    Path(__file__).resolve().parent.parent.parent
-    / "data"
-    / "demo_patient"
-    / "anamnesis-demo-bundle.json"
-)
+from fhir.local_bundle import documents_from_bundle, load_bundle
 
 
 def _load_demo_notes() -> list[tuple[str, str]]:
-    bundle = json.loads(BUNDLE_PATH.read_text(encoding="utf-8"))
-    notes: list[tuple[str, str]] = []
-    for entry in bundle.get("entry", []):
-        res = entry.get("resource", {})
-        if res.get("resourceType") != "DocumentReference":
-            continue
-        attachment = (res.get("content") or [{}])[0].get("attachment", {})
-        data = attachment.get("data")
-        if not data:
-            continue
-        text = base64.b64decode(data).decode("utf-8", errors="replace")
-        notes.append((res.get("id", "<no-id>"), text))
-    return notes
+    bundle = load_bundle()
+    return [(doc.id, doc.text) for doc in documents_from_bundle(bundle)]
 
 
 def test_decimal_not_split():

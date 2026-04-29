@@ -27,8 +27,9 @@ Data: EKG today NSR, rate 68, no acute ST/T. TTE 2025-11 LVEF
 60%, no RWMA, mild MR. CBC/BMP wnl 2026-02-05. INR not applicable.
 
 A/P:
-1. RCRI = 1 point (major surgery). Low-intermediate risk for
-MACE. Functional capacity preserved.
+1. RCRI = 0 points. Planned total hip arthroplasty is not an
+RCRI high-risk surgical category. Low risk for MACE. Functional
+capacity preserved.
 2. AFib anticoagulated w/ apixaban 5 mg BID. Per surgical team
 will hold 48h pre-op, resume POD1 per bleeding risk.
 3. HTN controlled. Continue lisinopril perioperatively per

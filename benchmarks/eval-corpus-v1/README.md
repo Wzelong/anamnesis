@@ -33,14 +33,14 @@ See `manifest.json` for computed totals (total chars, per-category fact counts, 
 
 ## Construction methodology
 
-Each note was drafted by hand, one at a time, in interleave order across specialties (C1 → E1 → N1 → C2 → ...) to prevent voice convergence. Every clinical detail (diagnosis, drug, dose, lab, score) that became a labeled fact had its terminology code verified against an authoritative browser *before* the prose was committed:
+Each note was drafted by hand, one at a time, in interleave order across specialties (C1 → E1 → N1 → C2 → ...) to prevent voice convergence. Codeable clinical details that became labeled facts had their terminology codes verified against authoritative sources before the prose was committed:
 
 - **SNOMED CT**: SNOMED International browser (`browser.ihtsdotools.org`)
 - **ICD-10-CM**: NLM Clinical Tables API and CMS 2026 tabular
 - **LOINC**: Regenstrief LOINC search (`loinc.org/{code}/`)
 - **RxNorm**: NLM RxNav (`mor.nlm.nih.gov/RxNav/`)
 
-Every code used anywhere in a label file is registered in `code-reference.json` with its system, code, display, source URL, verification date, and list of labels that reference it. The `validate_corpus.py` script asserts that every labeled code resolves to a reference entry and that no reference entry is unused.
+Every code used anywhere in a label file is registered in `code-reference.json` with its system, code, display, and source URL; the file carries a top-level verification date. A small number of survey-style observations, risk scores, and specialty scores remain intentionally uncoded when no stable corpus code is used. The `validate_corpus.py` script asserts that every labeled code resolves to a reference entry and that no reference entry is unused.
 
 Labels were produced immediately after each note was drafted. Every `verbatim_span` in a label is a character-for-character substring of its note (enforced by `validate_corpus.py` check 5a). Content distinctness from the Anamnesis demo patient (`data/demo_patient/anamnesis-demo-bundle.json`) is enforced by a banned-token regex run across all notes.
 
@@ -117,7 +117,7 @@ All fields are optional when the note does not support them, but the validator p
 - **Single annotator.** No inter-rater reliability; no second-reviewer audit pass.
 - **Small N.** 18 notes is enough to surface qualitative failure modes but not to power statistical comparisons with tight confidence intervals.
 - **Specialty scope.** Matches the Anamnesis demo scope (cardiology, ED, neurology). Generalization to other specialties is not supported.
-- **Coding depth.** Conditions are dual-coded (SNOMED + ICD-10) as in the demo bundle; Observations, Procedures, AllergyIntolerance, and MedicationRequest are single-system coded. An extractor that produces different coding conventions may need display-string matching rather than code-exact matching.
+- **Coding depth.** Patient Conditions are generally dual-coded (SNOMED + ICD-10) as in the demo bundle; Observations, Procedures, AllergyIntolerance, FamilyMemberHistory, and MedicationRequest facts are coded when a stable corpus code is available. Some risk scores, specialty scores, and patient-reported counts intentionally have empty `expected_codes`. An extractor that produces different coding conventions may need display-string matching rather than code-exact matching.
 - **Date handling.** Encounter dates are scattered across 2024–2026 to avoid temporal clustering, but the "current date" framing assumes the evaluator is running near 2026.
 
 ## How to run a system against the corpus

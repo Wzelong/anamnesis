@@ -112,6 +112,7 @@ async def _parse_structured(
     stage: str = "stage2",
     call_type: str,
     document_id: str | None = None,
+    reasoning_effort: str = "low",
 ) -> BaseModel | None:
     started_at = datetime.now(timezone.utc)
     usage: dict | None = None
@@ -121,7 +122,7 @@ async def _parse_structured(
     try:
         response = await client.responses.parse(
             model=model,
-            reasoning={"effort": "none"},
+            reasoning={"effort": reasoning_effort},
             input=[
                 {"role": "developer", "content": developer_prompt},
                 {"role": "user", "content": user_content},
@@ -168,6 +169,7 @@ async def scan_note(
         ScanResult,
         call_type="scan",
         document_id=note.document_id,
+        reasoning_effort="low",
     )
     scan = parsed or ScanResult()
     scan = _sanitize_note_context_dates(scan, note)

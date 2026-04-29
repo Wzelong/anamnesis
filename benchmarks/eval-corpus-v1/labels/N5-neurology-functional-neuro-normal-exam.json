@@ -16,7 +16,7 @@
       "verbatim_span": "Functional neurological disorder (motor and sensory subtype)",
       "expected_codes": [
         {"system": "SNOMED", "code": "15602001", "display": "Conversion disorder (disorder)"},
-        {"system": "ICD-10", "code": "F44.4", "display": "Conversion disorder with motor symptom or deficit"}
+        {"system": "ICD-10", "code": "F44.7", "display": "Conversion disorder with mixed symptom presentation"}
       ],
       "expected_attributes": {
         "clinicalStatus": "active",

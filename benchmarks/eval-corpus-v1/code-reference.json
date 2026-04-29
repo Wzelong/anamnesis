@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "verified_date": "2026-04-28",
-  "source_notes": "Codes verified against NLM Clinical Tables (ICD-10-CM), RxNav REST API (RxNorm), loinc.org, and SNOMED CT US Edition via demo bundle cross-reference. Well-established codes in wide clinical use.",
+  "source_notes": "Codes verified against NLM Clinical Tables (ICD-10-CM), RxNav REST API (RxNorm), loinc.org, and SNOMED CT browser with NCBI/BioPortal cross-checks where useful. Well-established codes in wide clinical use.",
   "codes": [
     {
       "id": "CR-001",
@@ -15,9 +15,9 @@
       "id": "CR-002",
       "system_short": "ICD-10",
       "system": "http://hl7.org/fhir/sid/icd-10-cm",
-      "code": "I20.9",
-      "display": "Angina pectoris, unspecified",
-      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I20.9"
+      "code": "I20.89",
+      "display": "Other forms of angina pectoris",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I20.89"
     },
     {
       "id": "CR-003",
@@ -31,9 +31,9 @@
       "id": "CR-004",
       "system_short": "ICD-10",
       "system": "http://hl7.org/fhir/sid/icd-10-cm",
-      "code": "I25.10",
-      "display": "Atherosclerotic heart disease of native coronary artery without angina pectoris",
-      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I25.10"
+      "code": "I25.118",
+      "display": "Atherosclerotic heart disease of native coronary artery with other forms of angina pectoris",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I25.118"
     },
     {
       "id": "CR-006",
@@ -55,17 +55,17 @@
       "id": "CR-008",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "49436004",
-      "display": "Atrial fibrillation (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=49436004"
+      "code": "282825002",
+      "display": "Paroxysmal atrial fibrillation (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=282825002"
     },
     {
       "id": "CR-009",
       "system_short": "ICD-10",
       "system": "http://hl7.org/fhir/sid/icd-10-cm",
-      "code": "I48.91",
-      "display": "Unspecified atrial fibrillation",
-      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I48.91"
+      "code": "I48.0",
+      "display": "Paroxysmal atrial fibrillation",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I48.0"
     },
     {
       "id": "CR-010",
@@ -79,9 +79,9 @@
       "id": "CR-011",
       "system_short": "ICD-10",
       "system": "http://hl7.org/fhir/sid/icd-10-cm",
-      "code": "G43.909",
-      "display": "Migraine, unspecified, not intractable, without status migrainosus",
-      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G43.909"
+      "code": "G43.009",
+      "display": "Migraine without aura, not intractable, without status migrainosus",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G43.009"
     },
     {
       "id": "CR-012",
@@ -160,9 +160,9 @@
       "id": "CR-021",
       "system_short": "ICD-10",
       "system": "http://hl7.org/fhir/sid/icd-10-cm",
-      "code": "F44.4",
-      "display": "Conversion disorder with motor symptom or deficit",
-      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=F44.4"
+      "code": "F44.7",
+      "display": "Conversion disorder with mixed symptom presentation",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=F44.7"
     },
     {
       "id": "CR-022",
@@ -304,9 +304,9 @@
       "id": "CR-039",
       "system_short": "ICD-10",
       "system": "http://hl7.org/fhir/sid/icd-10-cm",
-      "code": "J45.901",
-      "display": "Unspecified asthma with (acute) exacerbation",
-      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=J45.901"
+      "code": "J45.21",
+      "display": "Mild intermittent asthma with (acute) exacerbation",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=J45.21"
     },
     {
       "id": "CR-040",
@@ -341,6 +341,22 @@
       "source_url": "https://browser.ihtsdotools.org/?conceptId1=95281009"
     },
     {
+      "id": "CR-044",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "68226007",
+      "display": "Acute cystitis (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=68226007"
+    },
+    {
+      "id": "CR-045",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "N30.00",
+      "display": "Acute cystitis without hematuria",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=N30.00"
+    },
+    {
       "id": "CR-046",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
@@ -355,6 +371,62 @@
       "code": "K21.9",
       "display": "Gastro-esophageal reflux disease without esophagitis",
       "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=K21.9"
+    },
+    {
+      "id": "CR-048",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "440059007",
+      "display": "Persistent atrial fibrillation (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=440059007"
+    },
+    {
+      "id": "CR-049",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "I48.19",
+      "display": "Other persistent atrial fibrillation",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=I48.19"
+    },
+    {
+      "id": "CR-050",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "46635009",
+      "display": "Type 1 diabetes mellitus (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=46635009"
+    },
+    {
+      "id": "CR-051",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "43116000",
+      "display": "Eczema (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=43116000"
+    },
+    {
+      "id": "CR-052",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "61582004",
+      "display": "Allergic rhinitis (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=61582004"
+    },
+    {
+      "id": "CR-053",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "49049000",
+      "display": "Parkinson's disease (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=49049000"
+    },
+    {
+      "id": "CR-054",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "G20.A2",
+      "display": "Parkinson's disease without dyskinesia, with fluctuations",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G20.A2"
     },
     {
       "id": "CR-100",
@@ -403,6 +475,14 @@
       "code": "1364430",
       "display": "apixaban",
       "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/1364430/properties.json"
+    },
+    {
+      "id": "CR-107",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "37418",
+      "display": "sumatriptan",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/37418/properties.json"
     },
     {
       "id": "CR-108",
@@ -461,6 +541,14 @@
       "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/10831/properties.json"
     },
     {
+      "id": "CR-116",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "7454",
+      "display": "nitrofurantoin",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/7454/properties.json"
+    },
+    {
       "id": "CR-119",
       "system_short": "RxNorm",
       "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
@@ -469,12 +557,28 @@
       "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/435/properties.json"
     },
     {
+      "id": "CR-120",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "7213",
+      "display": "ipratropium",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/7213/properties.json"
+    },
+    {
       "id": "CR-121",
       "system_short": "RxNorm",
       "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
       "code": "3498",
       "display": "diphenhydramine",
       "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/3498/properties.json"
+    },
+    {
+      "id": "CR-122",
+      "system_short": "RxNorm",
+      "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+      "code": "103990",
+      "display": "carbidopa / levodopa",
+      "source_url": "https://rxnav.nlm.nih.gov/REST/rxcui/103990/properties.json"
     },
     {
       "id": "CR-200",
@@ -544,9 +648,9 @@
       "id": "CR-212",
       "system_short": "LOINC",
       "system": "http://loinc.org",
-      "code": "2708-6",
-      "display": "Oxygen saturation in Arterial blood",
-      "source_url": "https://loinc.org/2708-6/"
+      "code": "59408-5",
+      "display": "Oxygen saturation in Arterial blood by Pulse oximetry",
+      "source_url": "https://loinc.org/59408-5/"
     },
     {
       "id": "CR-250",

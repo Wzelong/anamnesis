@@ -16,7 +16,7 @@
       "verbatim_span": "Acute migraine without aura",
       "expected_codes": [
         {"system": "SNOMED", "code": "37796009", "display": "Migraine (disorder)"},
-        {"system": "ICD-10", "code": "G43.909", "display": "Migraine, unspecified, not intractable, without status migrainosus"}
+        {"system": "ICD-10", "code": "G43.009", "display": "Migraine without aura, not intractable, without status migrainosus"}
       ],
       "expected_attributes": {
         "clinicalStatus": "active",

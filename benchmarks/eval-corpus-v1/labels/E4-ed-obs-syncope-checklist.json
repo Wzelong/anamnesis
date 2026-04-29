@@ -52,7 +52,7 @@
     {
       "id": "E4-N2",
       "trap_type": "negation",
-      "verbatim_span": "No orthostatics",
+      "verbatim_span": "No orthostatic hypotension",
       "should_not_produce": "Condition: Orthostatic hypotension",
       "rationale": "Orthostatic changes screened and negative."
     }

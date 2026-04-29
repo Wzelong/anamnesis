@@ -20,8 +20,8 @@ Ms. Sato is a 27-year-old software engineer with a longstanding
 history of migraine without aura, initially diagnosed in her late
 teens, who was started on prophylactic topiramate at her last
 visit (2025-12-04) after worsening headache frequency over the
-prior year. At that visit she reported 12-14 headache days per
-month with approximately 6 migraines of disabling severity. She
+prior year. At that visit she reported 16-18 headache days per
+month with approximately 8 migraines of disabling severity. She
 was started on topiramate 25 mg PO at bedtime with a planned
 titration to 50 mg PO BID over 6 weeks.
 
@@ -92,8 +92,8 @@ Headache diary reviewed today.
 ASSESSMENT AND PLAN
 
 1. Chronic migraine without aura, improved on topiramate at 100 mg
-total daily dose. Monthly migraine days decreased from ~14 to ~5,
-disabling migraines from ~6 to ~2, consistent with clinically
+total daily dose. Monthly headache days decreased from ~17 to ~5,
+disabling migraines from ~8 to ~2, consistent with clinically
 meaningful response.
    - Continue topiramate 50 mg PO BID.
    - Continue sumatriptan PRN for acute migraine with current

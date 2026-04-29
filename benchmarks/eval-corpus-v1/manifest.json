@@ -1,5 +1,5 @@
 {
-  "code_reference_size": 75,
+  "code_reference_size": 88,
   "code_systems_used": [
     "ICD-10",
     "LOINC",
@@ -28,7 +28,7 @@
     "messy": 6,
     "trap": 6
   },
-  "total_chars": 76684,
+  "total_chars": 76742,
   "total_facts": 77,
   "total_non_facts": 45,
   "total_notes": 18,

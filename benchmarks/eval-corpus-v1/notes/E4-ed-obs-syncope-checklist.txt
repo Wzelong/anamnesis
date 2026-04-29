@@ -21,8 +21,8 @@ PRN. NKDA. SH: never smoker.
 Obs unit course:
 - Continuous telemetry x 12 hrs: sinus rhythm throughout, no
   arrhythmia, no pauses, HR 58-82.
-- Serial VS Q2H stable. No orthostatics (BP 128/78 supine, 124/76
-  standing after 3 min).
+- Serial VS Q2H stable. No orthostatic hypotension (BP 128/78
+  supine, 124/76 standing after 3 min).
 - EKG on arrival: NSR 72, no acute ST/T, no QT prolongation.
 - Trop neg. CBC, BMP wnl. TSH wnl. Glucose 94.
 - No recurrent sx overnight.
