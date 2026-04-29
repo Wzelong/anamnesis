@@ -3,6 +3,7 @@ from core.cache import JsonCache
 from core.code_candidates import StageFourOutput, code_candidates
 from core.coding import EmbeddingModel, IndexStore, SearchResult, search_code
 from core.pricing import estimate_cost
+from core.reconcile import StageFiveOutput, reconcile
 from core.validation import FHIR_DATE_RE, validate_fhir_date
 from core.extraction import (
     StageThreeOutput,
@@ -26,6 +27,7 @@ from core.preprocess import (
 from core.prompts import PROMPT_VERSION
 from core.schemas import (
     AllergyItem,
+    ChartMatch,
     CleanerResult,
     ConditionItem,
     DatedField,
@@ -39,6 +41,7 @@ from core.schemas import (
     NoteContext,
     ObservationItem,
     ProcedureItem,
+    ReconciliationResult,
     RESOURCE_TYPES,
     ScanResult,
     SourceRef,
@@ -46,6 +49,7 @@ from core.schemas import (
 
 __all__ = [
     "AllergyItem",
+    "ChartMatch",
     "EmbeddingModel",
     "IndexStore",
     "CleanerResult",
@@ -65,10 +69,12 @@ __all__ = [
     "PROMPT_VERSION",
     "PreprocessedNote",
     "ProcedureItem",
+    "ReconciliationResult",
     "RESOURCE_TYPES",
     "ScanResult",
     "SearchResult",
     "SentenceSpan",
+    "StageFiveOutput",
     "StageFourOutput",
     "SourceRef",
     "StageThreeOutput",
@@ -82,6 +88,7 @@ __all__ = [
     "parse_structured",
     "preprocess_document",
     "preprocess_documents",
+    "reconcile",
     "scan_note",
     "search_code",
     "split_sentences",

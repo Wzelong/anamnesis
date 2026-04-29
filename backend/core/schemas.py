@@ -218,3 +218,26 @@ ITEM_MODELS: dict[str, type[BaseModel]] = {
     "AllergyIntolerance": AllergyItem,
     "FamilyMemberHistory": FamilyMemberHistoryItem,
 }
+
+
+class ChartMatch(_Strict):
+    resource_id: str
+    display: str
+    match_type: Literal["exact_code", "ingredient", "display_text"] = "exact_code"
+
+
+class ReconciliationResult(_Strict):
+    candidate: MergedCandidate
+    classification: Literal["NEW", "DUPLICATE", "UPDATING", "CONFLICTING"]
+    reasoning: str
+    chart_matches: list[ChartMatch] = Field(default_factory=list)
+
+
+class LLMReconcileResult(_Strict):
+    index: int
+    classification: Literal["NEW", "DUPLICATE", "UPDATING", "CONFLICTING"]
+    reasoning: str
+
+
+class LLMReconcileBatchResult(_Strict):
+    decisions: list[LLMReconcileResult] = Field(default_factory=list)

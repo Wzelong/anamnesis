@@ -175,27 +175,35 @@ Output: `StageFourOutput` — same `MergedCandidate` list with `coding`
 field injected into each item dict. Structure mirrors FHIR
 `CodeableConcept.coding[]`: `[{system, code, display}]`.
 
-## Stage 5 — Classify vs existing chart (`core/classifier.py`, `core/diff.py`)
+## Stage 5 — Reconcile vs existing chart (`core/reconcile.py`) ✅
 
 The augmentation brain. This is the capability text2fhir does *not* have.
 
-For each coded candidate:
+**Two-tier approach:** deterministic code match first (no LLM), then LLM
+adjudication only for ambiguous cases where codes differ but display text
+overlaps. Typically 0–2 LLM calls for the demo data.
 
-1. **Retrieve similar existing resources** from the chart loaded in Stage 0
-   using a per-resource-type strategy declared alongside the profile:
-   - `Condition` — exact code match, then SNOMED/ICD parent-child, then
-     SapBERT similarity over `code.text`.
-   - `MedicationRequest` — match by RxNorm ingredient (same drug, different
-     dose → UPDATING).
-   - `AllergyIntolerance` — match by substance RxNorm.
-   - `Observation` — match by LOINC + effective date window.
-2. **LLM classify** (stronger model) → `NEW | UPDATING | CONFLICTING |
-   DUPLICATE`, with `reasoning` and `conflict_refs[]`.
-3. Route:
-   - `DUPLICATE` → drop.
-   - `UPDATING` → emit with `priorPrescription` / `supersedes` references.
-   - `CONFLICTING` → emit and flag for clinician adjudication.
-   - `NEW` → emit plain.
+**Per-resource-type matching:**
+
+| Resource | Strategy | Example |
+|----------|----------|---------|
+| Condition | exact (system, code) match → DUPLICATE; display overlap → LLM | HTN ICD-10 I10 match → DUPLICATE |
+| MedicationRequest | exact RxNorm → DUPLICATE; ingredient substring + dose compare → UPDATING | lisinopril 10→20 mg |
+| AllergyIntolerance | specific allergy vs NKDA (409137002) → CONFLICTING | penicillin vs NKDA |
+| Observation | LOINC match + tobacco-status normalization → UPDATING if value changed | smoking current→former |
+| Procedure | SNOMED code + date match → DUPLICATE; different date → NEW | |
+| FamilyMemberHistory | relationship code + condition code match | |
+
+**LLM batching by resource type.** Ambiguous candidates grouped by type,
+one LLM call per type (max 6, typically 0–1), all in parallel via
+`asyncio.gather`. Model: `gpt-5.4-mini`, `reasoning.effort="low"`.
+
+**Output:** `StageFiveOutput` — `list[ReconciliationResult]`, each wrapping
+the original `MergedCandidate` + `classification` (NEW/DUPLICATE/UPDATING/
+CONFLICTING) + `reasoning` + `chart_matches` (refs to matched existing
+resources).
+
+**Demo distribution:** 41 NEW, 7 DUPLICATE, 3 UPDATING, 2 CONFLICTING.
 
 ## Stage 6 — Assemble proposal (`core/augment.py`)
 
@@ -256,9 +264,8 @@ backend/core/
   preprocess.py       # sentence splitter + NoteContext extractor
   extraction.py       # scan → parse → clean → cross-note merge
   coding.py           # FAISS index store + SapBERT embedding model
-  code_candidates.py  # US Core fixed codes + LLM CodeSelector + cache
-  diff.py             # retrieve-similar strategies per resource type
-  classifier.py       # NEW / UPDATING / CONFLICTING / DUPLICATE
+  code_candidates.py  # US Core fixed codes + LLM CodeSelector
+  reconcile.py        # deterministic match + LLM adjudication → NEW/DUPLICATE/UPDATING/CONFLICTING
   augment.py          # assemble AugmentationProposal
 ```
 

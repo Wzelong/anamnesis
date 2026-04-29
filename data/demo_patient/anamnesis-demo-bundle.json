@@ -969,6 +969,123 @@
       }
     },
     {
+      "fullUrl": "urn:uuid:d8cc5af1-7e2a-5b3c-9f14-3a8e6d1c4b09",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "nkda",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-allergyintolerance"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>No known drug allergy</p></div>"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "409137002",
+              "display": "No known drug allergy"
+            }
+          ],
+          "text": "No known drug allergy (NKDA)"
+        },
+        "patient": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "recordedDate": "2025-10-20",
+        "recorder": {
+          "reference": "urn:uuid:4c187cd2-4a3b-53ad-a6c8-d5cc9ea2a96a",
+          "display": "Dr. David Park"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "AllergyIntolerance"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:b3f7c291-6d4e-5a8b-8c12-9e5f0a7d2b63",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "tobacco-use",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-smokingstatus"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Tobacco smoking status: Current every day smoker</p></div>"
+        },
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "social-history",
+                "display": "Social History"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "72166-2",
+              "display": "Tobacco smoking status"
+            }
+          ],
+          "text": "Tobacco smoking status"
+        },
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "effectiveDateTime": "2025-10-20",
+        "valueCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "449868002",
+              "display": "Current every day smoker"
+            }
+          ],
+          "text": "Current every day smoker"
+        },
+        "encounter": {
+          "reference": "urn:uuid:9cf8b7f2-32f3-517c-ae7a-72b365d33410"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
+      }
+    },
+    {
       "fullUrl": "urn:uuid:9cf8b7f2-32f3-517c-ae7a-72b365d33410",
       "resource": {
         "resourceType": "Encounter",

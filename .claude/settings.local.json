@@ -26,7 +26,8 @@
       "Bash(rm -rf C:/Users/zewang/Documents/GitHub/anamnesis/backend/.cache/stage3/)",
       "Bash(python -m pytest tests/test_e2e_pipeline.py::TestStage3CrossNoteDedupe -v)",
       "Bash(python -c ' *)",
-      "Bash(python -m pytest tests/test_e2e_pipeline.py -v)"
+      "Bash(python -m pytest tests/test_e2e_pipeline.py -v)",
+      "Bash(xargs ls *)"
     ]
   }
 }

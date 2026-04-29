@@ -23,9 +23,9 @@ export function Header() {
         <Image
           src="/logo.png"
           alt="Anamnesis"
-          width={32}
-          height={32}
-          className="size-8"
+          width={30}
+          height={30}
+          className="size-[30px]"
         />
         <span className="font-semibold text-sm">Anamnesis</span>
       </div>

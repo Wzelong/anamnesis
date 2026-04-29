@@ -14,6 +14,7 @@ import pytest
 from core.preprocess import PreprocessedNote, preprocess_documents
 from core.extraction import StageThreeOutput, StageTwoOutput, merge_across_notes
 from core.code_candidates import StageFourOutput, code_candidates
+from core.reconcile import StageFiveOutput, reconcile
 from core.cache import JsonCache
 from core.schemas import RESOURCE_TYPES, MergedCandidate
 from fhir.local_bundle import load_demo_data
@@ -120,7 +121,25 @@ def stage4_output(stage3_output) -> StageFourOutput:
 
 @pytest.fixture(scope="module")
 def stage5_output(stage4_output, patient_context):
-    return stage4_output
+    cache_dir = Path(__file__).resolve().parent.parent / ".cache" / "stage5"
+    cache = JsonCache(cache_dir)
+    key = "e2e_stage5"
+    cached = cache.get(key)
+    if cached is not None:
+        try:
+            return StageFiveOutput.from_json(cached)
+        except Exception:
+            pass
+
+    from openai import AsyncOpenAI
+    from config import Settings
+    settings = Settings()
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    result = asyncio.get_event_loop().run_until_complete(
+        reconcile(stage4_output, patient_context, client, model=settings.openai_model_fast)
+    )
+    cache.put(key, result.to_json())
+    return result
 
 
 @pytest.fixture(scope="module")
@@ -177,14 +196,20 @@ class TestStage0ChartLoad:
         for drug in ("lisinopril", "atorvastatin", "metformin", "aspirin"):
             assert any(drug in d for d in displays), f"missing med: {drug}"
 
-    def test_no_allergies_in_baseline(self, patient_context):
-        assert len(patient_context.allergies) == 0
+    def test_nkda_in_baseline(self, patient_context):
+        assert len(patient_context.allergies) == 1
+        nkda = patient_context.allergies[0]
+        codes = [c["code"] for c in nkda.get("code", {}).get("coding", [])]
+        assert "409137002" in codes
 
     def test_no_family_history_in_baseline(self, patient_context):
         assert len(patient_context.family_history) == 0
 
-    def test_no_observations_in_baseline(self, patient_context):
-        assert len(patient_context.observations) == 0
+    def test_tobacco_observation_in_baseline(self, patient_context):
+        assert len(patient_context.observations) == 1
+        obs = patient_context.observations[0]
+        codes = [c["code"] for c in obs.get("code", {}).get("coding", [])]
+        assert "72166-2" in codes
 
     def test_no_procedures_in_baseline(self, patient_context):
         assert len(patient_context.procedures) == 0
@@ -496,22 +521,125 @@ class TestStage4TerminologyCoding:
 
 
 # ===================================================================
-# Stage 5 — Classify vs Existing Chart (stub)
+# Stage 5 — Reconcile vs Existing Chart
 # ===================================================================
 
-class TestStage5Classify:
+class TestStage5Reconcile:
 
-    @pytest.mark.skip(reason="Stage 5 not implemented")
-    def test_angina_new(self, stage5_output, patient_context):
-        pass
+    @staticmethod
+    def _find(stage5_output, rtype, substring, field="name"):
+        for r in stage5_output.results:
+            if r.candidate.resource_type != rtype:
+                continue
+            val = r.candidate.item.get(field, "") or ""
+            if substring.lower() in val.lower():
+                return r
+        return None
 
-    @pytest.mark.skip(reason="Stage 5 not implemented")
-    def test_lisinopril_updating(self, stage5_output, patient_context):
-        pass
+    def test_output_count(self, stage5_output, stage4_output):
+        assert len(stage5_output.results) == len(stage4_output.candidates)
 
-    @pytest.mark.skip(reason="Stage 5 not implemented")
-    def test_existing_conditions_duplicate(self, stage5_output, patient_context):
-        pass
+    def test_all_classified(self, stage5_output):
+        for r in stage5_output.results:
+            assert r.classification in ("NEW", "DUPLICATE", "UPDATING", "CONFLICTING")
+            assert r.reasoning
+
+    # -- DUPLICATE --
+
+    def test_hypertension_duplicate(self, stage5_output):
+        r = self._find(stage5_output, "Condition", "hypertension")
+        assert r is not None, "hypertension candidate not found"
+        assert r.classification == "DUPLICATE"
+
+    def test_diabetes_duplicate(self, stage5_output):
+        r = self._find(stage5_output, "Condition", "diabetes")
+        assert r is not None, "diabetes candidate not found"
+        assert r.classification == "DUPLICATE"
+
+    def test_hyperlipidemia_duplicate(self, stage5_output):
+        r = self._find(stage5_output, "Condition", "hyperlipidemia")
+        assert r is not None, "hyperlipidemia candidate not found"
+        assert r.classification == "DUPLICATE"
+
+    def test_fatigue_duplicate(self, stage5_output):
+        r = self._find(stage5_output, "Condition", "fatigue")
+        assert r is not None, "fatigue candidate not found"
+        assert r.classification == "DUPLICATE"
+
+    def test_aspirin_duplicate(self, stage5_output):
+        r = self._find(stage5_output, "MedicationRequest", "aspirin")
+        assert r is not None, "aspirin candidate not found"
+        assert r.classification == "DUPLICATE"
+
+    def test_metformin_duplicate(self, stage5_output):
+        r = self._find(stage5_output, "MedicationRequest", "metformin")
+        assert r is not None, "metformin candidate not found"
+        assert r.classification == "DUPLICATE"
+
+    # -- UPDATING --
+
+    def test_lisinopril_updating(self, stage5_output):
+        r = self._find(stage5_output, "MedicationRequest", "lisinopril")
+        assert r is not None, "lisinopril candidate not found"
+        assert r.classification == "UPDATING"
+        assert len(r.chart_matches) >= 1
+
+    def test_tobacco_updating(self, stage5_output):
+        for r in stage5_output.results:
+            if r.candidate.resource_type != "Observation":
+                continue
+            codings = r.candidate.item.get("coding", [])
+            loincs = [c.get("code") for c in codings if c.get("system") == "http://loinc.org"]
+            val = (r.candidate.item.get("value") or "").lower()
+            if "72166-2" in loincs and ("quit" in val or "former" in val or "cessation" in val or "tobacco-free" in val):
+                assert r.classification == "UPDATING", f"tobacco cessation should be UPDATING, got {r.classification}"
+                return
+        pytest.skip("no tobacco cessation candidate found")
+
+    # -- CONFLICTING --
+
+    def test_penicillin_conflicting(self, stage5_output):
+        r = self._find(stage5_output, "AllergyIntolerance", "penicillin", field="substance")
+        assert r is not None, "penicillin candidate not found"
+        assert r.classification == "CONFLICTING"
+
+    def test_amoxicillin_conflicting(self, stage5_output):
+        r = self._find(stage5_output, "AllergyIntolerance", "amoxicillin", field="substance")
+        assert r is not None, "amoxicillin candidate not found"
+        assert r.classification == "CONFLICTING"
+
+    # -- NEW --
+
+    def test_cad_new(self, stage5_output):
+        r = self._find(stage5_output, "Condition", "coronary")
+        assert r is not None, "CAD candidate not found"
+        assert r.classification == "NEW"
+
+    def test_angina_new(self, stage5_output):
+        r = self._find(stage5_output, "Condition", "angina")
+        assert r is not None, "angina candidate not found"
+        assert r.classification == "NEW"
+
+    def test_metoprolol_new(self, stage5_output):
+        r = self._find(stage5_output, "MedicationRequest", "metoprolol")
+        assert r is not None, "metoprolol candidate not found"
+        assert r.classification == "NEW"
+
+    def test_family_history_new(self, stage5_output):
+        r = self._find(stage5_output, "FamilyMemberHistory", "father", field="relationship")
+        assert r is not None, "father FMH candidate not found"
+        assert r.classification == "NEW"
+
+    def test_catheterization_new(self, stage5_output):
+        r = self._find(stage5_output, "Procedure", "catheterization")
+        assert r is not None, "catheterization candidate not found"
+        assert r.classification == "NEW"
+
+    # -- Provenance --
+
+    def test_source_refs_preserved(self, stage5_output, stage4_output):
+        for r, s4 in zip(stage5_output.results, stage4_output.candidates):
+            assert len(r.candidate.source_refs) == len(s4.source_refs)
 
 
 # ===================================================================
