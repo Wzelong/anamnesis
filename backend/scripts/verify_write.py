@@ -17,7 +17,7 @@ from fhir.client import FhirClient
 from fhir.write import (
     SOURCE_SPAN_EXT_URL,
     AugmentationProposal,
-    SourceSpan,
+    Citation,
     apply_augmentation,
 )
 
@@ -57,12 +57,15 @@ async def _find_cardio_note(client: FhirClient, patient_id: str) -> tuple[str, s
     raise RuntimeError(f"No cardiology note (LOINC {CARDIO_LOINC}) by {CARDIO_AUTHOR} found")
 
 
-def _compute_span(note_text: str) -> SourceSpan:
+def _compute_citation(note_text: str, doc_id: str) -> Citation:
     pattern = re.compile(r"\s+".join(re.escape(w) for w in TARGET_QUOTE.split()))
     match = pattern.search(note_text)
     if not match:
         raise RuntimeError("Target quote not found in cardiology note")
-    return SourceSpan(start=match.start(), end=match.end(), text=match.group(0))
+    return Citation(
+        document_ref=f"DocumentReference/{doc_id}",
+        start=match.start(), end=match.end(), text=match.group(0),
+    )
 
 
 def _build_metoprolol_request(patient_id: str) -> dict:
@@ -122,6 +125,7 @@ async def _assert_roundtrip(
     assert sub.get("start", {}).get("valueInteger") == span.start
     assert sub.get("end", {}).get("valueInteger") == span.end
     assert sub.get("text", {}).get("valueString") == span.text
+    assert sub.get("documentRef", {}).get("valueString") == source_document_ref
 
 
 async def main() -> int:
@@ -140,15 +144,14 @@ async def main() -> int:
     doc_id, note_text = await _find_cardio_note(client, patient_id)
     print(f"Cardiology note: DocumentReference/{doc_id}")
 
-    span = _compute_span(note_text)
-    preview = span.text[:70] + ("..." if len(span.text) > 70 else "")
-    print(f"Source span: [{span.start}..{span.end}] {preview}")
+    citation = _compute_citation(note_text, doc_id)
+    preview = citation.text[:70] + ("..." if len(citation.text) > 70 else "")
+    print(f"Source span: [{citation.start}..{citation.end}] {preview}")
 
     proposal = AugmentationProposal(
         classification="NEW",
         resource=_build_metoprolol_request(patient_id),
-        source_document_ref=f"DocumentReference/{doc_id}",
-        source_span=span,
+        citations=[citation],
     )
 
     result = await apply_augmentation(client, proposal)
@@ -159,8 +162,8 @@ async def main() -> int:
         client,
         result.resource_ref,
         result.provenance_ref,
-        proposal.source_document_ref,
-        span,
+        citation.document_ref,
+        citation,
     )
     print("Round-trip verified ✓")
     return 0

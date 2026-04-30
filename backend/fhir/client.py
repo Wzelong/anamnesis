@@ -60,6 +60,11 @@ class FhirClient:
         response.raise_for_status()
         return response.json()
 
+    async def put(self, path: str, body: dict) -> dict:
+        response = await self._request("PUT", path, json_body=body)
+        response.raise_for_status()
+        return response.json()
+
     async def delete(self, path: str) -> None:
         response = await self._request("DELETE", path)
         if response.status_code in (404, 410):

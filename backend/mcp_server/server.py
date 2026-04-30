@@ -37,3 +37,28 @@ mcp.tool(
     name="GetPatientContext",
     description="Summary of the patient's existing FHIR record: counts of conditions, meds, allergies, observations, family history, procedures, encounters, and documents.",
 )(tools.get_patient_context)
+
+mcp.tool(
+    name="ProposeAugmentations",
+    description="Run the full augmentation pipeline for the current patient. Extracts clinical findings from notes, codes them with standard terminologies, reconciles against the existing chart, and returns a summary of proposals for review. Returns a deep link to the review UI.",
+)(tools.propose_augmentations)
+
+mcp.tool(
+    name="ListProposals",
+    description="List all augmentation proposals for the current patient, grouped by confidence tier (ATTENTION, REVIEW, CONFIDENT). Shows classification, resource type, confidence, and flags for each proposal.",
+)(tools.list_proposals_tool)
+
+mcp.tool(
+    name="AcceptProposal",
+    description="Accept a proposal and write the FHIR resource to the patient's chart with provenance. Only works for NEW proposals when a FHIR connection is available.",
+)(tools.accept_proposal_tool)
+
+mcp.tool(
+    name="RejectProposal",
+    description="Reject a proposal with a reason. The proposal is archived and no FHIR write occurs.",
+)(tools.reject_proposal_tool)
+
+mcp.tool(
+    name="EditProposal",
+    description="Edit the FHIR resource of a pending proposal before accepting. Pass the updated resource as a JSON string. Citations and provenance are preserved.",
+)(tools.edit_proposal_tool)

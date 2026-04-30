@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from core.preprocess import PreprocessedNote
@@ -15,32 +16,66 @@ log = logging.getLogger(__name__)
 
 _BP_LOINC = "85354-9"
 _TOBACCO_LOINC = "72166-2"
-_NUM_RE = re.compile(r"^[<>≤≥]?\s*[\d.]+$")
+_FHIR_DATE_RE = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")
+_NUM_RE = re.compile(r"^([<>≤≥]?)\s*([\d.]+)$")
 _BP_RE = re.compile(r"(\d+)\s*/\s*(\d+)")
 _AGE_RE = re.compile(r"(\d+)")
+_ICD10_DOT_RE = re.compile(r"^([A-Z]\d{2})(\d+)$")
 
 US_CORE_PROFILES: dict[str, str] = {
-    "Condition": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns",
+    "Condition-problem": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns",
+    "Condition-encounter": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis",
     "MedicationRequest": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest",
     "Procedure": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure",
     "AllergyIntolerance": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-allergyintolerance",
+    "FamilyMemberHistory": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-familymemberhistory",
+    "Provenance": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-provenance",
 }
 
 OBS_PROFILES: dict[str, str] = {
     "vital-signs": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-vital-signs",
     "laboratory": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab",
-    "social-history": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-smokingstatus",
+    "survey": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-screening-assessment",
+    "exam": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+    "imaging": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result",
+    "bp": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-blood-pressure",
+    "smokingstatus": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-smokingstatus",
 }
 
-CERTAINTY_TO_VERIFICATION: dict[str, str] = {
+_COMPARATOR_MAP = {"<": "<", ">": ">", "≤": "<=", "≥": ">="}
+
+_CONDITION_VERIFY_MAP: dict[str, str] = {
     "definite": "confirmed",
     "probable": "provisional",
+    "uncertain": "unconfirmed",
+}
+
+_ALLERGY_VERIFY_MAP: dict[str, str] = {
+    "definite": "confirmed",
+    "probable": "unconfirmed",
     "uncertain": "unconfirmed",
 }
 
 CONDITION_CATEGORY_MAP: dict[str, str] = {
     "diagnosis": "encounter-diagnosis",
     "problem": "problem-list-item",
+}
+
+_TOBACCO_SNOMED: dict[str, tuple[str, str]] = {
+    "current": ("449868002", "Current every day smoker"),
+    "ongoing": ("449868002", "Current every day smoker"),
+    "active": ("449868002", "Current every day smoker"),
+    "former": ("8517006", "Former smoker"),
+    "quit": ("8517006", "Former smoker"),
+    "never": ("266919005", "Never smoker"),
+    "non-smoker": ("266919005", "Never smoker"),
+}
+
+_UCUM_CODES: dict[str, str] = {
+    "%": "%", "mg": "mg", "mg/dL": "mg/dL", "g/dL": "g/dL",
+    "mEq/L": "meq/L", "mmol/L": "mmol/L", "ng/mL": "ng/mL",
+    "mmHg": "mm[Hg]", "kg": "kg", "cm": "cm", "bpm": "/min",
+    "breaths/min": "/min", "kg/m2": "kg/m2",
 }
 
 _COND_CLINICAL_SYSTEM = "http://terminology.hl7.org/CodeSystem/condition-clinical"
@@ -80,9 +115,14 @@ def _cc(coding: list[dict], text: str) -> dict:
     return {"coding": coding, "text": text}
 
 
-def _verification_status(certainty: str, system: str) -> dict:
-    code = CERTAINTY_TO_VERIFICATION.get(certainty, "provisional")
-    return {"coding": [{"system": system, "code": code}]}
+def _cond_verification(certainty: str) -> dict:
+    code = _CONDITION_VERIFY_MAP.get(certainty, "provisional")
+    return {"coding": [{"system": _COND_VERIFY_SYSTEM, "code": code}]}
+
+
+def _allergy_verification(certainty: str) -> dict:
+    code = _ALLERGY_VERIFY_MAP.get(certainty, "unconfirmed")
+    return {"coding": [{"system": _ALLERGY_VERIFY_SYSTEM, "code": code}]}
 
 
 def _parse_bp(value_str: str) -> tuple[int, int] | None:
@@ -99,6 +139,27 @@ def _parse_onset_age(s: str) -> int | None:
 
 def _is_numeric(v: str) -> bool:
     return bool(_NUM_RE.match(v.strip()))
+
+
+def _normalize_icd10(code: str) -> str:
+    m = _ICD10_DOT_RE.match(code.strip())
+    if m:
+        return f"{m.group(1)}.{m.group(2)}"
+    return code
+
+
+def _normalize_coding(coding_list: list[dict]) -> list[dict]:
+    out = []
+    for c in coding_list:
+        c = dict(c)
+        if c.get("system") == "http://hl7.org/fhir/sid/icd-10-cm" and c.get("code"):
+            c["code"] = _normalize_icd10(c["code"])
+        out.append(c)
+    return out
+
+
+def _is_valid_fhir_date(s: str) -> bool:
+    return bool(_FHIR_DATE_RE.match(s))
 
 
 def _build_encounter_map(
@@ -133,17 +194,35 @@ def _resolve_encounter(key: str | None, enc_map: dict[str, str]) -> str | None:
 
 def _build_condition(item: dict, patient_id: str, encounter_ref: str | None) -> dict:
     cat_code = CONDITION_CATEGORY_MAP.get(item.get("category", ""), "problem-list-item")
+    if cat_code == "encounter-diagnosis" and encounter_ref:
+        profile = US_CORE_PROFILES["Condition-encounter"]
+    else:
+        profile = US_CORE_PROFILES["Condition-problem"]
+        cat_code = "problem-list-item"
+
+    certainty = item.get("certainty", "probable")
+    verify = _cond_verification(certainty)
+
     resource: dict = {
         "resourceType": "Condition",
-        "meta": {"profile": [US_CORE_PROFILES["Condition"]]},
-        "clinicalStatus": {"coding": [{"system": _COND_CLINICAL_SYSTEM, "code": "active"}]},
-        "verificationStatus": _verification_status(item.get("certainty", "probable"), _COND_VERIFY_SYSTEM),
+        "meta": {"profile": [profile]},
+        "verificationStatus": verify,
         "category": [{"coding": [{"system": _COND_CATEGORY_SYSTEM, "code": cat_code}]}],
-        "code": _cc(item.get("coding", []), item.get("name", "")),
+        "code": _cc(_normalize_coding(item.get("coding", [])), item.get("name", "")),
         "subject": {"reference": f"Patient/{patient_id}"},
     }
-    if item.get("onset"):
-        resource["onsetDateTime"] = item["onset"]
+
+    verify_code = verify["coding"][0]["code"]
+    if verify_code != "entered-in-error":
+        resource["clinicalStatus"] = {"coding": [{"system": _COND_CLINICAL_SYSTEM, "code": "active"}]}
+
+    onset = item.get("onset")
+    if onset:
+        if _is_valid_fhir_date(onset):
+            resource["onsetDateTime"] = onset
+        else:
+            resource["onsetString"] = onset
+
     if item.get("severity"):
         resource["severity"] = {"text": item["severity"]}
     if item.get("body_site"):
@@ -153,15 +232,21 @@ def _build_condition(item: dict, patient_id: str, encounter_ref: str | None) -> 
     return _strip_none(resource)
 
 
-def _build_observation(item: dict, patient_id: str, encounter_ref: str | None) -> dict:
+def _build_observation(item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None) -> dict:
     cat = item.get("category", "exam")
-    profile = OBS_PROFILES.get(cat)
 
     codings = item.get("coding", [])
     loinc_codes = [c.get("code") for c in codings if c.get("system") == "http://loinc.org"]
 
-    if _TOBACCO_LOINC in loinc_codes:
-        profile = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-smokingstatus"
+    is_tobacco = _TOBACCO_LOINC in loinc_codes
+    is_bp = _BP_LOINC in loinc_codes
+
+    if is_bp:
+        profile = OBS_PROFILES["bp"]
+    elif is_tobacco:
+        profile = OBS_PROFILES["smokingstatus"]
+    else:
+        profile = OBS_PROFILES.get(cat)
 
     resource: dict = {
         "resourceType": "Observation",
@@ -173,10 +258,16 @@ def _build_observation(item: dict, patient_id: str, encounter_ref: str | None) -
     if profile:
         resource["meta"] = {"profile": [profile]}
 
+    effective = item.get("effective_date")
+    if effective:
+        resource["effectiveDateTime"] = effective
+    elif note_date:
+        resource["effectiveDateTime"] = note_date
+
     value_str = item.get("value", "")
     unit = item.get("unit")
 
-    if _BP_LOINC in loinc_codes:
+    if is_bp:
         bp = _parse_bp(value_str)
         if bp:
             resource["component"] = [
@@ -191,32 +282,52 @@ def _build_observation(item: dict, patient_id: str, encounter_ref: str | None) -
             ]
         else:
             resource["valueString"] = value_str
-    elif _TOBACCO_LOINC in loinc_codes or cat == "social-history":
+    elif is_tobacco:
+        vcc: dict = {"text": value_str}
+        v_lower = value_str.lower().strip()
+        for key, (code, display) in _TOBACCO_SNOMED.items():
+            if key in v_lower:
+                vcc["coding"] = [{"system": "http://snomed.info/sct", "code": code, "display": display}]
+                break
+        resource["valueCodeableConcept"] = vcc
+    elif cat == "social-history":
         resource["valueCodeableConcept"] = {"text": value_str}
     elif unit and _is_numeric(value_str):
-        try:
-            resource["valueQuantity"] = {"value": float(value_str.strip().lstrip("<>≤≥ ")), "unit": unit}
-        except ValueError:
+        m = _NUM_RE.match(value_str.strip())
+        if m:
+            comp_char, num_str = m.group(1), m.group(2)
+            qty: dict = {"value": float(num_str), "unit": unit}
+            if comp_char and comp_char in _COMPARATOR_MAP:
+                qty["comparator"] = _COMPARATOR_MAP[comp_char]
+            ucum = _UCUM_CODES.get(unit)
+            if ucum:
+                qty["system"] = "http://unitsofmeasure.org"
+                qty["code"] = ucum
+            resource["valueQuantity"] = qty
+        else:
             resource["valueString"] = f"{value_str} {unit}".strip()
     else:
         resource["valueString"] = value_str
 
-    if item.get("effective_date"):
-        resource["effectiveDateTime"] = item["effective_date"]
     if encounter_ref:
         resource["encounter"] = {"reference": encounter_ref}
     return _strip_none(resource)
 
 
-def _build_medication_request(item: dict, patient_id: str, encounter_ref: str | None) -> dict:
+def _build_medication_request(item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None) -> dict:
     resource: dict = {
         "resourceType": "MedicationRequest",
         "meta": {"profile": [US_CORE_PROFILES["MedicationRequest"]]},
         "status": item.get("status", "active"),
         "intent": item.get("intent", "order"),
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category", "code": "outpatient"}]}],
+        "reportedBoolean": True,
         "medicationCodeableConcept": _cc(item.get("coding", []), item.get("name", "")),
         "subject": {"reference": f"Patient/{patient_id}"},
+        "requester": {"reference": f"Patient/{patient_id}"},
     }
+    if note_date:
+        resource["authoredOn"] = note_date
 
     dose = item.get("dose")
     route = item.get("route")
@@ -244,7 +355,7 @@ def _build_medication_request(item: dict, patient_id: str, encounter_ref: str | 
     return _strip_none(resource)
 
 
-def _build_procedure(item: dict, patient_id: str, encounter_ref: str | None) -> dict:
+def _build_procedure(item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None) -> dict:
     resource: dict = {
         "resourceType": "Procedure",
         "meta": {"profile": [US_CORE_PROFILES["Procedure"]]},
@@ -252,8 +363,9 @@ def _build_procedure(item: dict, patient_id: str, encounter_ref: str | None) -> 
         "code": _cc(item.get("coding", []), item.get("name", "")),
         "subject": {"reference": f"Patient/{patient_id}"},
     }
-    if item.get("performed"):
-        resource["performedDateTime"] = item["performed"]
+    performed = item.get("performed") or note_date
+    if performed:
+        resource["performedDateTime"] = performed
     if item.get("body_site"):
         resource["bodySite"] = [{"text": s} for s in item["body_site"]]
     if item.get("reason"):
@@ -267,23 +379,28 @@ def _build_procedure(item: dict, patient_id: str, encounter_ref: str | None) -> 
 
 def _build_allergy_intolerance(item: dict, patient_id: str) -> dict:
     verification = item.get("verification")
-    if verification:
+    if verification and verification in ("unconfirmed", "confirmed", "refuted", "entered-in-error"):
         verify_code = verification
     else:
-        verify_code = CERTAINTY_TO_VERIFICATION.get(item.get("certainty", "probable"), "provisional")
+        verify_code = _ALLERGY_VERIFY_MAP.get(item.get("certainty", "probable"), "unconfirmed")
 
     resource: dict = {
         "resourceType": "AllergyIntolerance",
         "meta": {"profile": [US_CORE_PROFILES["AllergyIntolerance"]]},
-        "clinicalStatus": {"coding": [{"system": _ALLERGY_CLINICAL_SYSTEM, "code": "active"}]},
         "verificationStatus": {"coding": [{"system": _ALLERGY_VERIFY_SYSTEM, "code": verify_code}]},
         "code": _cc(item.get("coding", []), item.get("substance", "")),
         "patient": {"reference": f"Patient/{patient_id}"},
     }
+    if verify_code != "entered-in-error":
+        resource["clinicalStatus"] = {"coding": [{"system": _ALLERGY_CLINICAL_SYSTEM, "code": "active"}]}
     if item.get("category"):
         resource["category"] = [item["category"]]
     if item.get("criticality"):
         resource["criticality"] = item["criticality"]
+    if item.get("onset_age"):
+        age_val = _parse_onset_age(item["onset_age"])
+        if age_val is not None:
+            resource["onsetAge"] = {"value": age_val, "unit": "a", "system": "http://unitsofmeasure.org", "code": "a"}
     reaction_block: dict = {}
     if item.get("reaction"):
         reaction_block["manifestation"] = [{"text": item["reaction"]}]
@@ -312,6 +429,7 @@ def _build_family_member_history(item: dict, patient_id: str) -> dict:
 
     resource: dict = {
         "resourceType": "FamilyMemberHistory",
+        "meta": {"profile": [US_CORE_PROFILES["FamilyMemberHistory"]]},
         "status": "completed",
         "patient": {"reference": f"Patient/{patient_id}"},
         "relationship": _cc(item.get("coding", []), item.get("relationship", "")),
@@ -331,13 +449,21 @@ _BUILDERS: dict[str, object] = {
 }
 
 
-def build_fhir_resource(candidate: MergedCandidate, patient_id: str, enc_map: dict[str, str]) -> dict:
+def build_fhir_resource(
+    candidate: MergedCandidate,
+    patient_id: str,
+    enc_map: dict[str, str],
+    *,
+    note_date: str | None = None,
+) -> dict:
     builder = _BUILDERS.get(candidate.resource_type)
     if builder is None:
         raise ValueError(f"no builder for {candidate.resource_type}")
     encounter_ref = _resolve_encounter(candidate.encounter_key, enc_map)
     if candidate.resource_type in ("AllergyIntolerance", "FamilyMemberHistory"):
         return builder(candidate.item, patient_id)
+    if candidate.resource_type in ("Observation", "MedicationRequest", "Procedure"):
+        return builder(candidate.item, patient_id, encounter_ref, note_date=note_date)
     return builder(candidate.item, patient_id, encounter_ref)
 
 
@@ -409,11 +535,21 @@ def assemble_proposals(
     patient_id = patient_context.patient["id"]
     enc_map = _build_encounter_map(patient_context, notes)
 
+    doc_dates: dict[str, str] = {}
+    for note in notes:
+        if note.document_date:
+            doc_dates[note.document_id] = note.document_date.strftime("%Y-%m-%d")
+
     proposals: list[Proposal] = []
     for result in stage5.results:
         if result.classification == "DUPLICATE":
             continue
-        resource = build_fhir_resource(result.candidate, patient_id, enc_map)
+        note_date = None
+        for sr in result.candidate.source_refs:
+            note_date = doc_dates.get(sr.document_id)
+            if note_date:
+                break
+        resource = build_fhir_resource(result.candidate, patient_id, enc_map, note_date=note_date)
         citations = resolve_citations(result.candidate.source_refs, notes_by_doc)
         supersedes = (
             [m.resource_id for m in result.chart_matches]

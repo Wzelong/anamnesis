@@ -249,34 +249,67 @@ provisional, `uncertain` → unconfirmed (Condition + AllergyIntolerance).
 No FHIR write happens here. The resource JSON is pre-assembled and valid but
 sits in the working DB (via `ProposalRecord` ORM model) until a clinician acts.
 
-## Stage 7 — Review (`api/routes.py`, `mcp_server/tools.py`)
+## Stage 7 — Review (`services/proposals.py`, `mcp_server/tools.py`, `api/routes.py`) ✅
 
-The human-in-the-loop surface, exposed two ways:
+The human-in-the-loop surface. Two review paths, same backend:
 
-- **MCP tools** — `propose_augmentations`, `list_proposals`,
-  `accept_proposal`, `reject_proposal`, `edit_proposal`. Any Prompt Opinion
-  agent can drive the flow.
-- **REST API** — same surface, consumed by the frontend review workspace.
+1. **In-chat** — MCP tools in Prompt Opinion. Agent-driven flow.
+2. **Deep-link** — `ProposeAugmentations` returns `/{run_id}`. Clinician
+   opens Anamnesis frontend for richer review UI. Frontend calls REST API.
 
-This stage runs the pipeline on demand and returns the queue; it does not
-itself do extraction.
+**Architecture:** Service layer (`services/proposals.py`) shared by both
+surfaces. Framework-agnostic — takes `AsyncSession` + optional `FhirClient`.
 
-## Stage 8 — Write-back (`fhir/write.py`, already built)
+**5 MCP tools / 6 REST endpoints:**
 
-On accept, `apply_augmentation(client, proposal)`:
+| Tool / Endpoint | Action |
+|---|---|
+| `ProposeAugmentations` / `POST /api/proposals/run` | Run pipeline (0-6), persist proposals to DB, return summary + deep link |
+| `ListProposals` / `GET /api/proposals` | List proposals by patient_id or run_id, ordered by tier |
+| — / `GET /api/proposals/{id}` | Full proposal detail (resource, citations, metadata) |
+| `AcceptProposal` / `POST /api/proposals/{id}/accept` | Mark accepted, trigger Stage 8 write-back if FHIR available |
+| `RejectProposal` / `POST /api/proposals/{id}/reject` | Mark rejected with reason |
+| `EditProposal` / `PUT /api/proposals/{id}` | Edit FHIR resource, preserve citations/provenance |
 
-1. POST the resource to FHIR (US Core R4).
-2. POST a `Provenance` resource pointing at the written resource, with the
-   `source-span` extension recording each `(DocumentReference, char range)`
-   citation and the approver's identity.
-3. Append a row to the audit log (working DB) with the tool call payload,
-   timestamps, and outcome.
+**Privacy invariants:** No PHI in agent context beyond summaries. SHARP
+tokens per-request, never stored. Deep-link URLs contain only UUIDs.
+Every decision audited with reviewer + timestamp.
 
-Rejections and edits are audited too — every decision is recoverable.
+**Pipeline caching:** If pending proposals exist for a patient, returns
+them without re-running. Avoids redundant ~25s pipeline executions.
+
+## Stage 8 — Write-back (`fhir/write.py`) ✅
+
+On accept, `apply_augmentation(client, proposal)` writes to the FHIR server
+atomically (transaction bundle) with full multi-citation Provenance.
+
+**Three classification flows:**
+
+| Classification | FHIR operation | Provenance activity | Behavior |
+|---|---|---|---|
+| NEW | POST resource + POST Provenance | CREATE | New resource added to chart |
+| UPDATING | PUT to existing ref + POST Provenance | UPDATE | Replaces existing resource (e.g., dose change) |
+| CONFLICTING | POST resource + POST Provenance | CREATE | New resource created; existing NOT retired (separate clinical decision) |
+
+**Multi-citation Provenance:** Each source document gets its own `entity`
+entry. Each citation span gets its own `source-text-span` extension with
+`documentRef`, `start`, `end`, `text`. A condition corroborated by 3 notes
+produces 3 extension entries and up to 3 entity entries (deduplicated by
+document).
+
+**UPDATING flow:** reads the existing resource to get its `id` and
+`versionId`, merges the proposal's resource, PUTs to the same reference.
+The `supersedes_ref` from Stage 5 reconciliation provides the target.
+
+**Write result:** `WriteResult(resource_ref, provenance_ref, superseded_ref)`
+returned to the service layer, stored in the proposal audit trail.
+
+Rejections and edits are audited in the working DB — every decision is
+recoverable.
 
 ---
 
-## Module layout (target)
+## Module layout
 
 ```
 backend/core/
@@ -286,6 +319,16 @@ backend/core/
   code_candidates.py  # US Core fixed codes + LLM CodeSelector
   reconcile.py        # deterministic match + LLM adjudication → NEW/DUPLICATE/UPDATING/CONFLICTING
   augment.py          # FHIR builders + citation resolution → Proposal assembly
+
+backend/services/
+  proposals.py        # proposal lifecycle: run pipeline, list, accept, reject, edit
+
+backend/mcp_server/
+  server.py           # FastMCP instance + tool registration
+  tools.py            # 7 MCP tools (2 context + 5 review)
+
+backend/api/
+  routes.py           # 6 REST endpoints mirroring MCP tools
 ```
 
 ## Confidence scoring (`core/reconcile.py::_compute_confidence`)

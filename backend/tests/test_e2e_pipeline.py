@@ -149,8 +149,43 @@ def stage6_output(stage5_output, stage1_output, patient_context):
 
 
 @pytest.fixture(scope="module")
-def stage7_output(stage6_output):
-    return stage6_output
+def _stage7_db():
+    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+    from db.models import Base
+    eng = create_async_engine("sqlite+aiosqlite://", echo=False)
+    factory = async_sessionmaker(bind=eng, class_=AsyncSession, expire_on_commit=False)
+
+    async def _setup():
+        async with eng.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    asyncio.get_event_loop().run_until_complete(_setup())
+    return eng, factory
+
+
+@pytest.fixture(scope="module")
+def stage7_output(stage6_output, patient_context, _stage7_db):
+    from services.proposals import _proposal_to_record
+    from db.models import PipelineRun
+    from datetime import datetime, timezone
+    from uuid import uuid4
+
+    _, factory = _stage7_db
+    run_id = uuid4().hex
+    patient_id = patient_context.patient["id"]
+    now = datetime.now(timezone.utc)
+
+    async def _persist():
+        async with factory() as session:
+            session.add(PipelineRun(
+                id=run_id, patient_id=patient_id, triggered_by="test",
+                status="completed", started_at=now, finished_at=now,
+            ))
+            for p in stage6_output.proposals:
+                session.add(_proposal_to_record(p, run_id, patient_id))
+            await session.commit()
+
+    asyncio.get_event_loop().run_until_complete(_persist())
+    return {"run_id": run_id, "patient_id": patient_id, "factory": factory, "proposals": stage6_output.proposals}
 
 
 @pytest.fixture(scope="module")
@@ -834,29 +869,248 @@ class TestStage6AssembleProposal:
 
 class TestStage7Review:
 
-    @pytest.mark.skip(reason="Stage 7 not implemented")
-    def test_list_proposals(self, stage7_output):
-        pass
+    def test_proposals_persisted(self, stage7_output):
+        from services.proposals import list_proposals
+        factory = stage7_output["factory"]
 
-    @pytest.mark.skip(reason="Stage 7 not implemented")
+        async def _check():
+            async with factory() as session:
+                return await list_proposals(session, patient_id=stage7_output["patient_id"])
+
+        results = asyncio.get_event_loop().run_until_complete(_check())
+        assert len(results) == len(stage7_output["proposals"])
+
+    def test_list_by_run_id(self, stage7_output):
+        from services.proposals import list_proposals
+        factory = stage7_output["factory"]
+
+        async def _check():
+            async with factory() as session:
+                return await list_proposals(session, run_id=stage7_output["run_id"])
+
+        results = asyncio.get_event_loop().run_until_complete(_check())
+        assert len(results) == len(stage7_output["proposals"])
+
+    def test_list_ordering(self, stage7_output):
+        from services.proposals import list_proposals
+        factory = stage7_output["factory"]
+
+        async def _check():
+            async with factory() as session:
+                return await list_proposals(session, patient_id=stage7_output["patient_id"])
+
+        results = asyncio.get_event_loop().run_until_complete(_check())
+        tier_order = {"ATTENTION": 0, "REVIEW": 1, "CONFIDENT": 2}
+        tiers = [tier_order.get(r["confidence_tier"], 9) for r in results]
+        assert tiers == sorted(tiers)
+
+    def test_get_proposal_detail(self, stage7_output):
+        from services.proposals import get_proposal
+        factory = stage7_output["factory"]
+        pid = stage7_output["proposals"][0].id
+
+        async def _check():
+            async with factory() as session:
+                return await get_proposal(pid, session)
+
+        result = asyncio.get_event_loop().run_until_complete(_check())
+        assert result["id"] == pid
+        assert "resource" in result
+        assert "citations" in result
+
     def test_accept_proposal(self, stage7_output):
-        pass
+        from services.proposals import accept_proposal, get_proposal
+        factory = stage7_output["factory"]
+        new_proposals = [p for p in stage7_output["proposals"] if p.classification == "NEW"]
+        pid = new_proposals[0].id
 
-    @pytest.mark.skip(reason="Stage 7 not implemented")
+        async def _check():
+            async with factory() as session:
+                result = await accept_proposal(pid, session, reviewer="Dr. Test")
+                detail = await get_proposal(pid, session)
+                return result, detail
+
+        result, detail = asyncio.get_event_loop().run_until_complete(_check())
+        assert result["status"] == "accepted"
+        assert detail["status"] == "accepted"
+        assert detail["reviewed_by"] == "Dr. Test"
+        assert detail["reviewed_at"] is not None
+
     def test_reject_proposal(self, stage7_output):
-        pass
+        from services.proposals import reject_proposal, get_proposal
+        factory = stage7_output["factory"]
+        new_proposals = [p for p in stage7_output["proposals"] if p.classification == "NEW"]
+        pid = new_proposals[1].id
+
+        async def _check():
+            async with factory() as session:
+                result = await reject_proposal(pid, "Not clinically relevant", session)
+                detail = await get_proposal(pid, session)
+                return result, detail
+
+        result, detail = asyncio.get_event_loop().run_until_complete(_check())
+        assert result["status"] == "rejected"
+        assert detail["status"] == "rejected"
+
+    def test_accept_already_reviewed(self, stage7_output):
+        from services.proposals import accept_proposal
+        factory = stage7_output["factory"]
+        new_proposals = [p for p in stage7_output["proposals"] if p.classification == "NEW"]
+        pid = new_proposals[0].id
+
+        async def _check():
+            async with factory() as session:
+                return await accept_proposal(pid, session)
+
+        with pytest.raises(ValueError, match="already accepted"):
+            asyncio.get_event_loop().run_until_complete(_check())
+
+    def test_edit_proposal(self, stage7_output):
+        from services.proposals import edit_proposal, get_proposal
+        factory = stage7_output["factory"]
+        new_proposals = [p for p in stage7_output["proposals"] if p.classification == "NEW"]
+        pid = new_proposals[2].id
+
+        async def _check():
+            async with factory() as session:
+                detail = await get_proposal(pid, session)
+                resource = detail["resource"]
+                resource["note"] = [{"text": "edited by test"}]
+                result = await edit_proposal(pid, resource, session)
+                return result
+
+        result = asyncio.get_event_loop().run_until_complete(_check())
+        assert result["resource"].get("note") == [{"text": "edited by test"}]
 
 
 # ===================================================================
 # Stage 8 — Write-back (stub)
 # ===================================================================
 
+class _MockFhirClient:
+    def __init__(self):
+        self.calls: list[tuple[str, str, dict | None]] = []
+        self._resources: dict[str, dict] = {}
+        self._next_ids: dict[str, int] = {}
+
+    def seed(self, ref: str, resource: dict):
+        self._resources[ref] = resource
+
+    async def read(self, path: str) -> dict | None:
+        self.calls.append(("GET", path, None))
+        return self._resources.get(path)
+
+    async def transaction(self, bundle: dict) -> dict:
+        self.calls.append(("POST", "", bundle))
+        entries = []
+        for entry in bundle.get("entry", []):
+            req = entry.get("request", {})
+            method = req.get("method", "")
+            url = req.get("url", "")
+            resource = entry.get("resource", {})
+            rt = resource.get("resourceType", url)
+            self._next_ids.setdefault(rt, 0)
+            self._next_ids[rt] += 1
+            rid = f"mock-{self._next_ids[rt]}"
+            entries.append({
+                "response": {"status": "201", "location": f"{rt}/{rid}"},
+                "resource": {**resource, "id": rid},
+            })
+        return {"entry": entries}
+
+
 class TestStage8WriteBack:
 
-    @pytest.mark.skip(reason="Stage 8 needs mock FhirClient")
-    def test_new_creates_resource_and_provenance(self, stage8_proposals):
-        pass
+    def test_apply_new(self):
+        from fhir.write import AugmentationProposal, Citation, apply_augmentation
+        client = _MockFhirClient()
+        proposal = AugmentationProposal(
+            classification="NEW",
+            resource={"resourceType": "Condition", "code": {"text": "test"}},
+            citations=[Citation(document_ref="DocumentReference/note-1", start=0, end=10, text="test text")],
+        )
+        result = asyncio.get_event_loop().run_until_complete(apply_augmentation(client, proposal))
+        assert result.resource_ref.startswith("Condition/")
+        assert result.provenance_ref.startswith("Provenance/")
+        assert len(client.calls) == 1
+        bundle = client.calls[0][2]
+        assert bundle["entry"][0]["request"]["method"] == "POST"
 
-    @pytest.mark.skip(reason="Stage 8 needs mock FhirClient")
-    def test_provenance_has_source_span(self, stage8_proposals):
-        pass
+    def test_apply_new_multi_citation(self):
+        from fhir.write import AugmentationProposal, Citation, apply_augmentation, SOURCE_SPAN_EXT_URL
+        client = _MockFhirClient()
+        citations = [
+            Citation(document_ref="DocumentReference/note-1", start=0, end=10, text="from note 1"),
+            Citation(document_ref="DocumentReference/note-2", start=5, end=20, text="from note 2"),
+            Citation(document_ref="DocumentReference/note-1", start=50, end=60, text="second span note 1"),
+        ]
+        proposal = AugmentationProposal(
+            classification="NEW",
+            resource={"resourceType": "Condition", "code": {"text": "multi"}},
+            citations=citations,
+        )
+        asyncio.get_event_loop().run_until_complete(apply_augmentation(client, proposal))
+        bundle = client.calls[0][2]
+        prov = bundle["entry"][1]["resource"]
+        assert len(prov["entity"]) == 2
+        span_exts = [e for e in prov["extension"] if e["url"] == SOURCE_SPAN_EXT_URL]
+        assert len(span_exts) == 3
+
+    def test_apply_updating(self):
+        from fhir.write import AugmentationProposal, Citation, apply_augmentation
+        client = _MockFhirClient()
+        client.seed("MedicationRequest/lisinopril-10", {
+            "resourceType": "MedicationRequest", "id": "lisinopril-10",
+            "meta": {"versionId": "1"},
+            "status": "active",
+        })
+        proposal = AugmentationProposal(
+            classification="UPDATING",
+            resource={"resourceType": "MedicationRequest", "status": "active"},
+            citations=[Citation(document_ref="DocumentReference/note-1", start=0, end=10, text="dose change")],
+            supersedes_ref="MedicationRequest/lisinopril-10",
+        )
+        result = asyncio.get_event_loop().run_until_complete(apply_augmentation(client, proposal))
+        assert result.superseded_ref == "MedicationRequest/lisinopril-10"
+        assert result.resource_ref == "MedicationRequest/lisinopril-10"
+        bundle = client.calls[1][2]
+        assert bundle["entry"][0]["request"]["method"] == "PUT"
+        assert bundle["entry"][0]["resource"]["id"] == "lisinopril-10"
+
+    def test_apply_conflicting(self):
+        from fhir.write import AugmentationProposal, Citation, apply_augmentation
+        client = _MockFhirClient()
+        proposal = AugmentationProposal(
+            classification="CONFLICTING",
+            resource={"resourceType": "AllergyIntolerance", "code": {"text": "penicillin"}},
+            citations=[Citation(document_ref="DocumentReference/note-1", start=0, end=10, text="allergy text")],
+        )
+        result = asyncio.get_event_loop().run_until_complete(apply_augmentation(client, proposal))
+        assert result.resource_ref.startswith("AllergyIntolerance/")
+        assert result.provenance_ref.startswith("Provenance/")
+        bundle = client.calls[0][2]
+        assert bundle["entry"][0]["request"]["method"] == "POST"
+
+    def test_provenance_has_activity_code(self):
+        from fhir.write import AugmentationProposal, Citation, apply_augmentation
+        client = _MockFhirClient()
+        proposal = AugmentationProposal(
+            classification="NEW",
+            resource={"resourceType": "Condition", "code": {"text": "test"}},
+            citations=[Citation(document_ref="DocumentReference/note-1", start=0, end=5, text="test")],
+        )
+        asyncio.get_event_loop().run_until_complete(apply_augmentation(client, proposal))
+        prov = client.calls[0][2]["entry"][1]["resource"]
+        activity_code = prov["activity"]["coding"][0]["code"]
+        assert activity_code == "CREATE"
+
+    def test_provenance_entity_deduplicates_docs(self):
+        from fhir.write import build_provenance, Citation
+        citations = [
+            Citation(document_ref="DocumentReference/note-1", start=0, end=10, text="a"),
+            Citation(document_ref="DocumentReference/note-1", start=20, end=30, text="b"),
+            Citation(document_ref="DocumentReference/note-2", start=0, end=5, text="c"),
+        ]
+        prov = build_provenance("urn:uuid:test", citations)
+        assert len(prov["entity"]) == 2
+        assert len(prov["extension"]) == 3
