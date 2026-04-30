@@ -17,6 +17,7 @@ class PipelineRun(Base):
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
     patient_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    patient_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
     triggered_by: Mapped[str] = mapped_column(String(64))
     status: Mapped[str] = mapped_column(String(16))
     started_at: Mapped[datetime] = mapped_column()

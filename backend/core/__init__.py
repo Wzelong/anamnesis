@@ -2,7 +2,14 @@ from core import telemetry
 from core.augment import StageSixOutput, assemble_proposals
 from core.cache import JsonCache
 from core.code_candidates import StageFourOutput, code_candidates
-from core.coding import EmbeddingModel, IndexStore, SearchResult, search_code
+from core.coding import (
+    EmbeddingModel,
+    IndexStore,
+    SearchResult,
+    WarmupResult,
+    search_code,
+    warmup,
+)
 from core.pricing import estimate_cost
 from core.reconcile import StageFiveOutput, reconcile
 from core.validation import FHIR_DATE_RE, validate_fhir_date
@@ -99,4 +106,6 @@ __all__ = [
     "scan_note",
     "search_code",
     "split_sentences",
+    "WarmupResult",
+    "warmup",
 ]

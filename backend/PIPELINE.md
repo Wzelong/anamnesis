@@ -144,8 +144,11 @@ four FAISS indexes under `data/indexes/`:
 | LOINC | 95K | IndexFlatIP |
 | ICD-10 | 23K | IndexFlatIP |
 
-Indexes and embedding model load lazily on first use. `EmbeddingModel` and
-`IndexStore` are thread-safe singletons in `core/coding.py`.
+Indexes and the embedding model still load lazily on first use, but backend
+startup runs `core.coding.warmup()` by default and blocks until the model and
+all indexes are ready. Disable with `WARMUP_CODING_ON_STARTUP=false`.
+`EmbeddingModel` and `IndexStore` are thread-safe singletons in
+`core/coding.py`.
 
 **Per candidate flow:**
 

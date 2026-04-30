@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import Image from "next/image"
 import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -15,8 +17,31 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { ThemeToggle } from "./theme-toggle"
+import { useRouter } from "next/navigation"
+import { api } from "@/lib/api"
+import { useAppStore } from "@/lib/store"
 
 export function Header() {
+  const [resetting, setResetting] = useState(false)
+  const reset = useAppStore((s) => s.reset)
+  const fetchRuns = useAppStore((s) => s.fetchRuns)
+  const router = useRouter()
+
+  async function handleReset() {
+    setResetting(true)
+    try {
+      await api.reset()
+      reset()
+      await fetchRuns()
+      router.push("/")
+      toast.success("Working state reset.")
+    } catch {
+      toast.error("Reset failed. Check that the backend is running.")
+    } finally {
+      setResetting(false)
+    }
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 h-12 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 flex items-center z-50">
       <div className="pl-2 flex items-center gap-1">
@@ -55,7 +80,9 @@ export function Header() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction>Reset</AlertDialogAction>
+              <AlertDialogAction onClick={handleReset} disabled={resetting}>
+                {resetting ? "Resetting..." : "Reset"}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

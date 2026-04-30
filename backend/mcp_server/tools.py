@@ -86,10 +86,22 @@ async def propose_augmentations(ctx: Context = None) -> str:
     tier_parts = [f"{tier}: {count}" for tier, count in sorted(by_tier.items())]
     status = "Found existing" if cached else "Generated"
 
+    from context.sharp import get_clinician_identity
+    from context.auth import mint_review_token
+    from config import settings
+    base = settings.frontend_base_url.rstrip("/")
+    identity = get_clinician_identity(ctx) if ctx else None
+    if identity:
+        token = mint_review_token(run_id, result["patient_id"], identity)
+        link = f"{base}/{run_id}?token={token}"
+    else:
+        link = f"{base}/{run_id}"
+
     return (
         f"{status} {total} proposals for Patient/{result['patient_id']}:\n"
-        f"  {', '.join(tier_parts)}\n"
-        f"Use ListProposals to review, or open: /{run_id}"
+        f"  {', '.join(tier_parts)}\n\n"
+        f"Review workspace: {link}\n\n"
+        f"Show this link to the clinician exactly as-is. Use ListProposals to review in chat instead."
     )
 
 
@@ -129,20 +141,26 @@ async def list_proposals_tool(ctx: Context = None) -> str:
 async def accept_proposal_tool(proposal_id: str, ctx: Context = None) -> str:
     fhir_client = _get_fhir_client(ctx)
 
+    from context.sharp import get_clinician_identity
+    identity = get_clinician_identity(ctx) if ctx else None
+
     async with AsyncSessionLocal() as session:
         result = await proposal_svc.accept_proposal(
-            proposal_id, session, fhir_client=fhir_client,
+            proposal_id, session, fhir_client=fhir_client, reviewer=identity,
         )
 
     wr = result.get("write_result")
     if wr:
         return f"Accepted {proposal_id}. Written to FHIR: {wr['resource_ref']}, provenance: {wr['provenance_ref']}"
-    return f"Accepted {proposal_id}. FHIR write-back deferred (no FHIR connection or non-NEW classification)."
+    return f"Accepted {proposal_id}. FHIR write-back deferred (no FHIR connection)."
 
 
 async def reject_proposal_tool(proposal_id: str, reason: str, ctx: Context = None) -> str:
+    from context.sharp import get_clinician_identity
+    identity = get_clinician_identity(ctx) if ctx else None
+
     async with AsyncSessionLocal() as session:
-        await proposal_svc.reject_proposal(proposal_id, reason, session)
+        await proposal_svc.reject_proposal(proposal_id, reason, session, reviewer=identity)
 
     return f"Rejected {proposal_id}. Reason: {reason}"
 

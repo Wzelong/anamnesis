@@ -27,7 +27,12 @@
       "Bash(python -m pytest tests/test_e2e_pipeline.py::TestStage3CrossNoteDedupe -v)",
       "Bash(python -c ' *)",
       "Bash(python -m pytest tests/test_e2e_pipeline.py -v)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(python -m scripts.build_indexes --system loinc --force)",
+      "Bash(python -m scripts.build_indexes --system icd10 --force)",
+      "Bash(python -m pytest tests/ -v -k \"not Stage2\" --tb=no -q)",
+      "Bash(python -m pytest tests/ -v -k \"Stage2\" --tb=short -q)",
+      "Bash(netstat -ano)"
     ]
   }
 }

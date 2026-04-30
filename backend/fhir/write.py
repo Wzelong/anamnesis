@@ -8,11 +8,16 @@ Supports all three classifications:
 Multi-citation Provenance: each source document gets its own entity entry
 and source-span extension, so the UI can highlight every corroborating note.
 """
+from __future__ import annotations
+
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from context.auth import ReviewerIdentity
 
 from fhir.client import FhirClient
 
@@ -52,6 +57,7 @@ def build_provenance(
     *,
     activity_code: str = "CREATE",
     actor_name: str = "Anamnesis",
+    attester: ReviewerIdentity | None = None,
 ) -> dict:
     entities = []
     extensions = []
@@ -71,6 +77,19 @@ def build_provenance(
             ],
         })
 
+    agents = [{
+        "type": {"coding": [{"system": PROVENANCE_AGENT_TYPE_SYSTEM, "code": "author"}]},
+        "who": {"display": actor_name},
+    }]
+    if attester:
+        who: dict = {"display": attester.display}
+        if attester.fhir_reference:
+            who["reference"] = attester.fhir_reference
+        agents.append({
+            "type": {"coding": [{"system": PROVENANCE_AGENT_TYPE_SYSTEM, "code": "attester"}]},
+            "who": who,
+        })
+
     return {
         "resourceType": "Provenance",
         "meta": {"profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-provenance"]},
@@ -79,10 +98,7 @@ def build_provenance(
         "activity": {
             "coding": [{"system": PROVENANCE_ACTIVITY_SYSTEM, "code": activity_code}],
         },
-        "agent": [{
-            "type": {"coding": [{"system": PROVENANCE_AGENT_TYPE_SYSTEM, "code": "author"}]},
-            "who": {"display": actor_name},
-        }],
+        "agent": agents,
         "entity": entities,
         "extension": extensions,
     }
@@ -112,7 +128,7 @@ def _find_ref(entries: list[dict], resource_type: str) -> str:
     raise RuntimeError(f"transaction response had no {resource_type} entry")
 
 
-async def _apply_new(client: FhirClient, proposal: AugmentationProposal) -> WriteResult:
+async def _apply_new(client: FhirClient, proposal: AugmentationProposal, *, attester: ReviewerIdentity | None = None) -> WriteResult:
     resource_type = proposal.resource.get("resourceType")
     if not resource_type:
         raise ValueError("proposal.resource missing resourceType")
@@ -120,7 +136,7 @@ async def _apply_new(client: FhirClient, proposal: AugmentationProposal) -> Writ
     urn_resource = f"urn:uuid:{uuid4()}"
     urn_prov = f"urn:uuid:{uuid4()}"
 
-    provenance = build_provenance(urn_resource, proposal.citations, activity_code="CREATE")
+    provenance = build_provenance(urn_resource, proposal.citations, activity_code="CREATE", attester=attester)
 
     bundle = {
         "resourceType": "Bundle",
@@ -146,7 +162,7 @@ async def _apply_new(client: FhirClient, proposal: AugmentationProposal) -> Writ
     return WriteResult(resource_ref=resource_ref, provenance_ref=provenance_ref)
 
 
-async def _apply_updating(client: FhirClient, proposal: AugmentationProposal) -> WriteResult:
+async def _apply_updating(client: FhirClient, proposal: AugmentationProposal, *, attester: ReviewerIdentity | None = None) -> WriteResult:
     resource_type = proposal.resource.get("resourceType")
     if not resource_type:
         raise ValueError("proposal.resource missing resourceType")
@@ -165,7 +181,7 @@ async def _apply_updating(client: FhirClient, proposal: AugmentationProposal) ->
 
     urn_prov = f"urn:uuid:{uuid4()}"
     provenance = build_provenance(
-        proposal.supersedes_ref, proposal.citations, activity_code="UPDATE",
+        proposal.supersedes_ref, proposal.citations, activity_code="UPDATE", attester=attester,
     )
 
     bundle = {
@@ -195,7 +211,7 @@ async def _apply_updating(client: FhirClient, proposal: AugmentationProposal) ->
     )
 
 
-async def _apply_conflicting(client: FhirClient, proposal: AugmentationProposal) -> WriteResult:
+async def _apply_conflicting(client: FhirClient, proposal: AugmentationProposal, *, attester: ReviewerIdentity | None = None) -> WriteResult:
     resource_type = proposal.resource.get("resourceType")
     if not resource_type:
         raise ValueError("proposal.resource missing resourceType")
@@ -203,7 +219,7 @@ async def _apply_conflicting(client: FhirClient, proposal: AugmentationProposal)
     urn_resource = f"urn:uuid:{uuid4()}"
     urn_prov = f"urn:uuid:{uuid4()}"
 
-    provenance = build_provenance(urn_resource, proposal.citations, activity_code="CREATE")
+    provenance = build_provenance(urn_resource, proposal.citations, activity_code="CREATE", attester=attester)
 
     bundle = {
         "resourceType": "Bundle",
@@ -229,11 +245,11 @@ async def _apply_conflicting(client: FhirClient, proposal: AugmentationProposal)
     return WriteResult(resource_ref=resource_ref, provenance_ref=provenance_ref)
 
 
-async def apply_augmentation(client: FhirClient, proposal: AugmentationProposal) -> WriteResult:
+async def apply_augmentation(client: FhirClient, proposal: AugmentationProposal, *, attester: ReviewerIdentity | None = None) -> WriteResult:
     if proposal.classification == "NEW":
-        return await _apply_new(client, proposal)
+        return await _apply_new(client, proposal, attester=attester)
     if proposal.classification == "UPDATING":
-        return await _apply_updating(client, proposal)
+        return await _apply_updating(client, proposal, attester=attester)
     if proposal.classification == "CONFLICTING":
-        return await _apply_conflicting(client, proposal)
+        return await _apply_conflicting(client, proposal, attester=attester)
     raise ValueError(f"unknown classification: {proposal.classification}")

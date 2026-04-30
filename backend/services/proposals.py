@@ -6,7 +6,11 @@ import logging
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from context.auth import ReviewerIdentity
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -115,13 +119,21 @@ async def run_pipeline(
             }
 
     if fhir_client:
+        import asyncio
         from fhir.read import read_documents, read_patient_context
-        patient_context, documents = await read_patient_context(fhir_client, effective_patient_id), await read_documents(fhir_client, effective_patient_id)
+        patient_context, documents = await asyncio.gather(
+            read_patient_context(fhir_client, effective_patient_id),
+            read_documents(fhir_client, effective_patient_id),
+        )
     else:
         from fhir.local_bundle import load_demo_data
         patient_context, documents = load_demo_data()
 
     effective_patient_id = patient_context.patient["id"]
+    name_parts = (patient_context.patient.get("name") or [{}])[0]
+    given = " ".join(name_parts.get("given") or [])
+    family = name_parts.get("family") or ""
+    patient_name = f"{given} {family}".strip() or None
 
     from core.preprocess import preprocess_documents
     notes = preprocess_documents(documents)
@@ -156,6 +168,7 @@ async def run_pipeline(
     pipeline_run = PipelineRun(
         id=run_id,
         patient_id=effective_patient_id,
+        patient_name=patient_name,
         triggered_by="api",
         status="completed",
         started_at=now,
@@ -217,7 +230,7 @@ async def accept_proposal(
     session: AsyncSession,
     *,
     fhir_client=None,
-    reviewer: str | None = None,
+    reviewer: ReviewerIdentity | None = None,
 ) -> dict:
     record = await session.get(ProposalRecord, proposal_id)
     if not record:
@@ -227,7 +240,7 @@ async def accept_proposal(
 
     record.status = "accepted"
     record.reviewed_at = datetime.now(timezone.utc)
-    record.reviewed_by = reviewer
+    record.reviewed_by = reviewer.display if reviewer else None
 
     write_result = None
     if fhir_client:
@@ -248,7 +261,7 @@ async def accept_proposal(
             citations=citations,
             supersedes_ref=supersedes[0] if supersedes else None,
         )
-        result = await apply_augmentation(fhir_client, wp)
+        result = await apply_augmentation(fhir_client, wp, attester=reviewer)
         write_result = {
             "resource_ref": result.resource_ref,
             "provenance_ref": result.provenance_ref,
@@ -269,7 +282,7 @@ async def reject_proposal(
     reason: str,
     session: AsyncSession,
     *,
-    reviewer: str | None = None,
+    reviewer: ReviewerIdentity | None = None,
 ) -> dict:
     record = await session.get(ProposalRecord, proposal_id)
     if not record:
@@ -279,7 +292,7 @@ async def reject_proposal(
 
     record.status = "rejected"
     record.reviewed_at = datetime.now(timezone.utc)
-    record.reviewed_by = reviewer
+    record.reviewed_by = reviewer.display if reviewer else None
 
     metadata = json.loads(record.metadata_json)
     metadata["rejection_reason"] = reason

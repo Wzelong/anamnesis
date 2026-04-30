@@ -57,7 +57,7 @@ SYSTEMS: dict[str, dict] = {
 }
 
 EMBEDDING_MODEL = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
-IVFPQ_THRESHOLD = 100_000
+IVFPQ_THRESHOLD = 20_000
 
 
 def sha256_file(path: Path) -> str:
@@ -77,8 +77,9 @@ def build_one(
 ) -> dict | None:
     index_path = output_dir / f"{system}.faiss"
     meta_path = output_dir / f"{system}_metadata.parquet"
+    meta_npz_path = output_dir / f"{system}_metadata.npz"
 
-    if index_path.exists() and meta_path.exists() and not force:
+    if index_path.exists() and meta_path.exists() and meta_npz_path.exists() and not force:
         print(f"\n[{system}] Already built — skipping (use --force to rebuild)")
         return None
 
@@ -156,6 +157,15 @@ def build_one(
     os.replace(tmp_meta, meta_path)
     print(f"  Wrote {meta_path.name} ({meta_path.stat().st_size / 1024 / 1024:.1f} MB)")
 
+    code_col = cfg["code_col"]
+    display_col = "display" if cfg["display_is_list"] else cfg["display_col"]
+    codes = np.asarray(meta_table.column(code_col).to_pylist(), dtype=str)
+    displays = np.asarray(meta_table.column(display_col).to_pylist(), dtype=str)
+    tmp_meta_npz = output_dir / f"{system}_metadata.npz.tmp"
+    np.savez_compressed(tmp_meta_npz, codes=codes, displays=displays)
+    os.replace(tmp_meta_npz.with_suffix(""), meta_npz_path)
+    print(f"  Wrote {meta_npz_path.name} ({meta_npz_path.stat().st_size / 1024 / 1024:.1f} MB)")
+
     del table, meta_table
     gc.collect()
 
@@ -170,6 +180,7 @@ def build_one(
         "parquet_sha256": sha256_file(parquet_path),
         "index_sha256": sha256_file(index_path),
         "index_size_mb": round(index_path.stat().st_size / 1024 / 1024, 1),
+        "metadata_npz_size_mb": round(meta_npz_path.stat().st_size / 1024 / 1024, 1),
     }
 
 

@@ -919,14 +919,16 @@ class TestStage7Review:
         assert "citations" in result
 
     def test_accept_proposal(self, stage7_output):
+        from context.auth import ReviewerIdentity
         from services.proposals import accept_proposal, get_proposal
         factory = stage7_output["factory"]
         new_proposals = [p for p in stage7_output["proposals"] if p.classification == "NEW"]
         pid = new_proposals[0].id
+        reviewer = ReviewerIdentity(display="Dr. Test", fhir_reference="Practitioner/test-1")
 
         async def _check():
             async with factory() as session:
-                result = await accept_proposal(pid, session, reviewer="Dr. Test")
+                result = await accept_proposal(pid, session, reviewer=reviewer)
                 detail = await get_proposal(pid, session)
                 return result, detail
 
@@ -1114,3 +1116,35 @@ class TestStage8WriteBack:
         prov = build_provenance("urn:uuid:test", citations)
         assert len(prov["entity"]) == 2
         assert len(prov["extension"]) == 3
+
+    def test_provenance_has_attester_agent(self):
+        from context.auth import ReviewerIdentity
+        from fhir.write import AugmentationProposal, Citation, apply_augmentation
+        client = _MockFhirClient()
+        proposal = AugmentationProposal(
+            classification="NEW",
+            resource={"resourceType": "Condition", "code": {"text": "test"}},
+            citations=[Citation(document_ref="DocumentReference/note-1", start=0, end=5, text="t")],
+        )
+        attester = ReviewerIdentity(display="Dr. Chen", fhir_reference="Practitioner/p99")
+        asyncio.get_event_loop().run_until_complete(apply_augmentation(client, proposal, attester=attester))
+        prov = client.calls[0][2]["entry"][1]["resource"]
+        agents = prov["agent"]
+        assert len(agents) == 2
+        assert agents[0]["type"]["coding"][0]["code"] == "author"
+        assert agents[1]["type"]["coding"][0]["code"] == "attester"
+        assert agents[1]["who"]["display"] == "Dr. Chen"
+        assert agents[1]["who"]["reference"] == "Practitioner/p99"
+
+    def test_provenance_no_attester_when_none(self):
+        from fhir.write import AugmentationProposal, Citation, apply_augmentation
+        client = _MockFhirClient()
+        proposal = AugmentationProposal(
+            classification="NEW",
+            resource={"resourceType": "Condition", "code": {"text": "test"}},
+            citations=[Citation(document_ref="DocumentReference/note-1", start=0, end=5, text="t")],
+        )
+        asyncio.get_event_loop().run_until_complete(apply_augmentation(client, proposal))
+        prov = client.calls[0][2]["entry"][1]["resource"]
+        assert len(prov["agent"]) == 1
+        assert prov["agent"][0]["type"]["coding"][0]["code"] == "author"

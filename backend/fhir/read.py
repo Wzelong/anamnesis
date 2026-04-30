@@ -71,8 +71,7 @@ async def read_documents(client: FhirClient, patient_id: str) -> list[Document]:
     bundle = await client.search("DocumentReference", {"patient": patient_id})
     resources = _entries(bundle)
 
-    docs: list[Document] = []
-    for res in resources:
+    async def _parse_one(res: dict) -> Document:
         contents = res.get("content") or []
         attachment = contents[0].get("attachment", {}) if contents else {}
         text = await _decode_attachment(client, attachment)
@@ -89,12 +88,13 @@ async def read_documents(client: FhirClient, patient_id: str) -> list[Document]:
         enc_ref = enc_refs[0].get("reference", "") if enc_refs else ""
         enc_id = enc_ref if enc_ref else None
 
-        docs.append(Document(
+        return Document(
             id=res.get("id", ""),
             type=type_label,
             date=res.get("date", ""),
             author=author,
             text=text,
             encounter_id=enc_id or None,
-        ))
-    return docs
+        )
+
+    return list(await asyncio.gather(*[_parse_one(r) for r in resources]))
