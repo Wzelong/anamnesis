@@ -38,7 +38,8 @@
       "Bash(echo \"---EXIT: $?---\")",
       "Bash(uv run *)",
       "WebSearch",
-      "Bash(PYTHONPATH=. uv run pytest -x -q tests/test_telemetry.py tests/test_auth.py)"
+      "Bash(PYTHONPATH=. uv run pytest -x -q tests/test_telemetry.py tests/test_auth.py)",
+      "Bash(curl -sf http://localhost:8042/health)"
     ]
   }
 }

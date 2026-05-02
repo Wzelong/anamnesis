@@ -77,6 +77,27 @@ export interface SourceDocument {
   encounter_id: string | null
 }
 
+export type ChatRole = "user" | "assistant" | "tool"
+
+export interface ProposedEdit {
+  proposalId: string
+  resource: Record<string, unknown>
+  rationale: string
+  status: "pending" | "applied" | "dismissed"
+}
+
+export interface ChatMessage {
+  id: string
+  role: ChatRole
+  content: string
+  toolName?: string
+  toolArgs?: Record<string, unknown>
+  toolStatus?: "pending" | "ok" | "error"
+  toolSummary?: string
+  toolCallId?: string
+  proposedEdit?: ProposedEdit
+}
+
 export interface ChartContext {
   patient: Record<string, unknown>
   conditions: Array<Record<string, unknown>>

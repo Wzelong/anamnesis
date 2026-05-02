@@ -92,7 +92,7 @@ async def propose_augmentations(ctx: Context = None) -> str:
     base = settings.frontend_base_url.rstrip("/")
     identity = get_clinician_identity(ctx) if ctx else None
     if identity:
-        token = await mint_review_token(run_id, result["patient_id"], identity)
+        token = await mint_review_token(identity)
         link = f"{base}/{run_id}?token={token}"
     else:
         link = f"{base}/{run_id}"

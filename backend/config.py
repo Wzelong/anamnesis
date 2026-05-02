@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     price_table_path: str | None = None
     telemetry_jsonl_dir: str | None = None
     review_token_secret: str = ""
-    frontend_base_url: str = "http://localhost:3000"
+    frontend_base_url: str = "http://localhost:3042"
     warmup_coding_on_startup: bool = True
 
     model_config = SettingsConfigDict(

@@ -1,7 +1,12 @@
 import { usePathname } from "next/navigation"
 import { create } from "zustand"
 import { api } from "./api"
-import type { Proposal, ProposalDetail, Run } from "./types"
+import type { ChatMessage, Proposal, ProposalDetail, Run } from "./types"
+
+const SLIDING_WINDOW_USER_TURNS = 10
+let chatAbortController: AbortController | null = null
+let chatMsgCounter = 0
+const nextMsgId = () => `m_${Date.now().toString(36)}_${(chatMsgCounter++).toString(36)}`
 
 const TOKEN_STORAGE_KEY = "anamnesis.review_token"
 
@@ -39,6 +44,11 @@ interface AppState {
   rightTab: "notes" | "chart" | "chat"
   contentView: "detail" | "right"
 
+  chatByRun: Record<string, ChatMessage[]>
+  chatStreaming: boolean
+  chatStatus: string | null
+  chatError: string | null
+
   fetchRuns: () => Promise<void>
   toggleRunSelection: (id: string) => void
   selectAllRuns: (allIds: string[]) => void
@@ -59,6 +69,11 @@ interface AppState {
   setRunPanelOverride: (v: boolean | null) => void
   setRightTab: (tab: "notes" | "chart" | "chat") => void
   setContentView: (v: "detail" | "right") => void
+  sendChatMessage: (text: string) => Promise<void>
+  stopChat: () => void
+  applyProposedEdit: (messageId: string) => Promise<void>
+  dismissProposedEdit: (messageId: string) => void
+  resetChatForRun: (runId: string) => void
   reset: () => void
 }
 
@@ -84,6 +99,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   runPanelOverride: null,
   rightTab: "notes",
   contentView: "detail",
+
+  chatByRun: {},
+  chatStreaming: false,
+  chatStatus: null,
+  chatError: null,
 
   fetchRuns: async () => {
     set({ runsLoading: true })
@@ -229,7 +249,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setSelectedId: (id) => {
-    set({ selectedId: id, selectedDetail: null, contentView: "detail" })
+    set({ selectedId: id, selectedDetail: null })
     if (id) get().fetchDetail(id)
   },
 
@@ -249,7 +269,89 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setContentView: (v) => set({ contentView: v }),
 
+  resetChatForRun: (runId) => {
+    const next = { ...get().chatByRun }
+    delete next[runId]
+    set({ chatByRun: next })
+  },
+
+  stopChat: () => {
+    chatAbortController?.abort()
+    chatAbortController = null
+    set({ chatStreaming: false, chatStatus: null })
+  },
+
+  sendChatMessage: async (text) => {
+    const { runId, token, selectedId, chatByRun } = get()
+    if (!runId || !text.trim()) return
+    if (!token) {
+      set({ chatError: "Sign in with the review link to chat." })
+      return
+    }
+
+    const trimmed = text.trim()
+    const userMsg: ChatMessage = { id: nextMsgId(), role: "user", content: trimmed }
+    const existing = chatByRun[runId] ?? []
+    const next = [...existing, userMsg]
+    set({
+      chatByRun: { ...chatByRun, [runId]: next },
+      chatStreaming: true,
+      chatStatus: null,
+      chatError: null,
+    })
+
+    const payload = buildSlidingWindow(next)
+    const ctrl = new AbortController()
+    chatAbortController = ctrl
+
+    try {
+      const stream = await api.chatStream(
+        runId,
+        { messages: payload, selected_proposal_id: selectedId },
+        token,
+        ctrl.signal,
+      )
+      await consumeChatStream(stream, runId)
+    } catch (err) {
+      if (ctrl.signal.aborted) return
+      set({ chatError: err instanceof Error ? err.message : "Chat failed" })
+    } finally {
+      if (chatAbortController === ctrl) chatAbortController = null
+      set({ chatStreaming: false, chatStatus: null })
+    }
+  },
+
+  applyProposedEdit: async (messageId) => {
+    const { runId, token, chatByRun } = get()
+    if (!runId || !token) return
+    const msgs = chatByRun[runId] ?? []
+    const msg = msgs.find((m) => m.id === messageId)
+    if (!msg?.proposedEdit || msg.proposedEdit.status !== "pending") return
+
+    const { proposalId, resource } = msg.proposedEdit
+    try {
+      await get().editProposal(proposalId, resource)
+      updateChatMessage(messageId, runId, (m) => ({
+        ...m,
+        proposedEdit: m.proposedEdit && { ...m.proposedEdit, status: "applied" },
+      }))
+    } catch (err) {
+      set({ chatError: err instanceof Error ? err.message : "Edit failed" })
+    }
+  },
+
+  dismissProposedEdit: (messageId) => {
+    const { runId } = get()
+    if (!runId) return
+    updateChatMessage(messageId, runId, (m) => ({
+      ...m,
+      proposedEdit: m.proposedEdit && { ...m.proposedEdit, status: "dismissed" },
+    }))
+  },
+
   reset: () => {
+    chatAbortController?.abort()
+    chatAbortController = null
     persistToken(null)
     set({
       runs: [],
@@ -265,9 +367,166 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedId: null,
       selectedDetail: null,
       detailLoading: false,
+      chatByRun: {},
+      chatStreaming: false,
+      chatStatus: null,
+      chatError: null,
     })
   },
 }))
+
+function buildSlidingWindow(messages: ChatMessage[]): Array<{ role: string; content: string }> {
+  const userIdxs: number[] = []
+  for (let i = 0; i < messages.length; i++) {
+    if (messages[i].role === "user") userIdxs.push(i)
+  }
+  const cutoff = userIdxs.length > SLIDING_WINDOW_USER_TURNS
+    ? userIdxs[userIdxs.length - SLIDING_WINDOW_USER_TURNS]
+    : 0
+  return messages
+    .slice(cutoff)
+    .filter((m) => (m.role === "user" || m.role === "assistant") && m.content)
+    .map((m) => ({ role: m.role, content: m.content }))
+}
+
+function updateChatMessage(
+  messageId: string,
+  runId: string,
+  updater: (m: ChatMessage) => ChatMessage,
+) {
+  const state = useAppStore.getState()
+  const list = state.chatByRun[runId]
+  if (!list) return
+  const idx = list.findIndex((m) => m.id === messageId)
+  if (idx === -1) return
+  const next = list.slice()
+  next[idx] = updater(list[idx])
+  useAppStore.setState({ chatByRun: { ...state.chatByRun, [runId]: next } })
+}
+
+function pushChatMessage(runId: string, msg: ChatMessage) {
+  const state = useAppStore.getState()
+  const list = state.chatByRun[runId] ?? []
+  useAppStore.setState({
+    chatByRun: { ...state.chatByRun, [runId]: [...list, msg] },
+  })
+}
+
+function appendToLastAssistantText(runId: string, delta: string): string {
+  const state = useAppStore.getState()
+  const list = state.chatByRun[runId] ?? []
+  const last = list[list.length - 1]
+  if (last && last.role === "assistant" && !last.toolName && !last.proposedEdit) {
+    const updated: ChatMessage = { ...last, content: last.content + delta }
+    const next = list.slice(0, -1).concat(updated)
+    useAppStore.setState({ chatByRun: { ...state.chatByRun, [runId]: next } })
+    return last.id
+  }
+  const newMsg: ChatMessage = { id: nextMsgId(), role: "assistant", content: delta }
+  useAppStore.setState({
+    chatByRun: { ...state.chatByRun, [runId]: [...list, newMsg] },
+  })
+  return newMsg.id
+}
+
+const HUMAN_TOOL_NAME: Record<string, string> = {
+  list_proposals: "Listing proposals",
+  get_proposal: "Reading proposal",
+  get_chart: "Reading chart",
+  get_doc: "Reading document",
+  search_codes: "Searching codes",
+  propose_edit: "Drafting edit",
+}
+
+async function consumeChatStream(stream: ReadableStream<Uint8Array>, runId: string) {
+  const reader = stream.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ""
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const events = buffer.split("\n\n")
+    buffer = events.pop() ?? ""
+    for (const raw of events) {
+      const line = raw.split("\n").find((l) => l.startsWith("data:"))
+      if (!line) continue
+      const json = line.slice(5).trim()
+      if (!json) continue
+      try {
+        handleChatEvent(JSON.parse(json), runId)
+      } catch {
+        // ignore malformed event
+      }
+    }
+  }
+}
+
+function handleChatEvent(
+  event: { type: string; [k: string]: unknown },
+  runId: string,
+) {
+  switch (event.type) {
+    case "text":
+      appendToLastAssistantText(runId, String(event.delta ?? ""))
+      useAppStore.setState({ chatStatus: null })
+      break
+    case "reasoning":
+      useAppStore.setState((s) => ({
+        chatStatus: (s.chatStatus ?? "") + String(event.summary ?? ""),
+      }))
+      break
+    case "tool_call_start": {
+      const name = String(event.name ?? "")
+      const id = String(event.id ?? "")
+      pushChatMessage(runId, {
+        id: nextMsgId(),
+        role: "tool",
+        content: "",
+        toolName: name,
+        toolArgs: (event.args as Record<string, unknown>) ?? {},
+        toolStatus: "pending",
+        toolCallId: id,
+      })
+      useAppStore.setState({ chatStatus: HUMAN_TOOL_NAME[name] ?? name })
+      break
+    }
+    case "tool_call_result": {
+      const id = String(event.id ?? "")
+      const ok = Boolean(event.ok)
+      const summary = String(event.summary ?? "")
+      const list = useAppStore.getState().chatByRun[runId] ?? []
+      const idx = list.findIndex((m) => m.toolCallId === id)
+      if (idx === -1) break
+      const next = list.slice()
+      next[idx] = {
+        ...list[idx],
+        toolStatus: ok ? "ok" : "error",
+        toolSummary: summary,
+      }
+      useAppStore.setState((s) => ({ chatByRun: { ...s.chatByRun, [runId]: next } }))
+      break
+    }
+    case "proposed_edit": {
+      const proposalId = String(event.proposal_id ?? "")
+      const resource = (event.resource as Record<string, unknown>) ?? {}
+      const rationale = String(event.rationale ?? "")
+      pushChatMessage(runId, {
+        id: nextMsgId(),
+        role: "assistant",
+        content: "",
+        proposedEdit: { proposalId, resource, rationale, status: "pending" },
+      })
+      break
+    }
+    case "error":
+      useAppStore.setState({ chatError: String(event.message ?? "Chat error") })
+      break
+    case "done":
+      useAppStore.setState({ chatStatus: null })
+      break
+  }
+}
 
 export function useRunPanelOpen(): boolean {
   const pathname = usePathname()

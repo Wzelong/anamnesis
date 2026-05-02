@@ -6,7 +6,6 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
-  Ban,
   CheckCircle2,
   Code,
   DatabaseSearch,
@@ -15,11 +14,8 @@ import {
   Inbox,
   Minus,
   NotepadText,
-  Pencil,
   Save,
-  ShieldAlert,
-  Sparkles,
-  Stamp,
+  MessageCircleQuestionMark,
   Undo2,
   XCircle,
 } from "lucide-react"
@@ -187,7 +183,7 @@ export function ProposalDetailPanel() {
     { value: "detail", label: "Detail", icon: <FileSliders className="size-3.5" /> },
     { value: "notes", label: "Notes", icon: <FileText className="size-3.5" /> },
     { value: "chart", label: "FHIR store", icon: <DatabaseSearch className="size-3.5" /> },
-    { value: "chat", label: "AI chat", icon: <Sparkles className="size-3.5" /> },
+    { value: "chat", label: "AI chat", icon: <MessageCircleQuestionMark className="size-3.5" /> },
   ]
   const activeNavTab: typeof navTabs[number]["value"] = contentView === "detail" ? "detail" : rightTab
   const handleNavTab = (v: typeof navTabs[number]["value"]) => {
@@ -570,19 +566,18 @@ function UnauthenticatedNotice({ tokenValid }: { tokenValid: boolean | null }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <div
+        <span
           className={cn(
-            "flex items-center gap-1.5 text-xs cursor-default",
+            "text-xs cursor-default",
             verifying ? "text-muted-foreground" : "text-destructive",
           )}
           role="status"
         >
-          <ShieldAlert className="size-3.5" />
-          <span>{verifying ? "Verifying access…" : "Read-only — review token required"}</span>
-        </div>
+          {verifying ? "Verifying access…" : "Read-only — review token required"}
+        </span>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-[220px] [text-wrap:pretty]">
-        Writes need a per-clinician review token from the agent's deep link, so every FHIR change is attributable for audit.
+      <TooltipContent side="top" className="max-w-[240px] [text-wrap:pretty]">
+        Writes need an alias of the clinician's Prompt Opinion session. Without it, no FHIR change — Provenance always names a verified clinician. Production would SSO-embed this surface.
       </TooltipContent>
     </Tooltip>
   )
@@ -608,7 +603,6 @@ function ReviewActions({ tokenValid, decided, submitting, onEdit, onReject, onAc
         onClick={onEdit}
         disabled={decided || submitting || locked}
       >
-        <Pencil className="size-3" />
         Edit
       </Button>
       <Button
@@ -618,7 +612,6 @@ function ReviewActions({ tokenValid, decided, submitting, onEdit, onReject, onAc
         onClick={onReject}
         disabled={decided || submitting || locked}
       >
-        <Ban className="size-3" />
         Reject
       </Button>
       <Button
@@ -628,7 +621,6 @@ function ReviewActions({ tokenValid, decided, submitting, onEdit, onReject, onAc
         onClick={onAccept}
         disabled={decided || submitting || locked}
       >
-        <Stamp className="size-3" />
         Accept
       </Button>
     </>

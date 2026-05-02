@@ -60,4 +60,28 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ resource }),
     }),
+
+  chatStream: async (
+    runId: string,
+    body: {
+      messages: Array<{ role: string; content: string }>
+      selected_proposal_id: string | null
+    },
+    token: string,
+    signal: AbortSignal,
+  ): Promise<ReadableStream<Uint8Array>> => {
+    const res = await fetch(`${BASE}/api/chat/${runId}/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+      signal,
+    })
+    if (!res.ok || !res.body) {
+      throw new Error(`${res.status} ${res.statusText}`)
+    }
+    return res.body
+  },
 }

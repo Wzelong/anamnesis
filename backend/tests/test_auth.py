@@ -80,7 +80,7 @@ class TestMintAndValidate:
     def test_roundtrip(self):
         async def run():
             identity = ReviewerIdentity(display="Dr. Chen", fhir_reference="Practitioner/p99")
-            token = await mint_review_token("run-1", "patient-1", identity)
+            token = await mint_review_token(identity)
             result = await validate_review_token(token)
             assert result.display == "Dr. Chen"
             assert result.fhir_reference == "Practitioner/p99"
@@ -89,7 +89,7 @@ class TestMintAndValidate:
     def test_roundtrip_no_fhir_reference(self):
         async def run():
             identity = ReviewerIdentity(display="Authenticated via Prompt Opinion")
-            token = await mint_review_token("run-2", "patient-2", identity)
+            token = await mint_review_token(identity)
             result = await validate_review_token(token)
             assert result.display == "Authenticated via Prompt Opinion"
             assert result.fhir_reference is None
@@ -98,9 +98,17 @@ class TestMintAndValidate:
     def test_token_is_short_and_prefixed(self):
         async def run():
             identity = ReviewerIdentity(display="Dr. Test")
-            token = await mint_review_token("run-x", "patient-y", identity)
+            token = await mint_review_token(identity)
             assert token.startswith("rev_")
             assert len(token) <= 16
+        _run(run())
+
+    def test_each_mint_yields_a_distinct_token(self):
+        async def run():
+            identity = ReviewerIdentity(display="Dr. Test")
+            t1 = await mint_review_token(identity)
+            t2 = await mint_review_token(identity)
+            assert t1 != t2
         _run(run())
 
     def test_unknown_token_raises(self):
@@ -114,7 +122,7 @@ class TestMintAndValidate:
             from db import AsyncSessionLocal, ReviewToken
 
             identity = ReviewerIdentity(display="Dr. Test")
-            token = await mint_review_token("run-3", "patient-3", identity)
+            token = await mint_review_token(identity)
             async with AsyncSessionLocal() as session:
                 await session.execute(
                     update(ReviewToken)

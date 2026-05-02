@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, ChevronDown, DatabaseSearch, FileSliders, FileText, Inbox, Sparkles } from "lucide-react"
+import { ArrowLeft, Check, ChevronDown, DatabaseSearch, FileSliders, FileText, Inbox, MessageCircleQuestionMark } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAppStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
@@ -34,14 +34,14 @@ interface Props {
 const TABS: Array<{ value: Tab; label: string; icon: React.ReactNode }> = [
   { value: "notes", label: "Notes", icon: <FileText className="size-3.5" /> },
   { value: "chart", label: "FHIR store", icon: <DatabaseSearch className="size-3.5" /> },
-  { value: "chat", label: "AI chat", icon: <Sparkles className="size-3.5" /> },
+  { value: "chat", label: "AI chat", icon: <MessageCircleQuestionMark className="size-3.5" /> },
 ]
 
 const NAV_TABS: Array<{ value: "detail" | "notes" | "chart" | "chat"; label: string; icon: React.ReactNode }> = [
   { value: "detail", label: "Detail", icon: <FileSliders className="size-3.5" /> },
   { value: "notes", label: "Notes", icon: <FileText className="size-3.5" /> },
   { value: "chart", label: "FHIR store", icon: <DatabaseSearch className="size-3.5" /> },
-  { value: "chat", label: "AI chat", icon: <Sparkles className="size-3.5" /> },
+  { value: "chat", label: "AI chat", icon: <MessageCircleQuestionMark className="size-3.5" /> },
 ]
 
 export function RightPanel({ runId }: Props) {
@@ -120,6 +120,7 @@ export function RightPanel({ runId }: Props) {
           citations={detail?.citations ?? []}
           activeDocId={activeDocId}
           setActiveDocId={setActiveDocId}
+          detailLabel={detail?.display_label}
         />
         <div className="flex-1" />
         <div className="hidden xl:flex items-center gap-1 shrink-0">
@@ -150,21 +151,23 @@ export function RightPanel({ runId }: Props) {
           <Inbox className="size-8" />
           <div className="text-sm">Select a proposal to see context</div>
         </div>
-      ) : !detail ? (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading…</div>
       ) : tab === "notes" ? (
-        <RightPanelNotes
-          selectedId={selectedId}
-          citations={detail.citations}
-          documents={documents}
-          activeDocId={activeDocId}
-          setActiveDocId={setActiveDocId}
-        />
+        !detail ? (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading…</div>
+        ) : (
+          <RightPanelNotes
+            selectedId={selectedId}
+            citations={detail.citations}
+            documents={documents}
+            activeDocId={activeDocId}
+            setActiveDocId={setActiveDocId}
+          />
+        )
       ) : tab === "chart" ? (
         <RightPanelChart
           chart={chart}
-          classification={detail.classification}
-          chartMatches={detail.chart_matches}
+          classification={detail?.classification ?? "NEW"}
+          chartMatches={detail?.chart_matches ?? []}
         />
       ) : (
         <RightPanelChat />
@@ -181,6 +184,7 @@ function HeaderContext({
   citations,
   activeDocId,
   setActiveDocId,
+  detailLabel,
 }: {
   tab: Tab
   activeDoc: SourceDocument | null
@@ -189,6 +193,7 @@ function HeaderContext({
   citations: ResolvedCitation[]
   activeDocId: string | null
   setActiveDocId: (id: string) => void
+  detailLabel?: string | null
 }) {
   if (tab === "notes") {
     return (
@@ -204,7 +209,7 @@ function HeaderContext({
   if (tab === "chart") {
     return <ChartHeader chart={chart} />
   }
-  return <span className="text-[11px] text-muted-foreground">Coming soon</span>
+  return <ChatHeader detailLabel={detailLabel ?? null} />
 }
 
 function NotesHeader({
@@ -291,6 +296,14 @@ function ChartHeader({ chart }: { chart: import("@/lib/types").ChartContext | nu
   return (
     <div className="min-w-0 truncate text-[11px] text-muted-foreground tabular-nums">
       {meta}
+    </div>
+  )
+}
+
+function ChatHeader({ detailLabel: _detailLabel }: { detailLabel: string | null }) {
+  return (
+    <div className="min-w-0 truncate text-[11px] text-muted-foreground tabular-nums">
+      gpt-5.4-mini · low reasoning
     </div>
   )
 }

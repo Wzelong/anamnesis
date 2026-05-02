@@ -1,8 +1,10 @@
-"""Review token minting, validation, and clinician identity extraction.
+"""Review-link aliases for the Prompt Opinion clinician session.
 
-Review tokens are short opaque strings (e.g. `rev_a3f9k2x8`) backed by a
-SQLite table. They replace a self-contained JWT to keep deep-link URLs small
-while remaining durable across backend restarts.
+Prompt Opinion authenticates the clinician and mints the SHARP access token.
+We extract the identity claims at MCP-call time and persist them under a
+short opaque alias (e.g. `rev_a3f9k2x8`) so the deep-link URL stays clean.
+The alias is just an addressing handle to the identity we already verified —
+production would front this surface with platform SSO instead.
 """
 from __future__ import annotations
 
@@ -45,12 +47,7 @@ def extract_clinician_identity(access_token: str) -> ReviewerIdentity:
     return ReviewerIdentity(display=display, fhir_reference=fhir_reference)
 
 
-async def mint_review_token(
-    run_id: str,
-    patient_id: str,
-    identity: ReviewerIdentity,
-) -> str:
-    del run_id, patient_id
+async def mint_review_token(identity: ReviewerIdentity) -> str:
     from db import AsyncSessionLocal, ReviewToken
 
     token = short_id("rev")
