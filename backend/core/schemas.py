@@ -243,6 +243,21 @@ class ChartMatch(_Strict):
     match_type: Literal["exact_code", "ingredient", "display_text"] = "exact_code"
 
 
+class ConfidenceAxis(_Strict):
+    score: float
+    weight: float
+    contribution: float
+    reason: str
+
+
+class ConfidenceBreakdown(_Strict):
+    source: ConfidenceAxis
+    certainty: ConfidenceAxis
+    coding: ConfidenceAxis
+    match: ConfidenceAxis
+    classification: ConfidenceAxis
+
+
 class ReconciliationResult(_Strict):
     candidate: MergedCandidate
     classification: Literal["NEW", "DUPLICATE", "UPDATING", "CONFLICTING"]
@@ -251,6 +266,7 @@ class ReconciliationResult(_Strict):
     confidence_score: float = 0.5
     confidence_tier: Literal["CONFIDENT", "REVIEW", "ATTENTION"] = "REVIEW"
     flags: list[str] = Field(default_factory=list)
+    confidence_breakdown: ConfidenceBreakdown | None = None
 
 
 class LLMReconcileResult(_Strict):
@@ -276,5 +292,6 @@ class Proposal(_Strict):
     confidence_score: float
     confidence_tier: Literal["CONFIDENT", "REVIEW", "ATTENTION"]
     flags: list[str] = Field(default_factory=list)
+    confidence_breakdown: ConfidenceBreakdown | None = None
     supersedes: list[str] = Field(default_factory=list)
     conflicts_with: list[str] = Field(default_factory=list)

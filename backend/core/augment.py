@@ -572,6 +572,7 @@ def assemble_proposals(
             confidence_score=result.confidence_score,
             confidence_tier=result.confidence_tier,
             flags=result.flags,
+            confidence_breakdown=result.confidence_breakdown,
             supersedes=supersedes,
             conflicts_with=conflicts_with,
         ))

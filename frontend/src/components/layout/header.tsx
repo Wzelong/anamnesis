@@ -44,13 +44,13 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 h-12 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 flex items-center z-50">
-      <div className="pl-2 flex items-center gap-1">
+      <div className="pl-[6px] flex items-center gap-1">
         <Image
           src="/logo.png"
           alt="Anamnesis"
-          width={30}
-          height={30}
-          className="size-[30px]"
+          width={28}
+          height={28}
+          className="size-[28px]"
         />
         <span className="font-semibold text-sm">Anamnesis</span>
       </div>

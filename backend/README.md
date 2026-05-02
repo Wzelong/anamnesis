@@ -21,13 +21,13 @@ Copy `.env.example` to `.env` and fill in values.
 ## Run
 
 ```
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8042
 ```
 
 ## Health check
 
 ```
-curl http://localhost:8000/health
+curl http://localhost:8042/health
 ```
 
 Expected: `{"status":"ok","service":"anamnesis"}`

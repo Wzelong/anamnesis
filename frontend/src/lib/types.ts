@@ -5,6 +5,8 @@ export interface Run {
   status: "empty" | "pending" | "in_review" | "resolved"
   total_proposals: number
   pending_proposals: number
+  pending_by_tier: Partial<Record<"ATTENTION" | "REVIEW" | "CONFIDENT", number>>
+  pending_by_classification: Partial<Record<"NEW" | "UPDATING" | "CONFLICTING", number>>
   started_at: string | null
 }
 
@@ -26,11 +28,27 @@ export interface ProposalDetail extends Proposal {
   classification_reasoning: string
   extraction_reasoning: string
   merge_reasoning: string | null
+  confidence_breakdown: ConfidenceBreakdown | null
   chart_matches: ChartMatch[]
   supersedes: string[]
   conflicts_with: string[]
   reviewed_at: string | null
   reviewed_by: string | null
+}
+
+export interface ConfidenceAxis {
+  score: number
+  weight: number
+  contribution: number
+  reason: string
+}
+
+export interface ConfidenceBreakdown {
+  source: ConfidenceAxis
+  certainty: ConfidenceAxis
+  coding: ConfidenceAxis
+  match: ConfidenceAxis
+  classification: ConfidenceAxis
 }
 
 export interface ResolvedCitation {

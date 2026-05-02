@@ -22,6 +22,8 @@ from core.extraction import parse_structured
 from core.prompts import PROMPT_RECONCILE, RECONCILE_TYPE_RULES
 from core.schemas import (
     ChartMatch,
+    ConfidenceAxis,
+    ConfidenceBreakdown,
     LLMReconcileBatchResult,
     MergedCandidate,
     ReconciliationResult,
@@ -490,21 +492,34 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
 
     n_docs = len({sr.document_id for sr in refs})
     if n_docs >= 3:
-        source_score = 1.0
+        source_score, source_reason = 1.0, f"Mentioned in {n_docs} notes"
     elif n_docs == 2:
-        source_score = 0.7
+        source_score, source_reason = 0.7, "Mentioned in 2 notes"
     else:
-        source_score = 0.4
+        source_score, source_reason = 0.4, "Single mention"
 
     certainty = item.get("certainty", "probable")
     certainty_score = _CERTAINTY_SCORES.get(certainty, 0.6)
+    certainty_reason = {
+        "definite": "Stated assertively",
+        "probable": "Probable in source",
+        "uncertain": "Uncertain or secondhand",
+    }.get(certainty, "Probable in source")
 
     codings = item.get("coding", [])
     has_real_code = any("code" in c for c in codings)
     if has_real_code:
-        coding_score = 0.7 + min(0.3, len([c for c in codings if "code" in c]) * 0.15)
+        n_real = len([c for c in codings if "code" in c])
+        coding_score = 0.7 + min(0.3, n_real * 0.15)
+        systems = {c.get("system", "").split("/")[-1] for c in codings if "system" in c}
+        systems.discard("")
+        if len(systems) >= 2:
+            coding_reason = f"Coded in {len(systems)} systems ({', '.join(sorted(systems))})"
+        else:
+            coding_reason = f"{n_real} terminology code{'s' if n_real != 1 else ''}"
     else:
         coding_score = 0.1
+        coding_reason = "No terminology code"
 
     best_match_type = None
     if result.chart_matches:
@@ -514,14 +529,28 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
     cls = result.classification
     if cls == "CONFLICTING":
         match_score = 0.0
+        match_reason = "Conflicts with chart"
     elif cls == "DUPLICATE":
-        match_score = 1.0 if best_match_type == "exact_code" else 0.8
+        if best_match_type == "exact_code":
+            match_score, match_reason = 1.0, "Exact code match in chart"
+        else:
+            match_score, match_reason = 0.8, "Match in chart (non-exact)"
     elif cls == "UPDATING":
-        match_score = 0.9 if best_match_type in ("exact_code", "ingredient") else 0.6
+        if best_match_type in ("exact_code", "ingredient"):
+            match_score, match_reason = 0.9, f"Strong chart match ({best_match_type})"
+        else:
+            match_score, match_reason = 0.6, "Approximate chart match"
     else:
         match_score = 0.5
+        match_reason = "No prior chart anchor"
 
     class_score = _CLASSIFICATION_SCORES.get(cls, 0.5)
+    class_reason = {
+        "DUPLICATE": "Already in chart",
+        "UPDATING": "Updates existing record",
+        "NEW": "New finding",
+        "CONFLICTING": "Conflicts with existing record",
+    }.get(cls, cls)
 
     composite = (
         source_score * _W_SOURCE
@@ -529,6 +558,39 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
         + coding_score * _W_CODING
         + match_score * _W_MATCH
         + class_score * _W_CLASS
+    )
+
+    breakdown = ConfidenceBreakdown(
+        source=ConfidenceAxis(
+            score=round(source_score, 3),
+            weight=_W_SOURCE,
+            contribution=round(source_score * _W_SOURCE, 3),
+            reason=source_reason,
+        ),
+        certainty=ConfidenceAxis(
+            score=round(certainty_score, 3),
+            weight=_W_CERTAINTY,
+            contribution=round(certainty_score * _W_CERTAINTY, 3),
+            reason=certainty_reason,
+        ),
+        coding=ConfidenceAxis(
+            score=round(coding_score, 3),
+            weight=_W_CODING,
+            contribution=round(coding_score * _W_CODING, 3),
+            reason=coding_reason,
+        ),
+        match=ConfidenceAxis(
+            score=round(match_score, 3),
+            weight=_W_MATCH,
+            contribution=round(match_score * _W_MATCH, 3),
+            reason=match_reason,
+        ),
+        classification=ConfidenceAxis(
+            score=round(class_score, 3),
+            weight=_W_CLASS,
+            contribution=round(class_score * _W_CLASS, 3),
+            reason=class_reason,
+        ),
     )
 
     if cls == "CONFLICTING":
@@ -579,6 +641,7 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
         "confidence_score": round(composite, 3),
         "confidence_tier": tier,
         "flags": flags,
+        "confidence_breakdown": breakdown,
     })
 
 

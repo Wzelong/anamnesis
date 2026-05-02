@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8042"
 
 export async function apiFetch<T = unknown>(
   path: string,
@@ -14,6 +14,12 @@ export async function apiFetch<T = unknown>(
 
 export const api = {
   listRuns: () => apiFetch("/api/runs"),
+
+  deleteRuns: (ids: string[]) =>
+    apiFetch("/api/runs/delete", {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    }),
 
   reset: () => apiFetch("/api/reset", { method: "POST" }),
 

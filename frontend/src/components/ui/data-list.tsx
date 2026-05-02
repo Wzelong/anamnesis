@@ -13,7 +13,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Search, X, ListFilter, ChevronLeft, ChevronRight, CheckCheck } from "lucide-react"
+import { Search, ListFilter, ChevronLeft, ChevronRight, CheckCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { DataListProps } from "./data-list-types"
 
@@ -246,15 +246,6 @@ export function DataList<T>({
                   {action.icon}
                 </Button>
               ))}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 cursor-pointer text-muted-foreground"
-                onClick={clearSelection}
-                aria-label="Clear selection"
-              >
-                <X className="size-3" />
-              </Button>
             </div>
           </>
         ) : (
@@ -317,7 +308,7 @@ export function DataList<T>({
                 key={itemId}
                 ref={idx === 0 ? firstItemRef : null}
                 className={cn(
-                  "flex items-start gap-2 px-3 py-2.5 border-b transition-colors select-none",
+                  "flex items-start gap-2 px-2 py-2.5 border-b transition-colors select-none",
                   isActive ? "bg-muted/70" : "hover:bg-muted/50",
                   onItemClick && "cursor-pointer",
                 )}

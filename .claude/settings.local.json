@@ -32,7 +32,10 @@
       "Bash(python -m scripts.build_indexes --system icd10 --force)",
       "Bash(python -m pytest tests/ -v -k \"not Stage2\" --tb=no -q)",
       "Bash(python -m pytest tests/ -v -k \"Stage2\" --tb=short -q)",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "Bash(npx --no-install tsc --noEmit)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"---EXIT: $?---\")"
     ]
   }
 }

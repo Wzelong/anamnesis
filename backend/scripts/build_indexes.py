@@ -161,9 +161,9 @@ def build_one(
     display_col = "display" if cfg["display_is_list"] else cfg["display_col"]
     codes = np.asarray(meta_table.column(code_col).to_pylist(), dtype=str)
     displays = np.asarray(meta_table.column(display_col).to_pylist(), dtype=str)
-    tmp_meta_npz = output_dir / f"{system}_metadata.npz.tmp"
+    tmp_meta_npz = output_dir / f"{system}_metadata.tmp.npz"
     np.savez_compressed(tmp_meta_npz, codes=codes, displays=displays)
-    os.replace(tmp_meta_npz.with_suffix(""), meta_npz_path)
+    os.replace(tmp_meta_npz, meta_npz_path)
     print(f"  Wrote {meta_npz_path.name} ({meta_npz_path.stat().st_size / 1024 / 1024:.1f} MB)")
 
     del table, meta_table

@@ -23,17 +23,17 @@ python -m venv .venv
 # source .venv/bin/activate        # macOS/Linux
 pip install -e ".[dev]"
 cp .env.example .env               # then fill values
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8042
 ```
 
-Sanity check: `curl http://localhost:8000/health` → `{"status":"ok","service":"anamnesis"}`.
+Sanity check: `curl http://localhost:8042/health` → `{"status":"ok","service":"anamnesis"}`.
 
 ### 2. ngrok tunnel
 
 Our reserved static domain: **`ogle-spinach-splendor.ngrok-free.dev`**
 
 ```bash
-ngrok http --domain=ogle-spinach-splendor.ngrok-free.dev 8000
+ngrok http --domain=ogle-spinach-splendor.ngrok-free.dev 8042
 ```
 
 Public MCP URL: `https://ogle-spinach-splendor.ngrok-free.dev/mcp`

@@ -22,12 +22,106 @@ log = logging.getLogger(__name__)
 _TIER_ORDER = {"ATTENTION": 0, "REVIEW": 1, "CONFIDENT": 2}
 
 
+def _cc_text(cc: dict | None) -> str | None:
+    if not isinstance(cc, dict):
+        return None
+    if cc.get("text"):
+        return cc["text"]
+    coding = cc.get("coding") or []
+    if coding and isinstance(coding[0], dict):
+        return coding[0].get("display")
+    return None
+
+
+def _qty_str(q: dict | None) -> str | None:
+    if not isinstance(q, dict) or q.get("value") is None:
+        return None
+    v = q["value"]
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)
+    u = q.get("unit") or ""
+    return f"{v} {u}".rstrip()
+
+
+def _observation_label(r: dict) -> str:
+    name = _cc_text(r.get("code")) or "observation"
+
+    components = r.get("component") or []
+    if components:
+        sys_v = dia_v = None
+        unit = "mmHg"
+        for c in components:
+            label = (_cc_text(c.get("code")) or "").lower()
+            vq = c.get("valueQuantity") or {}
+            v = vq.get("value")
+            if v is None:
+                continue
+            if isinstance(v, float) and v.is_integer():
+                v = int(v)
+            u = vq.get("unit")
+            if "systolic" in label:
+                sys_v, unit = v, u or unit
+            elif "diastolic" in label:
+                dia_v, unit = v, u or unit
+        if sys_v is not None and dia_v is not None:
+            return f"BP {sys_v}/{dia_v} {unit}".rstrip()
+
+    qty = _qty_str(r.get("valueQuantity"))
+    if qty:
+        return f"{name} {qty}"
+
+    vc_text = _cc_text(r.get("valueCodeableConcept"))
+    if vc_text:
+        return f"{name}: {vc_text}"
+
+    return name
+
+
+def _family_hx_label(r: dict) -> str:
+    rel = _cc_text(r.get("relationship")) or "family"
+    conditions = r.get("condition") or []
+    if conditions and isinstance(conditions[0], dict):
+        c = conditions[0]
+        cond = _cc_text(c.get("code"))
+        onset = ""
+        oa = c.get("onsetAge") or {}
+        if isinstance(oa, dict) and oa.get("value") is not None:
+            ov = oa["value"]
+            if isinstance(ov, float) and ov.is_integer():
+                ov = int(ov)
+            onset = f" (onset {ov})"
+        elif c.get("onsetString"):
+            onset = f" ({c['onsetString']})"
+        if cond:
+            return f"{rel} — {cond}{onset}"
+    return rel
+
+
+def _allergy_label(r: dict) -> str:
+    name = _cc_text(r.get("code")) or "allergy"
+    reactions = r.get("reaction") or []
+    if reactions and isinstance(reactions[0], dict):
+        m = reactions[0].get("manifestation") or []
+        if m and isinstance(m[0], dict):
+            mt = _cc_text(m[0])
+            if mt:
+                return f"{name} ({mt})"
+    return name
+
+
 def _display_label(resource: dict) -> str:
+    rt = resource.get("resourceType")
+    if rt == "Observation":
+        return _observation_label(resource)
+    if rt == "FamilyMemberHistory":
+        return _family_hx_label(resource)
+    if rt == "AllergyIntolerance":
+        return _allergy_label(resource)
     for path in ("code", "medicationCodeableConcept", "relationship"):
-        cc = resource.get(path)
-        if isinstance(cc, dict) and cc.get("text"):
-            return cc["text"]
-    return resource.get("resourceType", "unknown")
+        text = _cc_text(resource.get(path))
+        if text:
+            return text
+    return rt or "unknown"
 
 
 def _proposal_to_record(proposal, run_id: str, patient_id: str) -> ProposalRecord:
@@ -36,6 +130,7 @@ def _proposal_to_record(proposal, run_id: str, patient_id: str) -> ProposalRecor
         "extraction_reasoning": proposal.extraction_reasoning,
         "merge_reasoning": proposal.merge_reasoning,
         "flags": proposal.flags,
+        "confidence_breakdown": proposal.confidence_breakdown.model_dump(mode="json") if proposal.confidence_breakdown else None,
         "chart_matches": [m.model_dump(mode="json") for m in proposal.chart_matches],
         "supersedes": proposal.supersedes,
         "conflicts_with": proposal.conflicts_with,
@@ -76,6 +171,7 @@ def _record_to_dict(record: ProposalRecord, *, full: bool = False) -> dict:
         d["classification_reasoning"] = metadata.get("classification_reasoning", "")
         d["extraction_reasoning"] = metadata.get("extraction_reasoning", "")
         d["merge_reasoning"] = metadata.get("merge_reasoning")
+        d["confidence_breakdown"] = metadata.get("confidence_breakdown")
         d["chart_matches"] = metadata.get("chart_matches", [])
         d["supersedes"] = metadata.get("supersedes", [])
         d["conflicts_with"] = metadata.get("conflicts_with", [])

@@ -3,6 +3,8 @@
 import { use, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { useAppStore } from "@/lib/store"
+import { ProposalListPanel } from "@/components/layout/proposal-list-panel"
+import { ProposalDetailPanel } from "@/components/layout/proposal-detail-panel"
 
 export default function RunPage({ params }: { params: Promise<{ runId: string }> }) {
   const { runId } = use(params)
@@ -17,8 +19,10 @@ export default function RunPage({ params }: { params: Promise<{ runId: string }>
   }, [runId, fetchProposals, searchParams, setToken])
 
   return (
-    <div className="flex-1 flex items-center justify-center">
-      <p className="text-sm text-muted-foreground">Detail view coming next</p>
+    <div className="flex-1 flex min-w-0 h-full min-h-0 border-b">
+      <ProposalListPanel />
+      <ProposalDetailPanel />
+      <div className="flex-1 min-w-0" />
     </div>
   )
 }

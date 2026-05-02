@@ -10,11 +10,11 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy import func, select as sa_select
+from sqlalchemy import delete as sa_delete, func, select as sa_select
 
 from context.auth import ReviewerIdentity, validate_review_token
 from db import get_session
-from db.models import PipelineRun, ProposalRecord
+from db.models import LLMCall, PipelineRun, ProposalRecord
 from services import proposals as proposal_svc
 
 _CACHE_DIR = Path(__file__).resolve().parent.parent / ".cache"
@@ -32,6 +32,10 @@ class RejectRequest(BaseModel):
 
 class EditRequest(BaseModel):
     resource: dict
+
+
+class DeleteRunsRequest(BaseModel):
+    ids: list[str]
 
 
 async def get_reviewer(
@@ -68,6 +72,32 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
     )).all()
     count_map = {r.run_id: {"total": r.total, "pending": r.pending} for r in counts}
 
+    tier_rows = (await session.execute(
+        sa_select(
+            ProposalRecord.run_id,
+            ProposalRecord.confidence_tier,
+            func.count().label("n"),
+        )
+        .where(ProposalRecord.status == "pending")
+        .group_by(ProposalRecord.run_id, ProposalRecord.confidence_tier)
+    )).all()
+    tier_map: dict[str, dict[str, int]] = {}
+    for row in tier_rows:
+        tier_map.setdefault(row.run_id, {})[row.confidence_tier] = row.n
+
+    cls_rows = (await session.execute(
+        sa_select(
+            ProposalRecord.run_id,
+            ProposalRecord.classification,
+            func.count().label("n"),
+        )
+        .where(ProposalRecord.status == "pending")
+        .group_by(ProposalRecord.run_id, ProposalRecord.classification)
+    )).all()
+    cls_map: dict[str, dict[str, int]] = {}
+    for row in cls_rows:
+        cls_map.setdefault(row.run_id, {})[row.classification] = row.n
+
     result = []
     for run in runs:
         c = count_map.get(run.id, {"total": 0, "pending": 0})
@@ -88,9 +118,25 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
             "status": status,
             "total_proposals": total,
             "pending_proposals": pending,
+            "pending_by_tier": tier_map.get(run.id, {}),
+            "pending_by_classification": cls_map.get(run.id, {}),
             "started_at": run.started_at.isoformat() if run.started_at else None,
         })
     return result
+
+
+@router.post("/runs/delete")
+async def delete_runs(
+    body: DeleteRunsRequest,
+    session: AsyncSession = Depends(get_session),
+):
+    if not body.ids:
+        return {"deleted": 0}
+    await session.execute(sa_delete(ProposalRecord).where(ProposalRecord.run_id.in_(body.ids)))
+    await session.execute(sa_delete(LLMCall).where(LLMCall.run_id.in_(body.ids)))
+    result = await session.execute(sa_delete(PipelineRun).where(PipelineRun.id.in_(body.ids)))
+    await session.commit()
+    return {"deleted": result.rowcount or 0}
 
 
 @router.post("/proposals/run")

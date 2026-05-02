@@ -2,12 +2,22 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { PanelLeftClose, PanelLeftOpen, ClipboardList, Search, RefreshCw } from "lucide-react"
+import { ClipboardList, PanelLeftClose, PanelLeftOpen, RefreshCw, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { useAppStore } from "@/lib/store"
-import type { Run } from "@/lib/types"
+import { DataList } from "@/components/ui/data-list"
+import type { BulkAction, ToolbarButton } from "@/components/ui/data-list-types"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useAppStore, useRunPanelOpen, useToggleRunPanel } from "@/lib/store"
 
 const STATUS_VARIANT: Record<string, "destructive" | "secondary" | "default" | "outline"> = {
   pending: "outline",
@@ -23,40 +33,52 @@ const STATUS_LABEL: Record<string, string> = {
   empty: "Empty",
 }
 
-function formatDate(iso: string | null) {
+function formatTimeAgo(iso: string | null) {
   if (!iso) return ""
   const d = new Date(iso)
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+  const now = new Date()
+  const s = Math.max(0, Math.floor((now.getTime() - d.getTime()) / 1000))
+  if (s < 60) return `${s}s`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h`
+  const days = Math.floor(h / 24)
+  if (days < 7) return `${days}d`
+  const sameYear = d.getFullYear() === now.getFullYear()
+  return d.toLocaleDateString(undefined, sameYear
+    ? { month: "short", day: "numeric" }
+    : { month: "short", day: "numeric", year: "numeric" })
 }
 
 export function RunListPanel() {
   const runs = useAppStore((s) => s.runs)
-  const runsLoading = useAppStore((s) => s.runsLoading)
   const fetchRuns = useAppStore((s) => s.fetchRuns)
-  const panelOpen = useAppStore((s) => s.runPanelOpen)
-  const togglePanel = useAppStore((s) => s.toggleRunPanel)
+  const selectedRunIds = useAppStore((s) => s.selectedRunIds)
+  const toggleRunSelection = useAppStore((s) => s.toggleRunSelection)
+  const selectAllRuns = useAppStore((s) => s.selectAllRuns)
+  const clearRunSelection = useAppStore((s) => s.clearRunSelection)
+  const deleteSelectedRuns = useAppStore((s) => s.deleteSelectedRuns)
+  const panelOpen = useRunPanelOpen()
+  const togglePanel = useToggleRunPanel()
   const router = useRouter()
   const pathname = usePathname()
 
   const [search, setSearch] = useState("")
-  const [contentVisible, setContentVisible] = useState(panelOpen)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(50)
   const [spinning, setSpinning] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const handleRefresh = async () => {
     setSpinning(true)
     await fetchRuns()
-    setTimeout(() => setSpinning(false), 1000)
+    setTimeout(() => setSpinning(false), 800)
   }
 
-  useEffect(() => {
-    if (panelOpen) {
-      const t = setTimeout(() => setContentVisible(true), 200)
-      return () => clearTimeout(t)
-    }
-    setContentVisible(false)
-  }, [panelOpen])
+  useEffect(() => { setPage(1) }, [search])
 
-  const activeRunId = pathname === "/" ? null : pathname.split("/")[1]
+  const activeRunId = pathname === "/" ? undefined : pathname.split("/")[1]
 
   const filtered = search.trim()
     ? runs.filter((r) => {
@@ -67,80 +89,128 @@ export function RunListPanel() {
       })
     : runs
 
-  return (
-    <aside
-      className={cn(
-        "shrink-0 overflow-hidden transition-[width] duration-200 ease-out flex flex-col",
-        panelOpen ? "w-[260px] border-r" : "w-[40px]",
-      )}
-    >
-      <div className={cn("h-11 px-2 shrink-0 flex items-center gap-0.5 select-none", panelOpen && "border-b")}>
-        <div className={cn("flex items-center gap-0.5 flex-1 min-w-0", !contentVisible && "hidden")}>
-          <div className="relative flex-1 min-w-0 ml-1">
-            <Search className="absolute left-0 top-[7px] size-3 text-muted-foreground" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search..."
-              className="pl-[18px] h-6 text-xs w-full bg-transparent outline-none placeholder:text-muted-foreground"
-            />
-          </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="size-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
-                onClick={handleRefresh}
-              >
-                <RefreshCw className={cn("size-3.5", spinning && "animate-spin")} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>Refresh</TooltipContent>
-          </Tooltip>
-        </div>
-        <button
-          type="button"
-          className="size-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer ml-auto"
-          onClick={togglePanel}
-        >
-          {panelOpen ? <PanelLeftClose className="size-3.5" /> : <PanelLeftOpen className="size-3.5" />}
-        </button>
-      </div>
+  const start = (page - 1) * pageSize
+  const paged = filtered.slice(start, start + pageSize)
 
-      <div className={cn("flex-1 overflow-y-auto", !contentVisible && "hidden")}>
-        {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2 px-4">
-            <ClipboardList className="size-6 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">
-              {search.trim() ? "No matching runs" : "No runs yet"}
-            </p>
-          </div>
-        ) : (
-          filtered.map((run: Run) => (
-            <button
-              key={run.id}
-              type="button"
-              onClick={() => router.push(`/${run.id}`)}
-              className={cn(
-                "w-full text-left px-3 py-2.5 transition-colors cursor-pointer",
-                activeRunId === run.id ? "bg-muted/70" : "hover:bg-muted/50",
-              )}
+  const toolbarButtons: ToolbarButton[] = [
+    {
+      icon: <RefreshCw className={cn("size-3", spinning && "animate-spin")} />,
+      onClick: handleRefresh,
+      ariaLabel: "Refresh",
+    },
+    {
+      icon: <PanelLeftClose className="size-3" />,
+      onClick: togglePanel,
+      ariaLabel: "Collapse",
+    },
+  ]
+
+  const bulkActions: BulkAction[] = [
+    {
+      icon: <Trash2 className="size-3" />,
+      onClick: () => setConfirmOpen(true),
+      ariaLabel: "Delete selected",
+    },
+  ]
+
+  if (!panelOpen) {
+    return (
+      <aside className="shrink-0 w-[40px] flex flex-col border-r">
+        <div className="h-11 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={togglePanel}
+            className="size-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
+            aria-label="Expand"
+          >
+            <PanelLeftOpen className="size-3.5" />
+          </button>
+        </div>
+      </aside>
+    )
+  }
+
+  return (
+    <>
+      <aside className="shrink-0 w-[260px] border-r flex flex-col">
+        <DataList
+          data={paged}
+          getItemId={(r) => r.id}
+          renderItem={(run) => {
+            const needReview =
+              (run.pending_by_tier?.ATTENTION ?? 0) + (run.pending_by_tier?.REVIEW ?? 0)
+            return (
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm truncate flex-1">
+                    {run.patient_name ?? `Patient ${(run.patient_id ?? run.id).slice(0, 8)}`}
+                  </span>
+                  <Badge variant={STATUS_VARIANT[run.status]} className="text-[10px] px-1 py-0 shrink-0">
+                    {STATUS_LABEL[run.status]}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                  <span className="flex-1 min-w-0 truncate">
+                    {needReview > 0
+                      ? `${needReview} of ${run.total_proposals} need review`
+                      : `${run.total_proposals} proposals`}
+                  </span>
+                  <span className="tabular-nums shrink-0 text-muted-foreground/70">
+                    {formatTimeAgo(run.started_at)}
+                  </span>
+                </div>
+              </div>
+            )
+          }}
+          searchPlaceholder="Search runs..."
+          searchValue={search}
+          onSearchChange={setSearch}
+          pagination={{
+            currentPage: page,
+            pageSize,
+            totalItems: filtered.length,
+            onPageChange: setPage,
+            onPageSizeChange: setPageSize,
+          }}
+          activeId={activeRunId}
+          selectedIds={selectedRunIds}
+          onSelectAll={() => selectAllRuns(paged.map((r) => r.id))}
+          onSelectOne={toggleRunSelection}
+          onClearSelection={clearRunSelection}
+          toolbarButtons={toolbarButtons}
+          bulkActions={bulkActions}
+          onItemClick={(r) => router.push(`/${r.id}`)}
+          emptyState={{
+            icon: <ClipboardList className="size-6 text-muted-foreground" />,
+            message: search.trim() ? "No matching runs" : "No runs yet",
+          }}
+        />
+      </aside>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedRunIds.size} run{selectedRunIds.size === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the runs and their proposals from the working DB. FHIR resources already written are unaffected.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                await deleteSelectedRuns()
+                setConfirmOpen(false)
+                if (activeRunId && !runs.some((r) => r.id === activeRunId)) {
+                  router.push("/")
+                }
+              }}
             >
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-sm font-medium truncate flex-1">
-                  {run.patient_name ?? `Patient ${(run.patient_id ?? run.id).slice(0, 8)}...`}
-                </span>
-                <Badge variant={STATUS_VARIANT[run.status]} className="text-[10px] px-1 py-0 shrink-0">
-                  {STATUS_LABEL[run.status]}
-                </Badge>
-              </div>
-              <div className="text-xs text-muted-foreground mt-0.5">
-                {run.total_proposals} proposals · {formatDate(run.started_at)}
-              </div>
-            </button>
-          ))
-        )}
-      </div>
-    </aside>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
