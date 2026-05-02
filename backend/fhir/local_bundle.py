@@ -26,6 +26,8 @@ _PATIENT_LINKED_TYPES = {
     "FamilyMemberHistory": "family_history",
     "Procedure": "procedures",
     "Encounter": "encounters",
+    "Practitioner": "practitioners",
+    "Organization": "organizations",
 }
 
 

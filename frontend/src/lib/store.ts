@@ -21,6 +21,7 @@ interface AppState {
   detailLoading: boolean
 
   runPanelOverride: boolean | null
+  rightTab: "notes" | "chart" | "chat"
 
   fetchRuns: () => Promise<void>
   toggleRunSelection: (id: string) => void
@@ -40,6 +41,7 @@ interface AppState {
   setSelectedId: (id: string | null) => void
   fetchDetail: (id: string) => Promise<void>
   setRunPanelOverride: (v: boolean | null) => void
+  setRightTab: (tab: "notes" | "chart" | "chat") => void
   reset: () => void
 }
 
@@ -61,6 +63,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   detailLoading: false,
 
   runPanelOverride: null,
+  rightTab: "notes",
 
   fetchRuns: async () => {
     set({ runsLoading: true })
@@ -103,8 +106,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       loading: true,
       error: null,
       runId,
-      selectedId: null,
-      selectedDetail: null,
       selectedProposalIds: new Set(),
     })
     try {
@@ -213,6 +214,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setRunPanelOverride: (v) => set({ runPanelOverride: v }),
+
+  setRightTab: (tab) => set({ rightTab: tab }),
 
   reset: () =>
     set({

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from core.preprocess import PreprocessedNote
-from core.reconcile import StageFiveOutput
+from core.reconcile import _DISCONTINUED_STATUSES, StageFiveOutput
 from core.schemas import ChartMatch, MergedCandidate, Proposal, ResolvedCitation, SourceRef
 from fhir.models import PatientContext
 
@@ -89,6 +89,14 @@ _ALLERGY_VERIFY_SYSTEM = "http://terminology.hl7.org/CodeSystem/allergyintoleran
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _is_negated_assertion(c: MergedCandidate) -> bool:
+    if c.resource_type == "Condition" and c.item.get("negated"):
+        return True
+    if c.resource_type == "MedicationRequest" and c.item.get("status") in _DISCONTINUED_STATUSES:
+        return True
+    return False
+
 
 def _strip_none(d: dict | list) -> dict | list:
     if isinstance(d, list):
@@ -544,6 +552,8 @@ def assemble_proposals(
     for result in stage5.results:
         if result.classification == "DUPLICATE":
             continue
+        if result.classification == "NEW" and _is_negated_assertion(result.candidate):
+            continue
         note_date = None
         for sr in result.candidate.source_refs:
             note_date = doc_dates.get(sr.document_id)
@@ -554,10 +564,6 @@ def assemble_proposals(
         supersedes = (
             [m.resource_id for m in result.chart_matches]
             if result.classification == "UPDATING" else []
-        )
-        conflicts_with = (
-            [m.resource_id for m in result.chart_matches]
-            if result.classification == "CONFLICTING" else []
         )
         proposals.append(Proposal(
             id=uuid4().hex,
@@ -574,7 +580,6 @@ def assemble_proposals(
             flags=result.flags,
             confidence_breakdown=result.confidence_breakdown,
             supersedes=supersedes,
-            conflicts_with=conflicts_with,
         ))
 
     by_class = {}

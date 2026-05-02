@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 
 import jwt
@@ -120,9 +121,46 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
             "pending_proposals": pending,
             "pending_by_tier": tier_map.get(run.id, {}),
             "pending_by_classification": cls_map.get(run.id, {}),
-            "started_at": run.started_at.isoformat() if run.started_at else None,
+            "started_at": run.started_at.replace(tzinfo=timezone.utc).isoformat() if run.started_at else None,
         })
     return result
+
+
+@router.get("/runs/{run_id}/documents")
+async def get_run_documents(
+    run_id: str,
+    session: AsyncSession = Depends(get_session),
+):
+    source = await proposal_svc.load_run_source(run_id, session)
+    if source is None:
+        raise HTTPException(404, "run not found")
+    _, documents = source
+    return {"documents": [d.__dict__ for d in documents]}
+
+
+@router.get("/runs/{run_id}/chart")
+async def get_run_chart(
+    run_id: str,
+    session: AsyncSession = Depends(get_session),
+):
+    source = await proposal_svc.load_run_source(run_id, session)
+    if source is None:
+        raise HTTPException(404, "run not found")
+    ctx, _ = source
+    return {
+        "patient": ctx.patient,
+        "conditions": ctx.conditions,
+        "medications": ctx.medications,
+        "allergies": ctx.allergies,
+        "observations": ctx.observations,
+        "procedures": ctx.procedures,
+        "family_history": ctx.family_history,
+        "encounters": ctx.encounters,
+        "practitioners": ctx.practitioners,
+        "organizations": ctx.organizations,
+        "source": "Local bundle",
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @router.post("/runs/delete")

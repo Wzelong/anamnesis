@@ -246,7 +246,7 @@ provisional, `uncertain` → unconfirmed (Condition + AllergyIntolerance).
 - `resource` (valid FHIR R4 dict), `resource_type`, `classification`
 - `citations` (list of `ResolvedCitation` with document_id, char_start/end, text)
 - `confidence_score`, `confidence_tier`, `flags` (carried from Stage 5)
-- `supersedes` (UPDATING), `conflicts_with` (CONFLICTING)
+- `supersedes` (UPDATING), `chart_matches` (any classification with chart hits)
 - `classification_reasoning`, `extraction_reasoning`, `merge_reasoning`
 
 No FHIR write happens here. The resource JSON is pre-assembled and valid but

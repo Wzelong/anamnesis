@@ -724,7 +724,7 @@
         },
         "text": {
           "status": "generated",
-          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Lisinopril 10 MG Oral Tablet — Take 1 tablet (10 mg) by mouth once daily</p></div>"
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Lisinopril 10 MG Oral Tablet \u2014 Take 1 tablet (10 mg) by mouth once daily</p></div>"
         },
         "status": "active",
         "intent": "order",
@@ -788,7 +788,7 @@
         },
         "text": {
           "status": "generated",
-          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Atorvastatin 40 MG Oral Tablet — Take 1 tablet (40 mg) by mouth once daily</p></div>"
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Atorvastatin 40 MG Oral Tablet \u2014 Take 1 tablet (40 mg) by mouth once daily</p></div>"
         },
         "status": "active",
         "intent": "order",
@@ -852,7 +852,7 @@
         },
         "text": {
           "status": "generated",
-          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Metformin hydrochloride 1000 MG Oral Tablet — Take 1 tablet (1000 mg) by mouth twice daily</p></div>"
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Metformin hydrochloride 1000 MG Oral Tablet \u2014 Take 1 tablet (1000 mg) by mouth twice daily</p></div>"
         },
         "status": "active",
         "intent": "order",
@@ -916,7 +916,7 @@
         },
         "text": {
           "status": "generated",
-          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Aspirin 81 MG Oral Tablet — Take 1 tablet (81 mg) by mouth once daily</p></div>"
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Aspirin 81 MG Oral Tablet \u2014 Take 1 tablet (81 mg) by mouth once daily</p></div>"
         },
         "status": "active",
         "intent": "order",
@@ -1597,6 +1597,97 @@
           "period": {
             "start": "2026-02-23T10:45:00-05:00",
             "end": "2026-02-23T10:45:00-05:00"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:d1a4629e-deb6-4045-b831-98cb4404fa84",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "cardio-followup-conflict",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-documentreference"
+          ]
+        },
+        "text": {
+          "status": "generated",
+          "div": "<div xmlns=\"http://www.w3.org/1999/xhtml\"><p>Cardiology follow-up, 2026-01-22</p></div>"
+        },
+        "identifier": [
+          {
+            "system": "http://bayside.health/document-id",
+            "value": "DOC-CARDIO-FOLLOWUP-CONFLICT"
+          }
+        ],
+        "status": "current",
+        "docStatus": "final",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Consult note"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category",
+                "code": "clinical-note",
+                "display": "Clinical Note"
+              }
+            ],
+            "text": "Clinical Note"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:2a6120c2-4234-5e7b-9ace-12b29b9cf134",
+          "display": "James Lee"
+        },
+        "date": "2026-01-22T09:30:00-05:00",
+        "author": [
+          {
+            "reference": "urn:uuid:4c187cd2-4a3b-53ad-a6c8-d5cc9ea2a96a",
+            "display": "Dr. David Park"
+          }
+        ],
+        "custodian": {
+          "reference": "urn:uuid:f9af3aaa-e1ca-5897-aafd-ed8a6f6f5607",
+          "display": "Bayside Health"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "en-US",
+              "data": "4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCiAgIEJBWVNJREUgSEVBTFRIICB8ICBERVBBUlRNRU5UIE9GIENBUkRJT0xPR1kKICAgT3V0cGF0aWVudCBGb2xsb3ctdXAgTm90ZQrilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAKClBhdGllbnQ6ICAgICAgICAgICBMRUUsIEpBTUVTCk1STjogICAgICAgICAgICAgICBCQVktMDA0Mi1MRUUKRE9COiAgICAgICAgICAgICAgIDExLzE1LzE5NTggICg2NyB5LCBNKQpFbmNvdW50ZXIgRGF0ZTogICAgMDEvMjIvMjAyNiAgMDk6MzAgRVNUCkVuY291bnRlciBJRDogICAgICBFTkMtQ0FSRElPLUZPTExPV1VQLTIwMjYKVmlzaXQgVHlwZTogICAgICAgIE91dHBhdGllbnQgZm9sbG93LXVwLCBwb3N0LW1lZGljYXRpb24gaW50b2xlcmFuY2UKU2VydmljZTogICAgICAgICAgIENhcmRpb2xvZ3kKQXR0ZW5kaW5nOiAgICAgICAgIERhdmlkIFBhcmssIE1EClJlZmVycmluZzogICAgICAgICBBbm5hIEtpbSwgTUQgIChCYXlzaWRlIEZhbWlseSBNZWRpY2luZSkK4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCgoKQ0hJRUYgQ09NUExBSU5UClBlcnNpc3RlbnQgZHJ5IGNvdWdoIHNpbmNlIHN0YXJ0aW5nIGxpc2lub3ByaWw7IG1lZGljYXRpb24gaW50b2xlcmFuY2UKZm9sbG93LXVwLgoKCkhJU1RPUlkgT0YgUFJFU0VOVCBJTExORVNTCk1yLiBKYW1lcyBMZWUgcmV0dXJucyBmb3IgYSAzLW1vbnRoIGZvbGxvdy11cCBhZnRlciBpbml0aWF0aW9uIG9mCm1lZGljYWwgbWFuYWdlbWVudCBmb3Igc3RhYmxlIGFuZ2luYS4gSGUgcmVwb3J0cyBvdmVyYWxsIGdvb2QgY29udHJvbApvZiBoaXMgYW5naW5hbCBzeW1wdG9tcyBvbiBtZXRvcHJvbG9sIHN1Y2NpbmF0ZSAyNSBtZyBkYWlseTsgbm8gcmVzdApwYWluLCBubyBwcm9ncmVzc2lvbiwgZXhlcmNpc2UgdG9sZXJhbmNlIGltcHJvdmVkLgoKSG93ZXZlciwgc2luY2UgYXBwcm94aW1hdGVseSBtaWQtTm92ZW1iZXIgaGUgaGFzIGRldmVsb3BlZCBhIHBlcnNpc3RlbnQsCmRyeSwgbm9uLXByb2R1Y3RpdmUgY291Z2ggdGhhdCBpcyB3b3JzZSBhdCBuaWdodCBhbmQgZGlzcnVwdHMgc2xlZXAuClRoZSBjb3VnaCBzdGFydGVkIDMgd2Vla3MgYWZ0ZXIgc3RhcnRpbmcgbGlzaW5vcHJpbCBmb3IgaHlwZXJ0ZW5zaW9uCmNvbnRyb2wuIFB1bG1vbmFyeSByZXZpZXcgaXMgb3RoZXJ3aXNlIHVucmVtYXJrYWJsZTogbm8gc2hvcnRuZXNzIG9mCmJyZWF0aCBhdCByZXN0LCBubyB3aGVlemluZywgbm8gZmV2ZXIsIG5vIHNwdXR1bSBwcm9kdWN0aW9uLiBIZSBoYXMKbm90IGhhZCByZWNlbnQgdXBwZXIgcmVzcGlyYXRvcnkgaWxsbmVzcy4KClRoaXMgaXMgY29uc2lzdGVudCB3aXRoIGEgY2xhc3NpYyBBQ0UtaW5oaWJpdG9yLWluZHVjZWQgY291Z2guCgoKUEFTVCBNRURJQ0FMIEhJU1RPUlkKLSBIeXBlcnRlbnNpb24gKHNpbmNlIDIwMTYpCi0gVHlwZSAyIGRpYWJldGVzIG1lbGxpdHVzLCBvbiBtZXRmb3JtaW4gKHNpbmNlIDIwMTgpCi0gSHlwZXJsaXBpZGVtaWEgKHNpbmNlIDIwMTYpCi0gVHdvLXZlc3NlbCBjb3JvbmFyeSBhcnRlcnkgZGlzZWFzZSB3aXRoIHN0YWJsZSBhbmdpbmEKLSBNaW5vciBpc2NoZW1pYyBzdHJva2UgKDIwMjQpCgoKQ1VSUkVOVCBNRURJQ0FUSU9OUyAgKHJldmlld2VkIGFuZCByZWNvbmNpbGVkKQotIExpc2lub3ByaWwgMTAgbWcgUE8gZGFpbHkgICAgICAgICAgICAoVE8gQkUgRElTQ09OVElOVUVEIHRvZGF5KQotIE1ldG9wcm9sb2wgc3VjY2luYXRlIDI1IG1nIFBPIGRhaWx5Ci0gQXRvcnZhc3RhdGluIDQwIG1nIFBPIGRhaWx5Ci0gTWV0Zm9ybWluIDEwMDAgbWcgUE8gQklECi0gQXNwaXJpbiA4MSBtZyBQTyBkYWlseQoKClZJVEFMIFNJR05TCkJQICAxMzgvODQgIChyaWdodCBhcm0sIHNlYXRlZCkKSFIgIDYyIHJlZ3VsYXIKUlIgIDE0ClNwTzIgIDk4JSBvbiByb29tIGFpcgpUICAgMzYuNyBDCgoKUEhZU0lDQUwgRVhBTUlOQVRJT04KR2VuZXJhbDogIFdlbGwtYXBwZWFyaW5nLCBubyBhY3V0ZSBkaXN0cmVzcy4KSEVFTlQ6ICAgIFRocm9hdCBjbGVhciwgbm8gcG9zdGVyaW9yIHBoYXJ5bmdlYWwgZXJ5dGhlbWEuCkNWOiAgICAgICBSZWd1bGFyIHJhdGUgYW5kIHJoeXRobS4gTm8gbXVybXVyLCBydWIsIG9yIGdhbGxvcC4KUmVzcDogICAgIENsZWFyIHRvIGF1c2N1bHRhdGlvbiBiaWxhdGVyYWxseS4gTm8gd2hlZXppbmcsIG5vIHJhbGVzLgpFeHQ6ICAgICAgTm8gZWRlbWEuIERpc3RhbCBwdWxzZXMgMisgc3ltbWV0cmljLgoKCkFTU0VTU01FTlQgQU5EIFBMQU4KCjEuIEFDRSBpbmhpYml0b3ItaW5kdWNlZCBjb3VnaC4KICAgLSBEaXNjb250aW51ZSBsaXNpbm9wcmlsIHRvZGF5LiBQYXRpZW50IGluc3RydWN0ZWQgdG8gc3RvcCB0YWtpbmcKICAgICBpdCBhcyBvZiB0aGlzIHZpc2l0LgogICAtIFN3aXRjaCB0byBsb3NhcnRhbiA1MCBtZyBQTyBkYWlseSwgYW4gYW5naW90ZW5zaW4gSUkgcmVjZXB0b3IKICAgICBibG9ja2VyLCBmb3Igb25nb2luZyBoeXBlcnRlbnNpb24gbWFuYWdlbWVudC4gUnggc2VudCB0bwogICAgIHBoYXJtYWN5LiBQYXRpZW50IGNvdW5zZWxlZCBvbiB3aGF0IHRvIGV4cGVjdC4KCjIuIFN0YWJsZSBhbmdpbmEgcGVjdG9yaXMgb24gbWVkaWNhbCBtYW5hZ2VtZW50LgogICAtIENvbnRpbnVlIG1ldG9wcm9sb2wgc3VjY2luYXRlIDI1IG1nIFBPIGRhaWx5LiBTeW1wdG9tcyB3ZWxsCiAgICAgY29udHJvbGxlZC4KICAgLSBDb250aW51ZSBhc3BpcmluIDgxIG1nIGFuZCBhdG9ydmFzdGF0aW4gNDAgbWcgZm9yIHNlY29uZGFyeQogICAgIHByZXZlbnRpb24uCgozLiBIeXBlcnRlbnNpb24uCiAgIC0gQlAgMTM4Lzg0IHRvZGF5LCBuZWFyIGdvYWwuIEV4cGVjdCBhZGVxdWF0ZSBjb250cm9sIG9uIGxvc2FydGFuLgogICAtIFJlY2hlY2sgQlAgaW4gNCB3ZWVrcyBhdCBwcmltYXJ5IGNhcmUgdmlzaXQuCgo0LiBUeXBlIDIgZGlhYmV0ZXMgbWVsbGl0dXMuCiAgIC0gQ29udGludWUgbWV0Zm9ybWluLiBEZWZlciBmdXJ0aGVyIGludGVuc2lmaWNhdGlvbiB0byBQQ1AuCgoKRk9MTE9XLVVQClJldHVybiB0byBjYXJkaW9sb2d5IGluIDMgbW9udGhzLiBTb29uZXIgZm9yIGFueSByZXR1cm4gb2YgYW5naW5hbApzeW1wdG9tcyBvciBzaWduaWZpY2FudCBCUCBlbGV2YXRpb24uIFBhdGllbnQgdG8gZm9sbG93IHVwIHdpdGggUENQCndpdGhpbiA0IHdlZWtzIGZvciBCUCByZWNoZWNrIG9uIG5ldyByZWdpbWVuLgoKCuKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKRGF2aWQgUGFyaywgTUQKQmF5c2lkZSBIZWFsdGggQ2FyZGlvbG9neQpOUEk6IDIzNDU2Nzg5MDEKRWxlY3Ryb25pY2FsbHkgc2lnbmVkOiAwMS8yMi8yMDI2ICAxMDowOCBFU1QK",
+              "title": "Cardiology follow-up note"
+            },
+            "format": {
+              "system": "http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
+              "code": "urn:ihe:iti:xds:2017:mimeTypeSufficient",
+              "display": "mimeType Sufficient"
+            }
+          }
+        ],
+        "context": {
+          "encounter": [
+            {
+              "reference": "urn:uuid:9cf8b7f2-32f3-517c-ae7a-72b365d33410"
+            }
+          ],
+          "period": {
+            "start": "2025-10-20T11:00:00-04:00",
+            "end": "2025-10-20T11:00:00-04:00"
           }
         }
       },

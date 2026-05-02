@@ -32,6 +32,10 @@ export const api = {
 
   getProposal: (id: string) => apiFetch(`/api/proposals/${id}`),
 
+  getDocuments: (runId: string) => apiFetch(`/api/runs/${runId}/documents`),
+
+  getChart: (runId: string) => apiFetch(`/api/runs/${runId}/chart`),
+
   acceptProposal: (id: string, token: string) =>
     apiFetch(`/api/proposals/${id}/accept`, {
       method: "POST",

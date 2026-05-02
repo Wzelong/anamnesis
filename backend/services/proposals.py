@@ -22,6 +22,25 @@ log = logging.getLogger(__name__)
 _TIER_ORDER = {"ATTENTION": 0, "REVIEW": 1, "CONFIDENT": 2}
 
 
+async def _load_source(patient_id: str | None, *, fhir_client=None):
+    if fhir_client and patient_id:
+        import asyncio
+        from fhir.read import read_documents, read_patient_context
+        return await asyncio.gather(
+            read_patient_context(fhir_client, patient_id),
+            read_documents(fhir_client, patient_id),
+        )
+    from fhir.local_bundle import load_demo_data
+    return load_demo_data()
+
+
+async def load_run_source(run_id: str, session: AsyncSession, *, fhir_client=None):
+    run = (await session.execute(select(PipelineRun).where(PipelineRun.id == run_id))).scalar_one_or_none()
+    if run is None:
+        return None
+    return await _load_source(run.patient_id, fhir_client=fhir_client)
+
+
 def _cc_text(cc: dict | None) -> str | None:
     if not isinstance(cc, dict):
         return None
@@ -133,7 +152,6 @@ def _proposal_to_record(proposal, run_id: str, patient_id: str) -> ProposalRecor
         "confidence_breakdown": proposal.confidence_breakdown.model_dump(mode="json") if proposal.confidence_breakdown else None,
         "chart_matches": [m.model_dump(mode="json") for m in proposal.chart_matches],
         "supersedes": proposal.supersedes,
-        "conflicts_with": proposal.conflicts_with,
     }
     return ProposalRecord(
         id=proposal.id,
@@ -174,8 +192,7 @@ def _record_to_dict(record: ProposalRecord, *, full: bool = False) -> dict:
         d["confidence_breakdown"] = metadata.get("confidence_breakdown")
         d["chart_matches"] = metadata.get("chart_matches", [])
         d["supersedes"] = metadata.get("supersedes", [])
-        d["conflicts_with"] = metadata.get("conflicts_with", [])
-        d["reviewed_at"] = record.reviewed_at.isoformat() if record.reviewed_at else None
+        d["reviewed_at"] = record.reviewed_at.replace(tzinfo=timezone.utc).isoformat() if record.reviewed_at else None
         d["reviewed_by"] = record.reviewed_by
     return d
 
@@ -214,16 +231,7 @@ async def run_pipeline(
                 "cached": True,
             }
 
-    if fhir_client:
-        import asyncio
-        from fhir.read import read_documents, read_patient_context
-        patient_context, documents = await asyncio.gather(
-            read_patient_context(fhir_client, effective_patient_id),
-            read_documents(fhir_client, effective_patient_id),
-        )
-    else:
-        from fhir.local_bundle import load_demo_data
-        patient_context, documents = load_demo_data()
+    patient_context, documents = await _load_source(effective_patient_id, fhir_client=fhir_client)
 
     effective_patient_id = patient_context.patient["id"]
     name_parts = (patient_context.patient.get("name") or [{}])[0]

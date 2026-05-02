@@ -5,7 +5,7 @@ shapes. Prompts encode clinical decision rules only. Bump PROMPT_VERSION
 to invalidate the cache when any prompt changes.
 """
 
-PROMPT_VERSION = "2026-04-29.10"
+PROMPT_VERSION = "2026-05-01.12"
 
 
 PROMPT_SCAN = """\
@@ -134,10 +134,15 @@ Goal
 One item per distinct condition stated in the snippet. A single sentence can yield multiple items.
 
 Rules
-- Include only when the snippet names a disease, diagnosis, or problem AND uses assertive framing ("has", "diagnosed with", "history of", "presents with").
+- Include when the snippet names a disease, diagnosis, or problem AND uses assertive framing ("has", "diagnosed with", "history of", "presents with"). Emit with `negated=false` (default).
 - SDOH exception: social or behavioral problems (food insecurity, housing instability, medication underdosing, financial hardship) may be included without an assertive verb.
-- Exclude: staging (TNM, AJCC, grade), pathology or lab markers, uncertain or negated statements, procedures.
-- Exclude ruled-out conditions: "ruled out", "excluded", "no evidence of", "negative workup for" — the condition was considered and rejected. Do not emit it.
+- Exclude: staging (TNM, AJCC, grade), pathology or lab markers, procedures.
+- Negation handling — emit a NAMED, SPECIFIC condition with `negated=true` when the snippet asserts the patient does NOT have it, has resolved it, or it has been ruled out:
+  - "patient denies hypertension" → emit hypertension with `negated=true`
+  - "no evidence of CHF on workup" → emit CHF with `negated=true`
+  - "HTN resolved", "no longer has X" → emit X with `negated=true`
+  - "ruled out PE" → emit pulmonary embolism with `negated=true`
+  This is for conflict detection against the chart (existing active record vs. note-stated absence). Do NOT emit broad negative review-of-systems items ("denies chest pain", "no fever") — only specific named conditions.
 - Exclude anatomical findings from procedures (e.g. "60% mid-LAD stenosis", "70% proximal RCA stenosis") — these are quantitative Observations from a catheterization or imaging study, not standalone diagnoses. Only emit the named disease ("coronary artery disease"), not its component lesions.
 - Exclude allergies and intolerances ("allergic to penicillin", "NKDA", substance reactions) → these belong to AllergyIntolerance.
 - Exclude family members' conditions ("family history of CAD", "father had MI") → these belong to FamilyMemberHistory. The family member's disease is not a patient Condition.
@@ -275,7 +280,7 @@ Rules
   - "increase to", "decrease to", "titrate to" → status=active, intent=order; reflect the new dose in `dose`.
   - "restart", "resume" → status=active, intent=order; the "same dose" refers to the dose in the referenced sentence — surface that dose in `dose`.
   - "hold" → status=on-hold, intent=order.
-  - "stop", "discontinue" → status=stopped, intent=order.
+  - "stop", "discontinue", "no longer takes", "off" + drug → status=stopped, intent=order. Always emit when explicit — this enables conflict detection against the chart's active medication list.
   - "plan to start" without an order action → status=draft, intent=plan.
 - Separate combination regimens ("lisinopril 10 mg + HCTZ 25 mg") into two items.
 - `frequency` captures the dose schedule as stated: "daily", "BID", "q8h", "PRN", "at bedtime".
@@ -475,6 +480,8 @@ Rules
 - Keep the more specific or complete item as the survivor (e.g. "two-vessel coronary artery disease" over "coronary artery disease").
 - Observations with different measured values (different BP readings, different lab dates) are distinct — keep separate.
 - Medications with different doses are distinct prescriptions — keep separate. Same drug + same dose = same prescription.
+- A medication with status in {stopped, cancelled, completed, entered-in-error} contradicts an active order for the same drug — KEEP SEPARATE so the chart conflict can be surfaced. Never merge a discontinuation into an active prescription.
+- A Condition with negated=true (e.g. "denies hypertension", "HTN resolved") contradicts an affirmative assertion of the same condition — KEEP SEPARATE.
 - "tobacco use" (ongoing) and "tobacco cessation" (quit) are different statuses — keep separate.
 - Cross-type: diseases belong to Condition; measurements, scores, and social-history facts belong to Observation. Use "reassign" when an item is in the wrong type.
 - When uncertain, keep items separate.

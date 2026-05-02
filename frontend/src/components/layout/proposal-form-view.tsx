@@ -1,7 +1,16 @@
 "use client"
 
-import { cn } from "@/lib/utils"
 import { RESOURCE_LABEL } from "@/lib/proposal-meta"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 type FhirResource = Record<string, unknown>
 type Mode = "view" | "edit"
@@ -16,6 +25,7 @@ interface Row {
   label: string
   value: string
   edit?: EditSpec
+  kind?: "header" | "meta"
 }
 
 type EditSpec =
@@ -96,109 +106,123 @@ const STATUS_FIELD_OPTIONS: Record<string, string[]> = {
   verificationStatus: CONDITION_VERIFICATION,
 }
 
-const PRIMITIVE_ENUMS: Record<string, string[]> = {
-  status: MED_STATUS, // safe default; obs/proc handlers override
-  intent: MED_INTENT,
-  type: ALLERGY_TYPE,
-  criticality: ALLERGY_CRITICALITY,
-}
-
 export function ProposalFormView({ resource, mode, onChange }: Props) {
   const rows = buildRows(resource, onChange)
   if (rows.length === 0) {
     return <div className="text-sm text-muted-foreground italic">No fields</div>
   }
+  if (mode === "edit") {
+    const editable = rows.filter((r) => r.kind !== "meta")
+    return (
+      <div className="flex flex-col gap-4">
+        {editable.map((row, i) => <EditRow key={i} row={row} />)}
+      </div>
+    )
+  }
   return (
     <dl className="flex flex-col gap-1.5">
-      {rows.map((row, i) => <InfoRow key={i} row={row} mode={mode} />)}
+      {rows.map((row, i) => <ViewRow key={i} row={row} />)}
     </dl>
   )
 }
 
-function InfoRow({ row, mode }: { row: Row; mode: Mode }) {
-  const isEditing = mode === "edit" && !!row.edit
-
-  if (!isEditing) {
-    if (!row.value && mode === "view") return null
-    return (
-      <div className="grid grid-cols-[140px_1fr] gap-3 items-baseline">
-        <dt className="text-xs text-muted-foreground">{row.label}</dt>
-        <dd className="text-sm min-w-0 break-words">
-          {row.value || <span className="text-muted-foreground italic">—</span>}
-        </dd>
-      </div>
-    )
-  }
-
-  const edit = row.edit!
+function ViewRow({ row }: { row: Row }) {
+  if (row.kind === "header") return <RowHeader label={row.label} />
+  if (!row.value) return null
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-3 items-start">
-      <dt className="text-xs text-muted-foreground pt-1.5">{row.label}</dt>
-      <dd className="min-w-0">
-        <EditInput edit={edit} value={row.value} />
-      </dd>
+    <div className="grid grid-cols-[140px_1fr] gap-3 items-baseline">
+      <dt className="text-xs text-muted-foreground">{row.label}</dt>
+      <dd className="text-sm min-w-0 break-words">{row.value}</dd>
+    </div>
+  )
+}
+
+function EditRow({ row }: { row: Row }) {
+  if (row.kind === "header") return <RowHeader label={row.label} />
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs text-muted-foreground">{row.label}</Label>
+      {row.edit ? (
+        <EditInput edit={row.edit} value={row.value} />
+      ) : (
+        <div className="text-sm text-muted-foreground break-words">
+          {row.value || <span className="italic">—</span>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RowHeader({ label }: { label: string }) {
+  return (
+    <div>
+      <span className="inline-block px-1.5 py-0.5 rounded bg-muted text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </span>
     </div>
   )
 }
 
 function EditInput({ edit, value }: { edit: EditSpec; value: string }) {
-  const baseInput = "text-sm border rounded-md px-2 py-1 bg-background outline-none focus-visible:ring-1 focus-visible:ring-ring"
-
   if (edit.kind === "select") {
     return (
-      <select
-        value={value}
-        onChange={(e) => edit.onChange(e.target.value)}
-        className={cn(baseInput)}
-      >
-        <option value=""></option>
-        {edit.options.map((o) => <option key={o} value={o}>{o}</option>)}
-      </select>
+      <Select value={value || ""} onValueChange={(v) => edit.onChange(v)}>
+        <SelectTrigger className="text-sm">
+          <SelectValue placeholder="Select…" />
+        </SelectTrigger>
+        <SelectContent>
+          {edit.options.map((o) => (
+            <SelectItem key={o} value={o}>{o}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     )
   }
 
   if (edit.kind === "textarea") {
     return (
-      <textarea
+      <Textarea
         value={value}
         onChange={(e) => edit.onChange(e.target.value)}
-        className={cn(baseInput, "w-full min-h-16 resize-y")}
+        className="text-sm min-h-[60px] resize-none field-sizing-content"
+        rows={1}
       />
     )
   }
 
   if (edit.kind === "number") {
     return (
-      <input
+      <Input
         type="number"
         value={value}
         onChange={(e) => {
           const n = parseFloat(e.target.value)
           edit.onChange(isNaN(n) ? null : n)
         }}
-        className={cn(baseInput, "w-32")}
+        className="text-sm"
       />
     )
   }
 
   return (
-    <input
+    <Input
       type={edit.kind === "date" ? "date" : "text"}
       value={value}
       onChange={(e) => edit.onChange(e.target.value)}
-      className={cn(baseInput, "w-full")}
+      className="text-sm"
     />
   )
 }
 
 function buildRows(resource: FhirResource, onChange: (next: FhirResource) => void): Row[] {
   const rt = resource.resourceType
-  const typeRow: Row = {
-    label: "Type",
+  const resourceTypeRow: Row = {
+    label: "ResourceType",
     value: typeof rt === "string" ? (RESOURCE_LABEL[rt] ?? rt) : "",
+    kind: "meta",
   }
   let curated: Row[] = []
-  const consumed = new Set<string>()
+  const consumed = new Set<string>(["resourceType"])
   switch (rt) {
     case "Condition":
       curated = conditionRows(resource, onChange)
@@ -225,13 +249,13 @@ function buildRows(resource: FhirResource, onChange: (next: FhirResource) => voi
       addAll(consumed, ["relationship", "patient", "condition", "bornDate"])
       break
     default:
-      return [typeRow, ...genericRows(resource, onChange)]
+      return [resourceTypeRow, ...genericRows(resource, onChange)]
   }
   const extras = genericRows(
     Object.fromEntries(Object.entries(resource).filter(([k]) => !consumed.has(k))),
     (next) => onChange({ ...resource, ...next }),
   )
-  return [typeRow, ...curated, ...extras]
+  return [resourceTypeRow, ...curated, ...extras]
 }
 
 function addAll(set: Set<string>, keys: string[]) {
@@ -249,7 +273,7 @@ function conditionRows(r: FhirResource, onChange: (n: FhirResource) => void): Ro
     ...ccRowWithCodings("Severity", r.severity, setField("severity")),
     refRow("Subject", r.subject),
     refRow("Encounter", r.encounter),
-    noteRow("Note", r.note),
+    noteRow("Note", r.note, setField("note")),
   ].filter(Boolean) as Row[]
 }
 
@@ -271,7 +295,7 @@ function medicationRequestRows(r: FhirResource, onChange: (n: FhirResource) => v
     refRow("Subject", r.subject),
     refRow("Requester", r.requester),
     refRow("Encounter", r.encounter),
-    noteRow("Note", r.note),
+    noteRow("Note", r.note, setField("note")),
   ].filter(Boolean) as Row[]
 }
 
@@ -413,22 +437,20 @@ function genericRows(r: FhirResource, onChange: (n: FhirResource) => void): Row[
     if (SKIP_FIELDS.has(k)) continue
     const label = humanize(k)
     const setField = (next: unknown) => onChange({ ...r, [k]: next })
-    pushFlat(rows, label, v, setField, k)
+    pushFlat(rows, label, v, setField)
   }
   return rows
 }
 
-function pushFlat(rows: Row[], label: string, value: unknown, setField: (n: unknown) => void, rawKey?: string) {
+function pushFlat(rows: Row[], label: string, value: unknown, setField: (n: unknown) => void) {
   if (value === null || value === undefined) return
   if (typeof value !== "object") {
     rows.push({
       label,
       value: String(value),
-      edit: rawKey && PRIMITIVE_ENUMS[rawKey]
-        ? { kind: "select", options: PRIMITIVE_ENUMS[rawKey], onChange: (v) => setField(v) }
-        : typeof value === "number"
-          ? { kind: "number", onChange: (v) => setField(v) }
-          : { kind: "text", onChange: (v) => setField(v) },
+      edit: typeof value === "number"
+        ? { kind: "number", onChange: (v) => setField(v) }
+        : { kind: "text", onChange: (v) => setField(v) },
     })
     return
   }
@@ -469,7 +491,7 @@ function pushFlat(rows: Row[], label: string, value: unknown, setField: (n: unkn
     const childLabel = `${label} · ${humanize(k)}`
     const setChild = (next: unknown) =>
       setField({ ...(value as Record<string, unknown>), [k]: next })
-    pushFlat(rows, childLabel, v, setChild, k)
+    pushFlat(rows, childLabel, v, setChild)
   }
 }
 
@@ -491,25 +513,52 @@ function ccRow(label: string, cc: unknown, setField?: (next: unknown) => void): 
   }
 }
 
-function codingRows(cc: unknown): Row[] {
+function codingRows(cc: unknown, setField?: (next: unknown) => void): Row[] {
   if (!cc || typeof cc !== "object") return []
   const obj = cc as Record<string, unknown>
   const arr = Array.isArray(obj.coding) ? (obj.coding as Array<Record<string, unknown>>) : []
+  const multiple = arr.length > 1
+
   return arr
-    .map((c) => {
+    .map((c, i) => {
       const code = typeof c.code === "string" ? c.code : ""
       const display = typeof c.display === "string" ? c.display : ""
       const system = typeof c.system === "string" ? c.system : ""
-      if (!code && !display) return null
+      if (!code && !display && !setField) return null
+
       const value = code && display ? `${code} · ${display}` : code || display
-      return { label: systemLabel(system), value } satisfies Row
+      const label = multiple ? `Coding ${i + 1}` : systemLabel(system)
+
+      const row: Row = {
+        label,
+        value,
+        edit: setField
+          ? {
+            kind: "text",
+            onChange: (raw: string) => {
+              const trimmed = raw.trim()
+              const sep = trimmed.split(" · ")
+              const newCode = (sep[0] ?? "").trim()
+              const newDisplay = sep.slice(1).join(" · ").trim()
+              const next = [...arr]
+              next[i] = {
+                ...c,
+                code: newCode || undefined,
+                display: newDisplay || undefined,
+              }
+              setField({ ...obj, coding: next })
+            },
+          }
+          : undefined,
+      }
+      return row
     })
     .filter((x): x is Row => x !== null)
 }
 
 function ccRowWithCodings(label: string, cc: unknown, setField?: (next: unknown) => void): Row[] {
   const main = ccRow(label, cc, setField)
-  const codings = codingRows(cc)
+  const codings = codingRows(cc, setField)
   return main ? [main, ...codings] : codings
 }
 
@@ -575,12 +624,28 @@ function dosageRow(label: string, dosage: unknown, setField: (next: unknown) => 
   }
 }
 
-function noteRow(label: string, notes: unknown): Row | null {
-  if (!Array.isArray(notes) || notes.length === 0) return null
-  const first = notes[0] as Record<string, unknown>
+function noteRow(label: string, notes: unknown, setField?: (next: unknown) => void): Row | null {
+  const arr = Array.isArray(notes) ? (notes as Array<Record<string, unknown>>) : []
+  const first = arr[0] ?? {}
   const text = typeof first.text === "string" ? first.text : ""
-  if (!text) return null
-  return { label, value: text }
+  if (!text && !setField) return null
+  return {
+    label,
+    value: text,
+    edit: setField
+      ? {
+        kind: "textarea",
+        onChange: (raw: string) => {
+          if (!raw && arr.length === 0) {
+            setField(undefined)
+            return
+          }
+          const next = [{ ...first, text: raw }, ...arr.slice(1)]
+          setField(next)
+        },
+      }
+      : undefined,
+  }
 }
 
 function valueRow(label: string, r: FhirResource, setField: (key: string) => (n: unknown) => void): Row | null {

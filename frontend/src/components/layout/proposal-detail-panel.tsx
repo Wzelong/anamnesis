@@ -6,7 +6,6 @@ import {
   ArrowUp,
   Ban,
   CheckCircle2,
-  ChevronRight,
   Code,
   Inbox,
   Minus,
@@ -41,6 +40,9 @@ import {
   TIER_LABEL,
 } from "@/lib/proposal-meta"
 import { ProposalFormView } from "./proposal-form-view"
+import { ProposalConflictCallout } from "./proposal-conflict-callout"
+import { JsonEditor } from "@/components/ui/json-editor"
+import { Disclosure } from "@/components/ui/disclosure"
 
 function formatTimeAgo(iso: string | null) {
   if (!iso) return ""
@@ -223,48 +225,51 @@ export function ProposalDetailPanel() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-auto px-3 py-3">
-        {tab === "form" ? (
-          <>
-            <h2 className="text-base font-semibold mb-3 break-words">{detail.display_label}</h2>
-            <ProposalFormView
-              resource={activeResource}
-              mode={editing ? "edit" : "view"}
-              onChange={handleFormChange}
-            />
-          </>
-        ) : editing ? (
-          <div className="flex flex-col gap-1">
-            <textarea
-              value={rawJson}
-              onChange={(e) => handleJsonChange(e.target.value)}
-              className="text-xs font-mono border rounded-md p-2 min-h-[300px] bg-background outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
-              spellCheck={false}
-            />
-            {jsonError && (
-              <div className="text-xs text-destructive">{jsonError}</div>
+      {tab === "form" ? (
+        <div className="flex-1 min-h-0 overflow-auto px-3 py-3">
+          <div className="mb-3 flex items-baseline gap-2 min-w-0">
+            <h2 className="text-base font-semibold break-words flex-1 min-w-0">{detail.display_label}</h2>
+            {editing && (
+              <span className="shrink-0 text-[10px] font-medium uppercase tracking-wider text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                Editing
+              </span>
             )}
           </div>
-        ) : (
-          <pre className="text-xs font-mono whitespace-pre overflow-x-auto">
-            {JSON.stringify(activeResource, null, 2)}
-          </pre>
-        )}
-
-        <ReasoningSections
-          extraction={detail.extraction_reasoning}
-          classification={detail.classification_reasoning}
-          merge={detail.merge_reasoning}
-          flags={detail.flags}
-          confidenceScore={detail.confidence_score}
-          breakdown={detail.confidence_breakdown}
-          chartMatches={detail.chart_matches}
-          supersedes={detail.supersedes}
-          conflicts={detail.conflicts_with}
-          classificationKind={detail.classification}
-          onSelectConflict={(id) => setSelectedId(id)}
-        />
-      </div>
+          {!editing && detail.classification === "CONFLICTING" && (
+            <ProposalConflictCallout
+              proposed={activeResource}
+              matches={detail.chart_matches}
+            />
+          )}
+          <ProposalFormView
+            resource={activeResource}
+            mode={editing ? "edit" : "view"}
+            onChange={handleFormChange}
+          />
+          {!editing && (
+            <ReasoningSections
+              extraction={detail.extraction_reasoning}
+              classification={detail.classification_reasoning}
+              merge={detail.merge_reasoning}
+              flags={detail.flags}
+              confidenceScore={detail.confidence_score}
+              breakdown={detail.confidence_breakdown}
+              chartMatches={detail.chart_matches}
+              supersedes={detail.supersedes}
+              classificationKind={detail.classification}
+              onSelectConflict={(id) => setSelectedId(id)}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <JsonEditor
+            value={editing ? rawJson : JSON.stringify(activeResource, null, 2)}
+            editable={editing}
+            onChange={editing ? handleJsonChange : undefined}
+          />
+        </div>
+      )}
 
       <div className="shrink-0 border-t px-3 py-2.5 flex items-center justify-end gap-2">
         {editing ? (
@@ -358,7 +363,6 @@ interface ReasoningProps {
   breakdown: import("@/lib/types").ConfidenceBreakdown | null
   chartMatches: { resource_id: string; display: string; match_type: string }[]
   supersedes: string[]
-  conflicts: string[]
   classificationKind: "NEW" | "UPDATING" | "CONFLICTING"
   onSelectConflict: (id: string) => void
 }
@@ -372,11 +376,9 @@ function ReasoningSections({
   breakdown,
   chartMatches,
   supersedes,
-  conflicts,
   classificationKind,
   onSelectConflict,
 }: ReasoningProps) {
-  const conflictDefault = classificationKind === "CONFLICTING"
   const updatingDefault = classificationKind === "UPDATING"
 
   return (
@@ -408,8 +410,8 @@ function ReasoningSections({
         </div>
       </Section>
 
-      {chartMatches.length > 0 && (
-        <Disclosure title={`Chart matches (${chartMatches.length})`} defaultOpen={conflictDefault}>
+      {chartMatches.length > 0 && classificationKind !== "CONFLICTING" && (
+        <Disclosure title={`Chart matches (${chartMatches.length})`} defaultOpen={updatingDefault}>
           <div className="flex flex-col gap-1">
             {chartMatches.map((m) => (
               <div key={m.resource_id} className="flex items-center gap-3 text-sm">
@@ -438,22 +440,6 @@ function ReasoningSections({
         </Disclosure>
       )}
 
-      {conflicts.length > 0 && (
-        <Disclosure title={`Conflicts (${conflicts.length})`} defaultOpen={conflictDefault}>
-          <div className="flex flex-col gap-1">
-            {conflicts.map((id) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => onSelectConflict(id)}
-                className="text-left text-xs font-mono text-primary hover:underline cursor-pointer"
-              >
-                {id}
-              </button>
-            ))}
-          </div>
-        </Disclosure>
-      )}
     </div>
   )
 }
@@ -549,34 +535,4 @@ function FlagIndicator({ direction }: { direction: FlagDirection }) {
   return <Minus className="size-3 shrink-0 text-muted-foreground mt-0.5" aria-label="context" />
 }
 
-
-function Disclosure({
-  title,
-  children,
-  defaultOpen,
-}: {
-  title: string
-  children: React.ReactNode
-  defaultOpen?: boolean
-}) {
-  const [open, setOpen] = useState(!!defaultOpen)
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-1.5 group cursor-pointer"
-      >
-        <ChevronRight className={cn(
-          "size-3 text-muted-foreground transition-transform",
-          open && "rotate-90",
-        )} />
-        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground group-hover:text-foreground transition-colors">
-          {title}
-        </span>
-      </button>
-      {open && <div className="mt-2 pl-4">{children}</div>}
-    </div>
-  )
-}
 

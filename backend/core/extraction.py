@@ -477,6 +477,19 @@ class StageThreeOutput:
 PATIENT_LEVEL_TYPES = {"Condition", "MedicationRequest", "AllergyIntolerance", "FamilyMemberHistory"}
 ENCOUNTER_LEVEL_TYPES = {"Observation", "Procedure"}
 
+_DISCONTINUED_MED_STATUSES = frozenset({"stopped", "cancelled", "completed", "entered-in-error"})
+
+
+def _is_conflict_signal(t: "_TaggedItem") -> bool:
+    if t.resource_type == "MedicationRequest":
+        status = getattr(t.item, "status", None)
+        if status in _DISCONTINUED_MED_STATUSES:
+            return True
+    if t.resource_type == "Condition":
+        if getattr(t.item, "negated", False):
+            return True
+    return False
+
 
 @dataclass
 class _TaggedItem:
@@ -792,6 +805,11 @@ async def merge_across_notes(
     tagged = _build_tagged_items(stage2_outputs)
     groups = _deterministic_group(tagged)
     resolved, ambiguous = _resolve_exact_matches(groups)
+
+    protected_keys = [k for k, items in ambiguous.items() if any(_is_conflict_signal(t) for t in items)]
+    if protected_keys:
+        protected_groups = {k: ambiguous.pop(k) for k in protected_keys}
+        resolved.extend(_groups_to_candidates(protected_groups))
 
     if not ambiguous:
         return StageThreeOutput(candidates=resolved)

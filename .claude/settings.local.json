@@ -35,7 +35,8 @@
       "Bash(netstat -ano)",
       "Bash(npx --no-install tsc --noEmit)",
       "Bash(npx tsc *)",
-      "Bash(echo \"---EXIT: $?---\")"
+      "Bash(echo \"---EXIT: $?---\")",
+      "Bash(uv run *)"
     ]
   }
 }

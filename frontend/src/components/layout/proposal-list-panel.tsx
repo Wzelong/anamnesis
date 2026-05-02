@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Ban,
   ClipboardList,
@@ -38,9 +39,10 @@ type TypeFilter = "" | keyof typeof RESOURCE_LABEL
 type ClassFilter = "" | "NEW" | "UPDATING" | "CONFLICTING"
 
 export function ProposalListPanel() {
+  const router = useRouter()
   const proposals = useAppStore((s) => s.proposals)
   const selectedId = useAppStore((s) => s.selectedId)
-  const setSelectedId = useAppStore((s) => s.setSelectedId)
+  const runId = useAppStore((s) => s.runId)
   const selectedProposalIds = useAppStore((s) => s.selectedProposalIds)
   const toggleProposalSelection = useAppStore((s) => s.toggleProposalSelection)
   const selectAllProposals = useAppStore((s) => s.selectAllProposals)
@@ -208,7 +210,7 @@ export function ProposalListPanel() {
           onSelectOne={toggleProposalSelection}
           onClearSelection={clearProposalSelection}
           bulkActions={bulkActions}
-          onItemClick={(p: Proposal) => setSelectedId(p.id)}
+          onItemClick={(p: Proposal) => runId && router.push(`/${runId}/${p.id}`)}
           emptyState={{
             icon: <ListChecks className="size-6 text-muted-foreground" />,
             message: "No proposals match",

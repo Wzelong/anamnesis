@@ -22,3 +22,5 @@ class PatientContext:
     family_history: list[dict] = field(default_factory=list)
     procedures: list[dict] = field(default_factory=list)
     encounters: list[dict] = field(default_factory=list)
+    practitioners: list[dict] = field(default_factory=list)
+    organizations: list[dict] = field(default_factory=list)

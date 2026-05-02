@@ -52,6 +52,7 @@ class ConditionItem(_Strict):
     onset: str | None = None
     body_site: list[str] | None = None
     caused_by: list[str] = Field(default_factory=list)
+    negated: bool = False
 
 
 class ConditionItemList(_Strict):
@@ -241,6 +242,7 @@ class ChartMatch(_Strict):
     resource_id: str
     display: str
     match_type: Literal["exact_code", "ingredient", "display_text"] = "exact_code"
+    resource: dict | None = None
 
 
 class ConfidenceAxis(_Strict):
@@ -294,4 +296,3 @@ class Proposal(_Strict):
     flags: list[str] = Field(default_factory=list)
     confidence_breakdown: ConfidenceBreakdown | None = None
     supersedes: list[str] = Field(default_factory=list)
-    conflicts_with: list[str] = Field(default_factory=list)

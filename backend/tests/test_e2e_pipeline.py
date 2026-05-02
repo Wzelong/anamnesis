@@ -812,10 +812,10 @@ class TestStage6AssembleProposal:
             assert 0.0 <= p.confidence_score <= 1.0
             assert p.confidence_tier in ("CONFIDENT", "REVIEW", "ATTENTION")
 
-    def test_conflicting_have_conflicts_with(self, stage6_output):
+    def test_conflicting_have_chart_matches(self, stage6_output):
         for p in stage6_output.proposals:
             if p.classification == "CONFLICTING":
-                assert len(p.conflicts_with) >= 1
+                assert len(p.chart_matches) >= 1
 
     def test_updating_have_supersedes(self, stage6_output):
         for p in stage6_output.proposals:

@@ -31,7 +31,6 @@ export interface ProposalDetail extends Proposal {
   confidence_breakdown: ConfidenceBreakdown | null
   chart_matches: ChartMatch[]
   supersedes: string[]
-  conflicts_with: string[]
   reviewed_at: string | null
   reviewed_by: string | null
 }
@@ -63,4 +62,29 @@ export interface ChartMatch {
   resource_id: string
   display: string
   match_type: "exact_code" | "ingredient" | "display_text"
+  resource?: Record<string, unknown> | null
+}
+
+export interface SourceDocument {
+  id: string
+  type: string
+  date: string
+  author: string
+  text: string
+  encounter_id: string | null
+}
+
+export interface ChartContext {
+  patient: Record<string, unknown>
+  conditions: Array<Record<string, unknown>>
+  medications: Array<Record<string, unknown>>
+  allergies: Array<Record<string, unknown>>
+  observations: Array<Record<string, unknown>>
+  procedures: Array<Record<string, unknown>>
+  family_history: Array<Record<string, unknown>>
+  encounters: Array<Record<string, unknown>>
+  practitioners: Array<Record<string, unknown>>
+  organizations: Array<Record<string, unknown>>
+  source: string
+  fetched_at: string
 }

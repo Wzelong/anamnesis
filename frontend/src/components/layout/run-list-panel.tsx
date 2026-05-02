@@ -199,9 +199,10 @@ export function RunListPanel() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
+                const willDelete = new Set(selectedRunIds)
                 await deleteSelectedRuns()
                 setConfirmOpen(false)
-                if (activeRunId && !runs.some((r) => r.id === activeRunId)) {
+                if (activeRunId && willDelete.has(activeRunId)) {
                   router.push("/")
                 }
               }}

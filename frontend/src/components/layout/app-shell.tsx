@@ -18,10 +18,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const lastRouteKind = useRef<"home" | "detail" | null>(null)
   const kind = pathname === "/" ? "home" : "detail"
-  if (lastRouteKind.current !== kind) {
-    lastRouteKind.current = kind
-    useAppStore.setState({ runPanelOverride: null })
-  }
+  useEffect(() => {
+    if (lastRouteKind.current !== kind) {
+      lastRouteKind.current = kind
+      useAppStore.setState({ runPanelOverride: null })
+    }
+  }, [kind])
 
   const isEmpty = !runsLoading && runs.length === 0
   const isHome = pathname === "/"
