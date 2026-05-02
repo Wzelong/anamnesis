@@ -2,13 +2,14 @@
 
 import { useEffect, useRef } from "react"
 import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 import { useAppStore } from "@/lib/store"
 import { Header } from "./header"
 import { RunListPanel } from "./run-list-panel"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const runs = useAppStore((s) => s.runs)
-  const runsLoading = useAppStore((s) => s.runsLoading)
+  const runsHydrated = useAppStore((s) => s.runsHydrated)
   const fetchRuns = useAppStore((s) => s.fetchRuns)
   const pathname = usePathname()
 
@@ -25,8 +26,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [kind])
 
-  const isEmpty = !runsLoading && runs.length === 0
+  const isEmpty = runsHydrated && runs.length === 0
   const isHome = pathname === "/"
+
+  if (!runsHydrated) return null
 
   if (isEmpty && isHome) {
     return <>{children}</>
@@ -37,7 +40,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Header />
       <div className="flex h-dvh pt-12">
         <RunListPanel />
-        <main className="flex-1 min-w-0 flex flex-col">
+        <main className={cn("flex-1 min-w-0 flex flex-col", isHome && "hidden lg:flex")}>
           {children}
         </main>
       </div>

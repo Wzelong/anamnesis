@@ -68,6 +68,7 @@ export function DataList<T>({
   onItemClick,
   emptyState,
   isFetching,
+  headerExtra,
 }: DataListProps<T>) {
   const [searchInputValue, setSearchInputValue] = useState(searchValue)
   const hasSelection = onSelectAll && onSelectOne
@@ -251,7 +252,7 @@ export function DataList<T>({
         ) : (
           <>
             {onSearchChange ? (
-              <div className="relative flex-1 min-w-0">
+              <div className="relative flex-1 min-w-0 -ml-1">
                 <Search className="absolute left-1 top-1.5 h-3.5 w-3.5 text-muted-foreground" />
                 <input
                   placeholder={searchPlaceholder}
@@ -283,6 +284,8 @@ export function DataList<T>({
         )}
       </div>
 
+      {headerExtra}
+
       {/* List */}
       <div ref={listRef} className="flex-1 overflow-y-auto min-h-0">
         {data.length === 0 && emptyState ? (
@@ -309,7 +312,7 @@ export function DataList<T>({
                 ref={idx === 0 ? firstItemRef : null}
                 className={cn(
                   "flex items-start gap-2 px-2 py-2.5 border-b transition-colors select-none",
-                  isActive ? "bg-muted/70" : "hover:bg-muted/50",
+                  isActive ? "bg-muted" : "hover:bg-muted/50",
                   onItemClick && "cursor-pointer",
                 )}
                 onClick={() => onItemClick?.(item)}

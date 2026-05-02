@@ -51,9 +51,14 @@ async def get_reviewer(
     if not raw:
         raise HTTPException(401, "Review token required")
     try:
-        return validate_review_token(raw)
+        return await validate_review_token(raw)
     except jwt.InvalidTokenError as e:
         raise HTTPException(401, f"Invalid review token: {e}") from e
+
+
+@router.get("/auth/check")
+async def check_auth(reviewer: ReviewerIdentity = Depends(get_reviewer)):
+    return {"display": reviewer.display, "fhir_reference": reviewer.fhir_reference}
 
 
 @router.get("/runs")
@@ -99,6 +104,18 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
     for row in cls_rows:
         cls_map.setdefault(row.run_id, {})[row.classification] = row.n
 
+    usage_rows = (await session.execute(
+        sa_select(
+            LLMCall.run_id,
+            func.sum(LLMCall.input_tokens + LLMCall.output_tokens).label("tokens"),
+            func.sum(LLMCall.usd_cost).label("cost"),
+        ).group_by(LLMCall.run_id)
+    )).all()
+    usage_map: dict[str, dict[str, float | int]] = {
+        row.run_id: {"tokens": int(row.tokens or 0), "cost": float(row.cost or 0)}
+        for row in usage_rows
+    }
+
     result = []
     for run in runs:
         c = count_map.get(run.id, {"total": 0, "pending": 0})
@@ -112,6 +129,10 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
             status = "in_review"
         else:
             status = "resolved"
+        duration_ms = None
+        if run.started_at and run.finished_at:
+            duration_ms = int((run.finished_at - run.started_at).total_seconds() * 1000)
+        usage = usage_map.get(run.id, {"tokens": 0, "cost": 0.0})
         result.append({
             "id": run.id,
             "patient_id": run.patient_id,
@@ -122,6 +143,9 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
             "pending_by_tier": tier_map.get(run.id, {}),
             "pending_by_classification": cls_map.get(run.id, {}),
             "started_at": run.started_at.replace(tzinfo=timezone.utc).isoformat() if run.started_at else None,
+            "duration_ms": duration_ms,
+            "total_tokens": usage["tokens"],
+            "total_cost_usd": usage["cost"],
         })
     return result
 
@@ -143,10 +167,31 @@ async def get_run_chart(
     run_id: str,
     session: AsyncSession = Depends(get_session),
 ):
+    run = (await session.execute(
+        sa_select(PipelineRun).where(PipelineRun.id == run_id)
+    )).scalar_one_or_none()
+    if run is None:
+        raise HTTPException(404, "run not found")
+
     source = await proposal_svc.load_run_source(run_id, session)
     if source is None:
         raise HTTPException(404, "run not found")
     ctx, _ = source
+
+    from services import run_snapshot
+    has_snapshot = run_snapshot.read(run_id) is not None
+    if has_snapshot and run.triggered_by == "api":
+        source_label = "FHIR server snapshot"
+    elif run.triggered_by == "api":
+        source_label = "FHIR server"
+    else:
+        source_label = "Local bundle"
+
+    fetched_at = (
+        run.started_at.replace(tzinfo=timezone.utc).isoformat()
+        if run.started_at else datetime.now(timezone.utc).isoformat()
+    )
+
     return {
         "patient": ctx.patient,
         "conditions": ctx.conditions,
@@ -158,8 +203,8 @@ async def get_run_chart(
         "encounters": ctx.encounters,
         "practitioners": ctx.practitioners,
         "organizations": ctx.organizations,
-        "source": "Local bundle",
-        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "source": source_label,
+        "fetched_at": fetched_at,
     }
 
 
@@ -174,6 +219,8 @@ async def delete_runs(
     await session.execute(sa_delete(LLMCall).where(LLMCall.run_id.in_(body.ids)))
     result = await session.execute(sa_delete(PipelineRun).where(PipelineRun.id.in_(body.ids)))
     await session.commit()
+    from services import run_snapshot
+    run_snapshot.delete_many(body.ids)
     return {"deleted": result.rowcount or 0}
 
 
@@ -257,7 +304,7 @@ async def reset(session: AsyncSession = Depends(get_session)):
     await session.commit()
 
     cleared = []
-    for name in ("stage1", "stage2", "stage2_output", "stage3", "stage4", "stage5"):
+    for name in ("stage1", "stage2", "stage2_output", "stage3", "stage4", "stage5", "runs"):
         d = _CACHE_DIR / name
         if d.exists():
             shutil.rmtree(d)

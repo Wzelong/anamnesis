@@ -1,16 +1,19 @@
-"""Review token minting, validation, and clinician identity extraction."""
+"""Review token minting, validation, and clinician identity extraction.
+
+Review tokens are short opaque strings (e.g. `rev_a3f9k2x8`) backed by a
+SQLite table. They replace a self-contained JWT to keep deep-link URLs small
+while remaining durable across backend restarts.
+"""
 from __future__ import annotations
 
-import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 import jwt
+from sqlalchemy import delete, select
 
-from config import settings
+from core.ids import short_id
 
-_SECRET = settings.review_token_secret or secrets.token_urlsafe(32)
-_ALGORITHM = "HS256"
 _TOKEN_LIFETIME = timedelta(hours=24)
 
 
@@ -18,6 +21,10 @@ _TOKEN_LIFETIME = timedelta(hours=24)
 class ReviewerIdentity:
     display: str
     fhir_reference: str | None = None
+
+
+class InvalidReviewToken(jwt.InvalidTokenError):
+    """Raised when a review token is unknown or expired."""
 
 
 def extract_clinician_identity(access_token: str) -> ReviewerIdentity:
@@ -38,29 +45,43 @@ def extract_clinician_identity(access_token: str) -> ReviewerIdentity:
     return ReviewerIdentity(display=display, fhir_reference=fhir_reference)
 
 
-def mint_review_token(
+async def mint_review_token(
     run_id: str,
     patient_id: str,
     identity: ReviewerIdentity,
 ) -> str:
+    del run_id, patient_id
+    from db import AsyncSessionLocal, ReviewToken
+
+    token = short_id("rev")
     now = datetime.now(timezone.utc)
-    payload = {
-        "sub": identity.fhir_reference or identity.display,
-        "name": identity.display,
-        "run_id": run_id,
-        "patient_id": patient_id,
-        "iat": now,
-        "exp": now + _TOKEN_LIFETIME,
-    }
-    return jwt.encode(payload, _SECRET, algorithm=_ALGORITHM)
+    async with AsyncSessionLocal() as session:
+        session.add(ReviewToken(
+            token=token,
+            display=identity.display,
+            fhir_reference=identity.fhir_reference,
+            expires_at=now + _TOKEN_LIFETIME,
+            created_at=now,
+        ))
+        await session.commit()
+    return token
 
 
-def validate_review_token(token: str) -> ReviewerIdentity:
-    payload = jwt.decode(token, _SECRET, algorithms=[_ALGORITHM])
-    fhir_ref = payload.get("sub")
-    if fhir_ref and "/" not in fhir_ref:
-        fhir_ref = None
-    return ReviewerIdentity(
-        display=payload.get("name", "Unknown"),
-        fhir_reference=fhir_ref,
-    )
+async def validate_review_token(token: str) -> ReviewerIdentity:
+    from db import AsyncSessionLocal, ReviewToken
+
+    now = datetime.now(timezone.utc)
+    async with AsyncSessionLocal() as session:
+        row = (await session.execute(
+            select(ReviewToken).where(ReviewToken.token == token)
+        )).scalar_one_or_none()
+        if row is None:
+            raise InvalidReviewToken("token not recognized")
+        expires_at = row.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < now:
+            await session.execute(delete(ReviewToken).where(ReviewToken.token == token))
+            await session.commit()
+            raise InvalidReviewToken("token expired")
+        return ReviewerIdentity(display=row.display, fhir_reference=row.fhir_reference)

@@ -83,3 +83,13 @@ class ProposalRecord(Base):
     __table_args__ = (
         Index("ix_proposal_patient_status", "patient_id", "status"),
     )
+
+
+class ReviewToken(Base):
+    __tablename__ = "review_token"
+
+    token: Mapped[str] = mapped_column(String(32), primary_key=True)
+    display: Mapped[str] = mapped_column(String(256))
+    fhir_reference: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(index=True)
+    created_at: Mapped[datetime] = mapped_column()

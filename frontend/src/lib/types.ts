@@ -8,6 +8,9 @@ export interface Run {
   pending_by_tier: Partial<Record<"ATTENTION" | "REVIEW" | "CONFIDENT", number>>
   pending_by_classification: Partial<Record<"NEW" | "UPDATING" | "CONFLICTING", number>>
   started_at: string | null
+  duration_ms: number | null
+  total_tokens: number
+  total_cost_usd: number
 }
 
 export interface Proposal {

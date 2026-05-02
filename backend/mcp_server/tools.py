@@ -92,7 +92,7 @@ async def propose_augmentations(ctx: Context = None) -> str:
     base = settings.frontend_base_url.rstrip("/")
     identity = get_clinician_identity(ctx) if ctx else None
     if identity:
-        token = mint_review_token(run_id, result["patient_id"], identity)
+        token = await mint_review_token(run_id, result["patient_id"], identity)
         link = f"{base}/{run_id}?token={token}"
     else:
         link = f"{base}/{run_id}"
@@ -131,7 +131,7 @@ async def list_proposals_tool(ctx: Context = None) -> str:
             flags = " | ".join(p.get("flags", [])[:2])
             status_tag = f" [{p['status']}]" if p["status"] != "pending" else ""
             lines.append(
-                f"  {p['id'][:8]} | {p['resource_type']} | {p['display_label']} | "
+                f"  {p['id']} | {p['resource_type']} | {p['display_label']} | "
                 f"{p['classification']}{status_tag} | {flags}"
             )
 

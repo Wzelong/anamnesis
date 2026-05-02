@@ -3,9 +3,23 @@ import { create } from "zustand"
 import { api } from "./api"
 import type { Proposal, ProposalDetail, Run } from "./types"
 
+const TOKEN_STORAGE_KEY = "anamnesis.review_token"
+
+function persistToken(token: string | null) {
+  if (typeof window === "undefined") return
+  if (token) window.localStorage.setItem(TOKEN_STORAGE_KEY, token)
+  else window.localStorage.removeItem(TOKEN_STORAGE_KEY)
+}
+
+export function readPersistedToken(): string | null {
+  if (typeof window === "undefined") return null
+  return window.localStorage.getItem(TOKEN_STORAGE_KEY)
+}
+
 interface AppState {
   runs: Run[]
   runsLoading: boolean
+  runsHydrated: boolean
   selectedRunIds: Set<string>
 
   proposals: Proposal[]
@@ -13,6 +27,7 @@ interface AppState {
   error: string | null
   runId: string | null
   token: string | null
+  tokenValid: boolean | null
 
   selectedProposalIds: Set<string>
 
@@ -22,6 +37,7 @@ interface AppState {
 
   runPanelOverride: boolean | null
   rightTab: "notes" | "chart" | "chat"
+  contentView: "detail" | "right"
 
   fetchRuns: () => Promise<void>
   toggleRunSelection: (id: string) => void
@@ -42,12 +58,14 @@ interface AppState {
   fetchDetail: (id: string) => Promise<void>
   setRunPanelOverride: (v: boolean | null) => void
   setRightTab: (tab: "notes" | "chart" | "chat") => void
+  setContentView: (v: "detail" | "right") => void
   reset: () => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
   runs: [],
   runsLoading: false,
+  runsHydrated: false,
   selectedRunIds: new Set(),
 
   proposals: [],
@@ -55,6 +73,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   error: null,
   runId: null,
   token: null,
+  tokenValid: null,
 
   selectedProposalIds: new Set(),
 
@@ -64,6 +83,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   runPanelOverride: null,
   rightTab: "notes",
+  contentView: "detail",
 
   fetchRuns: async () => {
     set({ runsLoading: true })
@@ -71,9 +91,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       const data = (await api.listRuns()) as Run[]
       const visible = new Set(data.map((r) => r.id))
       const filtered = new Set([...get().selectedRunIds].filter((id) => visible.has(id)))
-      set({ runs: data, runsLoading: false, selectedRunIds: filtered })
+      set({ runs: data, runsLoading: false, runsHydrated: true, selectedRunIds: filtered })
     } catch {
-      set({ runsLoading: false })
+      set({ runsLoading: false, runsHydrated: true })
     }
   },
 
@@ -196,10 +216,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  setToken: (token) => set({ token }),
+  setToken: (token) => {
+    persistToken(token)
+    set({ token, tokenValid: token ? null : false })
+    if (!token) return
+    api.checkAuth(token)
+      .then(() => set({ tokenValid: true }))
+      .catch(() => {
+        persistToken(null)
+        set({ token: null, tokenValid: false })
+      })
+  },
 
   setSelectedId: (id) => {
-    set({ selectedId: id, selectedDetail: null })
+    set({ selectedId: id, selectedDetail: null, contentView: "detail" })
     if (id) get().fetchDetail(id)
   },
 
@@ -217,7 +247,10 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setRightTab: (tab) => set({ rightTab: tab }),
 
-  reset: () =>
+  setContentView: (v) => set({ contentView: v }),
+
+  reset: () => {
+    persistToken(null)
     set({
       runs: [],
       runsLoading: false,
@@ -227,11 +260,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       error: null,
       runId: null,
       token: null,
+      tokenValid: null,
       selectedProposalIds: new Set(),
       selectedId: null,
       selectedDetail: null,
       detailLoading: false,
-    }),
+    })
+  },
 }))
 
 export function useRunPanelOpen(): boolean {

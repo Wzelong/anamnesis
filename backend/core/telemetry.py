@@ -12,6 +12,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from core.ids import short_id
 from core.pricing import estimate_cost
 
 log = logging.getLogger(__name__)
@@ -61,6 +62,8 @@ async def start_run(
     *,
     patient_id: str | None,
     triggered_by: str,
+    patient_name: str | None = None,
+    run_id: str | None = None,
     meta: dict[str, Any] | None = None,
     jsonl_dir: Path | None = None,
     regional: bool = False,
@@ -70,13 +73,13 @@ async def start_run(
     directory = jsonl_dir or DEFAULT_JSONL_DIR
     directory.mkdir(parents=True, exist_ok=True)
 
-    run_id = _uuid()
+    rid = run_id or short_id("run")
     run = RunContext(
-        run_id=run_id,
+        run_id=rid,
         patient_id=patient_id,
         triggered_by=triggered_by,
         started_at=_now(),
-        jsonl_path=directory / f"{run_id}.jsonl",
+        jsonl_path=directory / f"{rid}.jsonl",
         regional=regional,
     )
 
@@ -84,6 +87,7 @@ async def start_run(
         session.add(PipelineRun(
             id=run.run_id,
             patient_id=run.patient_id,
+            patient_name=patient_name,
             triggered_by=run.triggered_by,
             status="running",
             started_at=run.started_at,

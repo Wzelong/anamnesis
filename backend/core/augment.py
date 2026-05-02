@@ -5,7 +5,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from uuid import uuid4
+from core.ids import short_id
 
 from core.preprocess import PreprocessedNote
 from core.reconcile import _DISCONTINUED_STATUSES, StageFiveOutput
@@ -566,7 +566,7 @@ def assemble_proposals(
             if result.classification == "UPDATING" else []
         )
         proposals.append(Proposal(
-            id=uuid4().hex,
+            id=short_id("prop"),
             resource_type=result.candidate.resource_type,
             resource=resource,
             classification=result.classification,

@@ -1,23 +1,29 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter, useParams } from "next/navigation"
 import {
   ArrowDown,
+  ArrowLeft,
   ArrowUp,
   Ban,
   CheckCircle2,
   Code,
+  DatabaseSearch,
+  FileSliders,
+  FileText,
   Inbox,
   Minus,
   NotepadText,
   Pencil,
   Save,
+  ShieldAlert,
+  Sparkles,
   Stamp,
   Undo2,
   XCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -35,10 +41,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useAppStore } from "@/lib/store"
-import {
-  TIER_BADGE,
-  TIER_LABEL,
-} from "@/lib/proposal-meta"
+import { TIER_LABEL, TIER_TEXT } from "@/lib/proposal-meta"
 import { ProposalFormView } from "./proposal-form-view"
 import { ProposalConflictCallout } from "./proposal-conflict-callout"
 import { JsonEditor } from "@/components/ui/json-editor"
@@ -59,13 +62,20 @@ function formatTimeAgo(iso: string | null) {
 }
 
 export function ProposalDetailPanel() {
+  const router = useRouter()
+  const params = useParams<{ runId: string }>()
   const detail = useAppStore((s) => s.selectedDetail)
   const detailLoading = useAppStore((s) => s.detailLoading)
   const selectedId = useAppStore((s) => s.selectedId)
   const setSelectedId = useAppStore((s) => s.setSelectedId)
+  const contentView = useAppStore((s) => s.contentView)
+  const setContentView = useAppStore((s) => s.setContentView)
+  const rightTab = useAppStore((s) => s.rightTab)
+  const setRightTab = useAppStore((s) => s.setRightTab)
   const acceptProposal = useAppStore((s) => s.acceptProposal)
   const rejectProposal = useAppStore((s) => s.rejectProposal)
   const editProposal = useAppStore((s) => s.editProposal)
+  const tokenValid = useAppStore((s) => s.tokenValid)
 
   const [tab, setTab] = useState<"form" | "json">("form")
   const [editing, setEditing] = useState(false)
@@ -172,12 +182,62 @@ export function ProposalDetailPanel() {
     }
   }
 
+  const showDetailBody = contentView === "detail"
+  const navTabs: Array<{ value: "detail" | "notes" | "chart" | "chat"; label: string; icon: React.ReactNode }> = [
+    { value: "detail", label: "Detail", icon: <FileSliders className="size-3.5" /> },
+    { value: "notes", label: "Notes", icon: <FileText className="size-3.5" /> },
+    { value: "chart", label: "FHIR store", icon: <DatabaseSearch className="size-3.5" /> },
+    { value: "chat", label: "AI chat", icon: <Sparkles className="size-3.5" /> },
+  ]
+  const activeNavTab: typeof navTabs[number]["value"] = contentView === "detail" ? "detail" : rightTab
+  const handleNavTab = (v: typeof navTabs[number]["value"]) => {
+    if (v === "detail") setContentView("detail")
+    else { setContentView("right"); setRightTab(v) }
+  }
+
   return (
-    <section className="flex-1 min-w-0 border-r flex flex-col h-full min-h-0">
+    <section
+      className={cn(
+        "flex-1 min-w-0 border-r flex-col h-full min-h-0",
+        showDetailBody ? "flex" : "hidden xl:flex",
+      )}
+    >
+      {/* Below xl: navigation header (back + title + nav tabs) */}
+      <div className="h-11 shrink-0 border-b px-3 flex items-center gap-2 min-w-0 xl:hidden">
+        <ArrowLeft
+          className="size-3.5 text-muted-foreground hover:text-foreground cursor-pointer lg:hidden shrink-0"
+          onClick={() => params?.runId && router.push(`/${params.runId}`)}
+          aria-label="Back to list"
+        />
+        <span className="text-sm font-medium truncate flex-1 min-w-0">{detail.display_label}</span>
+        <div className="flex items-center gap-1 shrink-0">
+          {navTabs.map((t) => (
+            <Tooltip key={t.value}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-7 w-7 cursor-pointer text-muted-foreground",
+                    activeNavTab === t.value && "bg-muted",
+                  )}
+                  onClick={() => handleNavTab(t.value)}
+                  aria-label={t.label}
+                >
+                  {t.icon}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top"><p>{t.label}</p></TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </div>
+
+      {/* Sub-header: tier label + form/JSON toggle (always present at xl+, only when in detail view below xl) */}
       <div className="h-11 shrink-0 border-b px-3 flex items-center gap-2 min-w-0">
-        <Badge className={cn("text-[10px] px-1.5 py-0 shrink-0 font-normal", TIER_BADGE[detail.confidence_tier])}>
+        <span className={cn("text-sm font-medium shrink-0 truncate", TIER_TEXT[detail.confidence_tier])}>
           {TIER_LABEL[detail.confidence_tier]}
-        </Badge>
+        </span>
         {decided && (
           <span className="flex items-center gap-1.5 shrink-0 text-xs text-muted-foreground">
             {detail.status === "accepted"
@@ -271,58 +331,37 @@ export function ProposalDetailPanel() {
         </div>
       )}
 
-      <div className="shrink-0 border-t px-3 py-2.5 flex items-center justify-end gap-2">
-        {editing ? (
-          <>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={cancelEdit} disabled={submitting}>
-              <Undo2 className="size-3" />
-              Cancel
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs text-success-fg border-success-border hover:bg-success-bg hover:text-success-fg"
-              onClick={handleSave}
-              disabled={submitting || !!jsonError || !draft}
-            >
-              <Save className="size-3" />
-              Save
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={startEdit}
-              disabled={decided || submitting}
-            >
-              <Pencil className="size-3" />
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-              onClick={() => setRejectOpen(true)}
-              disabled={decided || submitting}
-            >
-              <Ban className="size-3" />
-              Reject
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs text-emerald-600 border-emerald-600/40 hover:bg-emerald-600/10 hover:text-emerald-600 dark:text-emerald-400 dark:border-emerald-400/40 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-400"
-              onClick={handleAccept}
-              disabled={decided || submitting}
-            >
-              <Stamp className="size-3" />
-              Accept
-            </Button>
-          </>
-        )}
+      <div className="shrink-0 border-t px-3 py-2.5 flex items-center gap-2">
+        {!editing && <UnauthenticatedNotice tokenValid={tokenValid} />}
+        <div className="ml-auto flex items-center gap-2">
+          {editing ? (
+            <>
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={cancelEdit} disabled={submitting}>
+                <Undo2 className="size-3" />
+                Cancel
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs text-success-fg border-success-border hover:bg-success-bg hover:text-success-fg"
+                onClick={handleSave}
+                disabled={submitting || !!jsonError || !draft}
+              >
+                <Save className="size-3" />
+                Save
+              </Button>
+            </>
+          ) : (
+            <ReviewActions
+              tokenValid={tokenValid}
+              decided={decided}
+              submitting={submitting}
+              onEdit={startEdit}
+              onReject={() => setRejectOpen(true)}
+              onAccept={handleAccept}
+            />
+          )}
+        </div>
       </div>
 
       <AlertDialog open={rejectOpen} onOpenChange={setRejectOpen}>
@@ -522,6 +561,77 @@ function ConfidenceBreakdownTable({
         </li>
       ))}
     </ul>
+  )
+}
+
+function UnauthenticatedNotice({ tokenValid }: { tokenValid: boolean | null }) {
+  if (tokenValid === true) return null
+  const verifying = tokenValid === null
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <div
+          className={cn(
+            "flex items-center gap-1.5 text-xs cursor-default",
+            verifying ? "text-muted-foreground" : "text-destructive",
+          )}
+          role="status"
+        >
+          <ShieldAlert className="size-3.5" />
+          <span>{verifying ? "Verifying access…" : "Read-only — review token required"}</span>
+        </div>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-[220px] [text-wrap:pretty]">
+        Writes need a per-clinician review token from the agent's deep link, so every FHIR change is attributable for audit.
+      </TooltipContent>
+    </Tooltip>
+  )
+}
+
+interface ReviewActionsProps {
+  tokenValid: boolean | null
+  decided: boolean
+  submitting: boolean
+  onEdit: () => void
+  onReject: () => void
+  onAccept: () => void
+}
+
+function ReviewActions({ tokenValid, decided, submitting, onEdit, onReject, onAccept }: ReviewActionsProps) {
+  const locked = tokenValid !== true
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 text-xs"
+        onClick={onEdit}
+        disabled={decided || submitting || locked}
+      >
+        <Pencil className="size-3" />
+        Edit
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+        onClick={onReject}
+        disabled={decided || submitting || locked}
+      >
+        <Ban className="size-3" />
+        Reject
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 text-xs text-emerald-600 border-emerald-600/40 hover:bg-emerald-600/10 hover:text-emerald-600 dark:text-emerald-400 dark:border-emerald-400/40 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-400"
+        onClick={onAccept}
+        disabled={decided || submitting || locked}
+      >
+        <Stamp className="size-3" />
+        Accept
+      </Button>
+    </>
   )
 }
 

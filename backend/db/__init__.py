@@ -1,4 +1,4 @@
-from db.models import Base, LLMCall, PipelineRun, ProposalRecord
+from db.models import Base, LLMCall, PipelineRun, ProposalRecord, ReviewToken
 from db.session import AsyncSessionLocal, engine, get_session
 
 
@@ -13,6 +13,7 @@ __all__ = [
     "LLMCall",
     "PipelineRun",
     "ProposalRecord",
+    "ReviewToken",
     "engine",
     "get_session",
     "init_db",

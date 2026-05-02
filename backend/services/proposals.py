@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
-from uuid import uuid4
+from core.ids import short_id
 
 if TYPE_CHECKING:
     from context.auth import ReviewerIdentity
@@ -38,6 +38,10 @@ async def load_run_source(run_id: str, session: AsyncSession, *, fhir_client=Non
     run = (await session.execute(select(PipelineRun).where(PipelineRun.id == run_id))).scalar_one_or_none()
     if run is None:
         return None
+    from services import run_snapshot
+    snapshot = run_snapshot.read(run_id)
+    if snapshot is not None:
+        return snapshot
     return await _load_source(run.patient_id, fhir_client=fhir_client)
 
 
@@ -223,6 +227,13 @@ async def run_pipeline(
             by_tier: dict[str, int] = {}
             for r in all_rows:
                 by_tier[r.confidence_tier] = by_tier.get(r.confidence_tier, 0) + 1
+            from services import run_snapshot
+            if run_snapshot.read(row.run_id) is None:
+                try:
+                    pc, docs = await _load_source(effective_patient_id, fhir_client=fhir_client)
+                    run_snapshot.write(row.run_id, pc, docs)
+                except Exception as exc:
+                    log.warning("snapshot backfill failed for run %s: %s", row.run_id, exc)
             return {
                 "run_id": row.run_id,
                 "patient_id": effective_patient_id,
@@ -239,51 +250,55 @@ async def run_pipeline(
     family = name_parts.get("family") or ""
     patient_name = f"{given} {family}".strip() or None
 
+    from core import telemetry
     from core.preprocess import preprocess_documents
-    notes = preprocess_documents(documents)
+    from services import run_snapshot
 
-    from openai import AsyncOpenAI
-    from config import settings
-    client = AsyncOpenAI(api_key=settings.openai_api_key)
-    model = settings.openai_model_fast
-    cache_dir = Path(__file__).resolve().parent.parent / ".cache"
-
-    from core.cache import JsonCache
-    from core.extraction import extract_candidates_batch, merge_across_notes
-    from core.code_candidates import code_candidates
-    from core.reconcile import reconcile
-    from core.augment import assemble_proposals
-
-    stage2_cache = JsonCache(cache_dir / "stage2_output")
-    stage2 = await extract_candidates_batch(notes, client, model=model, cache=stage2_cache)
-
-    stage3_cache = JsonCache(cache_dir / "stage3")
-    stage3 = await merge_across_notes(stage2, client, model=model, cache=stage3_cache)
-
-    stage4 = await code_candidates(stage3, client, model=model)
-
-    stage5 = await reconcile(stage4, patient_context, client, model=model)
-
-    stage6 = assemble_proposals(stage5, notes, patient_context)
-
-    run_id = uuid4().hex
-    now = datetime.now(timezone.utc)
-
-    pipeline_run = PipelineRun(
-        id=run_id,
+    run_id = short_id("run")
+    await telemetry.start_run(
+        run_id=run_id,
         patient_id=effective_patient_id,
         patient_name=patient_name,
         triggered_by="api",
-        status="completed",
-        started_at=now,
-        finished_at=datetime.now(timezone.utc),
+        meta={"doc_count": len(documents)},
     )
-    session.add(pipeline_run)
+    run_snapshot.write(run_id, patient_context, documents)
 
-    for proposal in stage6.proposals:
-        session.add(_proposal_to_record(proposal, run_id, effective_patient_id))
+    try:
+        notes = preprocess_documents(documents)
 
-    await session.commit()
+        from openai import AsyncOpenAI
+        from config import settings
+        client = AsyncOpenAI(api_key=settings.openai_api_key)
+        model = settings.openai_model_fast
+        cache_dir = Path(__file__).resolve().parent.parent / ".cache"
+
+        from core.cache import JsonCache
+        from core.extraction import extract_candidates_batch, merge_across_notes
+        from core.code_candidates import code_candidates
+        from core.reconcile import reconcile
+        from core.augment import assemble_proposals
+
+        stage2_cache = JsonCache(cache_dir / "stage2_output")
+        stage2 = await extract_candidates_batch(notes, client, model=model, cache=stage2_cache)
+
+        stage3_cache = JsonCache(cache_dir / "stage3")
+        stage3 = await merge_across_notes(stage2, client, model=model, cache=stage3_cache)
+
+        stage4 = await code_candidates(stage3, client, model=model)
+
+        stage5 = await reconcile(stage4, patient_context, client, model=model)
+
+        stage6 = assemble_proposals(stage5, notes, patient_context)
+
+        for proposal in stage6.proposals:
+            session.add(_proposal_to_record(proposal, run_id, effective_patient_id))
+        await session.commit()
+    except Exception as exc:
+        await telemetry.finish_run("failed", error=str(exc))
+        raise
+
+    await telemetry.finish_run("completed")
 
     by_tier = {}
     for p in stage6.proposals:

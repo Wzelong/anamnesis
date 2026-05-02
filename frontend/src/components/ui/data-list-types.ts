@@ -34,6 +34,8 @@ export interface DataListProps<T> {
   onItemClick?: (item: T) => void
   emptyState?: EmptyStateConfig
   isFetching?: boolean
+  /** Optional content rendered between the toolbar and the list rows. */
+  headerExtra?: ReactNode
 }
 
 export type { FilterConfig, ToolbarButton, BulkAction, SelectionStatus, EmptyStateConfig }

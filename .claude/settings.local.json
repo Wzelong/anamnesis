@@ -36,7 +36,9 @@
       "Bash(npx --no-install tsc --noEmit)",
       "Bash(npx tsc *)",
       "Bash(echo \"---EXIT: $?---\")",
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "WebSearch",
+      "Bash(PYTHONPATH=. uv run pytest -x -q tests/test_telemetry.py tests/test_auth.py)"
     ]
   }
 }

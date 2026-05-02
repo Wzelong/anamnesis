@@ -57,7 +57,7 @@ export const TIER_BADGE: Record<string, string> = {
 }
 
 export const TIER_LABEL: Record<string, string> = {
-  ATTENTION: "Attention",
-  REVIEW: "Caution",
-  CONFIDENT: "Confident",
+  ATTENTION: "Attention required",
+  REVIEW: "Needs review",
+  CONFIDENT: "High confidence",
 }

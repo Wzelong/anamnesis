@@ -113,9 +113,17 @@ export function RunListPanel() {
     },
   ]
 
-  if (!panelOpen) {
-    return (
-      <aside className="shrink-0 w-[40px] flex flex-col border-r">
+  const isRoot = pathname === "/"
+
+  return (
+    <>
+      <aside
+        className={cn(
+          "shrink-0 w-[40px] flex-col border-r hidden lg:flex",
+          panelOpen && "xl:hidden",
+          isRoot && "lg:hidden",
+        )}
+      >
         <div className="h-11 flex items-center justify-center">
           <button
             type="button"
@@ -127,12 +135,13 @@ export function RunListPanel() {
           </button>
         </div>
       </aside>
-    )
-  }
 
-  return (
-    <>
-      <aside className="shrink-0 w-[260px] border-r flex flex-col">
+      <aside
+        className={cn(
+          "shrink-0 lg:w-[260px] border-r flex-col",
+          isRoot ? "flex flex-1 lg:flex-none" : (panelOpen ? "hidden xl:flex" : "hidden"),
+        )}
+      >
         <DataList
           data={paged}
           getItemId={(r) => r.id}

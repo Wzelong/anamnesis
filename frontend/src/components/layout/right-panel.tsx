@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { Activity, Check, ChevronDown, FileText, Inbox, MessageSquare } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, Check, ChevronDown, DatabaseSearch, FileSliders, FileText, Inbox, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAppStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
@@ -32,16 +33,31 @@ interface Props {
 
 const TABS: Array<{ value: Tab; label: string; icon: React.ReactNode }> = [
   { value: "notes", label: "Notes", icon: <FileText className="size-3.5" /> },
-  { value: "chart", label: "Chart", icon: <Activity className="size-3.5" /> },
-  { value: "chat", label: "Chat", icon: <MessageSquare className="size-3.5" /> },
+  { value: "chart", label: "FHIR store", icon: <DatabaseSearch className="size-3.5" /> },
+  { value: "chat", label: "AI chat", icon: <Sparkles className="size-3.5" /> },
+]
+
+const NAV_TABS: Array<{ value: "detail" | "notes" | "chart" | "chat"; label: string; icon: React.ReactNode }> = [
+  { value: "detail", label: "Detail", icon: <FileSliders className="size-3.5" /> },
+  { value: "notes", label: "Notes", icon: <FileText className="size-3.5" /> },
+  { value: "chart", label: "FHIR store", icon: <DatabaseSearch className="size-3.5" /> },
+  { value: "chat", label: "AI chat", icon: <Sparkles className="size-3.5" /> },
 ]
 
 export function RightPanel({ runId }: Props) {
+  const router = useRouter()
   const tab = useAppStore((s) => s.rightTab)
   const setTab = useAppStore((s) => s.setRightTab)
+  const contentView = useAppStore((s) => s.contentView)
+  const setContentView = useAppStore((s) => s.setContentView)
   const [activeDocId, setActiveDocId] = useState<string | null>(null)
   const selectedId = useAppStore((s) => s.selectedId)
   const detail = useAppStore((s) => s.selectedDetail)
+
+  const handleNavTab = (v: typeof NAV_TABS[number]["value"]) => {
+    if (v === "detail") setContentView("detail")
+    else { setContentView("right"); setTab(v) }
+  }
 
   const documents = useDocuments(runId)
   const chart = useChart(runId, tab === "chart")
@@ -52,7 +68,49 @@ export function RightPanel({ runId }: Props) {
   )
 
   return (
-    <section className="flex-1 min-w-0 flex flex-col h-full min-h-0">
+    <section
+      className={cn(
+        "flex-1 min-w-0 flex-col h-full min-h-0",
+        contentView === "right" ? "flex" : "hidden xl:flex",
+      )}
+    >
+      {/* Below xl: navigation header (back + title + nav tabs) */}
+      <div className="h-11 shrink-0 border-b px-3 flex items-center gap-2 min-w-0 xl:hidden">
+        <ArrowLeft
+          className="size-3.5 text-muted-foreground hover:text-foreground cursor-pointer lg:hidden shrink-0"
+          onClick={() => router.push(`/${runId}`)}
+          aria-label="Back to list"
+        />
+        <span className="text-sm font-medium truncate flex-1 min-w-0">
+          {detail?.display_label ?? ""}
+        </span>
+        <div className="flex items-center gap-1 shrink-0">
+          {NAV_TABS.map((t) => {
+            const isActive = (t.value === "detail" && contentView === "detail") ||
+                             (t.value !== "detail" && contentView === "right" && tab === t.value)
+            return (
+              <Tooltip key={t.value}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-7 w-7 cursor-pointer text-muted-foreground",
+                      isActive && "bg-muted",
+                    )}
+                    onClick={() => handleNavTab(t.value)}
+                    aria-label={t.label}
+                  >
+                    {t.icon}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top"><p>{t.label}</p></TooltipContent>
+              </Tooltip>
+            )
+          })}
+        </div>
+      </div>
+
       <div className="h-11 shrink-0 border-b px-3 flex items-center gap-2 min-w-0">
         <HeaderContext
           tab={tab}
@@ -64,7 +122,7 @@ export function RightPanel({ runId }: Props) {
           setActiveDocId={setActiveDocId}
         />
         <div className="flex-1" />
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="hidden xl:flex items-center gap-1 shrink-0">
           {TABS.map((t) => (
             <Tooltip key={t.value}>
               <TooltipTrigger asChild>

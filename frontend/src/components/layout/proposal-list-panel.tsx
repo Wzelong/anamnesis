@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
+  ArrowLeft,
   Ban,
   ClipboardList,
   ListChecks,
@@ -32,6 +33,7 @@ import {
   RESOURCE_LABEL,
   TIER_DOT,
 } from "@/lib/proposal-meta"
+import { RunStatsItems, RunStatsStrip } from "./run-stats-strip"
 
 type StatusFilter = "" | "pending" | "accepted" | "rejected"
 type TierFilter = "" | "ATTENTION" | "REVIEW" | "CONFIDENT"
@@ -43,6 +45,8 @@ export function ProposalListPanel() {
   const proposals = useAppStore((s) => s.proposals)
   const selectedId = useAppStore((s) => s.selectedId)
   const runId = useAppStore((s) => s.runId)
+  const runs = useAppStore((s) => s.runs)
+  const currentRun = useMemo(() => runs.find((r) => r.id === runId), [runs, runId])
   const selectedProposalIds = useAppStore((s) => s.selectedProposalIds)
   const toggleProposalSelection = useAppStore((s) => s.toggleProposalSelection)
   const selectAllProposals = useAppStore((s) => s.selectAllProposals)
@@ -59,6 +63,15 @@ export function ProposalListPanel() {
   const [pageSize, setPageSize] = useState(50)
   const [rejectOpen, setRejectOpen] = useState(false)
   const [rejectReason, setRejectReason] = useState("")
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1023px)")
+    setIsMobile(mql.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mql.addEventListener("change", onChange)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
 
   useEffect(() => {
     setPage(1)
@@ -66,14 +79,21 @@ export function ProposalListPanel() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return proposals.filter((p) => {
-      if (statusFilter && p.status !== statusFilter) return false
-      if (tierFilter && p.confidence_tier !== tierFilter) return false
-      if (typeFilter && p.resource_type !== typeFilter) return false
-      if (classFilter && p.classification !== classFilter) return false
-      if (q && !p.display_label.toLowerCase().includes(q)) return false
-      return true
-    })
+    const tierRank: Record<string, number> = { ATTENTION: 0, REVIEW: 1, CONFIDENT: 2 }
+    return proposals
+      .filter((p) => {
+        if (statusFilter && p.status !== statusFilter) return false
+        if (tierFilter && p.confidence_tier !== tierFilter) return false
+        if (typeFilter && p.resource_type !== typeFilter) return false
+        if (classFilter && p.classification !== classFilter) return false
+        if (q && !p.display_label.toLowerCase().includes(q)) return false
+        return true
+      })
+      .sort((a, b) => {
+        const t = (tierRank[a.confidence_tier] ?? 99) - (tierRank[b.confidence_tier] ?? 99)
+        if (t !== 0) return t
+        return a.resource_type.localeCompare(b.resource_type)
+      })
   }, [proposals, search, statusFilter, tierFilter, typeFilter, classFilter])
 
   const counts = useMemo(() => {
@@ -138,8 +158,14 @@ export function ProposalListPanel() {
     },
   ]
 
-  const start = (page - 1) * pageSize
-  const paged = filtered.slice(start, start + pageSize)
+  const start = isMobile ? 0 : (page - 1) * pageSize
+  const paged = isMobile ? filtered : filtered.slice(start, start + pageSize)
+
+  const tokenValid = useAppStore((s) => s.tokenValid)
+  const locked = tokenValid !== true
+  const lockedMessage = tokenValid === null
+    ? "Verifying access…"
+    : "Open this run from the deep link to enable actions."
 
   const allSelectedConfident =
     selectedProposalIds.size > 0 &&
@@ -149,8 +175,12 @@ export function ProposalListPanel() {
 
   const bulkActions: BulkAction[] = [
     {
-      icon: <Stamp className={cn("size-3", !allSelectedConfident && "opacity-40")} />,
+      icon: <Stamp className={cn("size-3", (!allSelectedConfident || locked) && "opacity-40")} />,
       onClick: () => {
+        if (locked) {
+          toast.error(lockedMessage)
+          return
+        }
         if (!allSelectedConfident) {
           toast.error("Bulk-accept is restricted to confident proposals. Open individual items to review.")
           return
@@ -160,15 +190,39 @@ export function ProposalListPanel() {
       ariaLabel: "Accept selected",
     },
     {
-      icon: <Ban className="size-3" />,
-      onClick: () => setRejectOpen(true),
+      icon: <Ban className={cn("size-3", locked && "opacity-40")} />,
+      onClick: () => {
+        if (locked) {
+          toast.error(lockedMessage)
+          return
+        }
+        setRejectOpen(true)
+      },
       ariaLabel: "Reject selected",
     },
   ]
 
   return (
     <>
-      <aside className="shrink-0 w-[280px] border-r flex flex-col h-full min-h-0 overflow-hidden">
+      <aside
+        className={cn(
+          "shrink-0 lg:w-[280px] flex-1 lg:flex-none border-r flex-col h-full min-h-0 overflow-hidden",
+          selectedId ? "hidden lg:flex" : "flex",
+        )}
+      >
+        <div className="h-11 shrink-0 border-b px-3 flex items-center gap-2 min-w-0 lg:hidden">
+          <ArrowLeft
+            className="size-3.5 text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+            onClick={() => router.push("/")}
+            aria-label="Back to runs"
+          />
+          <span className="text-sm font-medium truncate flex-1 min-w-0">
+            {currentRun?.patient_name ?? (runId ? `Run ${runId.slice(0, 8)}` : "")}
+          </span>
+          <div className="flex items-center gap-2 shrink-0 text-[11px] text-muted-foreground tabular-nums">
+            <RunStatsItems run={currentRun} />
+          </div>
+        </div>
         <DataList
           data={paged}
           getItemId={(p) => p.id}
@@ -198,11 +252,11 @@ export function ProposalListPanel() {
           searchDebounceMs={250}
           filters={filters}
           pagination={{
-            currentPage: page,
-            pageSize,
+            currentPage: isMobile ? 1 : page,
+            pageSize: isMobile ? Math.max(1, filtered.length) : pageSize,
             totalItems: filtered.length,
             onPageChange: setPage,
-            onPageSizeChange: setPageSize,
+            onPageSizeChange: isMobile ? undefined : setPageSize,
           }}
           activeId={selectedId ?? undefined}
           selectedIds={selectedProposalIds}
@@ -215,6 +269,7 @@ export function ProposalListPanel() {
             icon: <ListChecks className="size-6 text-muted-foreground" />,
             message: "No proposals match",
           }}
+          headerExtra={<RunStatsStrip run={currentRun} />}
         />
       </aside>
 

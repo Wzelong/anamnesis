@@ -1,12 +1,15 @@
 """Tests for context/auth.py — review token minting, validation, identity extraction."""
+import asyncio
+import importlib
 from datetime import datetime, timedelta, timezone
 
 import jwt
 import pytest
+from sqlalchemy import update
 
 from context.auth import (
+    InvalidReviewToken,
     ReviewerIdentity,
-    _SECRET,
     extract_clinician_identity,
     mint_review_token,
     validate_review_token,
@@ -15,6 +18,24 @@ from context.auth import (
 
 def _encode_claims(claims: dict) -> str:
     return jwt.encode(claims, "irrelevant-key", algorithm="HS256")
+
+
+@pytest.fixture(autouse=True)
+def _isolated_db(tmp_path, monkeypatch):
+    db_path = tmp_path / "auth.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite+aiosqlite:///{db_path}")
+
+    import db.session as session_mod
+    import db as db_pkg
+    importlib.reload(session_mod)
+    importlib.reload(db_pkg)
+
+    asyncio.run(db_pkg.init_db())
+    yield
+
+
+def _run(coro):
+    return asyncio.run(coro)
 
 
 class TestExtractIdentity:
@@ -57,47 +78,56 @@ class TestExtractIdentity:
 
 class TestMintAndValidate:
     def test_roundtrip(self):
-        identity = ReviewerIdentity(display="Dr. Chen", fhir_reference="Practitioner/p99")
-        token = mint_review_token("run-1", "patient-1", identity)
-        result = validate_review_token(token)
-        assert result.display == "Dr. Chen"
-        assert result.fhir_reference == "Practitioner/p99"
+        async def run():
+            identity = ReviewerIdentity(display="Dr. Chen", fhir_reference="Practitioner/p99")
+            token = await mint_review_token("run-1", "patient-1", identity)
+            result = await validate_review_token(token)
+            assert result.display == "Dr. Chen"
+            assert result.fhir_reference == "Practitioner/p99"
+        _run(run())
 
     def test_roundtrip_no_fhir_reference(self):
-        identity = ReviewerIdentity(display="Authenticated via Prompt Opinion")
-        token = mint_review_token("run-2", "patient-2", identity)
-        result = validate_review_token(token)
-        assert result.display == "Authenticated via Prompt Opinion"
-        assert result.fhir_reference is None
+        async def run():
+            identity = ReviewerIdentity(display="Authenticated via Prompt Opinion")
+            token = await mint_review_token("run-2", "patient-2", identity)
+            result = await validate_review_token(token)
+            assert result.display == "Authenticated via Prompt Opinion"
+            assert result.fhir_reference is None
+        _run(run())
+
+    def test_token_is_short_and_prefixed(self):
+        async def run():
+            identity = ReviewerIdentity(display="Dr. Test")
+            token = await mint_review_token("run-x", "patient-y", identity)
+            assert token.startswith("rev_")
+            assert len(token) <= 16
+        _run(run())
+
+    def test_unknown_token_raises(self):
+        async def run():
+            with pytest.raises(InvalidReviewToken):
+                await validate_review_token("rev_doesnotexist")
+        _run(run())
 
     def test_expired_token_raises(self):
-        payload = {
-            "sub": "test",
-            "name": "Expired",
-            "run_id": "r",
-            "patient_id": "p",
-            "iat": datetime.now(timezone.utc) - timedelta(hours=48),
-            "exp": datetime.now(timezone.utc) - timedelta(hours=24),
-        }
-        token = jwt.encode(payload, _SECRET, algorithm="HS256")
-        with pytest.raises(jwt.ExpiredSignatureError):
-            validate_review_token(token)
+        async def run():
+            from db import AsyncSessionLocal, ReviewToken
 
-    def test_bad_signature_raises(self):
-        payload = {
-            "sub": "test",
-            "name": "Bad",
-            "run_id": "r",
-            "patient_id": "p",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-        }
-        token = jwt.encode(payload, "wrong-secret", algorithm="HS256")
-        with pytest.raises(jwt.InvalidSignatureError):
-            validate_review_token(token)
+            identity = ReviewerIdentity(display="Dr. Test")
+            token = await mint_review_token("run-3", "patient-3", identity)
+            async with AsyncSessionLocal() as session:
+                await session.execute(
+                    update(ReviewToken)
+                    .where(ReviewToken.token == token)
+                    .values(expires_at=datetime.now(timezone.utc) - timedelta(seconds=1))
+                )
+                await session.commit()
+            with pytest.raises(InvalidReviewToken):
+                await validate_review_token(token)
+        _run(run())
 
-    def test_payload_contains_run_and_patient(self):
-        identity = ReviewerIdentity(display="Dr. Test")
-        token = mint_review_token("run-abc", "patient-xyz", identity)
-        payload = jwt.decode(token, _SECRET, algorithms=["HS256"])
-        assert payload["run_id"] == "run-abc"
-        assert payload["patient_id"] == "patient-xyz"
+    def test_invalid_token_is_jwt_compatible(self):
+        async def run():
+            with pytest.raises(jwt.InvalidTokenError):
+                await validate_review_token("rev_nope")
+        _run(run())

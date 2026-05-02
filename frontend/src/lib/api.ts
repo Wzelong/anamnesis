@@ -13,6 +13,11 @@ export async function apiFetch<T = unknown>(
 }
 
 export const api = {
+  checkAuth: (token: string) =>
+    apiFetch("/api/auth/check", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
   listRuns: () => apiFetch("/api/runs"),
 
   deleteRuns: (ids: string[]) =>
