@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Essential hypertension, controlled on single agent",
       "expected_codes": [
-        {"system": "SNOMED", "code": "59621000", "display": "Essential hypertension (disorder)"},
-        {"system": "ICD-10", "code": "I10", "display": "Essential (primary) hypertension"}
+        {
+          "system": "SNOMED",
+          "code": "155296003",
+          "display": "Essential hypertension"
+        },
+        {
+          "system": "ICD-10",
+          "code": "I10",
+          "display": "Essential (primary) hypertension"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,8 +39,16 @@
       "category": "condition",
       "verbatim_span": "Hyperlipidemia with elevated Lp(a)",
       "expected_codes": [
-        {"system": "SNOMED", "code": "55822004", "display": "Hyperlipidemia (disorder)"},
-        {"system": "ICD-10", "code": "E78.5", "display": "Hyperlipidemia, unspecified"}
+        {
+          "system": "SNOMED",
+          "code": "55822004",
+          "display": "Hyperlipidemia (disorder)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "E78.5",
+          "display": "Hyperlipidemia, unspecified"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -47,7 +63,11 @@
       "category": "family_member_history",
       "verbatim_span": "Father, alive age 74, with coronary artery disease. Diagnosed\n  at age 58",
       "expected_codes": [
-        {"system": "SNOMED", "code": "53741008", "display": "Coronary arteriosclerosis (disorder)"}
+        {
+          "system": "SNOMED",
+          "code": "53741008",
+          "display": "Coronary arteriosclerosis (disorder)"
+        }
       ],
       "expected_attributes": {
         "relationship": "father",
@@ -62,7 +82,11 @@
       "category": "family_member_history",
       "verbatim_span": "Brother, deceased age 49 (February 2026), sudden cardiac death",
       "expected_codes": [
-        {"system": "SNOMED", "code": "95281009", "display": "Sudden cardiac death (disorder)"}
+        {
+          "system": "SNOMED",
+          "code": "95281009",
+          "display": "Sudden cardiac death (disorder)"
+        }
       ],
       "expected_attributes": {
         "relationship": "brother",
@@ -77,8 +101,16 @@
       "category": "family_member_history",
       "verbatim_span": "Maternal grandfather, deceased age 62, myocardial infarction",
       "expected_codes": [
-        {"system": "SNOMED", "code": "22298006", "display": "Myocardial infarction (disorder)"},
-        {"system": "ICD-10", "code": "I21.9", "display": "Acute myocardial infarction, unspecified"}
+        {
+          "system": "SNOMED",
+          "code": "22298006",
+          "display": "Myocardial infarction (disorder)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "I21.9",
+          "display": "Acute myocardial infarction, unspecified"
+        }
       ],
       "expected_attributes": {
         "relationship": "maternal-grandfather",
@@ -93,7 +125,11 @@
       "category": "family_member_history",
       "verbatim_span": "Paternal uncle, alive age 70, with a history of coronary\n  artery bypass grafting at age 60",
       "expected_codes": [
-        {"system": "SNOMED", "code": "232717009", "display": "Coronary artery bypass grafting (procedure)"}
+        {
+          "system": "SNOMED",
+          "code": "232717009",
+          "display": "Coronary artery bypass grafting (procedure)"
+        }
       ],
       "expected_attributes": {
         "relationship": "paternal-uncle",

@@ -1,0 +1,67 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-cog-mci"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-htn",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "155296003",
+              "display": "Essential hypertension"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "I10",
+              "display": "Essential (primary) hypertension"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-cog-mci"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-moca-prior",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "72133-2",
+              "display": "Total score [MoCA]"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-cog-mci"
+        },
+        "valueQuantity": {
+          "value": 26,
+          "unit": "{score}"
+        },
+        "effectiveDateTime": "2024-08-10"
+      }
+    }
+  ]
+}

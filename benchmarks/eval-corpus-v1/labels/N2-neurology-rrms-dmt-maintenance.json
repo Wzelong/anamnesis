@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Relapsing-remitting multiple sclerosis, clinically and\nradiographically stable",
       "expected_codes": [
-        {"system": "SNOMED", "code": "426373005", "display": "Relapsing-remitting multiple sclerosis (disorder)"},
-        {"system": "ICD-10", "code": "G35", "display": "Multiple sclerosis"}
+        {
+          "system": "SNOMED",
+          "code": "426373005",
+          "display": "Relapsing-remitting multiple sclerosis (disorder)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "G35D",
+          "display": "Multiple sclerosis, unspecified"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,7 +39,11 @@
       "category": "medication_request",
       "verbatim_span": "Continue ocrelizumab 600 mg IV every 6 months",
       "expected_codes": [
-        {"system": "RxNorm", "code": "1876366", "display": "ocrelizumab"}
+        {
+          "system": "RxNorm",
+          "code": "1876366",
+          "display": "ocrelizumab"
+        }
       ],
       "expected_attributes": {
         "status": "active",
@@ -61,7 +73,11 @@
       "category": "procedure",
       "verbatim_span": "Brain MRI with and without gadolinium (2026-02-28",
       "expected_codes": [
-        {"system": "SNOMED", "code": "241601008", "display": "Magnetic resonance imaging of brain (procedure)"}
+        {
+          "system": "SNOMED",
+          "code": "816077007",
+          "display": "MRI of brain"
+        }
       ],
       "expected_attributes": {
         "status": "completed",

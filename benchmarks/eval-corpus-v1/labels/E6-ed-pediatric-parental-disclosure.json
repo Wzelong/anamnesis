@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Acute asthma exacerbation, moderate severity",
       "expected_codes": [
-        {"system": "SNOMED", "code": "195967001", "display": "Asthma (disorder)"},
-        {"system": "ICD-10", "code": "J45.21", "display": "Mild intermittent asthma with (acute) exacerbation"}
+        {
+          "system": "SNOMED",
+          "code": "21341004",
+          "display": "Asthma"
+        },
+        {
+          "system": "ICD-10",
+          "code": "J45.21",
+          "display": "Mild intermittent asthma with (acute) exacerbation"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,8 +39,16 @@
       "category": "medication_request",
       "verbatim_span": "Albuterol 5 mg + ipratropium 0.5 mg nebulizer, three back-to-\n  back treatments",
       "expected_codes": [
-        {"system": "RxNorm", "code": "435", "display": "albuterol"},
-        {"system": "RxNorm", "code": "7213", "display": "ipratropium"}
+        {
+          "system": "RxNorm",
+          "code": "435",
+          "display": "albuterol"
+        },
+        {
+          "system": "RxNorm",
+          "code": "7213",
+          "display": "ipratropium"
+        }
       ],
       "expected_attributes": {
         "status": "completed",
@@ -48,7 +64,11 @@
       "category": "observation",
       "verbatim_span": "SpO2 92% RA",
       "expected_codes": [
-        {"system": "LOINC", "code": "59408-5", "display": "Oxygen saturation in Arterial blood by Pulse oximetry"}
+        {
+          "system": "LOINC",
+          "code": "59410-1",
+          "display": "Oxygen saturation in Arterial blood by Pulse oximetry --on room air"
+        }
       ],
       "expected_attributes": {
         "status": "final",
@@ -63,7 +83,11 @@
       "category": "observation",
       "verbatim_span": "Weight 27 kg",
       "expected_codes": [
-        {"system": "LOINC", "code": "29463-7", "display": "Body weight"}
+        {
+          "system": "LOINC",
+          "code": "29463-7",
+          "display": "Body weight"
+        }
       ],
       "expected_attributes": {
         "status": "final",
@@ -78,7 +102,11 @@
       "category": "family_member_history",
       "verbatim_span": "His mother has type 1 diabetes mellitus,\ndiagnosed at age 12",
       "expected_codes": [
-        {"system": "SNOMED", "code": "46635009", "display": "Type 1 diabetes mellitus (disorder)"}
+        {
+          "system": "SNOMED",
+          "code": "46635009",
+          "display": "Type 1 diabetes mellitus (disorder)"
+        }
       ],
       "expected_attributes": {
         "relationship": "mother",
@@ -93,8 +121,16 @@
       "category": "family_member_history",
       "verbatim_span": "His father\nhas moderate eczema and seasonal allergic rhinitis",
       "expected_codes": [
-        {"system": "SNOMED", "code": "43116000", "display": "Eczema (disorder)"},
-        {"system": "SNOMED", "code": "61582004", "display": "Allergic rhinitis (disorder)"}
+        {
+          "system": "SNOMED",
+          "code": "43116000",
+          "display": "Eczema (disorder)"
+        },
+        {
+          "system": "SNOMED",
+          "code": "195821000",
+          "display": "Allergic rhinitis NOS"
+        }
       ],
       "expected_attributes": {
         "relationship": "father",
@@ -108,7 +144,11 @@
       "category": "family_member_history",
       "verbatim_span": "An older\nsister (age 11) has mild intermittent asthma",
       "expected_codes": [
-        {"system": "SNOMED", "code": "195967001", "display": "Asthma (disorder)"}
+        {
+          "system": "SNOMED",
+          "code": "21341004",
+          "display": "Asthma"
+        }
       ],
       "expected_attributes": {
         "relationship": "sister",

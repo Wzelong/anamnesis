@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { cn } from "@/lib/utils"
+import { useAppStore } from "@/lib/store"
 import {
   type FhirResource,
   addressLine,
@@ -53,13 +54,27 @@ function sortByDateDesc(a: FhirResource, b: FhirResource): number {
   return (db || "").localeCompare(da || "")
 }
 
+type HighlightVariant = "conflict" | "update"
+
 export function RightPanelChart({ chart, classification, chartMatches }: Props) {
+  const highlightVariant: HighlightVariant = classification === "CONFLICTING" ? "conflict" : "update"
   const highlightedIds = useMemo(
     () => new Set(
-      classification === "CONFLICTING" ? chartMatches.map((m) => m.resource_id) : [],
+      classification === "CONFLICTING" || classification === "UPDATING"
+        ? chartMatches.map((m) => m.resource_id)
+        : [],
     ),
     [classification, chartMatches],
   )
+  const chartFocus = useAppStore((s) => s.chartFocus)
+  const rowRefs = useRef(new Map<string, HTMLDivElement>())
+
+  useEffect(() => {
+    if (!chartFocus) return
+    const el = rowRefs.current.get(chartFocus.id)
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" })
+  }, [chartFocus])
+
   const orgIndex = useMemo(
     () => buildOrgIndex(chart?.organizations ?? []),
     [chart?.organizations],
@@ -71,6 +86,10 @@ export function RightPanelChart({ chart, classification, chartMatches }: Props) 
   }
 
   const encounters = [...chart.encounters].sort(sortByDateDesc)
+  const setRowRef = (id: string) => (el: HTMLDivElement | null) => {
+    if (el) rowRefs.current.set(id, el)
+    else rowRefs.current.delete(id)
+  }
 
   return (
     <div className="flex-1 min-h-0 overflow-auto px-3 py-3 flex flex-col gap-4">
@@ -91,9 +110,18 @@ export function RightPanelChart({ chart, classification, chartMatches }: Props) 
             defaultOpen={open}
           >
             <div className="flex flex-col gap-1">
-              {sorted.map((r, i) => (
-                <ChartRow key={(r.id as string) || i} resource={r} highlighted={highlightedIds.has(r.id as string)} />
-              ))}
+              {sorted.map((r, i) => {
+                const id = r.id as string
+                return (
+                  <ChartRow
+                    key={id || i}
+                    resource={r}
+                    highlighted={highlightedIds.has(id)}
+                    variant={highlightVariant}
+                    rowRef={id ? setRowRef(id) : undefined}
+                  />
+                )
+              })}
             </div>
           </Disclosure>
         )
@@ -270,16 +298,28 @@ function PersonHero({ patient }: { patient: Record<string, unknown> }) {
   )
 }
 
-function ChartRow({ resource, highlighted }: { resource: FhirResource; highlighted: boolean }) {
+function ChartRow({
+  resource,
+  highlighted,
+  variant,
+  rowRef,
+}: {
+  resource: FhirResource
+  highlighted: boolean
+  variant: HighlightVariant
+  rowRef?: (el: HTMLDivElement | null) => void
+}) {
   const name = resourceDisplayName(resource) || "Untitled"
   const status = stateLabel(resource)
   const date = shortDate(resourceDate(resource))
   const muted = !highlighted && isInactive(resource)
   return (
     <div
+      ref={rowRef}
       className={cn(
         "flex items-baseline gap-2 text-xs leading-snug py-0.5 px-2 -mx-2 rounded-sm",
-        highlighted && "bg-destructive/10 py-1",
+        highlighted && variant === "conflict" && "bg-destructive/10 py-1",
+        highlighted && variant === "update" && "bg-warning-bg py-1",
         muted && "text-muted-foreground",
       )}
     >

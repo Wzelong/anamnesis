@@ -1,0 +1,20 @@
+{
+  "note_id": "E6",
+  "filename": "E6-ed-pediatric-parental-disclosure.txt",
+  "paired_bundle": "pediatric-asthma",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    { "fact_id": "E6-F1", "action": "DUPLICATE", "target_resource_id": "cond-asthma-mild", "match_basis": "exact_code", "expected_provenance": false, "rationale": "Asthma already in chart." },
+    { "fact_id": "E6-F2", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "ED nebulizer combo; one-time treatment." },
+    { "fact_id": "E6-F3", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "SpO2 vital sign; encounter-specific." },
+    { "fact_id": "E6-F4", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Weight observation; no prior in chart." },
+    { "fact_id": "E6-F5", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Mother T1DM; FamilyMemberHistory NEW." },
+    { "fact_id": "E6-F6", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Father eczema; FamilyMemberHistory NEW." },
+    { "fact_id": "E6-F7", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Sister asthma; FamilyMemberHistory NEW." }
+  ],
+  "expected_non_fact_actions": [
+    { "non_fact_id": "E6-N1", "expected_action": null, "rationale": "Wrong-subject trap: mother's T1DM must not become patient Condition." },
+    { "non_fact_id": "E6-N2", "expected_action": null, "rationale": "Wrong-subject trap: father's eczema must not become patient Condition." },
+    { "non_fact_id": "E6-N3", "expected_action": null, "rationale": "Negated family history items." }
+  ]
+}

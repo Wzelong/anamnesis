@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Vasovagal syncope, reflex-mediated",
       "expected_codes": [
-        {"system": "SNOMED", "code": "398665005", "display": "Vasovagal syncope (disorder)"},
-        {"system": "ICD-10", "code": "R55", "display": "Syncope and collapse"}
+        {
+          "system": "SNOMED",
+          "code": "139534004",
+          "display": "Syncope/vasovagal faint"
+        },
+        {
+          "system": "ICD-10",
+          "code": "R55",
+          "display": "Syncope and collapse"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,7 +39,11 @@
       "category": "procedure",
       "verbatim_span": "EKG on arrival",
       "expected_codes": [
-        {"system": "SNOMED", "code": "164847006", "display": "12 lead electrocardiogram (procedure)"}
+        {
+          "system": "SNOMED",
+          "code": "142010003",
+          "display": "12 lead ECG"
+        }
       ],
       "expected_attributes": {
         "status": "completed",

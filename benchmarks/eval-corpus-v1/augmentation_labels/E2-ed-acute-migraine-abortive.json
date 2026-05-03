@@ -1,0 +1,17 @@
+{
+  "note_id": "E2",
+  "filename": "E2-ed-acute-migraine-abortive.txt",
+  "paired_bundle": "migraine-asthma-htn",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    { "fact_id": "E2-F1", "action": "DUPLICATE", "target_resource_id": "cond-migraine", "match_basis": "exact_code", "expected_provenance": false, "rationale": "Migraine SNOMED 37796009 already in chart." },
+    { "fact_id": "E2-F2", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "ED IV ketorolac; one-time abortive." },
+    { "fact_id": "E2-F3", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "ED prochlorperazine; one-time." },
+    { "fact_id": "E2-F4", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "ED diphenhydramine; one-time." },
+    { "fact_id": "E2-F5", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Pain score observation; encounter-specific." }
+  ],
+  "expected_non_fact_actions": [
+    { "non_fact_id": "E2-N1", "expected_action": null, "rationale": "Negated red-flag symptoms." },
+    { "non_fact_id": "E2-N2", "expected_action": null, "rationale": "Historical CT 2021; not this encounter." }
+  ]
+}

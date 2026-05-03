@@ -39,9 +39,9 @@
       "id": "CR-006",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "84114007",
-      "display": "Heart failure (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=84114007"
+      "code": "155377000",
+      "display": "Heart failure NOS",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=155377000"
     },
     {
       "id": "CR-007",
@@ -55,9 +55,9 @@
       "id": "CR-008",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "282825002",
-      "display": "Paroxysmal atrial fibrillation (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=282825002"
+      "code": "195081002",
+      "display": "Paroxysmal atrial fibrillation",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=195081002"
     },
     {
       "id": "CR-009",
@@ -87,9 +87,9 @@
       "id": "CR-012",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "439729000",
-      "display": "Chronic migraine (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=439729000"
+      "code": "431601000124105",
+      "display": "Chronic migraine without aura (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=431601000124105"
     },
     {
       "id": "CR-013",
@@ -103,9 +103,9 @@
       "id": "CR-014",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "385627004",
+      "code": "449710006",
       "display": "Cellulitis of lower limb (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=385627004"
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=449710006"
     },
     {
       "id": "CR-015",
@@ -119,9 +119,9 @@
       "id": "CR-016",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "91175000",
-      "display": "Seizure (finding)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=91175000"
+      "code": "128613002",
+      "display": "Seizure disorder",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=128613002"
     },
     {
       "id": "CR-017",
@@ -143,17 +143,17 @@
       "id": "CR-019",
       "system_short": "ICD-10",
       "system": "http://hl7.org/fhir/sid/icd-10-cm",
-      "code": "G35",
-      "display": "Multiple sclerosis",
-      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G35"
+      "code": "G35D",
+      "display": "Multiple sclerosis, unspecified",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=G35D"
     },
     {
       "id": "CR-020",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "15602001",
-      "display": "Conversion disorder (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=15602001",
+      "code": "89239005",
+      "display": "Conversion disorder",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=89239005",
       "notes": "Used for functional neurological symptom disorder."
     },
     {
@@ -168,9 +168,9 @@
       "id": "CR-022",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "59621000",
-      "display": "Essential hypertension (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=59621000"
+      "code": "155296003",
+      "display": "Essential hypertension",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=155296003"
     },
     {
       "id": "CR-023",
@@ -216,9 +216,9 @@
       "id": "CR-028",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "302828002",
-      "display": "Venous insufficiency (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=302828002"
+      "code": "195516009",
+      "display": "Chronic venous insufficiency NOS",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=195516009"
     },
     {
       "id": "CR-029",
@@ -232,9 +232,9 @@
       "id": "CR-030",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "398665005",
-      "display": "Vasovagal syncope (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=398665005"
+      "code": "139534004",
+      "display": "Syncope/vasovagal faint",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=139534004"
     },
     {
       "id": "CR-031",
@@ -296,9 +296,9 @@
       "id": "CR-038",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "195967001",
-      "display": "Asthma (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=195967001"
+      "code": "21341004",
+      "display": "Asthma",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=21341004"
     },
     {
       "id": "CR-039",
@@ -360,9 +360,9 @@
       "id": "CR-046",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "235595009",
-      "display": "Gastroesophageal reflux disease (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=235595009"
+      "code": "102620007",
+      "display": "Gastroesophageal reflux",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=102620007"
     },
     {
       "id": "CR-047",
@@ -408,17 +408,17 @@
       "id": "CR-052",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "61582004",
-      "display": "Allergic rhinitis (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=61582004"
+      "code": "195821000",
+      "display": "Allergic rhinitis NOS",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=195821000"
     },
     {
       "id": "CR-053",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "49049000",
-      "display": "Parkinson's disease (disorder)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=49049000"
+      "code": "154999006",
+      "display": "Parkinson's disease",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=154999006"
     },
     {
       "id": "CR-054",
@@ -608,9 +608,9 @@
       "id": "CR-204",
       "system_short": "LOINC",
       "system": "http://loinc.org",
-      "code": "10230-1",
-      "display": "Left ventricular Ejection fraction",
-      "source_url": "https://loinc.org/10230-1/"
+      "code": "18043-0",
+      "display": "Left ventricular Ejection fraction by US",
+      "source_url": "https://loinc.org/18043-0/"
     },
     {
       "id": "CR-205",
@@ -624,9 +624,9 @@
       "id": "CR-209",
       "system_short": "LOINC",
       "system": "http://loinc.org",
-      "code": "8310-5",
-      "display": "Body temperature",
-      "source_url": "https://loinc.org/8310-5/"
+      "code": "8331-1",
+      "display": "Oral temperature",
+      "source_url": "https://loinc.org/8331-1/"
     },
     {
       "id": "CR-210",
@@ -648,9 +648,9 @@
       "id": "CR-212",
       "system_short": "LOINC",
       "system": "http://loinc.org",
-      "code": "59408-5",
-      "display": "Oxygen saturation in Arterial blood by Pulse oximetry",
-      "source_url": "https://loinc.org/59408-5/"
+      "code": "59410-1",
+      "display": "Oxygen saturation in Arterial blood by Pulse oximetry --on room air",
+      "source_url": "https://loinc.org/59410-1/"
     },
     {
       "id": "CR-250",
@@ -688,17 +688,17 @@
       "id": "CR-301",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "164847006",
-      "display": "12 lead electrocardiogram (procedure)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=164847006"
+      "code": "142010003",
+      "display": "12 lead ECG",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=142010003"
     },
     {
       "id": "CR-302",
       "system_short": "SNOMED",
       "system": "http://snomed.info/sct",
-      "code": "241601008",
-      "display": "Magnetic resonance imaging of brain (procedure)",
-      "source_url": "https://browser.ihtsdotools.org/?conceptId1=241601008"
+      "code": "816077007",
+      "display": "MRI of brain",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=816077007"
     },
     {
       "id": "CR-304",
@@ -707,6 +707,30 @@
       "code": "303653007",
       "display": "Computed tomography of head (procedure)",
       "source_url": "https://browser.ihtsdotools.org/?conceptId1=303653007"
+    },
+    {
+      "id": "CR-401",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "409137002",
+      "display": "No known drug allergy",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=409137002"
+    },
+    {
+      "id": "CR-402",
+      "system_short": "SNOMED",
+      "system": "http://snomed.info/sct",
+      "code": "21897009",
+      "display": "Generalized anxiety disorder (disorder)",
+      "source_url": "https://browser.ihtsdotools.org/?conceptId1=21897009"
+    },
+    {
+      "id": "CR-403",
+      "system_short": "ICD-10",
+      "system": "http://hl7.org/fhir/sid/icd-10-cm",
+      "code": "F41.1",
+      "display": "Generalized anxiety disorder",
+      "source_url": "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=F41.1"
     }
   ]
 }

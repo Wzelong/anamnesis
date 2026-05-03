@@ -72,6 +72,11 @@ mcp.tool(
 )(tools.reject_proposal_tool)
 
 mcp.tool(
+    name="ReopenProposal",
+    description="Reopen a previously rejected proposal, returning it to pending for re-review. Accepted proposals cannot be reopened (the FHIR write is permanent). The prior rejection (reason, reviewer, timestamp) is preserved in the proposal's decision history.",
+)(tools.reopen_proposal_tool)
+
+mcp.tool(
     name="EditProposal",
     description="Edit the FHIR resource of a pending proposal before accepting. Pass the updated resource as a JSON string. Citations and provenance are preserved.",
 )(tools.edit_proposal_tool)

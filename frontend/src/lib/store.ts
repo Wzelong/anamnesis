@@ -51,6 +51,7 @@ interface AppState {
   runPanelOverride: boolean | null
   rightTab: "notes" | "chart" | "chat"
   contentView: "detail" | "right"
+  chartFocus: { id: string; tick: number } | null
 
   chatByRun: Record<string, ChatMessage[]>
   chatStreaming: boolean
@@ -71,6 +72,7 @@ interface AppState {
   bulkRejectSelected: (reason: string) => Promise<void>
   acceptProposal: (id: string) => Promise<void>
   rejectProposal: (id: string, reason: string) => Promise<void>
+  reopenProposal: (id: string) => Promise<void>
   editProposal: (id: string, resource: Record<string, unknown>) => Promise<void>
   setToken: (token: string | null) => void
   setSelectedId: (id: string | null) => void
@@ -78,6 +80,8 @@ interface AppState {
   setRunPanelOverride: (v: boolean | null) => void
   setRightTab: (tab: "notes" | "chart" | "chat") => void
   setContentView: (v: "detail" | "right") => void
+  revealChartResource: (id: string) => void
+  clearChartFocus: () => void
   sendChatMessage: (text: string) => Promise<void>
   stopChat: () => void
   applyProposedEdit: (messageId: string) => Promise<void>
@@ -109,6 +113,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   runPanelOverride: null,
   rightTab: "notes",
   contentView: "detail",
+  chartFocus: null,
 
   chatByRun: {},
   chatStreaming: false,
@@ -259,6 +264,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (get().selectedId === id) await get().fetchDetail(id)
   },
 
+  reopenProposal: async (id) => {
+    const { token } = get()
+    if (!token) return
+    await api.reopenProposal(id, token)
+    set({
+      proposals: get().proposals.map((p) =>
+        p.id === id ? { ...p, status: "pending" } : p,
+      ),
+    })
+    if (get().selectedId === id) await get().fetchDetail(id)
+  },
+
   editProposal: async (id, resource) => {
     const { token } = get()
     if (!token) return
@@ -309,6 +326,17 @@ export const useAppStore = create<AppState>((set, get) => ({
   setRunPanelOverride: (v) => set({ runPanelOverride: v }),
 
   setRightTab: (tab) => set({ rightTab: tab }),
+
+  revealChartResource: (id) => {
+    const prev = get().chartFocus
+    set({
+      contentView: "right",
+      rightTab: "chart",
+      chartFocus: { id, tick: (prev?.tick ?? 0) + 1 },
+    })
+  },
+
+  clearChartFocus: () => set({ chartFocus: null }),
 
   setContentView: (v) => set({ contentView: v }),
 
@@ -410,6 +438,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedId: null,
       selectedDetail: null,
       detailLoading: false,
+      chartFocus: null,
       chatByRun: {},
       chatStreaming: false,
       chatStatus: null,

@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock, FileText, Sparkle, Wallet } from "lucide-react"
+import { ClipboardList, FileText } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { Run } from "@/lib/types"
 
@@ -14,53 +14,42 @@ function formatDuration(ms: number | null) {
   return `${m}m ${rem}s`
 }
 
-function formatTokens(n: number) {
-  if (n < 1000) return `${n}`
-  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}k`
-  return `${(n / 1_000_000).toFixed(1)}M`
-}
-
 function formatCost(usd: number) {
   if (usd === 0) return "$0"
-  if (usd < 0.01) return `<$0.01`
+  if (usd < 0.01) return "<$0.01"
   return `$${usd.toFixed(2)}`
 }
 
 interface StatItem {
-  icon: React.ReactNode
+  icon?: React.ReactNode
   value: string
-  label: string
+  tooltip: string
 }
 
 function buildItems(run: Run): StatItem[] {
   const items: StatItem[] = []
-  const duration = formatDuration(run.duration_ms)
-  if (duration) {
-    items.push({
-      icon: <Clock className="size-3" />,
-      value: duration,
-      label: "Processing time",
-    })
-  }
   if (run.total_documents > 0) {
     items.push({
       icon: <FileText className="size-3" />,
       value: `${run.total_documents}`,
-      label: `Documents processed (${run.total_documents})`,
+      tooltip: `${run.total_documents} ${run.total_documents === 1 ? "document" : "documents"} processed`,
     })
   }
-  if (run.total_tokens > 0) {
+  if (run.total_proposals > 0) {
     items.push({
-      icon: <Sparkle className="size-3" />,
-      value: formatTokens(run.total_tokens),
-      label: `Total tokens (${run.total_tokens.toLocaleString()})`,
+      icon: <ClipboardList className="size-3" />,
+      value: `${run.total_proposals}`,
+      tooltip: `${run.total_proposals} ${run.total_proposals === 1 ? "proposal" : "proposals"} generated`,
     })
+  }
+  const duration = formatDuration(run.duration_ms)
+  if (duration) {
+    items.push({ value: duration, tooltip: "Processing time" })
   }
   if (run.total_cost_usd > 0) {
     items.push({
-      icon: <Wallet className="size-3" />,
       value: formatCost(run.total_cost_usd),
-      label: `Estimated cost ($${run.total_cost_usd.toFixed(4)})`,
+      tooltip: `Estimated cost ($${run.total_cost_usd.toFixed(4)})`,
     })
   }
   return items
@@ -73,14 +62,14 @@ export function RunStatsItems({ run }: { run: Run | null | undefined }) {
   return (
     <>
       {items.map((item) => (
-        <Tooltip key={item.label}>
+        <Tooltip key={item.tooltip}>
           <TooltipTrigger asChild>
-            <div className="flex items-center gap-1 shrink-0 cursor-default">
+            <span className="flex items-center gap-1 shrink-0 cursor-default">
               {item.icon}
               <span>{item.value}</span>
-            </div>
+            </span>
           </TooltipTrigger>
-          <TooltipContent side="bottom"><p>{item.label}</p></TooltipContent>
+          <TooltipContent side="bottom"><p>{item.tooltip}</p></TooltipContent>
         </Tooltip>
       ))}
     </>

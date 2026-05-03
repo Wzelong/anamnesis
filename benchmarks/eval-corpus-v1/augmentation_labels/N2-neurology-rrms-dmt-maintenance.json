@@ -1,0 +1,16 @@
+{
+  "note_id": "N2",
+  "filename": "N2-neurology-rrms-dmt-maintenance.txt",
+  "paired_bundle": "rrms-dmt",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    { "fact_id": "N2-F1", "action": "DUPLICATE", "target_resource_id": "cond-rrms", "match_basis": "exact_code", "expected_provenance": false, "rationale": "RRMS already in chart." },
+    { "fact_id": "N2-F2", "action": "DUPLICATE", "target_resource_id": "med-ocrelizumab", "match_basis": "exact_code", "expected_provenance": false, "rationale": "Ocrelizumab 600 mg q6mo continued." },
+    { "fact_id": "N2-F3", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "EDSS observation lacks coded code-reference entry." },
+    { "fact_id": "N2-F4", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "New brain MRI procedure on 2026-02-28; chart has no prior MRI." }
+  ],
+  "expected_non_fact_actions": [
+    { "non_fact_id": "N2-N1", "expected_action": null, "rationale": "Negated MRI findings." },
+    { "non_fact_id": "N2-N2", "expected_action": null, "rationale": "Maternal aunt RA; FamilyMemberHistory not patient Condition." }
+  ]
+}

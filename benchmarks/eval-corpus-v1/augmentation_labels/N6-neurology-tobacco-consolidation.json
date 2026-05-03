@@ -1,0 +1,60 @@
+{
+  "note_id": "N6",
+  "filename": "N6-neurology-tobacco-consolidation.txt",
+  "paired_bundle": "pd-tobacco",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    {
+      "fact_id": "N6-F1",
+      "action": "DUPLICATE",
+      "target_resource_id": "cond-parkinsons",
+      "match_basis": "exact_code",
+      "expected_provenance": false,
+      "rationale": "Parkinson's disease SNOMED 49049000 already in chart."
+    },
+    {
+      "fact_id": "N6-F2",
+      "action": "UPDATING",
+      "target_resource_id": "obs-tobacco-former",
+      "match_basis": "loinc_value_diff",
+      "field_changes": [
+        { "path": "valueCodeableConcept.text", "from": "Former smoker", "to": "Current smoker" }
+      ],
+      "expected_provenance": true,
+      "rationale": "Patient previously documented as former smoker; now disclosed as currently smoking 0.5 ppd while attempting cessation. Tobacco status canonical: former -> current."
+    },
+    {
+      "fact_id": "N6-F3",
+      "action": "DUPLICATE",
+      "target_resource_id": "med-carbidopa-levodopa",
+      "match_basis": "exact_code",
+      "expected_provenance": false,
+      "rationale": "Carbidopa/levodopa continued at same dose."
+    },
+    {
+      "fact_id": "N6-F4",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "Father with PD as FamilyMemberHistory; no FHx in chart."
+    }
+  ],
+  "expected_non_fact_actions": [
+    {
+      "non_fact_id": "N6-N1",
+      "expected_action": null,
+      "rationale": "Multi-section consolidation trap (HPI mention); should not appear as a separate Proposal."
+    },
+    {
+      "non_fact_id": "N6-N2",
+      "expected_action": null,
+      "rationale": "Multi-section consolidation trap (A&P mention); should not appear as a separate Proposal."
+    },
+    {
+      "non_fact_id": "N6-N3",
+      "expected_action": null,
+      "rationale": "Patient still currently smoking; should not be classified as former smoker."
+    }
+  ]
+}

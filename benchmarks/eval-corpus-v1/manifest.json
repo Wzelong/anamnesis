@@ -1,5 +1,12 @@
 {
-  "code_reference_size": 88,
+  "action_distribution": {
+    "CONFLICTING": 1,
+    "DUPLICATE": 26,
+    "NEW": 47,
+    "UPDATING": 3
+  },
+  "augmentation_labels_count": 18,
+  "code_reference_size": 91,
   "code_systems_used": [
     "ICD-10",
     "LOINC",
@@ -18,6 +25,59 @@
   },
   "labeled_by": "Anamnesis project team",
   "license": "CC-BY-4.0 (synthetic notes; no PHI)",
+  "match_basis_distribution": {
+    "exact_code": 24,
+    "loinc_value_diff": 3,
+    "loinc_value_match": 2,
+    "no_match": 47,
+    "specific_vs_nkda": 1
+  },
+  "notes_per_fixture": {
+    "afib-paroxysmal": [
+      "C3-cardiology-preop-risk-eval"
+    ],
+    "afib-persistent-tia": [
+      "C4-cardiology-afib-rate-control"
+    ],
+    "cardio-comorbid": [
+      "C5-cardiology-chest-pain-acs-ruleout",
+      "C6-cardiology-rich-family-history"
+    ],
+    "cognitive-mci": [
+      "N4-neurology-cognitive-moca-eval"
+    ],
+    "fnd-anxiety": [
+      "N5-neurology-functional-neuro-normal-exam"
+    ],
+    "hfref-gdmt": [
+      "C2-cardiology-hfref-gdmt-optimization"
+    ],
+    "lean": [
+      "C1-cardiology-stable-angina-followup",
+      "E1-ed-cellulitis-iv-to-po",
+      "E4-ed-obs-syncope-checklist",
+      "E5-ed-sulfa-allergy-disclosure",
+      "N3-neurology-first-seizure-workup"
+    ],
+    "migraine-asthma-htn": [
+      "E2-ed-acute-migraine-abortive"
+    ],
+    "migraine-prophylaxis": [
+      "N1-neurology-migraine-prophylaxis"
+    ],
+    "multi-cardio-anxiety": [
+      "E3-ed-multicomplaint-dictation"
+    ],
+    "pd-tobacco": [
+      "N6-neurology-tobacco-consolidation"
+    ],
+    "pediatric-asthma": [
+      "E6-ed-pediatric-parental-disclosure"
+    ],
+    "rrms-dmt": [
+      "N2-neurology-rrms-dmt-maintenance"
+    ]
+  },
   "specialty_distribution": {
     "cardiology": 6,
     "emergency_department": 6,
@@ -30,6 +90,7 @@
   },
   "total_chars": 76742,
   "total_facts": 77,
+  "total_fixtures": 13,
   "total_non_facts": 45,
   "total_notes": 18,
   "trap_types": {

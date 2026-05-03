@@ -75,6 +75,12 @@ export const api = {
       body: JSON.stringify({ reason }),
     }),
 
+  reopenProposal: (id: string, token: string) =>
+    apiFetch(`/api/proposals/${id}/reopen`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
   editProposal: (id: string, resource: Record<string, unknown>, token: string) =>
     apiFetch(`/api/proposals/${id}`, {
       method: "PUT",

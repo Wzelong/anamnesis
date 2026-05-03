@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { ThemeToggle } from "./theme-toggle"
+import { ShortcutsDialog } from "./shortcuts-dialog"
 import { useRouter } from "next/navigation"
 import { api } from "@/lib/api"
 import { useAppStore } from "@/lib/store"
@@ -58,6 +59,7 @@ export function Header() {
       <div className="flex-1" />
 
       <div className="flex items-center gap-1 pr-3">
+        <ShortcutsDialog />
         <ThemeToggle />
         <AlertDialog>
           <AlertDialogTrigger asChild>

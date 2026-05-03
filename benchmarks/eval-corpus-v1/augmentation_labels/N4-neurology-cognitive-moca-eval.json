@@ -1,0 +1,15 @@
+{
+  "note_id": "N4",
+  "filename": "N4-neurology-cognitive-moca-eval.txt",
+  "paired_bundle": "cognitive-mci",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    { "fact_id": "N4-F1", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "MCI new working diagnosis." },
+    { "fact_id": "N4-F2", "action": "UPDATING", "target_resource_id": "obs-moca-prior", "match_basis": "loinc_value_diff", "field_changes": [{ "path": "valueQuantity.value", "from": "26", "to": "21" }], "expected_provenance": true, "rationale": "MoCA score declined from 26 (2024) to 21 (current)." },
+    { "fact_id": "N4-F3", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Mother's dementia; FamilyMemberHistory NEW." }
+  ],
+  "expected_non_fact_actions": [
+    { "non_fact_id": "N4-N1", "expected_action": null, "rationale": "Negated head injury / seizures." },
+    { "non_fact_id": "N4-N2", "expected_action": null, "rationale": "Differential concern for AD; not confirmed dx." }
+  ]
+}

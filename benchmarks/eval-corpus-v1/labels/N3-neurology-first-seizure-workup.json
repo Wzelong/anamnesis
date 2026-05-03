@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "First unprovoked generalized tonic-clonic seizure",
       "expected_codes": [
-        {"system": "SNOMED", "code": "91175000", "display": "Seizure (finding)"},
-        {"system": "ICD-10", "code": "R56.9", "display": "Unspecified convulsions"}
+        {
+          "system": "SNOMED",
+          "code": "128613002",
+          "display": "Seizure disorder"
+        },
+        {
+          "system": "ICD-10",
+          "code": "R56.9",
+          "display": "Unspecified convulsions"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,7 +39,11 @@
       "category": "procedure",
       "verbatim_span": "CT head without contrast (2026-03-26, PCP ordered):\nno acute findings",
       "expected_codes": [
-        {"system": "SNOMED", "code": "303653007", "display": "Computed tomography of head (procedure)"}
+        {
+          "system": "SNOMED",
+          "code": "303653007",
+          "display": "Computed tomography of head (procedure)"
+        }
       ],
       "expected_attributes": {
         "status": "completed",

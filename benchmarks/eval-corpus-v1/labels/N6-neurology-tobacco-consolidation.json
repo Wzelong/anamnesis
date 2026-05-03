@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Parkinson's disease, idiopathic, motor-stable on current\ndopaminergic regimen",
       "expected_codes": [
-        {"system": "SNOMED", "code": "49049000", "display": "Parkinson's disease (disorder)"},
-        {"system": "ICD-10", "code": "G20.A2", "display": "Parkinson's disease without dyskinesia, with fluctuations"}
+        {
+          "system": "SNOMED",
+          "code": "154999006",
+          "display": "Parkinson's disease"
+        },
+        {
+          "system": "ICD-10",
+          "code": "G20.A2",
+          "display": "Parkinson's disease without dyskinesia, with fluctuations"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,8 +39,16 @@
       "category": "observation",
       "verbatim_span": "Currently smoking approximately half a pack per day, actively\nattempting cessation; total tobacco exposure approximately 25\npack-years",
       "expected_codes": [
-        {"system": "LOINC", "code": "72166-2", "display": "Tobacco smoking status"},
-        {"system": "SNOMED", "code": "449868002", "display": "Smokes tobacco daily (finding)"}
+        {
+          "system": "LOINC",
+          "code": "72166-2",
+          "display": "Tobacco smoking status"
+        },
+        {
+          "system": "SNOMED",
+          "code": "449868002",
+          "display": "Smokes tobacco daily (finding)"
+        }
       ],
       "expected_attributes": {
         "status": "final",
@@ -47,7 +63,11 @@
       "category": "medication_request",
       "verbatim_span": "Continue carbidopa/levodopa 25/100 mg PO QID",
       "expected_codes": [
-        {"system": "RxNorm", "code": "103990", "display": "carbidopa / levodopa"}
+        {
+          "system": "RxNorm",
+          "code": "103990",
+          "display": "carbidopa / levodopa"
+        }
       ],
       "expected_attributes": {
         "status": "active",
@@ -64,7 +84,11 @@
       "category": "family_member_history",
       "verbatim_span": "Father with Parkinson's disease, diagnosed in his late 70s,\ndied age 82",
       "expected_codes": [
-        {"system": "SNOMED", "code": "49049000", "display": "Parkinson's disease (disorder)"}
+        {
+          "system": "SNOMED",
+          "code": "154999006",
+          "display": "Parkinson's disease"
+        }
       ],
       "expected_attributes": {
         "relationship": "father",

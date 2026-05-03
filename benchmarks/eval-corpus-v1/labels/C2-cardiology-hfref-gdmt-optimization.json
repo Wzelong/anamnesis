@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Heart failure with reduced ejection fraction, NYHA functional\nclass II",
       "expected_codes": [
-        {"system": "SNOMED", "code": "84114007", "display": "Heart failure (disorder)"},
-        {"system": "ICD-10", "code": "I50.22", "display": "Chronic systolic (congestive) heart failure"}
+        {
+          "system": "SNOMED",
+          "code": "155377000",
+          "display": "Heart failure NOS"
+        },
+        {
+          "system": "ICD-10",
+          "code": "I50.22",
+          "display": "Chronic systolic (congestive) heart failure"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,7 +39,11 @@
       "category": "observation",
       "verbatim_span": "LVEF 40%",
       "expected_codes": [
-        {"system": "LOINC", "code": "10230-1", "display": "Left ventricular Ejection fraction"}
+        {
+          "system": "LOINC",
+          "code": "18043-0",
+          "display": "Left ventricular Ejection fraction by US"
+        }
       ],
       "expected_attributes": {
         "status": "final",
@@ -46,7 +58,11 @@
       "category": "observation",
       "verbatim_span": "NYHA functional\nclass II",
       "expected_codes": [
-        {"system": "LOINC", "code": "93124-6", "display": "New York Heart Association Functional Classification"}
+        {
+          "system": "LOINC",
+          "code": "93124-6",
+          "display": "New York Heart Association Functional Classification"
+        }
       ],
       "expected_attributes": {
         "status": "final",
@@ -61,7 +77,11 @@
       "category": "medication_request",
       "verbatim_span": "Continue sacubitril/valsartan 97/103 mg PO BID",
       "expected_codes": [
-        {"system": "RxNorm", "code": "1656339", "display": "sacubitril / valsartan"}
+        {
+          "system": "RxNorm",
+          "code": "1656339",
+          "display": "sacubitril / valsartan"
+        }
       ],
       "expected_attributes": {
         "status": "active",
@@ -78,7 +98,11 @@
       "category": "medication_request",
       "verbatim_span": "Continue carvedilol 25 mg PO BID",
       "expected_codes": [
-        {"system": "RxNorm", "code": "20352", "display": "carvedilol"}
+        {
+          "system": "RxNorm",
+          "code": "20352",
+          "display": "carvedilol"
+        }
       ],
       "expected_attributes": {
         "status": "active",
@@ -95,7 +119,11 @@
       "category": "medication_request",
       "verbatim_span": "Continue spironolactone 25 mg PO daily",
       "expected_codes": [
-        {"system": "RxNorm", "code": "9997", "display": "spironolactone"}
+        {
+          "system": "RxNorm",
+          "code": "9997",
+          "display": "spironolactone"
+        }
       ],
       "expected_attributes": {
         "status": "active",
@@ -112,7 +140,11 @@
       "category": "medication_request",
       "verbatim_span": "Continue dapagliflozin 10 mg PO daily",
       "expected_codes": [
-        {"system": "RxNorm", "code": "1488564", "display": "dapagliflozin"}
+        {
+          "system": "RxNorm",
+          "code": "1488564",
+          "display": "dapagliflozin"
+        }
       ],
       "expected_attributes": {
         "status": "active",

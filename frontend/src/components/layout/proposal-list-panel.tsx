@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
@@ -61,23 +61,8 @@ export function ProposalListPanel() {
   const [tierFilter, setTierFilter] = useState<TierFilter>("")
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("")
   const [classFilter, setClassFilter] = useState<ClassFilter>("")
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(50)
   const [rejectOpen, setRejectOpen] = useState(false)
   const [rejectReason, setRejectReason] = useState("")
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const mql = window.matchMedia("(max-width: 1023px)")
-    setIsMobile(mql.matches)
-    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    mql.addEventListener("change", onChange)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
-
-  useEffect(() => {
-    setPage(1)
-  }, [search, statusFilter, tierFilter, typeFilter, classFilter])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -160,20 +145,27 @@ export function ProposalListPanel() {
     },
   ]
 
-  const start = isMobile ? 0 : (page - 1) * pageSize
-  const paged = isMobile ? filtered : filtered.slice(start, start + pageSize)
-
   const tokenValid = useAppStore((s) => s.tokenValid)
   const locked = tokenValid !== true
   const lockedMessage = tokenValid === null
     ? "Verifying access…"
     : "Open this run from the deep link to enable actions."
 
+  const selectedProposals = useMemo(() => {
+    const tierRank: Record<string, number> = { ATTENTION: 0, REVIEW: 1, CONFIDENT: 2 }
+    return [...selectedProposalIds]
+      .map((id) => proposals.find((p) => p.id === id))
+      .filter((p): p is Proposal => Boolean(p))
+      .sort((a, b) => {
+        const t = (tierRank[a.confidence_tier] ?? 99) - (tierRank[b.confidence_tier] ?? 99)
+        if (t !== 0) return t
+        return a.resource_type.localeCompare(b.resource_type)
+      })
+  }, [selectedProposalIds, proposals])
+
   const allSelectedConfident =
-    selectedProposalIds.size > 0 &&
-    [...selectedProposalIds].every(
-      (id) => proposals.find((p) => p.id === id)?.confidence_tier === "CONFIDENT",
-    )
+    selectedProposals.length > 0 &&
+    selectedProposals.every((p) => p.confidence_tier === "CONFIDENT")
 
   const bulkActions: BulkAction[] = [
     {
@@ -221,12 +213,12 @@ export function ProposalListPanel() {
           <span className="text-sm font-medium truncate flex-1 min-w-0">
             {currentRun?.patient_name ?? (runId ? `Run ${runId.slice(0, 8)}` : "")}
           </span>
-          <div className="flex items-center gap-2 shrink-0 text-[11px] text-muted-foreground tabular-nums">
+          <div className="flex items-center gap-3 shrink-0 text-[11px] text-muted-foreground tabular-nums">
             <RunStatsItems run={currentRun} />
           </div>
         </div>
         <DataList
-          data={paged}
+          data={filtered}
           getItemId={(p) => p.id}
           renderItem={(p) => {
             const Icon = RESOURCE_ICON[p.resource_type] ?? ClipboardList
@@ -267,16 +259,10 @@ export function ProposalListPanel() {
           onSearchChange={setSearch}
           searchDebounceMs={250}
           filters={filters}
-          pagination={{
-            currentPage: isMobile ? 1 : page,
-            pageSize: isMobile ? Math.max(1, filtered.length) : pageSize,
-            totalItems: filtered.length,
-            onPageChange: setPage,
-            onPageSizeChange: isMobile ? undefined : setPageSize,
-          }}
+          virtualized
           activeId={selectedId ?? undefined}
           selectedIds={selectedProposalIds}
-          onSelectAll={() => selectAllProposals(paged.filter((p) => p.status === "pending").map((p) => p.id))}
+          onSelectAll={() => selectAllProposals(filtered.filter((p) => p.status === "pending").map((p) => p.id))}
           onSelectOne={toggleProposalSelection}
           onClearSelection={clearProposalSelection}
           isItemSelectable={(p: Proposal) => p.status === "pending"}
@@ -293,12 +279,36 @@ export function ProposalListPanel() {
       <AlertDialog open={rejectOpen} onOpenChange={setRejectOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reject {selectedProposalIds.size} proposal{selectedProposalIds.size === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Reject {selectedProposals.length} proposal{selectedProposals.length === 1 ? "" : "s"}?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              The reason below applies to all selected proposals.
+              The reason below applies to all selected proposals and is saved to the audit log.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="border rounded-md max-h-56 overflow-y-auto divide-y">
+            {selectedProposals.map((p) => {
+              const Icon = RESOURCE_ICON[p.resource_type] ?? ClipboardList
+              return (
+                <div key={p.id} className="flex items-center gap-2 px-2 py-1.5 min-w-0">
+                  <span
+                    className={cn("size-1.5 rounded-full shrink-0", TIER_DOT[p.confidence_tier])}
+                    aria-hidden
+                  />
+                  <Icon className="size-3 text-muted-foreground shrink-0" />
+                  <span className="text-sm truncate flex-1">{p.display_label}</span>
+                  <Badge
+                    variant={CLASSIFICATION_VARIANT[p.classification]}
+                    className="text-[10px] px-1 py-0 shrink-0"
+                  >
+                    {CLASSIFICATION_LABEL[p.classification]}
+                  </Badge>
+                </div>
+              )
+            })}
+          </div>
           <textarea
+            autoFocus
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="Reason"

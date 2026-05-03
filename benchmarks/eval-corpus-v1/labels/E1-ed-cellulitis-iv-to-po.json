@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Cellulitis of left lower limb",
       "expected_codes": [
-        {"system": "SNOMED", "code": "385627004", "display": "Cellulitis of lower limb (disorder)"},
-        {"system": "ICD-10", "code": "L03.116", "display": "Cellulitis of left lower limb"}
+        {
+          "system": "SNOMED",
+          "code": "449710006",
+          "display": "Cellulitis of lower limb (disorder)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "L03.116",
+          "display": "Cellulitis of left lower limb"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,7 +39,11 @@
       "category": "medication_request",
       "verbatim_span": "IV ceftriaxone 2 g x 1 dose in the ED",
       "expected_codes": [
-        {"system": "RxNorm", "code": "2193", "display": "ceftriaxone"}
+        {
+          "system": "RxNorm",
+          "code": "2193",
+          "display": "ceftriaxone"
+        }
       ],
       "expected_attributes": {
         "status": "completed",
@@ -48,7 +60,11 @@
       "category": "medication_request",
       "verbatim_span": "Discharge on cephalexin 500 mg PO QID x 10 days",
       "expected_codes": [
-        {"system": "RxNorm", "code": "2231", "display": "cephalexin"}
+        {
+          "system": "RxNorm",
+          "code": "2231",
+          "display": "cephalexin"
+        }
       ],
       "expected_attributes": {
         "status": "active",
@@ -66,7 +82,11 @@
       "category": "observation",
       "verbatim_span": "WBC 13.2 x 10^9/L",
       "expected_codes": [
-        {"system": "LOINC", "code": "6690-2", "display": "Leukocytes [#/volume] in Blood by Automated count"}
+        {
+          "system": "LOINC",
+          "code": "6690-2",
+          "display": "Leukocytes [#/volume] in Blood by Automated count"
+        }
       ],
       "expected_attributes": {
         "status": "final",
@@ -81,7 +101,11 @@
       "category": "observation",
       "verbatim_span": "T 38.2 C",
       "expected_codes": [
-        {"system": "LOINC", "code": "8310-5", "display": "Body temperature"}
+        {
+          "system": "LOINC",
+          "code": "8331-1",
+          "display": "Oral temperature"
+        }
       ],
       "expected_attributes": {
         "status": "final",

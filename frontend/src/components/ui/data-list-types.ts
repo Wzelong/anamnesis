@@ -22,7 +22,14 @@ export interface DataListProps<T> {
   onSearchChange?: (value: string) => void
   searchDebounceMs?: number
   filters?: FilterConfig[]
-  pagination: DataListPaginationConfig
+  /** Omit when `virtualized` is true. */
+  pagination?: DataListPaginationConfig
+  /** Render the list with windowed virtualization (TanStack Virtual) instead
+   *  of pagination. Suitable for large unbounded lists. */
+  virtualized?: boolean
+  /** Initial row-height estimate for the virtualizer. Real heights are
+   *  measured per row after first paint. Defaults to 41. */
+  estimatedItemHeight?: number
   selectedIds?: Set<string>
   onSelectAll?: () => void
   onSelectOne?: (id: string) => void

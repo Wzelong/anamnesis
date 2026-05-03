@@ -1,0 +1,76 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-rrms"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-rrms",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "426373005",
+              "display": "Relapsing remitting multiple sclerosis (disorder)"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "G35D",
+              "display": "Multiple sclerosis, unspecified"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-rrms"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-ocrelizumab",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1876366",
+              "display": "ocrelizumab"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-rrms"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Infuse 600 mg IV every 6 months",
+            "doseAndRate": [
+              {
+                "doseQuantity": {
+                  "value": 600,
+                  "unit": "mg"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

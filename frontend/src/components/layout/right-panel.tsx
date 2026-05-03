@@ -270,7 +270,6 @@ function NotesHeader({
 
   if (!activeDoc) return null
   const meta = [shortDate(activeDoc.date), activeDoc.author].filter(Boolean).join(" · ")
-  const others = cited.length - 1
   const hasMany = cited.length > 1
 
   return (
@@ -303,9 +302,9 @@ function NotesHeader({
               })}
             </DropdownMenuContent>
           </DropdownMenu>
-          {others > 0 && (
-            <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">+{others}</span>
-          )}
+          <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">
+            {cited.length} notes
+          </span>
         </>
       ) : (
         <>

@@ -1,0 +1,16 @@
+{
+  "note_id": "E3",
+  "filename": "E3-ed-multicomplaint-dictation.txt",
+  "paired_bundle": "multi-cardio-anxiety",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    { "fact_id": "E3-F1", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Chest pain encounter dx; not in chart." },
+    { "fact_id": "E3-F2", "action": "DUPLICATE", "target_resource_id": "cond-cvi", "match_basis": "exact_code", "expected_provenance": false, "rationale": "CVI already in chart." },
+    { "fact_id": "E3-F3", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Tension-type headache encounter dx; not in chart." },
+    { "fact_id": "E3-F4", "action": "DUPLICATE", "target_resource_id": "obs-tobacco-current", "match_basis": "loinc_value_match", "expected_provenance": false, "rationale": "Current smoker matches chart canonical 'current'." }
+  ],
+  "expected_non_fact_actions": [
+    { "non_fact_id": "E3-N1", "expected_action": null, "rationale": "Ruled-out ACS." },
+    { "non_fact_id": "E3-N2", "expected_action": null, "rationale": "Ruled-out DVT." }
+  ]
+}

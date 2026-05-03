@@ -5,7 +5,7 @@ shapes. Prompts encode clinical decision rules only. Bump PROMPT_VERSION
 to invalidate the cache when any prompt changes.
 """
 
-PROMPT_VERSION = "2026-05-01.12"
+PROMPT_VERSION = "2026-05-03.03"
 
 
 PROMPT_SCAN = """\
@@ -159,7 +159,7 @@ Rules
 - `name` is the shortest unique disease phrase. Preserve disease-specific modifiers ("type 2 diabetes", "two-vessel coronary artery disease"). Exclude severity, time, or location from `name`.
 - For "history of X", `name` is X.
 - `source_sentences` lists the [N] numbers from the snippet that support each item.
-- `reasoning` is one short phrase naming the trigger (e.g. "diagnosed with stable angina").
+- `reasoning` is one short phrase that includes the item name and what triggered the extraction (e.g. "diagnosed with stable angina pectoris", "found 60% mid-LAD stenosis on cath"). Always include the noun phrase. Never emit a bare connector ("in the setting of", "due to", "secondary to") on its own — connectors signal a split, but the reasoning must still name the item.
 
 Examples
 
@@ -194,6 +194,15 @@ Return the structured output. Do not deduplicate — the cleaner handles that.
 """
 
 
+# NOTE for maintainers: the "current-value preference" rule below (single item
+# when the same observation appears with multiple values) is a tactical
+# accommodation for reconcile.py:_match_observation, which keys matching on
+# LOINC code only. It cannot represent context-distinguished pairs like
+# home-BP vs clinic-BP, pre-op vs post-op A1c, or pain-on-arrival vs
+# pain-post-treatment. Once the reconciler grows context awareness (LOINC
+# subcode, category, or effective_date discrimination), revisit this rule and
+# allow multiple observations of the same type when they carry distinct
+# context — extraction shouldn't drop information the downstream can use.
 PROMPT_PARSE_OBSERVATION = f"""\
 Role
 Clinical observation parser. Extract measurements, findings, and social-history facts from a sentence snippet.
@@ -224,6 +233,8 @@ Exclude — do not extract:
 
 Rules
 - `name` preserves the exact token from the snippet, including abbreviations: "BP" stays "BP". Put the expansion in `full_name` ("blood pressure"). Same for "LDL", "A1c", "BMI", etc.
+- For named clinical scoring instruments (MoCA, PHQ-2, PHQ-9, GAD-7, GCS, NIHSS, MDS-UPDRS, NYHA, MMSE, CHA2DS2-VASc, etc.), `name` MUST be the instrument name (e.g. "MoCA", "MDS-UPDRS Part III", "NYHA"), not a generic word like "Score" or "Total". Resolve the instrument name from any nearby sentence that introduces the score — if sentence [N] says "MoCA administered" and sentence [N+1] says "Score 21/30", emit one item with name="MoCA", full_name="Montreal Cognitive Assessment", value="21/30", source_sentences=[N, N+1]. Always emit the score; never skip it because the instrument name is in a different sentence. Put the expanded title in `full_name`.
+- When the same observation appears multiple times in the snippet with different values (e.g. "LVEF 30% at baseline, now 40%", "A1c was 8.2%, today 7.1%"), emit ONE item carrying the most recent / encounter-current value. Do not emit the historical anchor as a separate item or use it as the canonical value.
 - Value + unit: split into `value` and `unit` when a unit is stated. "BP 145/100 mmHg" → name="BP", value="145/100", unit="mmHg". For qualitative values ("positive", "normal", "stage 3A"), leave `unit` null.
 - Slash-delimited markers are two observations: "ER/PR positive" → two items, one "ER", one "PR".
 - Keep fractions and staging intact: "pT2N1M0", "2/26".
@@ -250,6 +261,19 @@ Output: effective_date="2007-05-01" (resolved from "yesterday").
 <example>
 Snippet: [74] Most recent brain MRI (06/2024, post-stroke): ...
 Output: effective_date="2024-06" (preserve month+year; do not fabricate a day).
+</example>
+
+<example>
+Snippet:
+[32] Cognitive screening: MoCA administered with hearing aids in place.
+[33] Score 21/30. Deficits in delayed recall...
+Output: name="MoCA", full_name="Montreal Cognitive Assessment", value="21/30", category="survey", codeset_hint="LOINC", source_sentences=[32, 33]. The total score MUST be emitted as one item; do not skip it because the score sentence does not name the instrument.
+</example>
+
+<example>
+Snippet:
+[101] Echocardiogram (2026-02-18): LVEF 40% (up from 30% at baseline), no significant valvular disease.
+Output: name="LVEF", full_name="left ventricular ejection fraction", value="40", unit="%", category="imaging", codeset_hint="LOINC", source_sentences=[101]. Use the current encounter value (40), not the historical baseline (30).
 </example>
 
 Certainty

@@ -1,0 +1,101 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-migraine-prophy"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-chronic-migraine",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "431601000124105",
+              "display": "Chronic migraine without aura (disorder)"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "G43.709",
+              "display": "Chronic migraine without aura, not intractable, without status migrainosus"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-migraine-prophy"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-topiramate-50",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "38404",
+              "display": "topiramate"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-migraine-prophy"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 50 mg by mouth twice daily",
+            "doseAndRate": [
+              {
+                "doseQuantity": {
+                  "value": 50,
+                  "unit": "mg"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-sumatriptan-prn",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "37418",
+              "display": "sumatriptan"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-migraine-prophy"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 100 mg by mouth as needed for migraine"
+          }
+        ]
+      }
+    }
+  ]
+}

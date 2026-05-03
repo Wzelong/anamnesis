@@ -1,0 +1,36 @@
+{
+  "note_id": "E4",
+  "filename": "E4-ed-obs-syncope-checklist.txt",
+  "paired_bundle": "lean",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    {
+      "fact_id": "E4-F1",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "Vasovagal syncope absent from lean chart."
+    },
+    {
+      "fact_id": "E4-F2",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "EKG procedure absent from lean chart."
+    }
+  ],
+  "expected_non_fact_actions": [
+    {
+      "non_fact_id": "E4-N1",
+      "expected_action": null,
+      "rationale": "Arrhythmia ruled out on telemetry; should not appear as a Proposal."
+    },
+    {
+      "non_fact_id": "E4-N2",
+      "expected_action": null,
+      "rationale": "Orthostatic hypotension ruled out; should not appear as a Proposal."
+    }
+  ]
+}

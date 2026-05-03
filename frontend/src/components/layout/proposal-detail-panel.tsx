@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
 import {
   ArrowDown,
@@ -33,7 +33,7 @@ import { ProposalFormView } from "./proposal-form-view"
 import { ProposalConflictCallout } from "./proposal-conflict-callout"
 import { ProvenanceCard } from "./provenance-card"
 import { JsonEditor } from "@/components/ui/json-editor"
-import { Disclosure } from "@/components/ui/disclosure"
+import { useShortcuts } from "@/lib/use-shortcuts"
 
 function formatTimeAgo(iso: string | null) {
   if (!iso) return ""
@@ -53,14 +53,16 @@ export function ProposalDetailPanel() {
   const router = useRouter()
   const params = useParams<{ runId: string }>()
   const detail = useAppStore((s) => s.selectedDetail)
+  const proposals = useAppStore((s) => s.proposals)
   const selectedId = useAppStore((s) => s.selectedId)
-  const setSelectedId = useAppStore((s) => s.setSelectedId)
   const contentView = useAppStore((s) => s.contentView)
   const setContentView = useAppStore((s) => s.setContentView)
   const rightTab = useAppStore((s) => s.rightTab)
   const setRightTab = useAppStore((s) => s.setRightTab)
+  const revealChartResource = useAppStore((s) => s.revealChartResource)
   const acceptProposal = useAppStore((s) => s.acceptProposal)
   const rejectProposal = useAppStore((s) => s.rejectProposal)
+  const reopenProposal = useAppStore((s) => s.reopenProposal)
   const editProposal = useAppStore((s) => s.editProposal)
   const tokenValid = useAppStore((s) => s.tokenValid)
   const actionError = useAppStore((s) => s.actionError)
@@ -83,6 +85,54 @@ export function ProposalDetailPanel() {
     setConfirming(null)
     setRejectReason("")
   }, [selectedId])
+
+  const navIds = useMemo(() => {
+    const tierRank: Record<string, number> = { ATTENTION: 0, REVIEW: 1, CONFIDENT: 2 }
+    return [...proposals]
+      .sort((a, b) => {
+        const t = (tierRank[a.confidence_tier] ?? 99) - (tierRank[b.confidence_tier] ?? 99)
+        if (t !== 0) return t
+        return a.resource_type.localeCompare(b.resource_type)
+      })
+      .map((p) => p.id)
+  }, [proposals])
+
+  const currentIdx = selectedId ? navIds.indexOf(selectedId) : -1
+  const prevId = currentIdx > 0
+    ? navIds[currentIdx - 1]
+    : currentIdx === -1 ? (navIds[navIds.length - 1] ?? null) : null
+  const nextId = currentIdx >= 0 && currentIdx < navIds.length - 1
+    ? navIds[currentIdx + 1]
+    : currentIdx === -1 ? (navIds[0] ?? null) : null
+  const runId = params?.runId
+
+  const goTo = (id: string | null) => {
+    if (id && runId) router.push(`/${runId}/${id}`)
+  }
+
+  const locked = tokenValid !== true
+  const canDecide = !!detail && detail.status === "pending" && !locked && !submitting
+  const shortcutsActive = !confirming && !editing
+
+  useShortcuts(
+    {
+      j: () => goTo(nextId),
+      ArrowDown: () => goTo(nextId),
+      k: () => goTo(prevId),
+      ArrowUp: () => goTo(prevId),
+      a: () => { if (canDecide) setConfirming("accept") },
+      r: () => { if (canDecide) setConfirming("reject") },
+      e: () => {
+        if (!detail || !canDecide) return
+        setDraft(detail.resource)
+        setRawJson(JSON.stringify(detail.resource, null, 2))
+        setJsonError(null)
+        setEditing(true)
+      },
+      v: () => { setContentView("right"); setRightTab("notes") },
+    },
+    shortcutsActive,
+  )
 
   if (!selectedId) {
     return (
@@ -164,6 +214,15 @@ export function ProposalDetailPanel() {
   const cancelConfirm = () => {
     setConfirming(null)
     setRejectReason("")
+  }
+
+  const handleReopen = async () => {
+    setSubmitting(true)
+    try {
+      await reopenProposal(detail.id)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleSave = async () => {
@@ -322,9 +381,8 @@ export function ProposalDetailPanel() {
               confidenceScore={detail.confidence_score}
               breakdown={detail.confidence_breakdown}
               chartMatches={detail.chart_matches}
-              supersedes={detail.supersedes}
               classificationKind={detail.classification}
-              onSelectConflict={(id) => setSelectedId(id)}
+              onRevealChartResource={revealChartResource}
             />
           )}
           {!editing && detail.status === "accepted" && detail.provenance_resource && (
@@ -353,7 +411,7 @@ export function ProposalDetailPanel() {
         <ActionErrorCallout message={actionError} onDismiss={clearActionError} />
       )}
 
-      {!confirming && (
+      {!confirming && detail.status !== "accepted" && (
         <div className="shrink-0 border-t px-3 py-2.5 flex items-center gap-2">
           {!editing && <UnauthenticatedNotice tokenValid={tokenValid} />}
           <div className="ml-auto flex items-center gap-2">
@@ -374,6 +432,17 @@ export function ProposalDetailPanel() {
                   Save
                 </Button>
               </>
+            ) : detail.status === "rejected" ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={handleReopen}
+                disabled={submitting || tokenValid !== true}
+              >
+                <Undo2 className="size-3" />
+                Reopen
+              </Button>
             ) : (
               <ReviewActions
                 tokenValid={tokenValid}
@@ -462,9 +531,40 @@ interface ReasoningProps {
   confidenceScore: number
   breakdown: import("@/lib/types").ConfidenceBreakdown | null
   chartMatches: { resource_id: string; display: string; match_type: string }[]
-  supersedes: string[]
   classificationKind: "NEW" | "UPDATING" | "CONFLICTING"
-  onSelectConflict: (id: string) => void
+  onRevealChartResource: (id: string) => void
+}
+
+const CHART_SECTION_TITLE: Record<"NEW" | "UPDATING" | "CONFLICTING", string> = {
+  NEW: "Related in chart",
+  UPDATING: "Replaces in chart",
+  CONFLICTING: "Conflicts in chart",
+}
+
+const MATCH_TYPE_LABEL: Record<string, string> = {
+  exact_code: "exact code",
+  ingredient: "same ingredient",
+  display_text: "name match",
+}
+
+const CONNECTOR_FRAGMENTS = new Set([
+  "in the setting of",
+  "due to",
+  "secondary to",
+  "associated with",
+  "in association with",
+  "from history of",
+  "from a history of",
+  "in the context of",
+  "related to",
+  "on the background of",
+])
+
+function isFragmentReasoning(value: string): boolean {
+  const t = value.trim().toLowerCase().replace(/[.!?]+$/, "")
+  if (!t) return true
+  if (t.split(/\s+/).length < 3) return true
+  return CONNECTOR_FRAGMENTS.has(t)
 }
 
 function ReasoningSections({
@@ -475,12 +575,9 @@ function ReasoningSections({
   confidenceScore,
   breakdown,
   chartMatches,
-  supersedes,
   classificationKind,
-  onSelectConflict,
+  onRevealChartResource,
 }: ReasoningProps) {
-  const updatingDefault = classificationKind === "UPDATING"
-
   return (
     <div className="mt-8 flex flex-col gap-6">
       <Section title="Confidence">
@@ -504,48 +601,47 @@ function ReasoningSections({
 
       <Section title="Reasoning">
         <div className="flex flex-col gap-3">
-          <ReasoningRow label="What the note said" value={extraction} />
+          <ReasoningRow label="What the note said" value={extraction} skipFragments />
           <ReasoningRow label="Compared to chart" value={classification} />
           {merge && <ReasoningRow label="Across notes" value={merge} />}
         </div>
       </Section>
 
       {chartMatches.length > 0 && classificationKind !== "CONFLICTING" && (
-        <Disclosure title={`Chart matches (${chartMatches.length})`} defaultOpen={updatingDefault}>
+        <Section title={CHART_SECTION_TITLE[classificationKind]}>
           <div className="flex flex-col gap-1">
             {chartMatches.map((m) => (
-              <div key={m.resource_id} className="flex items-center gap-3 text-sm">
-                <span className="flex-1 truncate">{m.display}</span>
-                <span className="text-xs text-muted-foreground shrink-0">{m.match_type}</span>
-              </div>
-            ))}
-          </div>
-        </Disclosure>
-      )}
-
-      {supersedes.length > 0 && (
-        <Disclosure title={`Supersedes (${supersedes.length})`} defaultOpen={updatingDefault}>
-          <div className="flex flex-col gap-1">
-            {supersedes.map((id) => (
               <button
-                key={id}
+                key={m.resource_id}
                 type="button"
-                onClick={() => onSelectConflict(id)}
-                className="text-left text-xs font-mono text-primary hover:underline cursor-pointer"
+                onClick={() => onRevealChartResource(m.resource_id)}
+                className="group flex items-center gap-3 text-sm text-left rounded-sm px-2 -mx-2 py-1 hover:bg-muted cursor-pointer"
               >
-                {id}
+                <span className="flex-1 truncate">{m.display || m.resource_id}</span>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {MATCH_TYPE_LABEL[m.match_type] ?? m.match_type}
+                </span>
               </button>
             ))}
           </div>
-        </Disclosure>
+        </Section>
       )}
 
     </div>
   )
 }
 
-function ReasoningRow({ label, value }: { label: string; value: string }) {
+function ReasoningRow({
+  label,
+  value,
+  skipFragments,
+}: {
+  label: string
+  value: string
+  skipFragments?: boolean
+}) {
   if (!value) return null
+  if (skipFragments && isFragmentReasoning(value)) return null
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-[11px] text-muted-foreground">{label}</span>
@@ -684,6 +780,7 @@ interface ReviewActionsProps {
 
 function ReviewActions({ tokenValid, decided, submitting, onEdit, onReject, onAccept }: ReviewActionsProps) {
   const locked = tokenValid !== true
+  const disabled = decided || submitting || locked
   return (
     <>
       <Button
@@ -691,7 +788,7 @@ function ReviewActions({ tokenValid, decided, submitting, onEdit, onReject, onAc
         size="sm"
         className="h-7 text-xs"
         onClick={onEdit}
-        disabled={decided || submitting || locked}
+        disabled={disabled}
       >
         Edit
       </Button>
@@ -700,7 +797,7 @@ function ReviewActions({ tokenValid, decided, submitting, onEdit, onReject, onAc
         size="sm"
         className="h-7 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
         onClick={onReject}
-        disabled={decided || submitting || locked}
+        disabled={disabled}
       >
         Reject
       </Button>
@@ -709,7 +806,7 @@ function ReviewActions({ tokenValid, decided, submitting, onEdit, onReject, onAc
         size="sm"
         className="h-7 text-xs text-emerald-600 border-emerald-600/40 hover:bg-emerald-600/10 hover:text-emerald-600 dark:text-emerald-400 dark:border-emerald-400/40 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-400"
         onClick={onAccept}
-        disabled={decided || submitting || locked}
+        disabled={disabled}
       >
         Accept
       </Button>

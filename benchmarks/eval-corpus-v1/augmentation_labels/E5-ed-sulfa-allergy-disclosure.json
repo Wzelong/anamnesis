@@ -1,0 +1,49 @@
+{
+  "note_id": "E5",
+  "filename": "E5-ed-sulfa-allergy-disclosure.txt",
+  "paired_bundle": "lean",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    {
+      "fact_id": "E5-F1",
+      "action": "CONFLICTING",
+      "target_resource_id": "allergy-nkda",
+      "match_basis": "specific_vs_nkda",
+      "expected_provenance": true,
+      "rationale": "Specific sulfa allergy disclosed; chart documents NKDA (SNOMED 409137002). Reconciler must surface the conflict for human review."
+    },
+    {
+      "fact_id": "E5-F2",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "Acute cystitis encounter diagnosis; not in chart."
+    },
+    {
+      "fact_id": "E5-F3",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "Nitrofurantoin order; not in chart."
+    }
+  ],
+  "expected_non_fact_actions": [
+    {
+      "non_fact_id": "E5-N1",
+      "expected_action": null,
+      "rationale": "Casual phrasing trap; severity must reflect documented urticaria + angioedema, not initial low-severity language."
+    },
+    {
+      "non_fact_id": "E5-N2",
+      "expected_action": null,
+      "rationale": "Absence of escalation; should not downgrade criticality."
+    },
+    {
+      "non_fact_id": "E5-N3",
+      "expected_action": null,
+      "rationale": "Historical resolved anemia; should not appear as active Condition."
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "note_id": "C2",
+  "filename": "C2-cardiology-hfref-gdmt-optimization.txt",
+  "paired_bundle": "hfref-gdmt",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    {
+      "fact_id": "C2-F1",
+      "action": "DUPLICATE",
+      "target_resource_id": "cond-hfref",
+      "match_basis": "exact_code",
+      "expected_provenance": false,
+      "rationale": "HFrEF SNOMED 84114007 already in chart."
+    },
+    {
+      "fact_id": "C2-F2",
+      "action": "UPDATING",
+      "target_resource_id": "obs-lvef-prior",
+      "match_basis": "loinc_value_diff",
+      "field_changes": [
+        { "path": "valueQuantity.value", "from": "30", "to": "40" }
+      ],
+      "expected_provenance": true,
+      "rationale": "LVEF improved from 30% to 40% under GDMT."
+    },
+    {
+      "fact_id": "C2-F3",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "NYHA functional classification not in chart."
+    },
+    {
+      "fact_id": "C2-F4",
+      "action": "DUPLICATE",
+      "target_resource_id": "med-sacubitril-valsartan",
+      "match_basis": "exact_code",
+      "expected_provenance": false,
+      "rationale": "Sacubitril/valsartan continued at same dose."
+    },
+    {
+      "fact_id": "C2-F5",
+      "action": "DUPLICATE",
+      "target_resource_id": "med-carvedilol-25",
+      "match_basis": "exact_code",
+      "expected_provenance": false,
+      "rationale": "Carvedilol continued at same dose."
+    },
+    {
+      "fact_id": "C2-F6",
+      "action": "DUPLICATE",
+      "target_resource_id": "med-spironolactone-25",
+      "match_basis": "exact_code",
+      "expected_provenance": false,
+      "rationale": "Spironolactone continued at same dose."
+    },
+    {
+      "fact_id": "C2-F7",
+      "action": "DUPLICATE",
+      "target_resource_id": "med-dapagliflozin-10",
+      "match_basis": "exact_code",
+      "expected_provenance": false,
+      "rationale": "Dapagliflozin continued at same dose."
+    }
+  ],
+  "expected_non_fact_actions": [
+    {
+      "non_fact_id": "C2-N1",
+      "expected_action": null,
+      "rationale": "Negated peripheral edema; should not appear as a Proposal."
+    },
+    {
+      "non_fact_id": "C2-N2",
+      "expected_action": null,
+      "rationale": "Negated orthopnea/PND; should not appear as a Proposal."
+    }
+  ]
+}

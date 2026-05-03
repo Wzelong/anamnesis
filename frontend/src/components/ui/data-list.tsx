@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -57,6 +58,8 @@ export function DataList<T>({
   searchDebounceMs = 0,
   filters,
   pagination,
+  virtualized = false,
+  estimatedItemHeight = 41,
   selectedIds = new Set(),
   onSelectAll,
   onSelectOne,
@@ -76,15 +79,21 @@ export function DataList<T>({
   const isAllSelected = data.length > 0 && selectedIds.size === data.length
   const hasActiveFilter = filters?.some((f) => f.value !== null) || false
 
-  const totalPages = Math.max(1, Math.ceil(pagination.totalItems / pagination.pageSize))
-  const safePage = Math.min(pagination.currentPage, totalPages)
-  const startIdx = pagination.totalItems === 0 ? 0 : (safePage - 1) * pagination.pageSize
-  const endIdx = Math.min(startIdx + pagination.pageSize, pagination.totalItems)
+  const totalPages = pagination
+    ? Math.max(1, Math.ceil(pagination.totalItems / pagination.pageSize))
+    : 1
+  const safePage = pagination ? Math.min(pagination.currentPage, totalPages) : 1
+  const startIdx = pagination
+    ? pagination.totalItems === 0 ? 0 : (safePage - 1) * pagination.pageSize
+    : 0
+  const endIdx = pagination
+    ? Math.min(startIdx + pagination.pageSize, pagination.totalItems)
+    : 0
 
   const listRef = useRef<HTMLDivElement>(null)
   const firstItemRef = useRef<HTMLDivElement>(null)
-  const onPageSizeChange = pagination.onPageSizeChange
-  const currentPageSize = pagination.pageSize
+  const onPageSizeChange = pagination?.onPageSizeChange
+  const currentPageSize = pagination?.pageSize ?? 0
 
   useEffect(() => {
     if (!onPageSizeChange) return
@@ -110,6 +119,14 @@ export function DataList<T>({
     if (firstItemRef.current) ro.observe(firstItemRef.current)
     return () => ro.disconnect()
   }, [onPageSizeChange, currentPageSize, data.length])
+
+  const virtualizer = useVirtualizer({
+    count: virtualized ? data.length : 0,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => estimatedItemHeight,
+    overscan: 8,
+    getItemKey: (index) => getItemId(data[index]),
+  })
 
   useEffect(() => {
     setSearchInputValue(searchValue)
@@ -301,6 +318,45 @@ export function DataList<T>({
               </Button>
             )}
           </div>
+        ) : virtualized ? (
+          <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+            {virtualizer.getVirtualItems().map((vRow) => {
+              const item = data[vRow.index]
+              const itemId = getItemId(item)
+              const isActive = activeId === itemId
+              const isSelected = selectedIds.has(itemId)
+
+              return (
+                <div
+                  key={vRow.key}
+                  data-index={vRow.index}
+                  ref={virtualizer.measureElement}
+                  className={cn(
+                    "absolute inset-x-0 top-0 flex items-start gap-2 px-2 py-2.5 border-b transition-colors select-none",
+                    isActive ? "bg-muted" : "hover:bg-muted/50",
+                    onItemClick && "cursor-pointer",
+                  )}
+                  style={{ transform: `translateY(${vRow.start}px)` }}
+                  onClick={() => onItemClick?.(item)}
+                >
+                  {hasSelection && (
+                    isItemSelectable && !isItemSelectable(item) ? (
+                      <div className="size-4 mt-[3px] shrink-0" aria-hidden />
+                    ) : (
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => onSelectOne?.(itemId)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="cursor-pointer mt-[3px] shrink-0"
+                        aria-label={`Select item ${itemId}`}
+                      />
+                    )
+                  )}
+                  <div className="flex-1 min-w-0">{renderItem(item)}</div>
+                </div>
+              )
+            })}
+          </div>
         ) : (
           data.map((item, idx) => {
             const itemId = getItemId(item)
@@ -339,7 +395,7 @@ export function DataList<T>({
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
+      {pagination && totalPages > 1 && (
         <div className="flex items-center justify-between px-3 py-3 border-t shrink-0 select-none">
           <span className="text-xs text-muted-foreground">{startIdx + 1}-{endIdx} of {pagination.totalItems}</span>
           <div className="flex items-center gap-1">

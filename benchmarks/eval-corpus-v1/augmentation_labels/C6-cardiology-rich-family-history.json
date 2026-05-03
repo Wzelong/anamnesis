@@ -1,0 +1,21 @@
+{
+  "note_id": "C6",
+  "filename": "C6-cardiology-rich-family-history.txt",
+  "paired_bundle": "cardio-comorbid",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    { "fact_id": "C6-F1", "action": "DUPLICATE", "target_resource_id": "cond-htn", "match_basis": "exact_code", "expected_provenance": false, "rationale": "HTN already in chart." },
+    { "fact_id": "C6-F2", "action": "DUPLICATE", "target_resource_id": "cond-hld", "match_basis": "exact_code", "expected_provenance": false, "rationale": "Hyperlipidemia already in chart." },
+    { "fact_id": "C6-F3", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Father with CAD; FamilyMemberHistory NEW." },
+    { "fact_id": "C6-F4", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Brother with SCD; FamilyMemberHistory NEW." },
+    { "fact_id": "C6-F5", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Maternal grandfather with MI; FamilyMemberHistory NEW." },
+    { "fact_id": "C6-F6", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Paternal uncle with CABG; FamilyMemberHistory NEW." },
+    { "fact_id": "C6-F7", "action": "NEW", "target_resource_id": null, "match_basis": "no_match", "expected_provenance": true, "rationale": "Coronary calcium score; not in chart." }
+  ],
+  "expected_non_fact_actions": [
+    { "non_fact_id": "C6-N1", "expected_action": null, "rationale": "Family-attributed CAD; should be FamilyMemberHistory, not patient Condition." },
+    { "non_fact_id": "C6-N2", "expected_action": null, "rationale": "Family-attributed SCD; should be FamilyMemberHistory." },
+    { "non_fact_id": "C6-N3", "expected_action": null, "rationale": "Family-attributed MI; should be FamilyMemberHistory." },
+    { "non_fact_id": "C6-N4", "expected_action": null, "rationale": "Family-attributed CABG; should be FamilyMemberHistory." }
+  ]
+}

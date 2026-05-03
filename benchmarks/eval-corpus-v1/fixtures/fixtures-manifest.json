@@ -1,0 +1,563 @@
+{
+  "afib-paroxysmal": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-afib-parox",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "195081002",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I48.0",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-afib-paroxysmal",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "155296003",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I10",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-htn",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "1364430",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-apixaban-5",
+      "resourceType": "MedicationRequest"
+    }
+  ],
+  "afib-persistent-tia": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-afib-pers",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "440059007",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I48.19",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-afib-persistent",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "6918",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-metoprolol-tartrate-50",
+      "resourceType": "MedicationRequest"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "1364430",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-apixaban-5",
+      "resourceType": "MedicationRequest"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "72166-2",
+          "system": "LOINC"
+        }
+      ],
+      "id": "obs-tobacco-former",
+      "resourceType": "Observation"
+    }
+  ],
+  "cardio-comorbid": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-cardio-comorbid",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "155296003",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I10",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-htn",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "55822004",
+          "system": "SNOMED"
+        },
+        {
+          "code": "E78.5",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-hld",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "102620007",
+          "system": "SNOMED"
+        },
+        {
+          "code": "K21.9",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-gerd",
+      "resourceType": "Condition"
+    }
+  ],
+  "cognitive-mci": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-cog-mci",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "155296003",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I10",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-htn",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "72133-2",
+          "system": "LOINC"
+        }
+      ],
+      "id": "obs-moca-prior",
+      "resourceType": "Observation"
+    }
+  ],
+  "fnd-anxiety": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-fnd",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "21897009",
+          "system": "SNOMED"
+        },
+        {
+          "code": "F41.1",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-gad",
+      "resourceType": "Condition"
+    }
+  ],
+  "hfref-gdmt": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-hfref",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "155377000",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I50.22",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-hfref",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "1656339",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-sacubitril-valsartan",
+      "resourceType": "MedicationRequest"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "20352",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-carvedilol-25",
+      "resourceType": "MedicationRequest"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "9997",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-spironolactone-25",
+      "resourceType": "MedicationRequest"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "1488564",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-dapagliflozin-10",
+      "resourceType": "MedicationRequest"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "18043-0",
+          "system": "LOINC"
+        }
+      ],
+      "id": "obs-lvef-prior",
+      "resourceType": "Observation"
+    }
+  ],
+  "lean": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-lean",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "409137002",
+          "system": "SNOMED"
+        }
+      ],
+      "id": "allergy-nkda",
+      "resourceType": "AllergyIntolerance"
+    }
+  ],
+  "migraine-asthma-htn": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-mig-asthma",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "37796009",
+          "system": "SNOMED"
+        },
+        {
+          "code": "G43.009",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-migraine",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "155296003",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I10",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-htn",
+      "resourceType": "Condition"
+    }
+  ],
+  "migraine-prophylaxis": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-migraine-prophy",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "431601000124105",
+          "system": "SNOMED"
+        },
+        {
+          "code": "G43.709",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-chronic-migraine",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "38404",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-topiramate-50",
+      "resourceType": "MedicationRequest"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "37418",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-sumatriptan-prn",
+      "resourceType": "MedicationRequest"
+    }
+  ],
+  "multi-cardio-anxiety": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-multi-cardio",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "155296003",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I10",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-htn",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "195516009",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I87.2",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-cvi",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "72166-2",
+          "system": "LOINC"
+        }
+      ],
+      "id": "obs-tobacco-current",
+      "resourceType": "Observation"
+    }
+  ],
+  "pd-tobacco": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-pd",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "154999006",
+          "system": "SNOMED"
+        },
+        {
+          "code": "G20.A2",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-parkinsons",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "155296003",
+          "system": "SNOMED"
+        },
+        {
+          "code": "I10",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-htn",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "103990",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-carbidopa-levodopa",
+      "resourceType": "MedicationRequest"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "72166-2",
+          "system": "LOINC"
+        }
+      ],
+      "id": "obs-tobacco-former",
+      "resourceType": "Observation"
+    }
+  ],
+  "pediatric-asthma": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-pediatric",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "21341004",
+          "system": "SNOMED"
+        },
+        {
+          "code": "J45.21",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-asthma-mild",
+      "resourceType": "Condition"
+    }
+  ],
+  "rrms-dmt": [
+    {
+      "active": true,
+      "codes": [],
+      "id": "pat-rrms",
+      "resourceType": "Patient"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "426373005",
+          "system": "SNOMED"
+        },
+        {
+          "code": "G35D",
+          "system": "ICD-10"
+        }
+      ],
+      "id": "cond-rrms",
+      "resourceType": "Condition"
+    },
+    {
+      "active": true,
+      "codes": [
+        {
+          "code": "1876366",
+          "system": "RxNorm"
+        }
+      ],
+      "id": "med-ocrelizumab",
+      "resourceType": "MedicationRequest"
+    }
+  ]
+}

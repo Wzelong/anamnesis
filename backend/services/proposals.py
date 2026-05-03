@@ -651,6 +651,35 @@ async def reject_proposal(
     return {"id": record.id, "status": "rejected", "reason": reason}
 
 
+async def reopen_proposal(proposal_id: str, session: AsyncSession) -> dict:
+    record = await session.get(ProposalRecord, proposal_id)
+    if not record:
+        raise ValueError(f"proposal {proposal_id} not found")
+    if record.status == "accepted":
+        raise ValueError("accepted proposals cannot be reopened — the FHIR write is permanent")
+    if record.status != "rejected":
+        raise ValueError(f"proposal {proposal_id} is already {record.status}")
+
+    metadata = json.loads(record.metadata_json)
+    history = metadata.setdefault("decision_history", [])
+    history.append({
+        "action": "rejected",
+        "reason": metadata.get("rejection_reason"),
+        "by": record.reviewed_by,
+        "at": record.reviewed_at.replace(tzinfo=timezone.utc).isoformat() if record.reviewed_at else None,
+    })
+    metadata.pop("rejection_reason", None)
+    record.metadata_json = json.dumps(metadata)
+
+    record.status = "pending"
+    record.reviewed_at = None
+    record.reviewed_by = None
+
+    await session.commit()
+
+    return {"id": record.id, "status": "pending"}
+
+
 async def edit_proposal(
     proposal_id: str,
     updated_resource: dict,

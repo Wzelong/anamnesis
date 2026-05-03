@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Chest pain, non-cardiac",
       "expected_codes": [
-        {"system": "SNOMED", "code": "29857009", "display": "Chest pain (finding)"},
-        {"system": "ICD-10", "code": "R07.9", "display": "Chest pain, unspecified"}
+        {
+          "system": "SNOMED",
+          "code": "29857009",
+          "display": "Chest pain (finding)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "R07.9",
+          "display": "Chest pain, unspecified"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,8 +39,16 @@
       "category": "condition",
       "verbatim_span": "Chronic venous insufficiency of the right lower extremity",
       "expected_codes": [
-        {"system": "SNOMED", "code": "302828002", "display": "Venous insufficiency (disorder)"},
-        {"system": "ICD-10", "code": "I87.2", "display": "Venous insufficiency (chronic) (peripheral)"}
+        {
+          "system": "SNOMED",
+          "code": "195516009",
+          "display": "Chronic venous insufficiency NOS"
+        },
+        {
+          "system": "ICD-10",
+          "code": "I87.2",
+          "display": "Venous insufficiency (chronic) (peripheral)"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -47,8 +63,16 @@
       "category": "condition",
       "verbatim_span": "Tension-type headache",
       "expected_codes": [
-        {"system": "SNOMED", "code": "398057008", "display": "Tension-type headache (disorder)"},
-        {"system": "ICD-10", "code": "G44.209", "display": "Tension-type headache, unspecified, not intractable"}
+        {
+          "system": "SNOMED",
+          "code": "398057008",
+          "display": "Tension-type headache (disorder)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "G44.209",
+          "display": "Tension-type headache, unspecified, not intractable"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -63,8 +87,16 @@
       "category": "observation",
       "verbatim_span": "current\nsmoker 15 pk-yr",
       "expected_codes": [
-        {"system": "LOINC", "code": "72166-2", "display": "Tobacco smoking status"},
-        {"system": "SNOMED", "code": "77176002", "display": "Smoker (finding)"}
+        {
+          "system": "LOINC",
+          "code": "72166-2",
+          "display": "Tobacco smoking status"
+        },
+        {
+          "system": "SNOMED",
+          "code": "77176002",
+          "display": "Smoker (finding)"
+        }
       ],
       "expected_attributes": {
         "status": "final",

@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Chronic migraine without aura",
       "expected_codes": [
-        {"system": "SNOMED", "code": "439729000", "display": "Chronic migraine (disorder)"},
-        {"system": "ICD-10", "code": "G43.709", "display": "Chronic migraine without aura, not intractable, without status migrainosus"}
+        {
+          "system": "SNOMED",
+          "code": "431601000124105",
+          "display": "Chronic migraine without aura (disorder)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "G43.709",
+          "display": "Chronic migraine without aura, not intractable, without status migrainosus"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,7 +39,11 @@
       "category": "medication_request",
       "verbatim_span": "Continue topiramate 50 mg PO BID",
       "expected_codes": [
-        {"system": "RxNorm", "code": "38404", "display": "topiramate"}
+        {
+          "system": "RxNorm",
+          "code": "38404",
+          "display": "topiramate"
+        }
       ],
       "expected_attributes": {
         "status": "active",
@@ -48,7 +60,11 @@
       "category": "medication_request",
       "verbatim_span": "Continue sumatriptan PRN for acute migraine",
       "expected_codes": [
-        {"system": "RxNorm", "code": "37418", "display": "sumatriptan"}
+        {
+          "system": "RxNorm",
+          "code": "37418",
+          "display": "sumatriptan"
+        }
       ],
       "expected_attributes": {
         "status": "active",

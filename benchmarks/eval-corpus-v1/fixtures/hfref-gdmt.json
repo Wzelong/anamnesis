@@ -1,0 +1,199 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "pat-hfref"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-hfref",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "155377000",
+              "display": "Heart failure NOS"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "I50.22",
+              "display": "Chronic systolic (congestive) heart failure"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-hfref"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-sacubitril-valsartan",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1656339",
+              "display": "sacubitril / valsartan"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-hfref"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1 tablet (97/103 mg) by mouth twice daily"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-carvedilol-25",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "20352",
+              "display": "carvedilol"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-hfref"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 25 mg by mouth twice daily",
+            "doseAndRate": [
+              {
+                "doseQuantity": {
+                  "value": 25,
+                  "unit": "mg"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-spironolactone-25",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "9997",
+              "display": "spironolactone"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-hfref"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 25 mg by mouth once daily",
+            "doseAndRate": [
+              {
+                "doseQuantity": {
+                  "value": 25,
+                  "unit": "mg"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-dapagliflozin-10",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1488564",
+              "display": "dapagliflozin"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-hfref"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 10 mg by mouth once daily",
+            "doseAndRate": [
+              {
+                "doseQuantity": {
+                  "value": 10,
+                  "unit": "mg"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-lvef-prior",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "18043-0",
+              "display": "Left ventricular Ejection fraction by US"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/pat-hfref"
+        },
+        "valueQuantity": {
+          "value": 30,
+          "unit": "%"
+        },
+        "effectiveDateTime": "2023-04-15"
+      }
+    }
+  ]
+}

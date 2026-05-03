@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Chest pain, unspecified - working diagnosis of non-cardiac\nchest pain",
       "expected_codes": [
-        {"system": "SNOMED", "code": "29857009", "display": "Chest pain (finding)"},
-        {"system": "ICD-10", "code": "R07.9", "display": "Chest pain, unspecified"}
+        {
+          "system": "SNOMED",
+          "code": "29857009",
+          "display": "Chest pain (finding)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "R07.9",
+          "display": "Chest pain, unspecified"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,8 +39,16 @@
       "category": "condition",
       "verbatim_span": "Costochondritis, likely contributing to and possibly the\nprimary driver",
       "expected_codes": [
-        {"system": "SNOMED", "code": "64109004", "display": "Costochondritis (disorder)"},
-        {"system": "ICD-10", "code": "M94.0", "display": "Chondrocostal junction syndrome [Tietze]"}
+        {
+          "system": "SNOMED",
+          "code": "64109004",
+          "display": "Costochondritis (disorder)"
+        },
+        {
+          "system": "ICD-10",
+          "code": "M94.0",
+          "display": "Chondrocostal junction syndrome [Tietze]"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -47,8 +63,16 @@
       "category": "condition",
       "verbatim_span": "Gastroesophageal reflux disease, chronic",
       "expected_codes": [
-        {"system": "SNOMED", "code": "235595009", "display": "Gastroesophageal reflux disease (disorder)"},
-        {"system": "ICD-10", "code": "K21.9", "display": "Gastro-esophageal reflux disease without esophagitis"}
+        {
+          "system": "SNOMED",
+          "code": "102620007",
+          "display": "Gastroesophageal reflux"
+        },
+        {
+          "system": "ICD-10",
+          "code": "K21.9",
+          "display": "Gastro-esophageal reflux disease without esophagitis"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",

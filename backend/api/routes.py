@@ -346,6 +346,18 @@ async def reject_proposal(
         raise HTTPException(400, str(e)) from e
 
 
+@router.post("/proposals/{proposal_id}/reopen")
+async def reopen_proposal(
+    proposal_id: str,
+    _: ReviewerIdentity = Depends(get_reviewer),
+    session: AsyncSession = Depends(get_session),
+):
+    try:
+        return await proposal_svc.reopen_proposal(proposal_id, session)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+
+
 @router.put("/proposals/{proposal_id}")
 async def edit_proposal(
     proposal_id: str,

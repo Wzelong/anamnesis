@@ -225,6 +225,14 @@ async def reject_proposal_tool(proposal_id: str, reason: str, ctx: Context = Non
     return f"Rejected {proposal_id}. Reason: {reason}"
 
 
+async def reopen_proposal_tool(proposal_id: str, ctx: Context = None) -> str:
+    await _top_up_run_creds(ctx)
+    async with AsyncSessionLocal() as session:
+        await proposal_svc.reopen_proposal(proposal_id, session)
+
+    return f"Reopened {proposal_id}. Status reset to pending; prior rejection preserved in decision history."
+
+
 async def edit_proposal_tool(proposal_id: str, updated_resource: str, ctx: Context = None) -> str:
     try:
         resource = json.loads(updated_resource)

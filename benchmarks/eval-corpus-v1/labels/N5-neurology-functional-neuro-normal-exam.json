@@ -15,8 +15,16 @@
       "category": "condition",
       "verbatim_span": "Functional neurological disorder (motor and sensory subtype)",
       "expected_codes": [
-        {"system": "SNOMED", "code": "15602001", "display": "Conversion disorder (disorder)"},
-        {"system": "ICD-10", "code": "F44.7", "display": "Conversion disorder with mixed symptom presentation"}
+        {
+          "system": "SNOMED",
+          "code": "89239005",
+          "display": "Conversion disorder"
+        },
+        {
+          "system": "ICD-10",
+          "code": "F44.7",
+          "display": "Conversion disorder with mixed symptom presentation"
+        }
       ],
       "expected_attributes": {
         "clinicalStatus": "active",
@@ -31,7 +39,11 @@
       "category": "procedure",
       "verbatim_span": "Prior brain MRI (2025-11, outside facility): normal",
       "expected_codes": [
-        {"system": "SNOMED", "code": "241601008", "display": "Magnetic resonance imaging of brain (procedure)"}
+        {
+          "system": "SNOMED",
+          "code": "816077007",
+          "display": "MRI of brain"
+        }
       ],
       "expected_attributes": {
         "status": "completed",

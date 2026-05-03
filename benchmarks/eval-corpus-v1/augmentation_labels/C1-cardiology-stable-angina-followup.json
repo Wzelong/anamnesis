@@ -1,0 +1,60 @@
+{
+  "note_id": "C1",
+  "filename": "C1-cardiology-stable-angina-followup.txt",
+  "paired_bundle": "lean",
+  "schema_version": "1.0.0",
+  "expected_actions": [
+    {
+      "fact_id": "C1-F1",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "Stable angina absent from lean chart."
+    },
+    {
+      "fact_id": "C1-F2",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "Single-vessel CAD absent from lean chart."
+    },
+    {
+      "fact_id": "C1-F3",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "Catheterization procedure absent from lean chart."
+    },
+    {
+      "fact_id": "C1-F4",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "Carvedilol absent from lean chart."
+    },
+    {
+      "fact_id": "C1-F5",
+      "action": "NEW",
+      "target_resource_id": null,
+      "match_basis": "no_match",
+      "expected_provenance": true,
+      "rationale": "LVEF observation absent from lean chart."
+    }
+  ],
+  "expected_non_fact_actions": [
+    {
+      "non_fact_id": "C1-N1",
+      "expected_action": null,
+      "rationale": "Negated vessels; should not appear as a Proposal."
+    },
+    {
+      "non_fact_id": "C1-N2",
+      "expected_action": null,
+      "rationale": "Negated left main disease; should not appear as a Proposal."
+    }
+  ]
+}
