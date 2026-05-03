@@ -5,7 +5,7 @@ shapes. Prompts encode clinical decision rules only. Bump PROMPT_VERSION
 to invalidate the cache when any prompt changes.
 """
 
-PROMPT_VERSION = "2026-05-03.06"
+PROMPT_VERSION = "2026-05-03.08"
 
 
 PROMPT_SCAN = """\
@@ -265,15 +265,15 @@ Output: effective_date="2024-06" (preserve month+year; do not fabricate a day).
 
 <example>
 Snippet:
-[32] Cognitive screening: MoCA administered with hearing aids in place.
-[33] Score 21/30. Deficits in delayed recall...
-Output: name="MoCA", full_name="Montreal Cognitive Assessment", value="21/30", category="survey", codeset_hint="LOINC", source_sentences=[32, 33]. The total score MUST be emitted as one item; do not skip it because the score sentence does not name the instrument.
+[12] Depression screening: PHQ-9 completed via tablet.
+[13] Total 14/27. Patient endorses sleep disturbance and anhedonia.
+Output: name="PHQ-9", full_name="Patient Health Questionnaire-9", value="14/27", category="survey", codeset_hint="LOINC", source_sentences=[12, 13]. The total score MUST be emitted as one item; do not skip it because the score sentence does not name the instrument.
 </example>
 
 <example>
 Snippet:
-[101] Echocardiogram (2026-02-18): LVEF 40% (up from 30% at baseline), no significant valvular disease.
-Output: name="LVEF", full_name="left ventricular ejection fraction", value="40", unit="%", category="imaging", codeset_hint="LOINC", source_sentences=[101]. Use the current encounter value (40), not the historical baseline (30).
+[34] Latest A1c (2026-04-12): 6.8%, down from 9.4% at last year's annual visit.
+Output: name="A1c", full_name="hemoglobin A1c", value="6.8", unit="%", category="laboratory", codeset_hint="LOINC", source_sentences=[34]. Use the current encounter value (6.8), not the historical baseline (9.4).
 </example>
 
 Certainty
@@ -294,13 +294,13 @@ Goal
 One item per distinct medication. Preserve dose, frequency, and route. Reflect the action verb in `status` and `intent`.
 
 Rules
-- Only emit a medication when the snippet contains an explicit, drug-specific action verb (start, initiate, continue [drug name], hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate, received, administered, given, dosed). A blanket "continue all home medications" is not drug-specific — it must not yield items.
+- Only emit a medication when the snippet contains an explicit, drug-specific action verb OR a continuation-state phrase. Action verbs: start, initiate, continue [drug name], hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate, received, administered, given, dosed. Continuation-state phrases (assessment / plan style): "on [drug]", "taking [drug]", "treated with [drug]", "managed with [drug]", "anticoagulated with [drug]" — these confirm the patient is currently on the named drug and treat as a continuation order. A blanket "continue all home medications" is not drug-specific — it must not yield items.
 - A valid item must name a specific identifiable drug (e.g. "metoprolol", "omeprazole", "lisinopril"). Generic references without a drug name — "home medications", "heart medication", "current regimen", "same meds" — must not yield items.
 - Home-medication reconciliation lists enumerate what the patient takes. They are not orders. If the snippet is a reconciliation block ("HOME MEDICATIONS - Lisinopril 10 mg, Atorvastatin 40 mg...") paired only with "continue all home medications", emit zero items — no individual drug was started, changed, or stopped.
 - `name` is the full clinical drug as stated: include strength and form when available ("lisinopril 20 mg oral tablet", "metoprolol succinate 25 mg"). Do not truncate to just the ingredient.
 - Action-verb mapping:
   - "start", "initiate", "begin", "prescribed", "ordered" → status=active, intent=order.
-  - "continue", "already on" → status=active, intent=order.
+  - "continue", "already on", "on [drug]", "taking", "treated with", "managed with", "anticoagulated with" → status=active, intent=order. Treat as a continuation order: the patient is currently on the named drug and the visit confirms it.
   - "increase to", "decrease to", "titrate to" → status=active, intent=order; reflect the new dose in `dose`.
   - "restart", "resume" → status=active, intent=order; the "same dose" refers to the dose in the referenced sentence — surface that dose in `dose`.
   - "hold" → status=on-hold, intent=order.
@@ -332,14 +332,20 @@ Output: one item — omeprazole 20 mg PO. The "New:" tag is an explicit order ac
 
 <example>
 Snippet:
-[86] Patient received IV ceftriaxone 2 g x 1 dose in the ED along with IV normal saline 1 L.
-Output: one item — ceftriaxone 2 g IV, status=completed, frequency="x 1 dose". (IV normal saline is a fluid, not a medication; do not emit.)
+[14] Patient received IV vancomycin 1 g x 1 dose in the ED along with IV normal saline 1 L.
+Output: one item — vancomycin 1 g IV, status=completed, frequency="x 1 dose". (IV normal saline is a fluid, not a medication; do not emit.)
 </example>
 
 <example>
 Snippet:
-[85] Received IV fluids (normal saline 1 L), IV ketorolac 30 mg, IV prochlorperazine 10 mg, and IV diphenhydramine 25 mg.
-Output: three items — ketorolac 30 mg IV, prochlorperazine 10 mg IV, diphenhydramine 25 mg IV. All status=completed (one-time ED administrations). Skip normal saline (fluid, not medication).
+[18] Received IV fluids (lactated Ringer's 1 L), IV ondansetron 4 mg, IV hydromorphone 0.5 mg, and IV famotidine 20 mg.
+Output: three items — ondansetron 4 mg IV, hydromorphone 0.5 mg IV, famotidine 20 mg IV. All status=completed (one-time ED administrations). Skip lactated Ringer's (fluid, not medication).
+</example>
+
+<example>
+Snippet:
+[27] 1. AFib anticoagulated w/ warfarin (INR goal 2-3). Last INR 2.4. Continue current dose.
+Output: one item — warfarin, status=active (continuation). The "anticoagulated w/" phrase confirms the patient is currently on warfarin. The continuation is established by the assessment-style sentence; do not skip just because there is no explicit "continue [drug]" verb at the start.
 </example>
 
 Certainty
@@ -388,8 +394,8 @@ Output: performed="2025-10" (month+year only; do not fabricate a day).
 </example>
 
 <example>
-Snippet: [43] Prior brain MRI (2025-11, outside facility): normal; no demyelinating lesions, no mass.
-Output: name="brain MRI", performed="2025-11", status=completed, outcome="normal — no demyelinating lesions, no mass". "Prior" with a stated date is a completed procedure that belongs in the chart history.
+Snippet: [55] Prior colonoscopy (2024-08, outside facility): two tubular adenomas removed; otherwise unremarkable.
+Output: name="colonoscopy", performed="2024-08", status=completed, outcome="two tubular adenomas removed; otherwise unremarkable". "Prior" with a stated date is a completed procedure that belongs in the chart history.
 </example>
 
 Certainty

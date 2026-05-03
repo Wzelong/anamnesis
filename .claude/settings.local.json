@@ -40,7 +40,8 @@
       "WebSearch",
       "Bash(PYTHONPATH=. uv run pytest -x -q tests/test_telemetry.py tests/test_auth.py)",
       "Bash(curl -sf http://localhost:8042/health)",
-      "Bash(grep -n \"\\\\`reasoning\\\\` is\\\\|reasoning.\\\\+short phrase\" /Users/zelong/Documents/GitHub/anamnesis/backend/core/prompts.py)"
+      "Bash(grep -n \"\\\\`reasoning\\\\` is\\\\|reasoning.\\\\+short phrase\" /Users/zelong/Documents/GitHub/anamnesis/backend/core/prompts.py)",
+      "Bash(.venv/bin/python *)"
     ]
   }
 }

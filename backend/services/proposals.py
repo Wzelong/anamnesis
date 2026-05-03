@@ -13,10 +13,10 @@ from core.ids import short_id
 if TYPE_CHECKING:
     from context.auth import ReviewerIdentity
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import PipelineRun, ProposalRecord
+from db.models import LLMCall, PipelineRun, ProposalRecord
 from fhir.models import Document
 
 log = logging.getLogger(__name__)
@@ -71,6 +71,26 @@ async def _load_source(patient_id: str | None, *, fhir_client=None):
         )
     from fhir.local_bundle import load_demo_data
     return load_demo_data()
+
+
+async def run_stats(run_id: str, session: AsyncSession) -> dict:
+    run = (await session.execute(select(PipelineRun).where(PipelineRun.id == run_id))).scalar_one_or_none()
+    duration_ms: int | None = None
+    if run and run.started_at and run.finished_at:
+        duration_ms = int((run.finished_at - run.started_at).total_seconds() * 1000)
+    usage = (await session.execute(
+        select(
+            func.coalesce(func.sum(LLMCall.input_tokens + LLMCall.output_tokens), 0).label("tokens"),
+            func.coalesce(func.sum(LLMCall.usd_cost), 0).label("cost"),
+            func.count(func.distinct(LLMCall.document_id)).label("docs"),
+        ).where(LLMCall.run_id == run_id)
+    )).one()
+    return {
+        "duration_ms": duration_ms,
+        "total_documents": int(usage.docs or 0),
+        "total_tokens": int(usage.tokens or 0),
+        "total_cost_usd": float(usage.cost or 0),
+    }
 
 
 async def load_run_source(run_id: str, session: AsyncSession, *, fhir_client=None):
@@ -394,6 +414,7 @@ async def run_pipeline(
                 "total": len(all_rows),
                 "by_tier": by_tier,
                 "cached": True,
+                **(await run_stats(row.run_id, session)),
             }
 
     patient_context, documents = await _load_source(effective_patient_id, fhir_client=fhir_client)
@@ -483,6 +504,7 @@ async def _run_with_documents(
         "total": len(stage6.proposals),
         "by_tier": by_tier,
         "cached": False,
+        **(await run_stats(run_id, session)),
     }
 
 

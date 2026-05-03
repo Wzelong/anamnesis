@@ -4,10 +4,15 @@ Usage:
   python benchmarks/eval-corpus-v1/run_augmentation_benchmark.py
   python benchmarks/eval-corpus-v1/run_augmentation_benchmark.py --only C1,E1
   python benchmarks/eval-corpus-v1/run_augmentation_benchmark.py --output report.json
+  python benchmarks/eval-corpus-v1/run_augmentation_benchmark.py --runs 5 --output stability.json
 
 Captures Stage 5 (with DUPLICATEs) and Stage 6 (Proposals) so all four classifications
 can be scored. Maps reconciler output to corpus fact_ids by primary code first, then
-citation char-span overlap with verbatim_span as a tiebreaker.
+ingredient-display normalization for medications, then citation char-span overlap.
+
+With --runs N (N>1), runs the full corpus N times with stage2/3 caches cleared
+between runs. Reports per-fact stability (stable-right / stable-wrong / flaky)
+to distinguish real bugs from reasoning-model variance.
 """
 from __future__ import annotations
 
@@ -30,7 +35,7 @@ from core.cache import JsonCache
 from core.code_candidates import code_candidates
 from core.extraction import extract_candidates_batch, merge_across_notes
 from core.preprocess import preprocess_documents
-from core.reconcile import reconcile
+from core.reconcile import reconcile, _normalize_ingredient
 from fhir.local_bundle import load_demo_data
 from fhir.models import Document
 
@@ -144,12 +149,15 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
     notes, stage5, _ = await execute_pipeline(pc, docs, client)
     notes_by_doc = {n.document_id: n for n in notes}
 
-    # Two-pass mapping: code-overlap first across all candidates, then citation
-    # overlap for remaining unmatched facts. Prevents a text-only candidate from
-    # claiming a fact_id via span overlap before a properly-coded sibling is
-    # checked.
+    # Three-pass mapping. Mirrors the production reconciler's matching strategy
+    # so the benchmark scores what the system actually does, not what the
+    # mapper happens to recognize. Pass order is intentional: stricter matches
+    # first to prevent loose matches from claiming a fact_id before the right
+    # candidate is checked.
     actual_by_fact: dict[str, str] = {}
-    matched_by_code: set[int] = set()
+    matched: set[int] = set()
+
+    # Pass 1: exact code overlap across all candidates.
     for i, result in enumerate(stage5.results):
         cand_codes = candidate_codes(result.candidate)
         if not cand_codes:
@@ -157,10 +165,40 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
         for f in ext["expected_facts"]:
             if cand_codes & fact_codes(f):
                 actual_by_fact.setdefault(f["id"], result.classification)
-                matched_by_code.add(i)
+                matched.add(i)
                 break
+
+    # Pass 2: ingredient overlap for MedicationRequest only. Reuses
+    # _normalize_ingredient from reconcile.py — same logic that fires in
+    # production when extractor picks a different RxNorm granularity (e.g.
+    # "apixaban 5 MG" 1364444 vs chart "apixaban" 1364430). Limited to meds
+    # to avoid collisions on similarly-named conditions.
     for i, result in enumerate(stage5.results):
-        if i in matched_by_code:
+        if i in matched or result.candidate.resource_type != "MedicationRequest":
+            continue
+        cand_ings = {
+            _normalize_ingredient(c.get("display", ""))
+            for c in result.candidate.item.get("coding", []) or []
+        }
+        cand_ings.discard("")
+        if not cand_ings:
+            continue
+        for f in ext["expected_facts"]:
+            if f["id"] in actual_by_fact or f.get("category") != "medication_request":
+                continue
+            fact_ings = {
+                _normalize_ingredient(c.get("display", ""))
+                for c in f.get("expected_codes", []) or []
+            }
+            fact_ings.discard("")
+            if cand_ings & fact_ings:
+                actual_by_fact.setdefault(f["id"], result.classification)
+                matched.add(i)
+                break
+
+    # Pass 3: citation span overlap for remaining unmatched facts.
+    for i, result in enumerate(stage5.results):
+        if i in matched:
             continue
         cand_spans = candidate_spans(result.candidate, notes_by_doc)
         if not cand_spans:
@@ -193,10 +231,112 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
     return rows, spurious
 
 
+async def run_full_pass(only, client) -> tuple[list[dict], dict]:
+    rows = []
+    spurious = {}
+    for stem, aug, ext, note_path, bundle_path in load_pairs(only):
+        print(f"  {stem} (bundle={aug['paired_bundle']}) ...", flush=True)
+        r, sp = await run_one(stem, aug, ext, note_path, bundle_path, client)
+        rows.extend(r)
+        spurious[stem] = sp
+    return rows, spurious
+
+
+def clear_pipeline_caches() -> None:
+    import shutil
+    for sub in ("stage2_output", "stage3"):
+        target = CACHE_ROOT / sub
+        if target.exists():
+            shutil.rmtree(target)
+
+
+def summarize_runs(per_run_rows: list[list[dict]]) -> dict:
+    fact_records: dict[str, dict] = {}
+    for run_idx, rows in enumerate(per_run_rows):
+        for row in rows:
+            key = (row["note"], row["fact_id"])
+            rec = fact_records.setdefault(key, {
+                "note": row["note"],
+                "fact_id": row["fact_id"],
+                "expected": row["expected"],
+                "classifications": Counter(),
+            })
+            rec["classifications"][row["actual"]] += 1
+
+    n_runs = len(per_run_rows)
+    facts_summary = []
+    for (note, fid), rec in fact_records.items():
+        c = rec["classifications"]
+        most_common, top_count = c.most_common(1)[0]
+        agreement = top_count / n_runs
+        hits = c.get(rec["expected"], 0)
+        if hits == n_runs:
+            stability = "stable_right"
+        elif hits == 0:
+            stability = "stable_wrong"
+        else:
+            stability = "flaky"
+        facts_summary.append({
+            "note": note,
+            "fact_id": fid,
+            "expected": rec["expected"],
+            "most_common_actual": most_common,
+            "agreement": round(agreement, 2),
+            "hits_over_runs": f"{hits}/{n_runs}",
+            "distribution": dict(c),
+            "stability": stability,
+        })
+    facts_summary.sort(key=lambda x: (x["stability"] != "stable_wrong", x["stability"] != "flaky", x["fact_id"]))
+
+    counts = Counter(f["stability"] for f in facts_summary)
+
+    per_class_runs: dict[str, list[float]] = defaultdict(list)
+    for rows in per_run_rows:
+        per_class_total: Counter = Counter()
+        per_class_hit: Counter = Counter()
+        for row in rows:
+            per_class_total[row["expected"]] += 1
+            if row["hit"]:
+                per_class_hit[row["expected"]] += 1
+        for cls, total in per_class_total.items():
+            per_class_runs[cls].append(per_class_hit.get(cls, 0) / total if total else 0.0)
+
+    per_class_summary = {}
+    for cls, vals in per_class_runs.items():
+        per_class_summary[cls] = {
+            "mean": round(sum(vals) / len(vals), 3),
+            "min": round(min(vals), 3),
+            "max": round(max(vals), 3),
+            "n_runs": len(vals),
+        }
+
+    overall_per_run = [
+        sum(1 for r in rows if r["hit"]) / len(rows) if rows else 0.0
+        for rows in per_run_rows
+    ]
+    overall = {
+        "mean": round(sum(overall_per_run) / len(overall_per_run), 3),
+        "min": round(min(overall_per_run), 3),
+        "max": round(max(overall_per_run), 3),
+        "per_run": [round(x, 3) for x in overall_per_run],
+    }
+
+    return {
+        "n_runs": n_runs,
+        "stability_counts": dict(counts),
+        "overall_accuracy": overall,
+        "per_class_accuracy": per_class_summary,
+        "facts": facts_summary,
+    }
+
+
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--only", help="Comma-separated note IDs (e.g. C1,E1)")
     parser.add_argument("--output", help="Write full report JSON here")
+    parser.add_argument("--runs", type=int, default=1,
+                        help="Number of full-corpus passes for stability analysis (default 1). "
+                             "When >1, clears stage2/3 caches between runs.")
     args = parser.parse_args()
 
     only = {x.strip() for x in args.only.split(",")} if args.only else None
@@ -205,37 +345,69 @@ async def main():
         return 2
 
     client = AsyncOpenAI(api_key=settings.openai_api_key)
-    confusion: dict[str, Counter] = defaultdict(Counter)
-    per_tier: dict[str, Counter] = defaultdict(Counter)
-    all_rows = []
-    all_spurious = {}
 
-    for stem, aug, ext, note_path, bundle_path in load_pairs(only):
-        print(f"running {stem} (bundle={aug['paired_bundle']}) ...", flush=True)
-        rows, spurious = await run_one(stem, aug, ext, note_path, bundle_path, client)
-        all_rows.extend(rows)
-        all_spurious[stem] = spurious
+    if args.runs <= 1:
+        print("running single pass...", flush=True)
+        rows, spurious = await run_full_pass(only, client)
+        confusion: dict[str, Counter] = defaultdict(Counter)
+        per_tier: dict[str, Counter] = defaultdict(Counter)
         for r in rows:
             confusion[r["expected"]][r["actual"]] += 1
-            per_tier[ext["tier"]]["hit" if r["hit"] else "miss"] += 1
+        ext_by_stem = {p[0]: p[2] for p in load_pairs(only)}
+        for r in rows:
+            per_tier[ext_by_stem[r["note"]]["tier"]]["hit" if r["hit"] else "miss"] += 1
 
-    overall_hits = sum(1 for r in all_rows if r["hit"])
-    summary = {
-        "totals": {"facts": len(all_rows), "hits": overall_hits, "misses": len(all_rows) - overall_hits},
-        "confusion": {k: dict(v) for k, v in confusion.items()},
-        "per_tier": {k: dict(v) for k, v in per_tier.items()},
-        "spurious_per_note": all_spurious,
-    }
+        overall_hits = sum(1 for r in rows if r["hit"])
+        summary = {
+            "totals": {"facts": len(rows), "hits": overall_hits, "misses": len(rows) - overall_hits},
+            "confusion": {k: dict(v) for k, v in confusion.items()},
+            "per_tier": {k: dict(v) for k, v in per_tier.items()},
+            "spurious_per_note": spurious,
+        }
+        print()
+        print(json.dumps(summary, indent=2))
+
+        if args.output:
+            report = {**summary, "rows": rows}
+            Path(args.output).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+            print(f"\nFull report written to {args.output}")
+
+        return 0 if overall_hits == len(rows) else 1
+
+    per_run_rows: list[list[dict]] = []
+    for run_idx in range(args.runs):
+        print(f"\n=== run {run_idx + 1}/{args.runs} ===", flush=True)
+        if run_idx > 0:
+            clear_pipeline_caches()
+        rows, _ = await run_full_pass(only, client)
+        per_run_rows.append(rows)
+
+    stability = summarize_runs(per_run_rows)
 
     print()
-    print(json.dumps(summary, indent=2))
+    print(f"=== Stability report (N={stability['n_runs']} runs) ===")
+    print(f"\nOverall accuracy: mean={stability['overall_accuracy']['mean']:.1%}  "
+          f"range={stability['overall_accuracy']['min']:.1%}-{stability['overall_accuracy']['max']:.1%}  "
+          f"per-run={stability['overall_accuracy']['per_run']}")
+    print(f"\nStability counts: {stability['stability_counts']}")
+    print(f"\nPer-classification accuracy across runs:")
+    for cls, s in stability["per_class_accuracy"].items():
+        print(f"  {cls:12} mean={s['mean']:.1%}  range={s['min']:.1%}-{s['max']:.1%}")
+
+    print(f"\nStable-wrong (always miss expected — real bugs):")
+    for f in stability["facts"]:
+        if f["stability"] == "stable_wrong":
+            print(f"  {f['fact_id']:8}  expected={f['expected']:12}  always={f['most_common_actual']:12}  dist={f['distribution']}")
+    print(f"\nFlaky (variance):")
+    for f in stability["facts"]:
+        if f["stability"] == "flaky":
+            print(f"  {f['fact_id']:8}  expected={f['expected']:12}  hits={f['hits_over_runs']}  dist={f['distribution']}")
 
     if args.output:
-        report = {**summary, "rows": all_rows}
-        Path(args.output).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-        print(f"\nFull report written to {args.output}")
+        Path(args.output).write_text(json.dumps(stability, indent=2) + "\n", encoding="utf-8")
+        print(f"\nFull stability report written to {args.output}")
 
-    return 0 if overall_hits == len(all_rows) else 1
+    return 0
 
 
 if __name__ == "__main__":

@@ -89,6 +89,27 @@ async def _top_up_run_creds(ctx: Context | None) -> None:
         await proposal_svc.refresh_creds_for_patient(patient_id, fhir_client, session)
 
 
+def _format_duration(ms: int | None) -> str | None:
+    if ms is None:
+        return None
+    if ms < 1000:
+        return f"{ms}ms"
+    s = ms / 1000
+    if s < 60:
+        return f"{s:.1f}s"
+    m = int(s // 60)
+    rem = round(s - m * 60)
+    return f"{m}m {rem}s"
+
+
+def _format_cost(usd: float) -> str:
+    if usd == 0:
+        return "$0"
+    if usd < 0.01:
+        return "<$0.01"
+    return f"${usd:.2f}"
+
+
 async def _format_run_summary(result: dict, ctx: Context | None) -> str:
     run_id = result["run_id"]
     total = result["total"]
@@ -97,6 +118,15 @@ async def _format_run_summary(result: dict, ctx: Context | None) -> str:
 
     tier_parts = [f"{tier}: {count}" for tier, count in sorted(by_tier.items())]
     status = "Found existing" if cached else "Generated"
+
+    docs = result.get("total_documents") or 0
+    duration = _format_duration(result.get("duration_ms"))
+    cost = _format_cost(float(result.get("total_cost_usd") or 0))
+    stats_parts = [f"{docs} docs"]
+    if duration:
+        stats_parts.append(duration)
+    stats_parts.append(cost)
+    stats_line = " · ".join(stats_parts)
 
     from context.sharp import get_clinician_identity
     from context.auth import mint_review_token
@@ -111,7 +141,8 @@ async def _format_run_summary(result: dict, ctx: Context | None) -> str:
 
     return (
         f"{status} {total} proposals for Patient/{result['patient_id']}:\n"
-        f"  {', '.join(tier_parts)}\n\n"
+        f"  {', '.join(tier_parts)}\n"
+        f"  {stats_line}\n\n"
         f"Review workspace: {link}\n\n"
         f"Show this link to the clinician exactly as-is. Use ListProposals to review in chat instead."
     )
