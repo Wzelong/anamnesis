@@ -155,7 +155,12 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
     # first to prevent loose matches from claiming a fact_id before the right
     # candidate is checked.
     actual_by_fact: dict[str, str] = {}
+    matched_result_by_fact: dict[str, object] = {}
     matched: set[int] = set()
+
+    def record(fid: str, result):
+        actual_by_fact.setdefault(fid, result.classification)
+        matched_result_by_fact.setdefault(fid, result)
 
     # Pass 1: exact code overlap across all candidates.
     for i, result in enumerate(stage5.results):
@@ -164,7 +169,7 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
             continue
         for f in ext["expected_facts"]:
             if cand_codes & fact_codes(f):
-                actual_by_fact.setdefault(f["id"], result.classification)
+                record(f["id"], result)
                 matched.add(i)
                 break
 
@@ -192,7 +197,7 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
             }
             fact_ings.discard("")
             if cand_ings & fact_ings:
-                actual_by_fact.setdefault(f["id"], result.classification)
+                record(f["id"], result)
                 matched.add(i)
                 break
 
@@ -208,38 +213,87 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
                 continue
             fs = fact_span(note_text, f)
             if fs and any(overlap(cs, fs) for cs in cand_spans):
-                actual_by_fact.setdefault(f["id"], result.classification)
+                record(f["id"], result)
                 break
 
+    fact_by_id = {f["id"]: f for f in ext["expected_facts"]}
+    tier = ext.get("tier")
     rows = []
     for action in aug["expected_actions"]:
         fid = action["fact_id"]
         expected = action["action"]
         actual = actual_by_fact.get(fid, "MISSING")
+        result = matched_result_by_fact.get(fid)
+        ext_fact = fact_by_id.get(fid, {})
+
+        if result is None:
+            code_matched = None
+            provenance_count = 0
+        else:
+            cand_codes = candidate_codes(result.candidate)
+            code_matched = bool(cand_codes & fact_codes(ext_fact))
+            provenance_count = sum(
+                len(getattr(sr, "source_sentences", []) or [])
+                for sr in getattr(result.candidate, "source_refs", []) or []
+            )
+
+        expected_systems = sorted({
+            c.get("system") for c in ext_fact.get("expected_codes", []) if c.get("code")
+        })
+
         rows.append({
             "note": stem,
+            "tier": tier,
+            "category": ext_fact.get("category"),
             "fact_id": fid,
             "expected": expected,
             "actual": actual,
             "hit": actual == expected,
+            "expected_systems": expected_systems,
+            "code_matched": code_matched,
+            "provenance_count": provenance_count,
+        })
+
+    non_fact_by_id = {nf["id"]: nf for nf in ext.get("expected_non_facts", [])}
+    trap_results = []
+    for nf_action in aug.get("expected_non_fact_actions", []):
+        nf_id = nf_action["non_fact_id"]
+        nf = non_fact_by_id.get(nf_id)
+        if not nf:
+            continue
+        trap_span = fact_span(note_text, nf)
+        rejected = True
+        if trap_span:
+            for result in stage5.results:
+                cand_spans = candidate_spans(result.candidate, notes_by_doc)
+                if any(overlap(cs, trap_span) for cs in cand_spans):
+                    rejected = False
+                    break
+        trap_results.append({
+            "note": stem,
+            "non_fact_id": nf_id,
+            "trap_type": nf.get("trap_type"),
+            "rejected": rejected,
         })
 
     extracted_fact_ids = set(actual_by_fact.keys())
     expected_fact_ids = {a["fact_id"] for a in aug["expected_actions"]}
     spurious = sorted(extracted_fact_ids - expected_fact_ids)
 
-    return rows, spurious
+    return rows, spurious, trap_results
 
 
-async def run_full_pass(only, client) -> tuple[list[dict], dict]:
+async def run_full_pass(only, client) -> tuple[list[dict], dict, list[dict]]:
     rows = []
     spurious = {}
+    traps = []
     for stem, aug, ext, note_path, bundle_path in load_pairs(only):
         print(f"  {stem} (bundle={aug['paired_bundle']}) ...", flush=True)
-        r, sp = await run_one(stem, aug, ext, note_path, bundle_path, client)
+        r, sp, tr = await run_one(stem, aug, ext, note_path, bundle_path, client)
         rows.extend(r)
         spurious[stem] = sp
-    return rows, spurious
+        traps.extend(tr)
+    return rows, spurious, traps
 
 
 def clear_pipeline_caches() -> None:
@@ -348,7 +402,7 @@ async def main():
 
     if args.runs <= 1:
         print("running single pass...", flush=True)
-        rows, spurious = await run_full_pass(only, client)
+        rows, spurious, _ = await run_full_pass(only, client)
         confusion: dict[str, Counter] = defaultdict(Counter)
         per_tier: dict[str, Counter] = defaultdict(Counter)
         for r in rows:
@@ -379,7 +433,7 @@ async def main():
         print(f"\n=== run {run_idx + 1}/{args.runs} ===", flush=True)
         if run_idx > 0:
             clear_pipeline_caches()
-        rows, _ = await run_full_pass(only, client)
+        rows, _, _ = await run_full_pass(only, client)
         per_run_rows.append(rows)
 
     stability = summarize_runs(per_run_rows)
