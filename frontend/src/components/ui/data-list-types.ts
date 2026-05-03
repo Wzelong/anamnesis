@@ -27,6 +27,10 @@ export interface DataListProps<T> {
   onSelectAll?: () => void
   onSelectOne?: (id: string) => void
   onClearSelection?: () => void
+  /** When provided and returns false for an item, the row's checkbox is
+   *  removed entirely (no width). Caller renders any per-row indicator in
+   *  `renderItem` itself. */
+  isItemSelectable?: (item: T) => boolean
   activeId?: string
   toolbarButtons?: ToolbarButton[]
   bulkActions?: BulkAction[]

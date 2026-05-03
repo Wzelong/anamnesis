@@ -539,13 +539,27 @@ def _derive_encounter_key(s2: StageTwoOutput) -> str:
     return s2.document_id
 
 
+def _observation_encounter_key(item: BaseModel, fallback: str) -> str:
+    """For Observations, anchor to the lab's own effective_date (month precision)
+    so the same external lab quoted in different notes lands in the same group.
+    """
+    eff = getattr(item, "effective_date", None)
+    if eff:
+        return f"obs:{eff[:7]}"
+    return fallback
+
+
 def _build_tagged_items(stage2_outputs: list[StageTwoOutput]) -> list[_TaggedItem]:
     tagged: list[_TaggedItem] = []
     for s2 in stage2_outputs:
-        enc_key = _derive_encounter_key(s2)
+        note_enc_key = _derive_encounter_key(s2)
         for rtype, items in s2.candidates.items():
             for item in items:
                 name = _get_item_name(rtype, item)
+                enc_key = (
+                    _observation_encounter_key(item, note_enc_key)
+                    if rtype == "Observation" else note_enc_key
+                )
                 tagged.append(_TaggedItem(
                     resource_type=rtype,
                     item=item,

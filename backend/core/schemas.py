@@ -253,11 +253,8 @@ class ConfidenceAxis(_Strict):
 
 
 class ConfidenceBreakdown(_Strict):
-    source: ConfidenceAxis
     certainty: ConfidenceAxis
     coding: ConfidenceAxis
-    match: ConfidenceAxis
-    classification: ConfidenceAxis
 
 
 class ReconciliationResult(_Strict):

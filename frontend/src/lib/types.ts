@@ -11,6 +11,7 @@ export interface Run {
   duration_ms: number | null
   total_tokens: number
   total_cost_usd: number
+  total_documents: number
 }
 
 export interface Proposal {
@@ -36,6 +37,13 @@ export interface ProposalDetail extends Proposal {
   supersedes: string[]
   reviewed_at: string | null
   reviewed_by: string | null
+  rejection_reason: string | null
+  provenance_resource: Record<string, unknown> | null
+  write_result: {
+    resource_ref: string | null
+    provenance_ref: string | null
+    superseded_ref: string | null
+  } | null
 }
 
 export interface ConfidenceAxis {
@@ -46,11 +54,8 @@ export interface ConfidenceAxis {
 }
 
 export interface ConfidenceBreakdown {
-  source: ConfidenceAxis
   certainty: ConfidenceAxis
   coding: ConfidenceAxis
-  match: ConfidenceAxis
-  classification: ConfidenceAxis
 }
 
 export interface ResolvedCitation {
@@ -109,6 +114,10 @@ export interface ChartContext {
   encounters: Array<Record<string, unknown>>
   practitioners: Array<Record<string, unknown>>
   organizations: Array<Record<string, unknown>>
+  documents: Array<Record<string, unknown>>
+  provenances: Array<Record<string, unknown>>
   source: string
   fetched_at: string
+  live: boolean
+  token_expires_at: string | null
 }

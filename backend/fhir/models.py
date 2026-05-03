@@ -24,3 +24,5 @@ class PatientContext:
     encounters: list[dict] = field(default_factory=list)
     practitioners: list[dict] = field(default_factory=list)
     organizations: list[dict] = field(default_factory=list)
+    documents: list[dict] = field(default_factory=list)
+    provenances: list[dict] = field(default_factory=list)

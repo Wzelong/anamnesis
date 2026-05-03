@@ -1,5 +1,16 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8042"
 
+export class ApiError extends Error {
+  status: number
+  detail: string
+  constructor(status: number, detail: string) {
+    super(detail)
+    this.name = "ApiError"
+    this.status = status
+    this.detail = detail
+  }
+}
+
 export async function apiFetch<T = unknown>(
   path: string,
   init?: RequestInit,
@@ -8,7 +19,14 @@ export async function apiFetch<T = unknown>(
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   })
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+  if (!res.ok) {
+    let detail = `${res.status} ${res.statusText}`
+    try {
+      const body = await res.json()
+      if (body && typeof body.detail === "string") detail = body.detail
+    } catch {}
+    throw new ApiError(res.status, detail)
+  }
   return res.json()
 }
 
@@ -40,6 +58,9 @@ export const api = {
   getDocuments: (runId: string) => apiFetch(`/api/runs/${runId}/documents`),
 
   getChart: (runId: string) => apiFetch(`/api/runs/${runId}/chart`),
+
+  refreshChart: (runId: string) =>
+    apiFetch(`/api/runs/${runId}/chart/refresh`, { method: "POST" }),
 
   acceptProposal: (id: string, token: string) =>
     apiFetch(`/api/proposals/${id}/accept`, {

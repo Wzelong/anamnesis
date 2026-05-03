@@ -48,8 +48,14 @@ class TestExtractIdentity:
     def test_fhir_user_no_name(self):
         token = _encode_claims({"fhirUser": "Practitioner/xyz"})
         identity = extract_clinician_identity(token)
-        assert identity.display == "Practitioner/xyz"
+        assert identity.display == "Authenticated via Prompt Opinion"
         assert identity.fhir_reference == "Practitioner/xyz"
+
+    def test_uuid_sub_not_used_as_display(self):
+        token = _encode_claims({"sub": "019dbc8e-914c-7447-9054-4c18443bd188"})
+        identity = extract_clinician_identity(token)
+        assert identity.display == "Authenticated via Prompt Opinion"
+        assert identity.fhir_reference is None
 
     def test_sub_fallback(self):
         token = _encode_claims({"sub": "user-42"})

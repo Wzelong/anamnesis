@@ -1,15 +1,16 @@
 # Anamnesis Demo Patient Bundle
 
-The FHIR R4 / US Core 6.1.0 bundle that anchors the Anamnesis demo. Contains the existing structured record for **James Lee** (the augmentation engine's input) plus three clinical notes (the augmentation engine's source material). The eight resulting augmentations are the engine's output and are *not* in this bundle.
+The FHIR R4 / US Core 6.1.0 bundle that anchors the Anamnesis demo. Contains the existing structured record for **James Lee** (the augmentation engine's input) plus four clinical notes (the augmentation engine's source material). The resulting augmentations are the engine's output and are *not* in this bundle.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `anamnesis-demo-bundle.json` | The FHIR R4 transaction Bundle (~74 KB, 21 resources). POST this to your FHIR server. |
+| `anamnesis-demo-bundle.json` | The FHIR R4 transaction Bundle (~80 KB, 22 resources). POST this to your FHIR server. |
 | `note-1-cardiology-consultation.md` | The cardiology consult note (artifact view of what's in the bundle). |
 | `note-2-ed-discharge-summary.md` | The Riverside ED discharge summary (artifact view). |
 | `note-3-neurology-followup.md` | The neurology follow-up note (artifact view). |
+| Cardiology follow-up (2026-01-22) | A fourth `DocumentReference` lives base64-inline in the bundle (id `cardio-followup-conflict`). No standalone `.md` artifact; decode `content[0].attachment.data` if you need the prose. |
 | `build_bundle.py` | Python builder. Edit and re-run if you want to change anything. |
 | `validate_bundle.py` | Validator with structural + US Core profile + reference integrity checks. |
 
@@ -19,7 +20,7 @@ The FHIR R4 / US Core 6.1.0 bundle that anchors the Anamnesis demo. Contains the
 
 Race: Asian. Ethnicity: Not Hispanic or Latino. Birth sex: M. (USCDI demographics extensions populated.)
 
-## What's in the bundle (21 resources, baseline / pre-augmentation)
+## What's in the bundle (22 resources, baseline / pre-augmentation)
 
 | Type | Count | Items |
 |---|---|---|
@@ -29,7 +30,7 @@ Race: Asian. Ethnicity: Not Hispanic or Latino. Birth sex: M. (USCDI demographic
 | Condition | 4 | Essential HTN (2016), T2DM (2018), hyperlipidemia (2016), chronic post-stroke fatigue (2024) |
 | MedicationRequest | 4 | Lisinopril 10mg daily, atorvastatin 40mg daily, metformin 1000mg BID, ASA 81mg daily |
 | Encounter | 3 | Cardiology consult (10/20/2025), Riverside ED visit (12/15/2025), Neurology follow-up (2/23/2026) |
-| DocumentReference | 3 | Three clinical notes with full text base64-encoded inline; LOINC-coded by document type |
+| DocumentReference | 4 | Four clinical notes with full text base64-encoded inline; LOINC-coded by document type |
 
 ## What is deliberately NOT in the structured baseline
 
@@ -175,6 +176,16 @@ The richness of this resource — not just *"patient has penicillin allergy"* bu
 
 ---
 
+## Note 4 — Cardiology Follow-up, ACE-inhibitor cough (Dr. David Park, 2026-01-22)
+
+Lives only as the base64 attachment on the `cardio-followup-conflict` DocumentReference; there is no `note-4-*.md` artifact.
+
+Documents a 3-month follow-up after stable angina management. Patient developed a persistent dry cough about 3 weeks after starting lisinopril. Cardiology attributes it to ACE-inhibitor intolerance, **discontinues lisinopril 10 mg**, and **switches to losartan 50 mg PO daily**. Metoprolol, atorvastatin, ASA continued.
+
+**Engine challenge:** the neurology note (note 3, 2026-02-23) increases lisinopril 10 → 20 mg, which contradicts this discontinuation one month earlier. The agent should surface this temporal conflict — both notes were written in good faith, but the chart timeline is incoherent without reconciliation. Expected augmentations include a status change on the existing lisinopril order, a NEW losartan MedicationRequest, and a flag on the ACE-inhibitor intolerance.
+
+---
+
 # Three derived insights (NOT augmentations — agent reasoning over the augmented record)
 
 These appear in the **closing visit-prep beat** of the demo, not in the augmentation review screen. They demonstrate that consumer agents (e.g., the visit-prep agent) can do clinical reasoning *because* the structured record is now complete.
@@ -195,13 +206,13 @@ The platform thesis lands here: **clean structured data unlocks downstream agent
 - **US Core 6.1.0** profiles applied via `meta.profile` on each resource
 - **Code systems:** SNOMED CT (`http://snomed.info/sct`), LOINC (`http://loinc.org`), ICD-10-CM (`http://hl7.org/fhir/sid/icd-10-cm`), RxNorm (`http://www.nlm.nih.gov/research/umls/rxnorm`), HL7 v3 ActCode and condition terminologies, US Core DocumentReference category, IHE format codes, OMB race/ethnicity (CDCREC)
 - **References:** all 42 cross-resource references resolve via `urn:uuid:` to other entries in the bundle
-- **All 12 augmentation source spans verified findable** in the note text (whitespace-normalized substring match)
+- **All augmentation source spans verified findable** in the note text (whitespace-normalized substring match)
 
 Validation results from `validate_bundle.py`:
 
 ```
 Bundle: anamnesis-demo-bundle.json
-Total entries: 21
+Total entries: 22
 Total Reference targets: 10
 Total Codings: 53
 
@@ -229,7 +240,7 @@ The server will:
 2. Resolve `urn:uuid:` references between resources to those new IDs
 3. Return a `transaction-response` Bundle with the assigned IDs
 
-If the platform supports bundle upload through the UI, use the "Upload FHIR Bundle" option in the Patients section. Verify after loading by checking that the patient appears in the patient list, the problem list shows 4 conditions, the medication list shows 4 active prescriptions, and 3 documents are accessible under the patient's chart.
+If the platform supports bundle upload through the UI, use the "Upload FHIR Bundle" option in the Patients section. Verify after loading by checking that the patient appears in the patient list, the problem list shows 4 conditions, the medication list shows 4 active prescriptions, and 4 documents are accessible under the patient's chart.
 
 ## Re-running the build
 

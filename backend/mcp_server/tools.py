@@ -20,6 +20,7 @@ async def who_is_patient(ctx: Context = None) -> str:
     if not patient_id:
         raise ValueError("No patient id in SHARP context")
 
+    await _top_up_run_creds(ctx)
     patient = await FhirClient(fhir.url, fhir.token).read(f"Patient/{patient_id}")
     if not patient:
         raise ValueError(f"Patient/{patient_id} not found")
@@ -40,6 +41,7 @@ async def get_patient_context(ctx: Context = None) -> str:
     if not patient_id:
         raise ValueError("No patient id in SHARP context")
 
+    await _top_up_run_creds(ctx)
     client = FhirClient(fhir.url, fhir.token)
     pctx, docs = await asyncio.gather(
         read_patient_context(client, patient_id),
@@ -71,13 +73,23 @@ def _get_fhir_client(ctx: Context) -> FhirClient | None:
     return FhirClient(fhir.url, fhir.token)
 
 
-async def propose_augmentations(ctx: Context = None) -> str:
+async def _top_up_run_creds(ctx: Context | None) -> None:
+    """Refresh persisted FHIR creds for the SHARP patient's open runs.
+
+    Any MCP call carrying fresh SHARP headers re-arms accept/refresh on the
+    review surface without forcing a new pipeline run.
+    """
+    if ctx is None:
+        return
     patient_id = get_patient_id(ctx)
     fhir_client = _get_fhir_client(ctx)
-
+    if not patient_id or fhir_client is None:
+        return
     async with AsyncSessionLocal() as session:
-        result = await proposal_svc.run_pipeline(patient_id, session, fhir_client=fhir_client)
+        await proposal_svc.refresh_creds_for_patient(patient_id, fhir_client, session)
 
+
+async def _format_run_summary(result: dict, ctx: Context | None) -> str:
     run_id = result["run_id"]
     total = result["total"]
     by_tier = result["by_tier"]
@@ -105,11 +117,57 @@ async def propose_augmentations(ctx: Context = None) -> str:
     )
 
 
+async def propose_augmentations(ctx: Context = None) -> str:
+    patient_id = get_patient_id(ctx)
+    fhir_client = _get_fhir_client(ctx)
+
+    async with AsyncSessionLocal() as session:
+        result = await proposal_svc.run_pipeline(patient_id, session, fhir_client=fhir_client)
+
+    return await _format_run_summary(result, ctx)
+
+
+_MAX_NOTE_BYTES = 200_000
+
+
+async def propose_augmentations_from_notes(
+    notes: list[str],
+    note_type: str = "External record",
+    note_date: str | None = None,
+    ctx: Context = None,
+) -> str:
+    if not notes:
+        raise ValueError("notes must contain at least one entry")
+    for i, n in enumerate(notes):
+        if not isinstance(n, str):
+            raise ValueError(f"notes[{i}] must be a string")
+        if len(n.encode("utf-8")) > _MAX_NOTE_BYTES:
+            raise ValueError(f"notes[{i}] exceeds {_MAX_NOTE_BYTES} bytes")
+
+    patient_id = get_patient_id(ctx)
+    if not patient_id:
+        raise ValueError("No patient id in SHARP context")
+    fhir_client = _get_fhir_client(ctx)
+
+    async with AsyncSessionLocal() as session:
+        result = await proposal_svc.run_pipeline_with_inline_notes(
+            patient_id,
+            notes,
+            session,
+            note_type=note_type,
+            note_date=note_date,
+            fhir_client=fhir_client,
+        )
+
+    return await _format_run_summary(result, ctx)
+
+
 async def list_proposals_tool(ctx: Context = None) -> str:
     patient_id = get_patient_id(ctx)
     if not patient_id:
         raise ValueError("No patient id in SHARP context")
 
+    await _top_up_run_creds(ctx)
     async with AsyncSessionLocal() as session:
         proposals = await proposal_svc.list_proposals(session, patient_id=patient_id)
 
@@ -144,6 +202,7 @@ async def accept_proposal_tool(proposal_id: str, ctx: Context = None) -> str:
     from context.sharp import get_clinician_identity
     identity = get_clinician_identity(ctx) if ctx else None
 
+    await _top_up_run_creds(ctx)
     async with AsyncSessionLocal() as session:
         result = await proposal_svc.accept_proposal(
             proposal_id, session, fhir_client=fhir_client, reviewer=identity,
@@ -159,6 +218,7 @@ async def reject_proposal_tool(proposal_id: str, reason: str, ctx: Context = Non
     from context.sharp import get_clinician_identity
     identity = get_clinician_identity(ctx) if ctx else None
 
+    await _top_up_run_creds(ctx)
     async with AsyncSessionLocal() as session:
         await proposal_svc.reject_proposal(proposal_id, reason, session, reviewer=identity)
 
@@ -171,6 +231,7 @@ async def edit_proposal_tool(proposal_id: str, updated_resource: str, ctx: Conte
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid JSON: {e}") from e
 
+    await _top_up_run_creds(ctx)
     async with AsyncSessionLocal() as session:
         result = await proposal_svc.edit_proposal(proposal_id, resource, session)
 

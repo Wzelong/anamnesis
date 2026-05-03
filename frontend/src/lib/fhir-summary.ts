@@ -90,7 +90,21 @@ export function resourceDisplayName(r: FhirResource): string {
     return codeableDisplay(r.code)
   }
   if (type === "FamilyMemberHistory") return codeableDisplay(r.relationship)
+  if (type === "DocumentReference") return codeableDisplay(r.type) || "Document"
+  if (type === "Provenance") {
+    const targets = r.target as Array<Record<string, unknown>> | undefined
+    const first = targets?.[0]
+    return referenceDisplay(first) || "Provenance"
+  }
   return ""
+}
+
+export function provenanceTargets(r: FhirResource): string[] {
+  const targets = r.target as Array<Record<string, unknown>> | undefined
+  if (!targets) return []
+  return targets
+    .map((t) => (t.reference as string) || "")
+    .filter(Boolean)
 }
 
 export function humanName(name: unknown): string {
@@ -166,6 +180,8 @@ export function resourceDate(r: FhirResource): string {
     const period = r.period as { start?: string; end?: string } | undefined
     return period?.start || ""
   }
+  if (type === "DocumentReference") return (r.date as string) || ""
+  if (type === "Provenance") return (r.recorded as string) || ""
   return ""
 }
 

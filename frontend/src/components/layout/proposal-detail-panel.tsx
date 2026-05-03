@@ -7,11 +7,12 @@ import {
   ArrowLeft,
   ArrowUp,
   CheckCircle2,
+  ClipboardPlus,
   Code,
   DatabaseSearch,
-  FileSliders,
   FileText,
   Inbox,
+  Loader2,
   Minus,
   NotepadText,
   Save,
@@ -26,20 +27,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { useAppStore } from "@/lib/store"
 import { TIER_LABEL, TIER_TEXT } from "@/lib/proposal-meta"
 import { ProposalFormView } from "./proposal-form-view"
 import { ProposalConflictCallout } from "./proposal-conflict-callout"
+import { ProvenanceCard } from "./provenance-card"
 import { JsonEditor } from "@/components/ui/json-editor"
 import { Disclosure } from "@/components/ui/disclosure"
 
@@ -61,7 +53,6 @@ export function ProposalDetailPanel() {
   const router = useRouter()
   const params = useParams<{ runId: string }>()
   const detail = useAppStore((s) => s.selectedDetail)
-  const detailLoading = useAppStore((s) => s.detailLoading)
   const selectedId = useAppStore((s) => s.selectedId)
   const setSelectedId = useAppStore((s) => s.setSelectedId)
   const contentView = useAppStore((s) => s.contentView)
@@ -72,13 +63,15 @@ export function ProposalDetailPanel() {
   const rejectProposal = useAppStore((s) => s.rejectProposal)
   const editProposal = useAppStore((s) => s.editProposal)
   const tokenValid = useAppStore((s) => s.tokenValid)
+  const actionError = useAppStore((s) => s.actionError)
+  const clearActionError = useAppStore((s) => s.clearActionError)
 
   const [tab, setTab] = useState<"form" | "json">("form")
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState<Record<string, unknown> | null>(null)
   const [rawJson, setRawJson] = useState("")
   const [jsonError, setJsonError] = useState<string | null>(null)
-  const [rejectOpen, setRejectOpen] = useState(false)
+  const [confirming, setConfirming] = useState<"accept" | "reject" | null>(null)
   const [rejectReason, setRejectReason] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
@@ -87,6 +80,8 @@ export function ProposalDetailPanel() {
     setDraft(null)
     setRawJson("")
     setJsonError(null)
+    setConfirming(null)
+    setRejectReason("")
   }, [selectedId])
 
   if (!selectedId) {
@@ -98,7 +93,7 @@ export function ProposalDetailPanel() {
     )
   }
 
-  if (detailLoading || !detail) {
+  if (!detail) {
     return (
       <section className="flex-1 min-w-0 border-r flex items-center justify-center text-muted-foreground text-sm">
         Loading…
@@ -148,6 +143,7 @@ export function ProposalDetailPanel() {
     setSubmitting(true)
     try {
       await acceptProposal(detail.id)
+      setConfirming(null)
     } finally {
       setSubmitting(false)
     }
@@ -158,11 +154,16 @@ export function ProposalDetailPanel() {
     setSubmitting(true)
     try {
       await rejectProposal(detail.id, rejectReason.trim())
-      setRejectOpen(false)
+      setConfirming(null)
       setRejectReason("")
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const cancelConfirm = () => {
+    setConfirming(null)
+    setRejectReason("")
   }
 
   const handleSave = async () => {
@@ -180,7 +181,7 @@ export function ProposalDetailPanel() {
 
   const showDetailBody = contentView === "detail"
   const navTabs: Array<{ value: "detail" | "notes" | "chart" | "chat"; label: string; icon: React.ReactNode }> = [
-    { value: "detail", label: "Detail", icon: <FileSliders className="size-3.5" /> },
+    { value: "detail", label: "Proposal", icon: <ClipboardPlus className="size-3.5" /> },
     { value: "notes", label: "Notes", icon: <FileText className="size-3.5" /> },
     { value: "chart", label: "FHIR store", icon: <DatabaseSearch className="size-3.5" /> },
     { value: "chat", label: "AI chat", icon: <MessageCircleQuestionMark className="size-3.5" /> },
@@ -229,23 +230,21 @@ export function ProposalDetailPanel() {
         </div>
       </div>
 
-      {/* Sub-header: tier label + form/JSON toggle (always present at xl+, only when in detail view below xl) */}
+      {/* Sub-header: tier label OR decision status + form/JSON toggle */}
       <div className="h-11 shrink-0 border-b px-3 flex items-center gap-2 min-w-0">
-        <span className={cn("text-sm font-medium shrink-0 truncate", TIER_TEXT[detail.confidence_tier])}>
-          {TIER_LABEL[detail.confidence_tier]}
-        </span>
-        {decided && (
-          <span className="flex items-center gap-1.5 shrink-0 text-xs text-muted-foreground">
-            {detail.status === "accepted"
-              ? <CheckCircle2 className="size-3.5 text-success-fg" />
-              : <XCircle className="size-3.5" />}
-            {detail.reviewed_by && <span>{detail.reviewed_by}</span>}
+        {decided ? (
+          <span className="flex items-baseline gap-1.5 shrink-0 text-xs text-muted-foreground">
+            <span>{detail.status === "accepted" ? "Accepted" : "Rejected"}</span>
             {detail.reviewed_at && (
               <>
                 <span className="text-muted-foreground/60">·</span>
                 <span>{formatTimeAgo(detail.reviewed_at)}</span>
               </>
             )}
+          </span>
+        ) : (
+          <span className={cn("text-xs shrink-0 truncate", TIER_TEXT[detail.confidence_tier])}>
+            {TIER_LABEL[detail.confidence_tier]}
           </span>
         )}
         <div className="flex-1" />
@@ -281,7 +280,16 @@ export function ProposalDetailPanel() {
         </div>
       </div>
 
-      {tab === "form" ? (
+      {confirming ? (
+        <ConfirmView
+          kind={confirming}
+          reason={rejectReason}
+          onReasonChange={setRejectReason}
+          onCancel={cancelConfirm}
+          onConfirm={confirming === "accept" ? handleAccept : handleReject}
+          submitting={submitting}
+        />
+      ) : tab === "form" ? (
         <div className="flex-1 min-h-0 overflow-auto px-3 py-3">
           <div className="mb-3 flex items-baseline gap-2 min-w-0">
             <h2 className="text-base font-semibold break-words flex-1 min-w-0">{detail.display_label}</h2>
@@ -291,7 +299,10 @@ export function ProposalDetailPanel() {
               </span>
             )}
           </div>
-          {!editing && detail.classification === "CONFLICTING" && (
+          {!editing && detail.status === "rejected" && detail.rejection_reason && (
+            <RejectionBanner reason={detail.rejection_reason} />
+          )}
+          {!editing && detail.classification === "CONFLICTING" && !decided && (
             <ProposalConflictCallout
               proposed={activeResource}
               matches={detail.chart_matches}
@@ -302,7 +313,7 @@ export function ProposalDetailPanel() {
             mode={editing ? "edit" : "view"}
             onChange={handleFormChange}
           />
-          {!editing && (
+          {!editing && !decided && (
             <ReasoningSections
               extraction={detail.extraction_reasoning}
               classification={detail.classification_reasoning}
@@ -316,76 +327,130 @@ export function ProposalDetailPanel() {
               onSelectConflict={(id) => setSelectedId(id)}
             />
           )}
-        </div>
-      ) : (
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <JsonEditor
-            value={editing ? rawJson : JSON.stringify(activeResource, null, 2)}
-            editable={editing}
-            onChange={editing ? handleJsonChange : undefined}
-          />
-        </div>
-      )}
-
-      <div className="shrink-0 border-t px-3 py-2.5 flex items-center gap-2">
-        {!editing && <UnauthenticatedNotice tokenValid={tokenValid} />}
-        <div className="ml-auto flex items-center gap-2">
-          {editing ? (
-            <>
-              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={cancelEdit} disabled={submitting}>
-                <Undo2 className="size-3" />
-                Cancel
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs text-success-fg border-success-border hover:bg-success-bg hover:text-success-fg"
-                onClick={handleSave}
-                disabled={submitting || !!jsonError || !draft}
-              >
-                <Save className="size-3" />
-                Save
-              </Button>
-            </>
-          ) : (
-            <ReviewActions
-              tokenValid={tokenValid}
-              decided={decided}
-              submitting={submitting}
-              onEdit={startEdit}
-              onReject={() => setRejectOpen(true)}
-              onAccept={handleAccept}
-            />
+          {!editing && detail.status === "accepted" && detail.provenance_resource && (
+            <div className="mt-6">
+              <ProvenanceCard resource={detail.provenance_resource} />
+            </div>
           )}
         </div>
-      </div>
+      ) : (() => {
+        const json = editing ? rawJson : JSON.stringify(activeResource, null, 2)
+        const lineCount = json.split("\n").length
+        return (
+          <div className="flex-1 min-h-0 overflow-auto pb-6">
+            <div style={{ height: lineCount * 20 + 24 }}>
+              <JsonEditor
+                value={json}
+                editable={editing}
+                onChange={editing ? handleJsonChange : undefined}
+              />
+            </div>
+          </div>
+        )
+      })()}
 
-      <AlertDialog open={rejectOpen} onOpenChange={setRejectOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Reject this proposal?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Provide a brief reason for rejection.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <textarea
-            value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="Reason"
-            className="w-full text-sm border rounded-md p-2 min-h-20 outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          />
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={!rejectReason.trim() || submitting}
-              onClick={handleReject}
-            >
-              Reject
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {!confirming && actionError && !editing && (
+        <ActionErrorCallout message={actionError} onDismiss={clearActionError} />
+      )}
+
+      {!confirming && (
+        <div className="shrink-0 border-t px-3 py-2.5 flex items-center gap-2">
+          {!editing && <UnauthenticatedNotice tokenValid={tokenValid} />}
+          <div className="ml-auto flex items-center gap-2">
+            {editing ? (
+              <>
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={cancelEdit} disabled={submitting}>
+                  <Undo2 className="size-3" />
+                  Cancel
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs text-success-fg border-success-border hover:bg-success-bg hover:text-success-fg"
+                  onClick={handleSave}
+                  disabled={submitting || !!jsonError || !draft}
+                >
+                  <Save className="size-3" />
+                  Save
+                </Button>
+              </>
+            ) : (
+              <ReviewActions
+                tokenValid={tokenValid}
+                decided={decided}
+                submitting={submitting}
+                onEdit={startEdit}
+                onReject={() => setConfirming("reject")}
+                onAccept={() => setConfirming("accept")}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </section>
+  )
+}
+
+interface ConfirmViewProps {
+  kind: "accept" | "reject"
+  reason: string
+  onReasonChange: (v: string) => void
+  onCancel: () => void
+  onConfirm: () => void
+  submitting: boolean
+}
+
+function ConfirmView({ kind, reason, onReasonChange, onCancel, onConfirm, submitting }: ConfirmViewProps) {
+  const isAccept = kind === "accept"
+  const Icon = isAccept ? CheckCircle2 : XCircle
+  const disabled = submitting || (!isAccept && !reason.trim())
+
+  return (
+    <div className="flex-1 min-h-0 flex flex-col items-center justify-center text-center gap-3 px-6">
+      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+        <Icon className="size-4.5 text-muted-foreground" />
+      </div>
+      <div className="space-y-1">
+        <p className="text-sm font-medium">
+          {isAccept ? "Accept this proposal?" : "Reject this proposal?"}
+        </p>
+        <p className="text-xs text-muted-foreground max-w-sm">
+          {isAccept
+            ? "This writes the resource to FHIR with a Provenance record naming you."
+            : "Provide a brief reason — it's saved to the audit log."}
+        </p>
+      </div>
+      {!isAccept && (
+        <textarea
+          autoFocus
+          value={reason}
+          onChange={(e) => onReasonChange(e.target.value)}
+          placeholder="Reason"
+          disabled={submitting}
+          className="w-full max-w-sm text-sm border rounded-md p-2 min-h-20 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+      )}
+      <div className="flex items-center gap-2 mt-1">
+        <Button variant="outline" size="sm" className="h-7 text-xs cursor-pointer" onClick={onCancel} disabled={submitting}>
+          Cancel
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-7 text-xs cursor-pointer",
+            isAccept
+              ? "text-emerald-600 border-emerald-600/40 hover:bg-emerald-600/10 hover:text-emerald-600 dark:text-emerald-400 dark:border-emerald-400/40 dark:hover:bg-emerald-400/10 dark:hover:text-emerald-400"
+              : "text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive",
+          )}
+          onClick={onConfirm}
+          disabled={disabled}
+        >
+          {submitting ? <Loader2 className="size-3 animate-spin" /> : <Icon className="size-3" />}
+          {isAccept ? "Accept" : "Reject"}
+        </Button>
+      </div>
+    </div>
   )
 }
 
@@ -519,11 +584,8 @@ function flagDirection(f: string): FlagDirection {
 }
 
 const AXIS_LABELS: { key: keyof import("@/lib/types").ConfidenceBreakdown; label: string }[] = [
-  { key: "source", label: "Source" },
   { key: "certainty", label: "Certainty" },
   { key: "coding", label: "Coding" },
-  { key: "match", label: "Match" },
-  { key: "classification", label: "Verdict" },
 ]
 
 function axisDirection(score: number): FlagDirection {
@@ -557,6 +619,34 @@ function ConfidenceBreakdownTable({
         </li>
       ))}
     </ul>
+  )
+}
+
+function RejectionBanner({ reason }: { reason: string }) {
+  return (
+    <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 flex items-start gap-2">
+      <XCircle className="size-3.5 text-destructive mt-0.5 shrink-0" />
+      <div className="flex-1 min-w-0">
+        <div className="text-xs font-medium text-destructive mb-0.5">Rejected</div>
+        <div className="text-xs text-foreground/80 leading-snug whitespace-pre-wrap break-words">{reason}</div>
+      </div>
+    </div>
+  )
+}
+
+function ActionErrorCallout({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <div className="shrink-0 border-t bg-destructive/5 px-3 py-2 flex items-start gap-2">
+      <span className="text-xs text-destructive flex-1 leading-snug">{message}</span>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="text-xs text-destructive/80 hover:text-destructive cursor-pointer shrink-0"
+        aria-label="Dismiss"
+      >
+        Dismiss
+      </button>
+    </div>
   )
 }
 

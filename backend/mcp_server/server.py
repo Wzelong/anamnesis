@@ -44,6 +44,19 @@ mcp.tool(
 )(tools.propose_augmentations)
 
 mcp.tool(
+    name="ProposeAugmentationsFromNotes",
+    description=(
+        "Run the augmentation pipeline against agent-supplied note text (e.g. an "
+        "extracted PDF, pasted outside record, or email). Use this when the clinician's "
+        "note is text the agent already has in hand. Source documents are NOT written to "
+        "the FHIR chart unless a derived augmentation is accepted; on accept, the source "
+        "DocumentReference is bundled into the same transaction as the resource and "
+        "Provenance, so the chart only ever contains ratified evidence. Returns a deep "
+        "link to the review UI."
+    ),
+)(tools.propose_augmentations_from_notes)
+
+mcp.tool(
     name="ListProposals",
     description="List all augmentation proposals for the current patient, grouped by confidence tier (ATTENTION, REVIEW, CONFIDENT). Shows classification, resource type, confidence, and flags for each proposal.",
 )(tools.list_proposals_tool)

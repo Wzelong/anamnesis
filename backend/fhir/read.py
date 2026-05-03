@@ -14,7 +14,7 @@ def _entries(bundle: dict | None) -> list[dict]:
 
 async def read_patient_context(client: FhirClient, patient_id: str) -> PatientContext:
     params = {"patient": patient_id}
-    patient, conditions, medications, allergies, observations, family_history, procedures, encounters = await asyncio.gather(
+    patient, conditions, medications, allergies, observations, family_history, procedures, encounters, documents = await asyncio.gather(
         client.read(f"Patient/{patient_id}"),
         client.search("Condition", params),
         client.search("MedicationRequest", params),
@@ -23,20 +23,85 @@ async def read_patient_context(client: FhirClient, patient_id: str) -> PatientCo
         client.search("FamilyMemberHistory", params),
         client.search("Procedure", params),
         client.search("Encounter", params),
+        client.search("DocumentReference", params),
     )
     if not patient:
         raise ValueError(f"Patient/{patient_id} not found")
 
+    cond = _entries(conditions)
+    meds = _entries(medications)
+    allergy = _entries(allergies)
+    obs = _entries(observations)
+    fhx = _entries(family_history)
+    proc = _entries(procedures)
+    enc = _entries(encounters)
+    docs = _entries(documents)
+
+    targets = [f"Patient/{patient_id}"]
+    for resources, type_name in [
+        (cond, "Condition"), (meds, "MedicationRequest"), (allergy, "AllergyIntolerance"),
+        (obs, "Observation"), (fhx, "FamilyMemberHistory"), (proc, "Procedure"),
+        (enc, "Encounter"), (docs, "DocumentReference"),
+    ]:
+        for r in resources:
+            rid = r.get("id")
+            if rid:
+                targets.append(f"{type_name}/{rid}")
+
+    pract_ids: set[str] = set()
+    org_ids: set[str] = set()
+    for resources in (cond, meds, allergy, obs, fhx, proc, enc, docs):
+        for r in resources:
+            _walk_refs(r, pract_ids, org_ids)
+
+    provenance_task = client.search("Provenance", {"target": ",".join(targets)})
+    pract_task = client.search("Practitioner", {"_id": ",".join(pract_ids)}) if pract_ids else None
+    org_task = client.search("Organization", {"_id": ",".join(org_ids)}) if org_ids else None
+    provenance_bundle, practitioner_bundle, organization_bundle = await asyncio.gather(
+        provenance_task,
+        pract_task or asyncio.sleep(0, result=None),
+        org_task or asyncio.sleep(0, result=None),
+    )
+    provenances = _entries(provenance_bundle)
+
+    for p in provenances:
+        _walk_refs(p, pract_ids, org_ids)
+    new_pract = pract_ids - {pr.get("id", "") for pr in _entries(practitioner_bundle)}
+    new_org = org_ids - {o.get("id", "") for o in _entries(organization_bundle)}
+    if new_pract:
+        practitioner_bundle = await client.search("Practitioner", {"_id": ",".join(pract_ids)})
+    if new_org:
+        organization_bundle = await client.search("Organization", {"_id": ",".join(org_ids)})
+
     return PatientContext(
         patient=patient,
-        conditions=_entries(conditions),
-        medications=_entries(medications),
-        allergies=_entries(allergies),
-        observations=_entries(observations),
-        family_history=_entries(family_history),
-        procedures=_entries(procedures),
-        encounters=_entries(encounters),
+        conditions=cond,
+        medications=meds,
+        allergies=allergy,
+        observations=obs,
+        family_history=fhx,
+        procedures=proc,
+        encounters=enc,
+        practitioners=_entries(practitioner_bundle),
+        organizations=_entries(organization_bundle),
+        documents=docs,
+        provenances=provenances,
     )
+
+
+def _walk_refs(node, practitioners: set[str], organizations: set[str]) -> None:
+    if isinstance(node, dict):
+        ref = node.get("reference")
+        if isinstance(ref, str):
+            if ref.startswith("Practitioner/"):
+                practitioners.add(ref.split("/", 1)[1])
+            elif ref.startswith("Organization/"):
+                organizations.add(ref.split("/", 1)[1])
+        for v in node.values():
+            _walk_refs(v, practitioners, organizations)
+    elif isinstance(node, list):
+        for v in node:
+            _walk_refs(v, practitioners, organizations)
 
 
 async def _decode_attachment(client: FhirClient, attachment: dict) -> str:

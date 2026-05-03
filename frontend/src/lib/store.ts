@@ -6,6 +6,13 @@ import type { ChatMessage, Proposal, ProposalDetail, Run } from "./types"
 const SLIDING_WINDOW_USER_TURNS = 10
 let chatAbortController: AbortController | null = null
 let chatMsgCounter = 0
+let chatReasoningBuffer = ""
+
+function extractReasoningTitle(raw: string): string {
+  const trimmed = raw.replace(/^\s*\*+\s*/, "")
+  const closing = trimmed.indexOf("**")
+  return (closing >= 0 ? trimmed.slice(0, closing) : trimmed).trim()
+}
 const nextMsgId = () => `m_${Date.now().toString(36)}_${(chatMsgCounter++).toString(36)}`
 
 const TOKEN_STORAGE_KEY = "anamnesis.review_token"
@@ -30,6 +37,7 @@ interface AppState {
   proposals: Proposal[]
   loading: boolean
   error: string | null
+  actionError: string | null
   runId: string | null
   token: string | null
   tokenValid: boolean | null
@@ -54,6 +62,7 @@ interface AppState {
   selectAllRuns: (allIds: string[]) => void
   clearRunSelection: () => void
   deleteSelectedRuns: () => Promise<void>
+  clearActionError: () => void
   fetchProposals: (runId: string) => Promise<void>
   toggleProposalSelection: (id: string) => void
   selectAllProposals: (allIds: string[]) => void
@@ -86,6 +95,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   proposals: [],
   loading: false,
   error: null,
+  actionError: null,
   runId: null,
   token: null,
   tokenValid: null,
@@ -180,9 +190,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       return p?.confidence_tier === "CONFIDENT"
     })
     if (!allConfident) return
-    await Promise.all(ids.map((id) => api.acceptProposal(id, token)))
+    set({ actionError: null })
+    let results: Array<{ write_result?: unknown }>
+    try {
+      results = await Promise.all(
+        ids.map((id) => api.acceptProposal(id, token) as Promise<{ write_result?: unknown }>),
+      )
+    } catch (e) {
+      set({ actionError: e instanceof Error ? e.message : "Accept failed" })
+      return
+    }
     set({ selectedProposalIds: new Set() })
     if (runId) {
+      const wrote = results.some((r) => Boolean(r?.write_result))
+      if (wrote) {
+        const { refreshChart } = await import("@/components/layout/right-panel-data")
+        await refreshChart(runId).catch(() => {})
+      }
       set({ proposals: [], runId: null })
       await get().fetchProposals(runId)
     }
@@ -201,15 +225,26 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   acceptProposal: async (id) => {
-    const { token } = get()
+    const { token, runId } = get()
     if (!token) return
-    await api.acceptProposal(id, token)
+    set({ actionError: null })
+    let result: { write_result?: unknown } | undefined
+    try {
+      result = (await api.acceptProposal(id, token)) as { write_result?: unknown } | undefined
+    } catch (e) {
+      set({ actionError: e instanceof Error ? e.message : "Accept failed" })
+      return
+    }
     set({
       proposals: get().proposals.map((p) =>
         p.id === id ? { ...p, status: "accepted" } : p,
       ),
     })
     if (get().selectedId === id) await get().fetchDetail(id)
+    if (runId && result?.write_result) {
+      const { refreshChart } = await import("@/components/layout/right-panel-data")
+      await refreshChart(runId).catch(() => {})
+    }
   },
 
   rejectProposal: async (id, reason) => {
@@ -249,16 +284,24 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setSelectedId: (id) => {
-    set({ selectedId: id, selectedDetail: null })
-    if (id) get().fetchDetail(id)
+    if (id === null) {
+      set({ selectedId: null, selectedDetail: null, actionError: null })
+      return
+    }
+    set({ selectedId: id, actionError: null })
+    get().fetchDetail(id)
   },
+
+  clearActionError: () => set({ actionError: null }),
 
   fetchDetail: async (id) => {
     set({ detailLoading: true })
     try {
       const data = (await api.getProposal(id)) as ProposalDetail
+      if (get().selectedId !== id) return
       set({ selectedDetail: data, detailLoading: false })
     } catch {
+      if (get().selectedId !== id) return
       set({ detailLoading: false })
     }
   },
@@ -296,7 +339,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       chatByRun: { ...chatByRun, [runId]: next },
       chatStreaming: true,
-      chatStatus: null,
+      chatStatus: "Thinking",
       chatError: null,
     })
 
@@ -469,42 +512,20 @@ function handleChatEvent(
   switch (event.type) {
     case "text":
       appendToLastAssistantText(runId, String(event.delta ?? ""))
+      chatReasoningBuffer = ""
       useAppStore.setState({ chatStatus: null })
       break
     case "reasoning":
-      useAppStore.setState((s) => ({
-        chatStatus: (s.chatStatus ?? "") + String(event.summary ?? ""),
-      }))
+      chatReasoningBuffer += String(event.summary ?? "")
+      useAppStore.setState({ chatStatus: extractReasoningTitle(chatReasoningBuffer) || null })
       break
     case "tool_call_start": {
       const name = String(event.name ?? "")
-      const id = String(event.id ?? "")
-      pushChatMessage(runId, {
-        id: nextMsgId(),
-        role: "tool",
-        content: "",
-        toolName: name,
-        toolArgs: (event.args as Record<string, unknown>) ?? {},
-        toolStatus: "pending",
-        toolCallId: id,
-      })
+      chatReasoningBuffer = ""
       useAppStore.setState({ chatStatus: HUMAN_TOOL_NAME[name] ?? name })
       break
     }
     case "tool_call_result": {
-      const id = String(event.id ?? "")
-      const ok = Boolean(event.ok)
-      const summary = String(event.summary ?? "")
-      const list = useAppStore.getState().chatByRun[runId] ?? []
-      const idx = list.findIndex((m) => m.toolCallId === id)
-      if (idx === -1) break
-      const next = list.slice()
-      next[idx] = {
-        ...list[idx],
-        toolStatus: ok ? "ok" : "error",
-        toolSummary: summary,
-      }
-      useAppStore.setState((s) => ({ chatByRun: { ...s.chatByRun, [runId]: next } }))
       break
     }
     case "proposed_edit": {
@@ -523,6 +544,7 @@ function handleChatEvent(
       useAppStore.setState({ chatError: String(event.message ?? "Chat error") })
       break
     case "done":
+      chatReasoningBuffer = ""
       useAppStore.setState({ chatStatus: null })
       break
   }

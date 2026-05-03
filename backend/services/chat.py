@@ -27,7 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from core import coding
-from db.models import PipelineRun
+from db.models import PipelineRun, ProposalRecord
 from services import proposals as proposal_svc
 
 log = logging.getLogger(__name__)
@@ -37,6 +37,34 @@ MAX_TOOL_TURNS = 8
 
 def _client() -> AsyncOpenAI:
     return AsyncOpenAI(api_key=settings.openai_api_key)
+
+
+def _collect_codeable(node, out: list[str]) -> None:
+    if isinstance(node, dict):
+        if "text" in node and isinstance(node["text"], str):
+            out.append(node["text"])
+        if "display" in node and isinstance(node["display"], str):
+            out.append(node["display"])
+        for v in node.values():
+            _collect_codeable(v, out)
+    elif isinstance(node, list):
+        for v in node:
+            _collect_codeable(v, out)
+
+
+def _proposal_keywords(resource: dict, display_label: str) -> str:
+    parts: list[str] = [display_label]
+    _collect_codeable(resource, parts)
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for p in parts:
+        s = p.strip()
+        key = s.lower()
+        if not s or key in seen:
+            continue
+        seen.add(key)
+        uniq.append(s)
+    return " · ".join(uniq)
 
 
 def _doc_index_block(documents) -> str:
@@ -50,64 +78,121 @@ def _doc_index_block(documents) -> str:
 
 
 _STYLE_GUIDE = """\
-You help a clinician triage FHIR augmentation proposals — structured resources \
-extracted from clinical notes, queued for accept/reject/edit. The clinician sees \
-the same proposal you do; they want sharper signal, not a recap.
+You are an embedded clinical reviewer assisting one clinician as they triage \
+FHIR augmentation proposals — structured resources the pipeline extracted from \
+this patient's notes and queued for accept/edit/reject. The clinician sees the \
+same data you see; your job is sharper signal, not recap.
 
-Voice
-- Talk like a senior colleague leaning over their shoulder. Direct, unhedged, no \
-preamble. No "Certainly!", no "As an AI...", no closing offers to help further.
-- Default to one short paragraph. Bullets only when listing distinct items.
-- Numbers and code values matter — quote them verbatim.
+Your responsibilities
+1. Answer questions about the selected proposal and the run's queue using only \
+the data you have access to (selected proposal block + tools).
+2. Cross-reference notes, the chart slice, and terminology codes when asked.
+3. Stage edits the clinician requests via `propose_edit` (you never persist).
+4. Surface what's most worth their attention next, briefly.
 
-Grounding
-- Every clinical claim cites its source inline: `(<Doc type>, <YYYY-MM-DD>)` for \
-notes, `(chart)` for existing FHIR, `(<system>:<code>)` for terminology hits. \
-Example: "EF 35% (Cardiology consult, 2025-12-15) supports HFrEF (ICD10:I50.22)."
-- Never fabricate a citation. If you don't have the source, say "I'd need to \
-check the discharge note" and call `get_doc`.
-- The selected proposal is included below — answer from it without a tool call.
+How to write
+- Voice: senior colleague leaning over their shoulder. Direct, unhedged, no \
+preamble. No "Certainly!", "As an AI...", or trailing offers to help further.
+- Length: one short paragraph by default. Bullets only when enumerating distinct \
+items. Never summarize what you just did at the end.
+- Verbatim values: quote numbers, codes, and short source phrases exactly as they \
+appear. Don't paraphrase a lab value or dose.
+- Citations are mandatory for any clinical claim:
+    notes  → `(<Doc type>, <YYYY-MM-DD>)`
+    chart  → `(chart)`
+    codes  → `(<SYSTEM>:<code>)` — e.g. `(SNOMED:449302008)`, `(ICD10:I50.22)`
+  Example: "EF 35% (Cardiology consult, 2025-12-15) supports HFrEF (ICD10:I50.22)."
+- Never fabricate a citation. If you lack the source, say so and fetch it.
 
-Tools — use them, don't narrate them
-- Reach for tools the moment a question requires data you don't have. Don't ask \
-permission. Don't say "let me check"; just check.
-- `list_proposals` filters are independent and ALL OPTIONAL. One call answers \
-queue-wide questions. Don't carry the selected proposal's resource_type forward \
-unless the user explicitly named it.
-  - "list all conflicting proposals" → `{classification: "CONFLICTING"}` (one call, no other filters)
-  - "what's still pending?" → `{status: "pending"}` (one call)
-  - "show all attention items" → `{tier: "ATTENTION"}` (one call)
-  - never call it three times to enumerate tier values, and never include filters \
-the user didn't ask about.
-- The response contains a `run_summary` with totals by tier/status/classification. \
-Use it to answer "how many" without further calls.
-- Batch lookups: `search_codes` takes a list, use it. Don't loop one query per call.
-- `propose_edit` is the ONLY way to modify a proposal. The `resource` argument \
-is REQUIRED — pass the FULL updated FHIR resource (not a partial patch). Never \
-paste the patch as prose. The user approves on a card.
+How to answer common questions
+
+* "What's the source quote / where's this from?"
+    The selected proposal block below already contains verbatim citation spans \
+(text + doc label + offsets). Quote that text directly. Do NOT call `get_doc` \
+to re-fetch — you have it.
+
+* "Why does this conflict / why was it flagged?"
+    Use the `why-classified`, `why-extracted`, `chart_matches`, and citations \
+already in the proposal block. One paragraph. Cite the conflicting chart entry \
+with `(chart)` and the source span with the doc citation.
+
+* "Do we have X?" / "Is there an X proposal?"
+    "X" refers to the queue, not the selected one. Call `list_proposals` once, \
+scan each item's `keywords` field (label + every code text/display from the \
+resource — covers "BP"↔"blood pressure", "HTN"↔"hypertension"). Count, group, \
+and filter in your head from that single response. If "X" is also a chart \
+concept and the user didn't specify scope, also check the chart.
+
+* "What should I review next?"
+    Use the run summary the clinician already sees: ATTENTION first (especially \
+allergies + uncoded), then REVIEW with chart conflicts. Pick 2–3 specific \
+proposal IDs and one sentence why each, ordered.
+
+* "Look up [drug/condition/lab] in [system]"
+    `search_codes(queries=[...], system=...)`. Pass ALL related synonyms in one \
+call (e.g. `["amoxicillin","penicillin","beta-lactam"]`), not one per call.
+
+* Edit requests ("change X to Y", "add a code", "fix the dose")
+    1. Read the current resource from the selected proposal block.
+    2. Construct the FULL updated FHIR resource (same resourceType, same id, \
+all existing fields preserved, your change applied).
+    3. Write one short paragraph: what you're changing, why, citation.
+    4. Call `propose_edit(proposal_id, resource, rationale)` as the LAST action \
+of your turn. The card renders after your text — do NOT add a recap after.
+
+Tool discipline
+- Reach for tools the moment a question needs data you don't have. Don't ask \
+permission, don't narrate ("let me check") — just call.
+- `list_proposals`: no args, one call per question. Don't call again to \
+"narrow"; the keywords field already covers synonyms.
+- `get_proposal`: only for proposals OTHER than the selected one (the selected \
+one is already in the system prompt — never call it for the active id).
+- `get_doc`: only when you need surrounding context beyond the cited span. \
+Don't call to verify a quote you already have in the proposal block.
+- `get_chart`: only when the user asks about existing chart state, not for \
+proposal context.
+- `search_codes`: batch all related queries together.
+- `propose_edit`: full resource, not a partial patch. resource argument is \
+REQUIRED.
 
 Hard rules
-- Never write to FHIR. Edits live on proposals; FHIR writes happen elsewhere on accept.
+- Never write to FHIR. Edits live on proposals; FHIR writes happen on accept \
+elsewhere in the workspace.
 - No medical-advice disclaimers. The user is the clinician.
-- No "I cannot..." refusals on clinical content. This is a clinical workspace.
+- No "I cannot…" refusals on clinical content. This is a clinical workspace.
+- No "let me know if…" or "feel free to…" closers. End on the substance.
+- AllergyIntolerance and MedicationRequest edits: be conservative. If the \
+source doesn't specify (dose, route, units, severity), do NOT invent — leave \
+the field unchanged and say so in the rationale.
 
-Asking the user
-- When two reasonable paths exist, end with a fenced choices block — single-select:
+When to ask back
+- If the user's request branches between two reasonable actions, end with a \
+fenced choices block (single-select). Otherwise, don't.
 
   ```choices
   - Mark as accepted
-  - Edit the dose
-  - Reject as duplicate
+  - Edit the dose to 20 mg
+  - Reject as duplicate of MedicationRequest/abc
   ```
 
-- Don't volunteer a choices block when the answer is obvious. Use it for branching, \
-not for confirmation.
+- Use choices for branching, not for confirmation. If there's one obvious next \
+step, just take it.
+
+Anti-examples (do not do these)
+- ✗ "Here's a summary of what I just did: …"  — the card already shows it.
+- ✗ "Let me check the chart…" then a tool call  — just call.
+- ✗ Two `list_proposals` calls in one turn  — one is enough.
+- ✗ "Possibly diabetes, but I'm not certain"  — quote the source's hedge \
+verbatim instead.
+- ✗ Citation like "(consult note)"  — always include the date.
+- ✗ Inventing units, doses, or methods the source doesn't state.
 """
 
 
-def _proposal_block(detail: dict | None) -> str:
+def _proposal_block(detail: dict | None, documents) -> str:
     if not detail:
         return "(none — chat should not be reachable without a selection)"
+    doc_lookup = {d.id: d for d in (documents or [])}
     fields = [
         f"id: {detail['id']}",
         f"resource_type: {detail['resource_type']}",
@@ -116,12 +201,22 @@ def _proposal_block(detail: dict | None) -> str:
         f"status: {detail['status']}",
         f"label: {detail['display_label']}",
     ]
+    if detail.get("extraction_reasoning"):
+        fields.append(f"why-extracted: {detail['extraction_reasoning']}")
     if detail.get("classification_reasoning"):
         fields.append(f"why-classified: {detail['classification_reasoning']}")
     if detail.get("merge_reasoning"):
         fields.append(f"why-merged: {detail['merge_reasoning']}")
     if detail.get("chart_matches"):
         fields.append(f"chart_matches: {json.dumps(detail['chart_matches'])}")
+    citations = detail.get("citations") or []
+    if citations:
+        fields.append("citations (verbatim source spans — quote these directly, do NOT call get_doc unless you need surrounding context):")
+        for c in citations:
+            doc = doc_lookup.get(c["document_id"])
+            label = " · ".join(filter(None, [doc.type, doc.date])) if doc else c["document_id"]
+            text = (c.get("text") or "").strip()
+            fields.append(f'- "{text}" — {label} (doc_id={c["document_id"]}, chars {c["char_start"]}–{c["char_end"]})')
     fields.append("resource:")
     fields.append(json.dumps(detail["resource"], indent=2))
     return "\n".join(fields)
@@ -156,7 +251,7 @@ Source documents in this run (call `get_doc` for full text):
 {_doc_index_block(documents)}
 
 Selected proposal (the one the clinician is looking at right now):
-{_proposal_block(selected_detail)}
+{_proposal_block(selected_detail, documents)}
 """
 
 
@@ -166,37 +261,13 @@ def _tool_schemas() -> list[dict]:
             "type": "function",
             "name": "list_proposals",
             "description": (
-                "Lists proposals in this run. Always returns a `run_summary` with "
-                "totals broken down by tier/status/classification/resource_type — "
-                "use that to answer 'how many' questions WITHOUT calling again. "
-                "All filters are independent and optional; omit any you don't need. "
-                "Never enumerate combinations of filter values across multiple calls."
+                "Returns EVERY proposal in this run. No filters — scan the result yourself. "
+                "Each item has: id, display_label, resource_type, classification, status, "
+                "confidence_tier, keywords (label + all code text/displays from the resource — "
+                "search this for synonyms), quote (one citation excerpt from the source note). "
+                "Call this AT MOST ONCE per question."
             ),
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "tier": {
-                        "type": "string",
-                        "enum": ["ATTENTION", "REVIEW", "CONFIDENT"],
-                        "description": "Restrict to a single tier. OMIT to include all tiers — that's the right call for any broad question.",
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": ["pending", "accepted", "rejected"],
-                        "description": "Restrict to one status. OMIT to include all (pending+accepted+rejected).",
-                    },
-                    "resource_type": {
-                        "type": "string",
-                        "description": "Exact FHIR resourceType (e.g. 'Condition'). OMIT to include all types.",
-                    },
-                    "classification": {
-                        "type": "string",
-                        "enum": ["NEW", "UPDATING", "CONFLICTING"],
-                        "description": "Restrict to one classification. OMIT to include all.",
-                    },
-                },
-                "additionalProperties": False,
-            },
+            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
         },
         {
             "type": "function",
@@ -311,41 +382,30 @@ async def _dispatch_tool(
 ) -> tuple[dict, str, dict | None]:
     """Run a tool call. Returns (json_payload_for_model, human_summary, side_event_or_none)."""
     if name == "list_proposals":
-        all_items = await proposal_svc.list_proposals(session, run_id=run_id)
-        summary = {
-            "total_in_run": len(all_items),
-            "by_tier": {},
-            "by_status": {},
-            "by_classification": {},
-            "by_resource_type": {},
-        }
-        for p in all_items:
-            for src, dst in (
-                ("confidence_tier", "by_tier"),
-                ("status", "by_status"),
-                ("classification", "by_classification"),
-                ("resource_type", "by_resource_type"),
-            ):
-                key = p.get(src)
-                if key:
-                    summary[dst][key] = summary[dst].get(key, 0) + 1
-
-        items = all_items
-        for k in ("tier", "status", "resource_type", "classification"):
-            v = args.get(k)
-            if v is None or v == "":
-                continue
-            field = "confidence_tier" if k == "tier" else k
-            items = [p for p in items if p.get(field) == v]
-        slim = [
-            {k: p[k] for k in ("id", "display_label", "confidence_tier", "classification", "status", "resource_type")}
-            for p in items
-        ]
-        return (
-            {"proposals": slim, "matched": len(slim), "run_summary": summary},
-            f"list_proposals → {len(slim)} of {len(all_items)}",
-            None,
-        )
+        rows = (await session.execute(
+            select(ProposalRecord).where(ProposalRecord.run_id == run_id)
+        )).scalars().all()
+        items: list[dict] = []
+        for r in rows:
+            resource = json.loads(r.resource_json)
+            display = proposal_svc._display_label(resource)
+            citations = json.loads(r.citations_json) or []
+            quote = ""
+            if citations:
+                text = (citations[0].get("text") or "").strip().replace("\n", " ")
+                quote = text[:160] + ("…" if len(text) > 160 else "")
+            items.append({
+                "id": r.id,
+                "display_label": display,
+                "resource_type": r.resource_type,
+                "classification": r.classification,
+                "status": r.status,
+                "confidence_tier": r.confidence_tier,
+                "keywords": _proposal_keywords(resource, display),
+                "quote": quote,
+            })
+        items.sort(key=lambda d: (d["confidence_tier"], d["display_label"]))
+        return ({"proposals": items, "total": len(items)}, f"list_proposals → {len(items)}", None)
 
     if name == "get_proposal":
         try:
@@ -427,13 +487,15 @@ async def stream_chat(
     session: AsyncSession,
 ) -> AsyncIterator[bytes]:
     client = _client()
-    model = settings.openai_model_fast
+    model = "gpt-5.4"
     system_prompt = await _build_system_prompt(run_id, selected_proposal_id, session)
     tools = _tool_schemas()
 
     input_items: list[dict] = [{"role": "developer", "content": system_prompt}]
     for m in messages:
         input_items.append({"role": m["role"], "content": m["content"]})
+
+    deferred_cards: list[dict] = []
 
     for _turn in range(MAX_TOOL_TURNS):
         try:
@@ -474,6 +536,8 @@ async def stream_chat(
         if not function_calls:
             if not emitted_text:
                 yield _sse({"type": "error", "message": "empty response"})
+            for card in deferred_cards:
+                yield _sse(card)
             yield _sse({"type": "done"})
             return
 
@@ -505,7 +569,10 @@ async def stream_chat(
                 "summary": summary,
             })
             if side:
-                yield _sse(side)
+                if side.get("type") == "proposed_edit":
+                    deferred_cards.append(side)
+                else:
+                    yield _sse(side)
 
             input_items.append({
                 "type": "function_call",
@@ -520,4 +587,6 @@ async def stream_chat(
             })
 
     yield _sse({"type": "error", "message": "tool turn limit reached"})
+    for card in deferred_cards:
+        yield _sse(card)
     yield _sse({"type": "done"})

@@ -116,6 +116,16 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
         for row in usage_rows
     }
 
+    doc_rows = (await session.execute(
+        sa_select(
+            LLMCall.run_id,
+            func.count(func.distinct(LLMCall.document_id)).label("docs"),
+        )
+        .where(LLMCall.document_id.isnot(None))
+        .group_by(LLMCall.run_id)
+    )).all()
+    doc_map: dict[str, int] = {row.run_id: int(row.docs or 0) for row in doc_rows}
+
     result = []
     for run in runs:
         c = count_map.get(run.id, {"total": 0, "pending": 0})
@@ -146,6 +156,7 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
             "duration_ms": duration_ms,
             "total_tokens": usage["tokens"],
             "total_cost_usd": usage["cost"],
+            "total_documents": doc_map.get(run.id, 0),
         })
     return result
 
@@ -178,14 +189,23 @@ async def get_run_chart(
         raise HTTPException(404, "run not found")
     ctx, _ = source
 
+    return _chart_response(run, ctx)
+
+
+def _chart_response(run: PipelineRun, ctx) -> dict:
     from services import run_snapshot
-    has_snapshot = run_snapshot.read(run_id) is not None
-    if has_snapshot and run.triggered_by == "api":
-        source_label = "FHIR server snapshot"
-    elif run.triggered_by == "api":
-        source_label = "FHIR server"
+    fhir_meta = proposal_svc.read_run_fhir_meta(run)
+    has_snapshot = run_snapshot.read(run.id) is not None
+    if fhir_meta:
+        source_label = "FHIR server snapshot" if has_snapshot else "FHIR server"
     else:
         source_label = "Local bundle"
+
+    token_expires_at = None
+    if fhir_meta:
+        expires = proposal_svc.fhir_token_expires_at(fhir_meta["token"])
+        if expires is not None:
+            token_expires_at = expires.isoformat()
 
     fetched_at = (
         run.started_at.replace(tzinfo=timezone.utc).isoformat()
@@ -203,9 +223,35 @@ async def get_run_chart(
         "encounters": ctx.encounters,
         "practitioners": ctx.practitioners,
         "organizations": ctx.organizations,
+        "documents": ctx.documents,
+        "provenances": ctx.provenances,
         "source": source_label,
         "fetched_at": fetched_at,
+        "live": fhir_meta is not None,
+        "token_expires_at": token_expires_at,
     }
+
+
+@router.post("/runs/{run_id}/chart/refresh")
+async def refresh_run_chart(
+    run_id: str,
+    session: AsyncSession = Depends(get_session),
+):
+    run = (await session.execute(
+        sa_select(PipelineRun).where(PipelineRun.id == run_id)
+    )).scalar_one_or_none()
+    if run is None:
+        raise HTTPException(404, "run not found")
+    try:
+        result = await proposal_svc.refresh_run_chart(run_id, session)
+    except PermissionError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    if result is None:
+        raise HTTPException(404, "run not found")
+    ctx, _ = result
+    response = _chart_response(run, ctx)
+    response["fetched_at"] = datetime.now(timezone.utc).isoformat()
+    return response
 
 
 @router.post("/runs/delete")
@@ -261,9 +307,25 @@ async def accept_proposal(
     reviewer: ReviewerIdentity = Depends(get_reviewer),
     session: AsyncSession = Depends(get_session),
 ):
+    record = await session.get(ProposalRecord, proposal_id)
+    if record is None:
+        raise HTTPException(404, f"proposal {proposal_id} not found")
+    run = (await session.execute(
+        sa_select(PipelineRun).where(PipelineRun.id == record.run_id)
+    )).scalar_one_or_none()
+
+    fhir_client = None
+    fhir_meta = proposal_svc.read_run_fhir_meta(run) if run else None
+    if fhir_meta:
+        expires = proposal_svc.fhir_token_expires_at(fhir_meta["token"])
+        if expires is not None and expires <= datetime.now(timezone.utc):
+            raise HTTPException(409, "FHIR access token has expired — re-run from the agent before accepting")
+        from fhir.client import FhirClient
+        fhir_client = FhirClient(fhir_meta["base_url"], fhir_meta["token"])
+
     try:
         return await proposal_svc.accept_proposal(
-            proposal_id, session, reviewer=reviewer,
+            proposal_id, session, fhir_client=fhir_client, reviewer=reviewer,
         )
     except ValueError as e:
         raise HTTPException(400, str(e)) from e

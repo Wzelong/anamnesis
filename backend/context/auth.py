@@ -8,6 +8,7 @@ production would front this surface with platform SSO instead.
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
@@ -17,6 +18,7 @@ from sqlalchemy import delete, select
 from core.ids import short_id
 
 _TOKEN_LIFETIME = timedelta(hours=24)
+_UUID_LIKE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE)
 
 
 @dataclass
@@ -29,22 +31,27 @@ class InvalidReviewToken(jwt.InvalidTokenError):
     """Raised when a review token is unknown or expired."""
 
 
+def _is_human_label(value: object) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return False
+    if "/" in value:
+        return False
+    if _UUID_LIKE.match(value):
+        return False
+    return True
+
+
 def extract_clinician_identity(access_token: str) -> ReviewerIdentity:
     claims = jwt.decode(access_token, options={"verify_signature": False})
 
     fhir_user = claims.get("fhirUser")
-    fhir_reference = None
-    if fhir_user and "/" in str(fhir_user):
-        fhir_reference = str(fhir_user)
+    fhir_reference = str(fhir_user) if fhir_user and "/" in str(fhir_user) else None
 
-    name = claims.get("name")
-    sub = claims.get("sub")
+    for candidate in (claims.get("name"), fhir_user, claims.get("sub")):
+        if _is_human_label(candidate):
+            return ReviewerIdentity(display=str(candidate), fhir_reference=fhir_reference)
 
-    display = name or (str(fhir_user) if fhir_user else None) or (str(sub) if sub else None)
-    if not display:
-        display = "Authenticated via Prompt Opinion"
-
-    return ReviewerIdentity(display=display, fhir_reference=fhir_reference)
+    return ReviewerIdentity(display="Authenticated via Prompt Opinion", fhir_reference=fhir_reference)
 
 
 async def mint_review_token(identity: ReviewerIdentity) -> str:

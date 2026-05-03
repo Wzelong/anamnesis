@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -236,23 +237,112 @@ def _collect_search_jobs(
     return jobs
 
 
+_ABBREV: dict[str, str] = {
+    "htn": "hypertension",
+    "dm": "diabetes mellitus",
+    "dm2": "type 2 diabetes mellitus",
+    "t2dm": "type 2 diabetes mellitus",
+    "t1dm": "type 1 diabetes mellitus",
+    "mi": "myocardial infarction",
+    "chf": "congestive heart failure",
+    "hfref": "heart failure with reduced ejection fraction",
+    "hfpef": "heart failure with preserved ejection fraction",
+    "cad": "coronary artery disease",
+    "copd": "chronic obstructive pulmonary disease",
+    "afib": "atrial fibrillation",
+    "a-fib": "atrial fibrillation",
+    "ckd": "chronic kidney disease",
+    "esrd": "end-stage renal disease",
+    "uti": "urinary tract infection",
+    "gerd": "gastroesophageal reflux disease",
+    "osa": "obstructive sleep apnea",
+    "dvt": "deep vein thrombosis",
+    "pe": "pulmonary embolism",
+    "ldl": "low-density lipoprotein cholesterol",
+    "hdl": "high-density lipoprotein cholesterol",
+    "bp": "blood pressure",
+    "hr": "heart rate",
+    "rr": "respiratory rate",
+    "spo2": "oxygen saturation",
+    "a1c": "hemoglobin a1c",
+    "hba1c": "hemoglobin a1c",
+}
+
+_LATERALITY_RE = re.compile(r"[,\s]+(?:left|right|bilateral|bilat)\.?\s*$", re.IGNORECASE)
+_PARENS_RE = re.compile(r"\s*\([^)]*\)\s*$")
+_DOSE_RE = re.compile(r"\s+\d+(?:\.\d+)?\s*(?:mg|mcg|µg|g|ml|units?|iu|tabs?|caps?)\b.*$", re.IGNORECASE)
+_LEADING_SEVERITY_RE = re.compile(r"^(?:severe|moderate|mild|acute|subacute|chronic|recurrent|active|resolved|small|large)\s+", re.IGNORECASE)
+_TRAILING_QUALIFIER_RE = re.compile(r",\s*(?:nos|unspecified|nec|stable|improving|worsening)\.?\s*$", re.IGNORECASE)
+
+
+def _query_variants(term: str) -> list[str]:
+    """Generate query variants for first-pass search.
+
+    Returns the original term first, then progressively stripped/expanded forms.
+    Order is deterministic; deduped while preserving first occurrence.
+    """
+    out: list[str] = [term.strip()]
+    seen = {out[0].lower()}
+
+    def _add(v: str) -> None:
+        v = v.strip()
+        key = v.lower()
+        if v and key not in seen:
+            out.append(v)
+            seen.add(key)
+
+    _add(_LATERALITY_RE.sub("", term))
+    _add(_PARENS_RE.sub("", term))
+    _add(_DOSE_RE.sub("", term))
+    _add(_LEADING_SEVERITY_RE.sub("", term))
+    _add(_TRAILING_QUALIFIER_RE.sub("", term))
+
+    lower = term.lower().strip().rstrip(".")
+    if lower in _ABBREV:
+        _add(_ABBREV[lower])
+    for tok in re.findall(r"\b[a-z][a-z0-9-]+\b", lower):
+        if tok in _ABBREV and _ABBREV[tok] not in seen:
+            _add(term.lower().replace(tok, _ABBREV[tok]))
+
+    return out
+
+
+def _merge_results(lists: list[list[SearchResult]], top_k: int) -> list[SearchResult]:
+    """Merge per-variant FAISS hits, dedupe by code, keep best score, re-rank."""
+    best: dict[str, SearchResult] = {}
+    for hits in lists:
+        for r in hits:
+            prev = best.get(r.code)
+            if prev is None or r.score > prev.score:
+                best[r.code] = r
+    merged = sorted(best.values(), key=lambda r: -r.score)[:top_k]
+    return [SearchResult(code=r.code, display=r.display, score=r.score, rank=i + 1) for i, r in enumerate(merged)]
+
+
 def _batch_search(
     jobs: list[tuple[int, str, str, str]],
 ) -> dict[str, list[SearchResult]]:
-    """Batch-embed unique terms, run FAISS searches, return results keyed by job key."""
+    """Batch-embed unique terms (with variants), run FAISS, merge per-job."""
     if not jobs:
         return {}
 
     store, emb_model = _get_defaults()
 
-    unique_terms = list(dict.fromkeys(t for _, _, t, _ in jobs))
+    job_variants: dict[str, list[str]] = {}
+    all_terms: set[str] = set()
+    for _, key, term, _system in jobs:
+        variants = _query_variants(term)
+        job_variants[key] = variants
+        all_terms.update(variants)
+
+    unique_terms = sorted(all_terms)
     vecs = emb_model.encode(unique_terms)
     term_to_vec: dict[str, np.ndarray] = {t: vecs[i] for i, t in enumerate(unique_terms)}
 
     results: dict[str, list[SearchResult]] = {}
-    for _, key, term, system in jobs:
-        vec = term_to_vec[term]
-        results[key] = store.search(vec, system, 10)
+    for _, key, _term, system in jobs:
+        per_variant = [store.search(term_to_vec[v], system, 5) for v in job_variants[key]]
+        results[key] = _merge_results(per_variant, top_k=10)
     return results
 
 

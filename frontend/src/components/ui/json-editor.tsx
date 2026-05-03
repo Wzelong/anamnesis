@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useTheme } from "next-themes"
 import CodeMirror, { EditorView, type Extension, type ReactCodeMirrorRef } from "@uiw/react-codemirror"
 import { json, jsonParseLinter } from "@codemirror/lang-json"
 import { linter } from "@codemirror/lint"
@@ -16,6 +17,7 @@ import {
 } from "@codemirror/search"
 import { tags as t } from "@lezer/highlight"
 import { Check, ChevronDown, ChevronUp, Copy, Search, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -27,9 +29,10 @@ interface Props {
   value: string
   editable?: boolean
   onChange?: (next: string) => void
+  hideTypeLabel?: boolean
 }
 
-const baseTheme = EditorView.theme({
+const buildBaseTheme = (dark: boolean) => EditorView.theme({
   "&": {
     fontSize: "12px",
     backgroundColor: "transparent",
@@ -42,26 +45,8 @@ const baseTheme = EditorView.theme({
     lineHeight: "1.6",
     overflow: "auto",
   },
-  ".cm-content": { padding: "8px 0", caretColor: "var(--foreground)", minHeight: "100%" },
-  ".cm-gutters": {
-    backgroundColor: "color-mix(in oklch, var(--muted) 50%, transparent)",
-    color: "color-mix(in oklch, var(--muted-foreground) 55%, transparent)",
-    border: "none",
-    paddingRight: "6px",
-    marginRight: "8px",
-  },
-  ".cm-lineNumbers .cm-gutterElement": {
-    padding: "0 4px 0 8px",
-    minWidth: "28px",
-    fontVariantNumeric: "tabular-nums",
-  },
-  ".cm-foldGutter .cm-gutterElement": {
-    color: "color-mix(in oklch, var(--muted-foreground) 60%, transparent)",
-    cursor: "pointer",
-    padding: "0 2px",
-  },
+  ".cm-content": { padding: "12px", caretColor: "var(--foreground)", minHeight: "100%" },
   ".cm-activeLine": { backgroundColor: "transparent" },
-  ".cm-activeLineGutter": { backgroundColor: "transparent" },
   ".cm-selectionBackground, ::selection": {
     backgroundColor: "color-mix(in oklch, var(--ring) 25%, transparent) !important",
   },
@@ -90,7 +75,7 @@ const baseTheme = EditorView.theme({
     outline: "1px solid var(--warning-fg)",
     borderRadius: "2px",
   },
-})
+}, { dark })
 
 const highlight = HighlightStyle.define([
   { tag: t.propertyName, color: "var(--foreground)", fontWeight: "500" },
@@ -127,9 +112,11 @@ function inspect(value: string): ResourceMeta {
   return { resourceType: "JSON", fieldCount: 0, parsed: false }
 }
 
-export function JsonEditor({ value, editable = false, onChange }: Props) {
+export function JsonEditor({ value, editable = false, onChange, hideTypeLabel = false }: Props) {
   const ref = useRef<ReactCodeMirrorRef | null>(null)
   const meta = useMemo(() => inspect(value), [value])
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme === "dark"
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -150,9 +137,9 @@ export function JsonEditor({ value, editable = false, onChange }: Props) {
       syntaxHighlighting(highlight),
       search({ top: true }),
       EditorView.lineWrapping,
-      baseTheme,
+      buildBaseTheme(isDark),
     ],
-    [],
+    [isDark],
   )
 
   useEffect(() => {
@@ -206,7 +193,7 @@ export function JsonEditor({ value, editable = false, onChange }: Props) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="shrink-0 py-1.5 border-b bg-muted/30 flex items-center px-3">
+      <div className="h-8 shrink-0 border-b bg-muted/30 flex items-center px-3">
         {searchOpen ? (
           <div className="flex items-center gap-1 flex-1 min-w-0">
             <Search className="size-3.5 text-muted-foreground shrink-0" />
@@ -257,8 +244,13 @@ export function JsonEditor({ value, editable = false, onChange }: Props) {
           </div>
         ) : (
           <>
-            <span className="text-xs font-mono text-foreground shrink-0">{meta.resourceType}</span>
-            <span className="ml-2 text-[11px] text-muted-foreground tabular-nums shrink-0">
+            {!hideTypeLabel && (
+              <span className="text-xs font-mono text-foreground shrink-0">{meta.resourceType}</span>
+            )}
+            <span className={cn(
+              "text-[11px] text-muted-foreground tabular-nums shrink-0",
+              !hideTypeLabel && "ml-2",
+            )}>
               {meta.parsed ? `${meta.fieldCount} field${meta.fieldCount === 1 ? "" : "s"}` : "Invalid JSON"}
             </span>
             <div className="flex-1" />
@@ -292,10 +284,11 @@ export function JsonEditor({ value, editable = false, onChange }: Props) {
           value={value}
           editable={editable}
           readOnly={!editable}
+          theme="none"
           extensions={extensions}
           basicSetup={{
-            lineNumbers: true,
-            foldGutter: true,
+            lineNumbers: false,
+            foldGutter: false,
             highlightActiveLine: false,
             highlightActiveLineGutter: false,
             highlightSelectionMatches: false,

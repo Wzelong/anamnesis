@@ -28,6 +28,8 @@ _PATIENT_LINKED_TYPES = {
     "Encounter": "encounters",
     "Practitioner": "practitioners",
     "Organization": "organizations",
+    "DocumentReference": "documents",
+    "Provenance": "provenances",
 }
 
 

@@ -120,7 +120,14 @@ def _strip_none(d: dict | list) -> dict | list:
 
 
 def _cc(coding: list[dict], text: str) -> dict:
-    return {"coding": coding, "text": text}
+    valid = [c for c in coding if c.get("system") and c.get("code")]
+    if valid:
+        return {"coding": valid, "text": text}
+    fallback_text = text or next(
+        (c.get("text") or c.get("display") or "" for c in coding if c.get("text") or c.get("display")),
+        "",
+    )
+    return {"text": fallback_text} if fallback_text else {}
 
 
 def _cond_verification(certainty: str) -> dict:

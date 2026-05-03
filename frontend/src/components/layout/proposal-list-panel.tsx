@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation"
 import {
   ArrowLeft,
   Ban,
+  Check,
   ClipboardList,
   ListChecks,
   Stamp,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -230,19 +232,33 @@ export function ProposalListPanel() {
             const Icon = RESOURCE_ICON[p.resource_type] ?? ClipboardList
             const reviewed = p.status !== "pending"
             return (
-              <div className={cn("flex items-center gap-2 min-w-0", reviewed && "opacity-60")}>
-                <span
-                  className={cn("size-1.5 rounded-full shrink-0", TIER_DOT[p.confidence_tier])}
-                  aria-hidden
-                />
-                <Icon className="size-3 text-muted-foreground shrink-0" />
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="size-3 shrink-0 inline-flex items-center justify-center text-muted-foreground">
+                  {reviewed ? (
+                    p.status === "accepted"
+                      ? <Check className="size-3 -ml-1" />
+                      : <X className="size-3 -ml-1" />
+                  ) : (
+                    <span
+                      className={cn("size-1.5 rounded-full", TIER_DOT[p.confidence_tier])}
+                      aria-hidden
+                    />
+                  )}
+                </span>
+                <Icon className={cn("size-3 text-muted-foreground shrink-0", reviewed && "-ml-0.5")} />
                 <span className="text-sm truncate flex-1">{p.display_label}</span>
-                <Badge
-                  variant={CLASSIFICATION_VARIANT[p.classification]}
-                  className="text-[10px] px-1 py-0 shrink-0"
-                >
-                  {CLASSIFICATION_LABEL[p.classification]}
-                </Badge>
+                {reviewed ? (
+                  <span className="text-[10px] px-1 py-0 shrink-0 text-muted-foreground">
+                    {p.status === "accepted" ? "Accepted" : "Rejected"}
+                  </span>
+                ) : (
+                  <Badge
+                    variant={CLASSIFICATION_VARIANT[p.classification]}
+                    className="text-[10px] px-1 py-0 shrink-0"
+                  >
+                    {CLASSIFICATION_LABEL[p.classification]}
+                  </Badge>
+                )}
               </div>
             )
           }}
@@ -260,9 +276,10 @@ export function ProposalListPanel() {
           }}
           activeId={selectedId ?? undefined}
           selectedIds={selectedProposalIds}
-          onSelectAll={() => selectAllProposals(paged.map((p) => p.id))}
+          onSelectAll={() => selectAllProposals(paged.filter((p) => p.status === "pending").map((p) => p.id))}
           onSelectOne={toggleProposalSelection}
           onClearSelection={clearProposalSelection}
+          isItemSelectable={(p: Proposal) => p.status === "pending"}
           bulkActions={bulkActions}
           onItemClick={(p: Proposal) => runId && router.push(`/${runId}/${p.id}`)}
           emptyState={{

@@ -1,6 +1,6 @@
 "use client"
 
-import { Clock, Sparkle, Wallet } from "lucide-react"
+import { Clock, FileText, Sparkle, Wallet } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { Run } from "@/lib/types"
 
@@ -40,6 +40,13 @@ function buildItems(run: Run): StatItem[] {
       icon: <Clock className="size-3" />,
       value: duration,
       label: "Processing time",
+    })
+  }
+  if (run.total_documents > 0) {
+    items.push({
+      icon: <FileText className="size-3" />,
+      value: `${run.total_documents}`,
+      label: `Documents processed (${run.total_documents})`,
     })
   }
   if (run.total_tokens > 0) {

@@ -61,6 +61,7 @@ export function DataList<T>({
   onSelectAll,
   onSelectOne,
   onClearSelection,
+  isItemSelectable,
   activeId,
   toolbarButtons = [],
   bulkActions = [],
@@ -318,13 +319,17 @@ export function DataList<T>({
                 onClick={() => onItemClick?.(item)}
               >
                 {hasSelection && (
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={() => onSelectOne?.(itemId)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="cursor-pointer mt-[3px] shrink-0"
-                    aria-label={`Select item ${itemId}`}
-                  />
+                  isItemSelectable && !isItemSelectable(item) ? (
+                    <div className="size-4 mt-[3px] shrink-0" aria-hidden />
+                  ) : (
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => onSelectOne?.(itemId)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="cursor-pointer mt-[3px] shrink-0"
+                      aria-label={`Select item ${itemId}`}
+                    />
+                  )
                 )}
                 <div className="flex-1 min-w-0">{renderItem(item)}</div>
               </div>

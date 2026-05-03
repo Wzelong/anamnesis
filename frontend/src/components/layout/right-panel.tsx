@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Check, ChevronDown, DatabaseSearch, FileSliders, FileText, Inbox, MessageCircleQuestionMark } from "lucide-react"
+import { ArrowLeft, Check, ChevronDown, ClipboardPlus, DatabaseSearch, FileText, Inbox, MessageCircleQuestionMark, RefreshCw, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAppStore } from "@/lib/store"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,7 @@ import type { ResolvedCitation, SourceDocument } from "@/lib/types"
 import { RightPanelNotes } from "./right-panel-notes"
 import { RightPanelChart } from "./right-panel-chart"
 import { RightPanelChat } from "./right-panel-chat"
-import { useChart, useDocuments } from "./right-panel-data"
+import { useChart, useChartRefresh, useDocuments } from "./right-panel-data"
 
 type Tab = "notes" | "chart" | "chat"
 
@@ -38,7 +38,7 @@ const TABS: Array<{ value: Tab; label: string; icon: React.ReactNode }> = [
 ]
 
 const NAV_TABS: Array<{ value: "detail" | "notes" | "chart" | "chat"; label: string; icon: React.ReactNode }> = [
-  { value: "detail", label: "Detail", icon: <FileSliders className="size-3.5" /> },
+  { value: "detail", label: "Proposal", icon: <ClipboardPlus className="size-3.5" /> },
   { value: "notes", label: "Notes", icon: <FileText className="size-3.5" /> },
   { value: "chart", label: "FHIR store", icon: <DatabaseSearch className="size-3.5" /> },
   { value: "chat", label: "AI chat", icon: <MessageCircleQuestionMark className="size-3.5" /> },
@@ -53,14 +53,20 @@ export function RightPanel({ runId }: Props) {
   const [activeDocId, setActiveDocId] = useState<string | null>(null)
   const selectedId = useAppStore((s) => s.selectedId)
   const detail = useAppStore((s) => s.selectedDetail)
+  const chatHasMessages = useAppStore((s) => (s.chatByRun[runId]?.length ?? 0) > 0)
+  const chatStreaming = useAppStore((s) => s.chatStreaming)
+  const resetChatForRun = useAppStore((s) => s.resetChatForRun)
 
   const handleNavTab = (v: typeof NAV_TABS[number]["value"]) => {
     if (v === "detail") setContentView("detail")
     else { setContentView("right"); setTab(v) }
   }
 
+  const handleResetChat = () => resetChatForRun(runId)
+
   const documents = useDocuments(runId)
   const chart = useChart(runId, tab === "chart")
+  const { refresh: refreshChartFn, pending: chartRefreshing, error: chartRefreshError } = useChartRefresh(runId)
 
   const activeDoc = useMemo(
     () => documents?.find((d) => d.id === activeDocId) ?? null,
@@ -121,6 +127,11 @@ export function RightPanel({ runId }: Props) {
           activeDocId={activeDocId}
           setActiveDocId={setActiveDocId}
           detailLabel={detail?.display_label}
+          chatHasMessages={chatHasMessages}
+          chatStreaming={chatStreaming}
+          onResetChat={handleResetChat}
+          onRefreshChart={refreshChartFn}
+          chartRefreshing={chartRefreshing}
         />
         <div className="flex-1" />
         <div className="hidden xl:flex items-center gap-1 shrink-0">
@@ -164,11 +175,18 @@ export function RightPanel({ runId }: Props) {
           />
         )
       ) : tab === "chart" ? (
-        <RightPanelChart
-          chart={chart}
-          classification={detail?.classification ?? "NEW"}
-          chartMatches={detail?.chart_matches ?? []}
-        />
+        <div className="flex-1 min-h-0 flex flex-col">
+          {chartRefreshError && (
+            <div className="shrink-0 border-t bg-destructive/5 px-3 py-2 text-xs text-destructive">
+              {chartRefreshError}
+            </div>
+          )}
+          <RightPanelChart
+            chart={chart}
+            classification={detail?.classification ?? "NEW"}
+            chartMatches={detail?.chart_matches ?? []}
+          />
+        </div>
       ) : (
         <RightPanelChat />
       )}
@@ -185,6 +203,11 @@ function HeaderContext({
   activeDocId,
   setActiveDocId,
   detailLabel,
+  chatHasMessages,
+  chatStreaming,
+  onResetChat,
+  onRefreshChart,
+  chartRefreshing,
 }: {
   tab: Tab
   activeDoc: SourceDocument | null
@@ -194,6 +217,11 @@ function HeaderContext({
   activeDocId: string | null
   setActiveDocId: (id: string) => void
   detailLabel?: string | null
+  chatHasMessages: boolean
+  chatStreaming: boolean
+  onResetChat: () => void
+  onRefreshChart: () => void
+  chartRefreshing: boolean
 }) {
   if (tab === "notes") {
     return (
@@ -207,9 +235,16 @@ function HeaderContext({
     )
   }
   if (tab === "chart") {
-    return <ChartHeader chart={chart} />
+    return <ChartHeader chart={chart} onRefresh={onRefreshChart} refreshing={chartRefreshing} />
   }
-  return <ChatHeader detailLabel={detailLabel ?? null} />
+  return (
+    <ChatHeader
+      detailLabel={detailLabel ?? null}
+      hasMessages={chatHasMessages}
+      streaming={chatStreaming}
+      onReset={onResetChat}
+    />
+  )
 }
 
 function NotesHeader({
@@ -282,7 +317,15 @@ function NotesHeader({
   )
 }
 
-function ChartHeader({ chart }: { chart: import("@/lib/types").ChartContext | null }) {
+function ChartHeader({
+  chart,
+  onRefresh,
+  refreshing,
+}: {
+  chart: import("@/lib/types").ChartContext | null
+  onRefresh: () => void
+  refreshing: boolean
+}) {
   const [, setTick] = useState(0)
   useEffect(() => {
     if (!chart?.fetched_at) return
@@ -293,17 +336,66 @@ function ChartHeader({ chart }: { chart: import("@/lib/types").ChartContext | nu
   if (!chart) return null
   const ago = formatTimeAgo(chart.fetched_at)
   const meta = [chart.source, ago].filter(Boolean).join(" · ")
+  const expired = Boolean(
+    chart.live && chart.token_expires_at && new Date(chart.token_expires_at).getTime() <= Date.now(),
+  )
   return (
-    <div className="min-w-0 truncate text-[11px] text-muted-foreground tabular-nums">
-      {meta}
+    <div className="min-w-0 flex items-center gap-1.5">
+      <span className="truncate text-[11px] text-muted-foreground tabular-nums">{meta}</span>
+      {chart.live && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 cursor-pointer text-muted-foreground shrink-0 disabled:cursor-not-allowed"
+              onClick={onRefresh}
+              disabled={refreshing || expired}
+              aria-label="Refresh chart"
+            >
+              <RefreshCw className={cn("size-3", refreshing && "animate-spin")} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            <p>{expired ? "FHIR access token expired — re-run from the agent to refresh" : "Refresh from FHIR server"}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
     </div>
   )
 }
 
-function ChatHeader({ detailLabel: _detailLabel }: { detailLabel: string | null }) {
+function ChatHeader({
+  detailLabel: _detailLabel,
+  hasMessages,
+  streaming,
+  onReset,
+}: {
+  detailLabel: string | null
+  hasMessages: boolean
+  streaming: boolean
+  onReset: () => void
+}) {
   return (
-    <div className="min-w-0 truncate text-[11px] text-muted-foreground tabular-nums">
-      gpt-5.4-mini · low reasoning
+    <div className="min-w-0 flex items-center gap-1.5">
+      <span className="text-[11px] text-muted-foreground tabular-nums truncate">gpt-5.4</span>
+      {hasMessages && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 cursor-pointer text-muted-foreground shrink-0"
+              onClick={onReset}
+              disabled={streaming}
+              aria-label="Reset chat"
+            >
+              <RotateCcw className="size-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="top"><p>Reset chat</p></TooltipContent>
+        </Tooltip>
+      )}
     </div>
   )
 }

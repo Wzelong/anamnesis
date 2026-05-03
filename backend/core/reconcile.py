@@ -598,97 +598,51 @@ class StageFiveOutput:
         )
 
 
-_CERTAINTY_SCORES = {"definite": 1.0, "probable": 0.6, "uncertain": 0.2}
-_CLASSIFICATION_SCORES = {"DUPLICATE": 1.0, "UPDATING": 0.7, "NEW": 0.5, "CONFLICTING": 0.0}
+_CERTAINTY_BASE = {"definite": 1.0, "probable": 0.6, "uncertain": 0.25}
+_CERTAINTY_PROMOTED = {"definite": 1.0, "probable": 1.0, "uncertain": 0.6}
 
-_W_SOURCE = 0.25
-_W_CERTAINTY = 0.20
-_W_CODING = 0.25
-_W_MATCH = 0.20
-_W_CLASS = 0.10
+_W_CERTAINTY = 0.5
+_W_CODING = 0.5
+
+_CONFIDENT_THRESHOLD = 0.80
+_REVIEW_THRESHOLD = 0.40
 
 
 def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
     item = result.candidate.item
     refs = result.candidate.source_refs
-
+    cls = result.classification
     n_docs = len({sr.document_id for sr in refs})
-    if n_docs >= 3:
-        source_score, source_reason = 1.0, f"Mentioned in {n_docs} notes"
-    elif n_docs == 2:
-        source_score, source_reason = 0.7, "Mentioned in 2 notes"
-    else:
-        source_score, source_reason = 0.4, "Single mention"
 
     certainty = item.get("certainty", "probable")
-    certainty_score = _CERTAINTY_SCORES.get(certainty, 0.6)
+    corroborated = n_docs >= 2
+    certainty_score = (
+        _CERTAINTY_PROMOTED if corroborated else _CERTAINTY_BASE
+    ).get(certainty, 0.6)
     certainty_reason = {
         "definite": "Stated assertively",
-        "probable": "Probable in source",
-        "uncertain": "Uncertain or secondhand",
+        "probable": "Probable in source" + (" (corroborated)" if corroborated else ""),
+        "uncertain": "Uncertain or secondhand" + (" (corroborated)" if corroborated else ""),
     }.get(certainty, "Probable in source")
 
     codings = item.get("coding", [])
     has_real_code = any("code" in c for c in codings)
     if has_real_code:
-        n_real = len([c for c in codings if "code" in c])
-        coding_score = 0.7 + min(0.3, n_real * 0.15)
+        coding_score = 1.0
         systems = {c.get("system", "").split("/")[-1] for c in codings if "system" in c}
         systems.discard("")
-        if len(systems) >= 2:
-            coding_reason = f"Coded in {len(systems)} systems ({', '.join(sorted(systems))})"
-        else:
-            coding_reason = f"{n_real} terminology code{'s' if n_real != 1 else ''}"
+        coding_reason = (
+            f"Coded in {len(systems)} systems ({', '.join(sorted(systems))})"
+            if len(systems) >= 2
+            else f"{len([c for c in codings if 'code' in c])} terminology code"
+        )
     else:
-        coding_score = 0.1
+        coding_score = 0.3
         coding_reason = "No terminology code"
 
-    best_match_type = None
-    if result.chart_matches:
-        priority = {"exact_code": 3, "ingredient": 2, "display_text": 1}
-        best_match_type = max(result.chart_matches, key=lambda m: priority.get(m.match_type, 0)).match_type
-
-    cls = result.classification
-    if cls == "CONFLICTING":
-        match_score = 0.0
-        match_reason = "Conflicts with chart"
-    elif cls == "DUPLICATE":
-        if best_match_type == "exact_code":
-            match_score, match_reason = 1.0, "Exact code match in chart"
-        else:
-            match_score, match_reason = 0.8, "Match in chart (non-exact)"
-    elif cls == "UPDATING":
-        if best_match_type in ("exact_code", "ingredient"):
-            match_score, match_reason = 0.9, f"Strong chart match ({best_match_type})"
-        else:
-            match_score, match_reason = 0.6, "Approximate chart match"
-    else:
-        match_score = 0.5
-        match_reason = "No prior chart anchor"
-
-    class_score = _CLASSIFICATION_SCORES.get(cls, 0.5)
-    class_reason = {
-        "DUPLICATE": "Already in chart",
-        "UPDATING": "Updates existing record",
-        "NEW": "New finding",
-        "CONFLICTING": "Conflicts with existing record",
-    }.get(cls, cls)
-
-    composite = (
-        source_score * _W_SOURCE
-        + certainty_score * _W_CERTAINTY
-        + coding_score * _W_CODING
-        + match_score * _W_MATCH
-        + class_score * _W_CLASS
-    )
+    composite = certainty_score * _W_CERTAINTY + coding_score * _W_CODING
 
     breakdown = ConfidenceBreakdown(
-        source=ConfidenceAxis(
-            score=round(source_score, 3),
-            weight=_W_SOURCE,
-            contribution=round(source_score * _W_SOURCE, 3),
-            reason=source_reason,
-        ),
         certainty=ConfidenceAxis(
             score=round(certainty_score, 3),
             weight=_W_CERTAINTY,
@@ -701,37 +655,24 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
             contribution=round(coding_score * _W_CODING, 3),
             reason=coding_reason,
         ),
-        match=ConfidenceAxis(
-            score=round(match_score, 3),
-            weight=_W_MATCH,
-            contribution=round(match_score * _W_MATCH, 3),
-            reason=match_reason,
-        ),
-        classification=ConfidenceAxis(
-            score=round(class_score, 3),
-            weight=_W_CLASS,
-            contribution=round(class_score * _W_CLASS, 3),
-            reason=class_reason,
-        ),
     )
 
+    resource_type = result.candidate.resource_type
     if cls == "CONFLICTING":
         tier = "ATTENTION"
-    elif composite >= 0.70:
-        tier = "CONFIDENT"
-    elif composite >= 0.40:
+    elif resource_type == "AllergyIntolerance" and (certainty == "uncertain" or not has_real_code):
+        tier = "ATTENTION"
+    elif composite >= _CONFIDENT_THRESHOLD:
+        tier = "REVIEW" if not has_real_code else "CONFIDENT"
+    elif composite >= _REVIEW_THRESHOLD:
         tier = "REVIEW"
     else:
         tier = "ATTENTION"
 
     flags: list[str] = []
 
-    if n_docs >= 3:
+    if n_docs >= 2:
         flags.append(f"Mentioned in {n_docs} notes")
-    elif n_docs == 2:
-        flags.append("Mentioned in 2 notes")
-    else:
-        flags.append("Single mention")
 
     if certainty == "uncertain":
         flags.append("Source language is uncertain or secondhand")
@@ -745,6 +686,11 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
         systems.discard("")
         if len(systems) >= 2:
             flags.append(f"Coded in {len(systems)} systems ({', '.join(sorted(systems))})")
+
+    best_match_type = None
+    if result.chart_matches:
+        priority = {"exact_code": 3, "ingredient": 2, "display_text": 1}
+        best_match_type = max(result.chart_matches, key=lambda m: priority.get(m.match_type, 0)).match_type
 
     if cls == "CONFLICTING":
         displays = [m.display for m in result.chart_matches if m.display]

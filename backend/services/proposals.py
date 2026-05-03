@@ -1,6 +1,7 @@
 """Service layer for proposal lifecycle: run pipeline, list, accept, reject, edit."""
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from datetime import datetime, timezone
@@ -16,10 +17,48 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import PipelineRun, ProposalRecord
+from fhir.models import Document
 
 log = logging.getLogger(__name__)
 
 _TIER_ORDER = {"ATTENTION": 0, "REVIEW": 1, "CONFIDENT": 2}
+
+
+INLINE_DOC_PREFIX = "inline_"
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _documents_from_notes(
+    raw_notes: list[str],
+    note_type: str,
+    note_date: str | None,
+) -> list[Document]:
+    """Build virtual Documents from agent-supplied note text.
+
+    IDs are deterministic over content (sha256 prefix) so the same note
+    re-uploaded yields the same id across runs.
+    """
+    date = note_date or _now_iso()
+    out: list[Document] = []
+    for raw in raw_notes:
+        text = (raw or "").strip()
+        if not text:
+            continue
+        digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+        out.append(Document(
+            id=f"{INLINE_DOC_PREFIX}{digest}",
+            type=note_type,
+            date=date,
+            author="",
+            text=text,
+            encounter_id=None,
+        ))
+    if not out:
+        raise ValueError("no usable notes provided")
+    return out
 
 
 async def _load_source(patient_id: str | None, *, fhir_client=None):
@@ -43,6 +82,115 @@ async def load_run_source(run_id: str, session: AsyncSession, *, fhir_client=Non
     if snapshot is not None:
         return snapshot
     return await _load_source(run.patient_id, fhir_client=fhir_client)
+
+
+def _fhir_meta_from_client(fhir_client) -> dict | None:
+    if fhir_client is None:
+        return None
+    base_url = getattr(fhir_client, "base_url", None)
+    token = getattr(fhir_client, "token", None)
+    if not base_url or not token:
+        return None
+    return {"base_url": base_url, "token": token}
+
+
+async def _update_run_fhir_meta(session: AsyncSession, run_id: str, fhir_meta: dict) -> None:
+    run = (await session.execute(select(PipelineRun).where(PipelineRun.id == run_id))).scalar_one_or_none()
+    if run is None:
+        return
+    try:
+        meta = json.loads(run.meta_json) if run.meta_json else {}
+    except json.JSONDecodeError:
+        meta = {}
+    if not isinstance(meta, dict):
+        meta = {}
+    meta["fhir"] = fhir_meta
+    run.meta_json = json.dumps(meta, default=str)
+    await session.commit()
+
+
+def read_run_fhir_meta(run: PipelineRun) -> dict | None:
+    if not run.meta_json:
+        return None
+    try:
+        meta = json.loads(run.meta_json)
+    except json.JSONDecodeError:
+        return None
+    fhir = meta.get("fhir") if isinstance(meta, dict) else None
+    if isinstance(fhir, dict) and fhir.get("base_url") and fhir.get("token"):
+        return fhir
+    return None
+
+
+def fhir_token_expires_at(token: str) -> datetime | None:
+    import jwt
+    try:
+        claims = jwt.decode(token, options={"verify_signature": False})
+    except Exception:
+        return None
+    exp = claims.get("exp")
+    if not isinstance(exp, (int, float)):
+        return None
+    return datetime.fromtimestamp(exp, tz=timezone.utc)
+
+
+async def refresh_creds_for_patient(
+    patient_id: str | None,
+    fhir_client,
+    session: AsyncSession,
+) -> int:
+    """Top up the stored FHIR creds for any of this patient's open runs.
+
+    Called from MCP tool entrypoints so a clinician's "do anything" action
+    silently re-arms accept/refresh on the review surface after an expired
+    token, without forcing a fresh pipeline run. Returns the number of runs
+    whose creds were updated.
+    """
+    if not patient_id:
+        return 0
+    fhir_meta = _fhir_meta_from_client(fhir_client)
+    if fhir_meta is None:
+        return 0
+    rows = (await session.execute(
+        select(PipelineRun).where(PipelineRun.patient_id == patient_id)
+    )).scalars().all()
+    updated = 0
+    for run in rows:
+        try:
+            meta = json.loads(run.meta_json) if run.meta_json else {}
+        except json.JSONDecodeError:
+            meta = {}
+        if not isinstance(meta, dict):
+            meta = {}
+        meta["fhir"] = fhir_meta
+        run.meta_json = json.dumps(meta, default=str)
+        updated += 1
+    if updated:
+        await session.commit()
+    return updated
+
+
+async def refresh_run_chart(run_id: str, session: AsyncSession):
+    run = (await session.execute(select(PipelineRun).where(PipelineRun.id == run_id))).scalar_one_or_none()
+    if run is None:
+        return None
+    fhir = read_run_fhir_meta(run)
+    if fhir is None:
+        raise PermissionError("run has no live FHIR connection")
+    expires = fhir_token_expires_at(fhir["token"])
+    if expires is not None and expires <= datetime.now(timezone.utc):
+        raise PermissionError("FHIR access token has expired")
+
+    from fhir.client import FhirClient
+    from fhir.read import read_patient_context
+    from services import run_snapshot
+
+    client = FhirClient(fhir["base_url"], fhir["token"])
+    patient_context = await read_patient_context(client, run.patient_id)
+    snapshot = run_snapshot.read(run_id)
+    documents = snapshot[1] if snapshot else []
+    run_snapshot.write(run_id, patient_context, documents)
+    return patient_context, documents
 
 
 def _cc_text(cc: dict | None) -> str | None:
@@ -198,6 +346,9 @@ def _record_to_dict(record: ProposalRecord, *, full: bool = False) -> dict:
         d["supersedes"] = metadata.get("supersedes", [])
         d["reviewed_at"] = record.reviewed_at.replace(tzinfo=timezone.utc).isoformat() if record.reviewed_at else None
         d["reviewed_by"] = record.reviewed_by
+        d["rejection_reason"] = metadata.get("rejection_reason")
+        d["provenance_resource"] = metadata.get("provenance_resource")
+        d["write_result"] = metadata.get("write_result")
     return d
 
 
@@ -234,6 +385,9 @@ async def run_pipeline(
                     run_snapshot.write(row.run_id, pc, docs)
                 except Exception as exc:
                     log.warning("snapshot backfill failed for run %s: %s", row.run_id, exc)
+            new_fhir_meta = _fhir_meta_from_client(fhir_client)
+            if new_fhir_meta:
+                await _update_run_fhir_meta(session, row.run_id, new_fhir_meta)
             return {
                 "run_id": row.run_id,
                 "patient_id": effective_patient_id,
@@ -243,7 +397,47 @@ async def run_pipeline(
             }
 
     patient_context, documents = await _load_source(effective_patient_id, fhir_client=fhir_client)
+    return await _run_with_documents(
+        patient_context, documents, session,
+        triggered_by="api", fhir_meta=_fhir_meta_from_client(fhir_client),
+    )
 
+
+async def run_pipeline_with_inline_notes(
+    patient_id: str | None,
+    raw_notes: list[str],
+    session: AsyncSession,
+    *,
+    note_type: str = "External record",
+    note_date: str | None = None,
+    fhir_client=None,
+) -> dict:
+    """Augmentation pipeline against agent-supplied note text.
+
+    Reconciles findings against the patient's existing FHIR chart, but does
+    not pull DocumentReferences from the server — the supplied `raw_notes`
+    are the only source documents for this run. The source documents are
+    written to FHIR only when the clinician accepts a derived augmentation.
+    """
+    if not raw_notes:
+        raise ValueError("raw_notes must contain at least one note")
+
+    patient_context, _ = await _load_source(patient_id, fhir_client=fhir_client)
+    documents = _documents_from_notes(raw_notes, note_type, note_date)
+    return await _run_with_documents(
+        patient_context, documents, session,
+        triggered_by="api:inline", fhir_meta=_fhir_meta_from_client(fhir_client),
+    )
+
+
+async def _run_with_documents(
+    patient_context,
+    documents: list[Document],
+    session: AsyncSession,
+    *,
+    triggered_by: str,
+    fhir_meta: dict | None = None,
+) -> dict:
     effective_patient_id = patient_context.patient["id"]
     name_parts = (patient_context.patient.get("name") or [{}])[0]
     given = " ".join(name_parts.get("given") or [])
@@ -251,46 +445,23 @@ async def run_pipeline(
     patient_name = f"{given} {family}".strip() or None
 
     from core import telemetry
-    from core.preprocess import preprocess_documents
     from services import run_snapshot
 
     run_id = short_id("run")
+    meta: dict = {"doc_count": len(documents)}
+    if fhir_meta:
+        meta["fhir"] = fhir_meta
     await telemetry.start_run(
         run_id=run_id,
         patient_id=effective_patient_id,
         patient_name=patient_name,
-        triggered_by="api",
-        meta={"doc_count": len(documents)},
+        triggered_by=triggered_by,
+        meta=meta,
     )
     run_snapshot.write(run_id, patient_context, documents)
 
     try:
-        notes = preprocess_documents(documents)
-
-        from openai import AsyncOpenAI
-        from config import settings
-        client = AsyncOpenAI(api_key=settings.openai_api_key)
-        model = settings.openai_model_fast
-        cache_dir = Path(__file__).resolve().parent.parent / ".cache"
-
-        from core.cache import JsonCache
-        from core.extraction import extract_candidates_batch, merge_across_notes
-        from core.code_candidates import code_candidates
-        from core.reconcile import reconcile
-        from core.augment import assemble_proposals
-
-        stage2_cache = JsonCache(cache_dir / "stage2_output")
-        stage2 = await extract_candidates_batch(notes, client, model=model, cache=stage2_cache)
-
-        stage3_cache = JsonCache(cache_dir / "stage3")
-        stage3 = await merge_across_notes(stage2, client, model=model, cache=stage3_cache)
-
-        stage4 = await code_candidates(stage3, client, model=model)
-
-        stage5 = await reconcile(stage4, patient_context, client, model=model)
-
-        stage6 = assemble_proposals(stage5, notes, patient_context)
-
+        stage6 = await _execute_stages(patient_context, documents)
         for proposal in stage6.proposals:
             session.add(_proposal_to_record(proposal, run_id, effective_patient_id))
         await session.commit()
@@ -300,7 +471,7 @@ async def run_pipeline(
 
     await telemetry.finish_run("completed")
 
-    by_tier = {}
+    by_tier: dict[str, int] = {}
     for p in stage6.proposals:
         by_tier[p.confidence_tier] = by_tier.get(p.confidence_tier, 0) + 1
 
@@ -313,6 +484,33 @@ async def run_pipeline(
         "by_tier": by_tier,
         "cached": False,
     }
+
+
+async def _execute_stages(patient_context, documents: list[Document]):
+    from openai import AsyncOpenAI
+
+    from config import settings
+    from core.augment import assemble_proposals
+    from core.cache import JsonCache
+    from core.code_candidates import code_candidates
+    from core.extraction import extract_candidates_batch, merge_across_notes
+    from core.preprocess import preprocess_documents
+    from core.reconcile import reconcile
+
+    notes = preprocess_documents(documents)
+    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    model = settings.openai_model_fast
+    cache_dir = Path(__file__).resolve().parent.parent / ".cache"
+
+    stage2_cache = JsonCache(cache_dir / "stage2_output")
+    stage2 = await extract_candidates_batch(notes, client, model=model, cache=stage2_cache)
+
+    stage3_cache = JsonCache(cache_dir / "stage3")
+    stage3 = await merge_across_notes(stage2, client, model=model, cache=stage3_cache)
+
+    stage4 = await code_candidates(stage3, client, model=model)
+    stage5 = await reconcile(stage4, patient_context, client, model=model)
+    return assemble_proposals(stage5, notes, patient_context)
 
 
 async def list_proposals(
@@ -361,31 +559,61 @@ async def accept_proposal(
     record.reviewed_at = datetime.now(timezone.utc)
     record.reviewed_by = reviewer.display if reviewer else None
 
+    from fhir.write import Citation, build_provenance
+    from services import run_snapshot
+
+    raw_citations = json.loads(record.citations_json)
+    snapshot = run_snapshot.read(record.run_id)
+    snapshot_docs: dict[str, Document] = (
+        {d.id: d for d in snapshot[1]} if snapshot else {}
+    )
+    citations: list[Citation] = []
+    for c in raw_citations:
+        doc_id = c["document_id"]
+        inline_doc = (
+            snapshot_docs.get(doc_id)
+            if doc_id.startswith(INLINE_DOC_PREFIX) else None
+        )
+        citations.append(Citation(
+            document_ref=f"DocumentReference/{doc_id}",
+            start=c["char_start"],
+            end=c["char_end"],
+            text=c["text"],
+            inline_document=inline_doc,
+        ))
+
+    metadata = json.loads(record.metadata_json)
+    supersedes = metadata.get("supersedes", [])
+
     write_result = None
     if fhir_client:
-        from fhir.write import AugmentationProposal as WriteProposal, Citation, apply_augmentation
-        raw_citations = json.loads(record.citations_json)
-        citations = [
-            Citation(
-                document_ref=f"DocumentReference/{c['document_id']}",
-                start=c["char_start"], end=c["char_end"], text=c["text"],
-            )
-            for c in raw_citations
-        ]
-        metadata = json.loads(record.metadata_json)
-        supersedes = metadata.get("supersedes", [])
+        from fhir.write import AugmentationProposal as WriteProposal, apply_augmentation
         wp = WriteProposal(
             classification=record.classification,
             resource=json.loads(record.resource_json),
             citations=citations,
             supersedes_ref=supersedes[0] if supersedes else None,
         )
-        result = await apply_augmentation(fhir_client, wp, attester=reviewer)
+        result = await apply_augmentation(
+            fhir_client, wp, attester=reviewer, patient_id=record.patient_id,
+        )
         write_result = {
             "resource_ref": result.resource_ref,
             "provenance_ref": result.provenance_ref,
             "superseded_ref": result.superseded_ref,
         }
+        target_urn = result.resource_ref or f"urn:local:{record.id}"
+    else:
+        target_urn = f"urn:local:{record.id}"
+
+    activity_code = "UPDATE" if record.classification == "UPDATING" else "CREATE"
+    provenance_resource = build_provenance(
+        target_urn, citations, activity_code=activity_code, attester=reviewer,
+    )
+    metadata["provenance_resource"] = provenance_resource
+    if write_result:
+        metadata["write_result"] = write_result
+    record.metadata_json = json.dumps(metadata)
 
     await session.commit()
 
@@ -393,6 +621,7 @@ async def accept_proposal(
         "id": record.id,
         "status": "accepted",
         "write_result": write_result,
+        "provenance_resource": provenance_resource,
     }
 
 

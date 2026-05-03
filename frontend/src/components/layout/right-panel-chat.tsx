@@ -25,7 +25,6 @@ import { ChatInput } from "./chat/chat-input"
 import { LoadingIndicator } from "./chat/loading-indicator"
 import { ActionChoices, extractChoices } from "./chat/action-choices"
 import { ProposedEditCard } from "./chat/proposed-edit-card"
-import { ToolBreadcrumb } from "./chat/tool-breadcrumb"
 
 export function RightPanelChat() {
   const runId = useAppStore((s) => s.runId)
@@ -83,18 +82,24 @@ export function RightPanelChat() {
             onPick={(opt) => sendChatMessage(opt)}
           />
         ) : (
-          <div className="flex flex-col gap-3 px-4 py-4 pb-24">
-            {messages.map((m) => (
-              <RenderedMessage
-                key={m.id}
-                message={m}
-                streaming={streaming}
-                onPick={(opt) => sendChatMessage(opt)}
-                onRevise={(rationale) => reviseFor(rationale)}
-                onDismiss={() => dismissProposedEdit(m.id)}
-              />
-            ))}
-            {streaming && <LoadingIndicator status={status} />}
+          <div className="mx-auto w-full max-w-3xl flex flex-col gap-3 px-4 py-4 pb-28">
+            {messages
+              .filter((m) => m.role !== "tool")
+              .map((m) => (
+                <RenderedMessage
+                  key={m.id}
+                  message={m}
+                  streaming={streaming}
+                  onPick={(opt) => sendChatMessage(opt)}
+                  onRevise={(rationale) => reviseFor(rationale)}
+                  onDismiss={() => dismissProposedEdit(m.id)}
+                />
+              ))}
+            {streaming && status && (() => {
+              const visible = messages.filter((m) => m.role !== "tool")
+              const last = visible[visible.length - 1]
+              return !last || last.role === "user" ? <LoadingIndicator status={status} /> : null
+            })()}
           </div>
         )}
       </div>
@@ -128,9 +133,6 @@ function RenderedMessage({
   onRevise: (rationale: string) => void
   onDismiss: () => void
 }) {
-  if (message.role === "tool") {
-    return <ToolBreadcrumb name={message.toolName ?? ""} status={message.toolStatus} summary={message.toolSummary} />
-  }
   if (message.role === "user") {
     return <ChatMessageBubble role="user" content={message.content} />
   }
@@ -204,11 +206,11 @@ function UnauthenticatedChat({ verifying }: { verifying: boolean }) {
         <EmptyMedia variant="icon">
           <Lock />
         </EmptyMedia>
-        <EmptyTitle>{verifying ? "Verifying access…" : "Sign in to chat"}</EmptyTitle>
+        <EmptyTitle>{verifying ? "Verifying access…" : "Review token required"}</EmptyTitle>
         <EmptyDescription>
           {verifying
             ? "Checking your review token."
-            : "Chat needs an alias of the clinician's Prompt Opinion session. Without it, no FHIR change — Provenance always names a verified clinician. Production would SSO-embed this surface."}
+            : "The assistant walks you through each proposal's reasoning, citations, and conflicts. Open this workspace with a valid review token to start chatting."}
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
