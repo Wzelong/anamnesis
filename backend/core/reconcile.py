@@ -72,8 +72,18 @@ def _canonical_tobacco(value: str) -> str:
     return v
 
 
+def _normalize_code(system: str, code: str) -> tuple[str, str]:
+    # ICD-10-CM is the only system that varies between dotted ("I50.22") and
+    # dotless ("I5022") form across sources — FAISS metadata is dotless, FHIR
+    # servers are dotted. Normalize symmetrically so exact-code matching works
+    # regardless of which form each side carries.
+    if "icd-10" in system.lower() or "icd10" in system.lower():
+        return (system, code.replace(".", ""))
+    return (system, code)
+
+
 def _extract_codes(coding_list: list[dict]) -> set[tuple[str, str]]:
-    return {(c["system"], c["code"]) for c in coding_list if "system" in c and "code" in c}
+    return {_normalize_code(c["system"], c["code"]) for c in coding_list if "system" in c and "code" in c}
 
 
 def _extract_fhir_codes(resource: dict, path: str = "code") -> set[tuple[str, str]]:
@@ -83,7 +93,7 @@ def _extract_fhir_codes(resource: dict, path: str = "code") -> set[tuple[str, st
         if not node:
             return set()
     codings = node.get("coding", []) if isinstance(node, dict) else []
-    return {(c["system"], c["code"]) for c in codings if "system" in c and "code" in c}
+    return {_normalize_code(c["system"], c["code"]) for c in codings if "system" in c and "code" in c}
 
 
 def _fhir_display(resource: dict, path: str = "code") -> str:
@@ -177,7 +187,7 @@ def build_chart_index(ctx: PatientContext) -> ChartIndex:
         rel = f.get("relationship", {})
         for c in rel.get("coding", []):
             if "system" in c and "code" in c:
-                fmh_cm.setdefault((c["system"], c["code"]), []).append(f)
+                fmh_cm.setdefault(_normalize_code(c["system"], c["code"]), []).append(f)
         disp = _normalize_display(rel.get("text", "") or next(
             (c.get("display", "") for c in rel.get("coding", [])), ""
         ))

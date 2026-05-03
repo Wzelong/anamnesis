@@ -5,7 +5,7 @@ shapes. Prompts encode clinical decision rules only. Bump PROMPT_VERSION
 to invalidate the cache when any prompt changes.
 """
 
-PROMPT_VERSION = "2026-05-03.03"
+PROMPT_VERSION = "2026-05-03.06"
 
 
 PROMPT_SCAN = """\
@@ -56,13 +56,13 @@ Include sentences describing a named relative's medical history (mother, father,
 </resource>
 
 <resource name="Procedure">
-Include completed or in-progress procedures: surgeries, imaging done, biopsies, catheterizations, therapy sessions.
-Exclude planned procedures (those belong to ServiceRequest, out of scope here).
+Include completed or in-progress procedures: surgeries, imaging done, biopsies, catheterizations, therapy sessions. Procedures referenced as historical with an explicit date ("Prior brain MRI (2025-11): normal", "Previous colonoscopy 2024", "Earlier echo Dec 2025") are completed procedures and must be included — they belong in the chart even if performed outside this encounter.
+Exclude planned procedures (those belong to ServiceRequest, out of scope here): "scheduled", "will obtain", "ordered for next visit", "expected within 3 weeks".
 Output nested groups: each group is a list of sentence numbers that need each other for full context (split name / details / findings / date).
 </resource>
 
 <resource name="MedicationRequest">
-Include drug names paired with an explicit treatment action: start, initiate, continue, hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate.
+Include drug names paired with an explicit treatment action: start, initiate, continue, hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate, received, administered, given, dosed.
 Exclude:
 - Home-medication reconciliation lists ("HOME MEDICATIONS", "Home meds", "Medication reconciliation") and discharge-medication blocks that say "continue all home medications". These list what the patient takes — they are not new orders or changes.
 - Sentences like "continued his home medications" or "continue all home medications as previously prescribed" without naming a specific new drug action. These are blanket continuations, not individual medication requests.
@@ -294,7 +294,7 @@ Goal
 One item per distinct medication. Preserve dose, frequency, and route. Reflect the action verb in `status` and `intent`.
 
 Rules
-- Only emit a medication when the snippet contains an explicit, drug-specific action verb (start, initiate, continue [drug name], hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate). A blanket "continue all home medications" is not drug-specific — it must not yield items.
+- Only emit a medication when the snippet contains an explicit, drug-specific action verb (start, initiate, continue [drug name], hold, restart, prescribed, ordered, increase to, decrease to, stop, discontinue, titrate, received, administered, given, dosed). A blanket "continue all home medications" is not drug-specific — it must not yield items.
 - A valid item must name a specific identifiable drug (e.g. "metoprolol", "omeprazole", "lisinopril"). Generic references without a drug name — "home medications", "heart medication", "current regimen", "same meds" — must not yield items.
 - Home-medication reconciliation lists enumerate what the patient takes. They are not orders. If the snippet is a reconciliation block ("HOME MEDICATIONS - Lisinopril 10 mg, Atorvastatin 40 mg...") paired only with "continue all home medications", emit zero items — no individual drug was started, changed, or stopped.
 - `name` is the full clinical drug as stated: include strength and form when available ("lisinopril 20 mg oral tablet", "metoprolol succinate 25 mg"). Do not truncate to just the ingredient.
@@ -305,6 +305,7 @@ Rules
   - "restart", "resume" → status=active, intent=order; the "same dose" refers to the dose in the referenced sentence — surface that dose in `dose`.
   - "hold" → status=on-hold, intent=order.
   - "stop", "discontinue", "no longer takes", "off" + drug → status=stopped, intent=order. Always emit when explicit — this enables conflict detection against the chart's active medication list.
+  - "received", "administered", "given", "dosed" + drug → status=completed, intent=order. Captures one-time administrations during this encounter (typical ED course or inpatient: "Received IV ceftriaxone 2 g x 1 dose", "given IV ketorolac 30 mg"). The dose was actually given, so the medication belongs in the chart as a completed event, not skipped.
   - "plan to start" without an order action → status=draft, intent=plan.
 - Separate combination regimens ("lisinopril 10 mg + HCTZ 25 mg") into two items.
 - `frequency` captures the dose schedule as stated: "daily", "BID", "q8h", "PRN", "at bedtime".
@@ -327,6 +328,18 @@ Snippet:
 [97] DISCHARGE MEDICATIONS - Continue all home medications as previously prescribed.
 [98] - New: omeprazole 20 mg PO once daily for 14 days.
 Output: one item — omeprazole 20 mg PO. The "New:" tag is an explicit order action.
+</example>
+
+<example>
+Snippet:
+[86] Patient received IV ceftriaxone 2 g x 1 dose in the ED along with IV normal saline 1 L.
+Output: one item — ceftriaxone 2 g IV, status=completed, frequency="x 1 dose". (IV normal saline is a fluid, not a medication; do not emit.)
+</example>
+
+<example>
+Snippet:
+[85] Received IV fluids (normal saline 1 L), IV ketorolac 30 mg, IV prochlorperazine 10 mg, and IV diphenhydramine 25 mg.
+Output: three items — ketorolac 30 mg IV, prochlorperazine 10 mg IV, diphenhydramine 25 mg IV. All status=completed (one-time ED administrations). Skip normal saline (fluid, not medication).
 </example>
 
 Certainty
@@ -353,8 +366,9 @@ Rules
 - Status mapping:
   - "performed", "done", "completed" → completed.
   - "underwent", past-tense verb → completed.
+  - "prior", "previous", "earlier", "outside facility" + named procedure with a stated date → completed. The procedure happened before this encounter; record it with the stated date so it lands in the chart's procedure history.
   - "ongoing", "in progress" → in-progress.
-  - "scheduled", "planned" → preparation.
+  - "scheduled", "planned", "ordered" (without a performed date) → preparation.
 - `category`: surgical / diagnostic / counselling / education. Leave null if unclear.
 - `outcome` captures findings or result if stated ("two-vessel CAD", "no polyps").
 - `body_site` lists anatomical locations as separate list items; use null when absent.
@@ -371,6 +385,11 @@ Output: performed="2025-10-15".
 <example>
 Snippet: [28] Diagnostic cardiac catheterization (10/2025), no PCI.
 Output: performed="2025-10" (month+year only; do not fabricate a day).
+</example>
+
+<example>
+Snippet: [43] Prior brain MRI (2025-11, outside facility): normal; no demyelinating lesions, no mass.
+Output: name="brain MRI", performed="2025-11", status=completed, outcome="normal — no demyelinating lesions, no mass". "Prior" with a stated date is a completed procedure that belongs in the chart history.
 </example>
 
 Certainty
