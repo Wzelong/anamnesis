@@ -37,11 +37,51 @@ MatchVerdict = Literal["NEW", "DUPLICATE", "UPDATING", "CONFLICTING", "AMBIGUOUS
 NKDA_CODE = "409137002"
 TOBACCO_LOINC = "72166-2"
 
-_DOSE_RE = re.compile(r"\s+\d+(\.\d+)?\s*(mg|mcg|g|ml|units?|%)\b.*", re.IGNORECASE)
+_DOSE_RE = re.compile(r"\s+\d+(\.\d+)?(/\d+(\.\d+)?)?\s*(mg|mcg|g|ml|units?|%)\b.*", re.IGNORECASE)
 _STRIP_PREFIXES = re.compile(
     r"^(essential|chronic|acute|mild|moderate|severe|minor|primary)\s+",
     re.IGNORECASE,
 )
+
+# Verbose RxNorm / SNOMED clinical-drug displays carry preambles, dose words,
+# packaging suffixes, and chemical qualifiers that would otherwise prevent the
+# ingredient-fallback from matching the chart's concise display. The next four
+# patterns reduce a string like
+#   "Product containing precisely carbidopa anhydrous (as carbidopa) 25 milligram
+#    and levodopa 100 milligram/1 each conventional release oral tablet (clinical drug)"
+# to "carbidopa / levodopa", which matches the chart side written as
+# "carbidopa / levodopa".
+_INGREDIENT_PREAMBLE_RE = re.compile(r"^product containing(?:\s+precisely)?\s+", re.IGNORECASE)
+_INGREDIENT_TABLET_SUFFIX_RE = re.compile(r"\s*/\d+\s+each\s+.*$", re.IGNORECASE)
+_INGREDIENT_PARENS_RE = re.compile(r"\s*\([^)]*\)\s*")
+_INGREDIENT_INLINE_DOSE_RE = re.compile(
+    r"\s+\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)?\s*"
+    r"(milligrams?|micrograms?|grams?|milliliters?|mg|mcg|g|ml)\b",
+    re.IGNORECASE,
+)
+_INGREDIENT_QUALIFIERS_RE = re.compile(
+    r"\b(anhydrous|monohydrate|dihydrate|trihydrate|sodium|potassium|calcium|"
+    r"hydrochloride|hcl|sulfate|sulphate|maleate|tartrate|succinate|fumarate|"
+    r"hemifumarate|mesylate|besylate|acetate|citrate|"
+    r"oral tablet|oral capsule|oral solution|injectable solution|"
+    r"conventional release|extended release|delayed release)\b",
+    re.IGNORECASE,
+)
+_INGREDIENT_AND_RE = re.compile(r"\s+and\s+", re.IGNORECASE)
+_INGREDIENT_SLASH_SPACING_RE = re.compile(r"\s*/\s*")
+
+# Reasoning models occasionally cram the unit into MedicationDose.value
+# ("25/100 mg") instead of leaving it in MedicationDose.unit. Normalize both
+# sides of the dose comparison so a unit-bearing candidate doesn't fire a
+# false UPDATING against a unitless chart dose extracted from dosageInstruction.
+_DOSE_VALUE_TAIL_RE = re.compile(
+    r"\s*(milligrams?|micrograms?|grams?|milliliters?|mg|mcg|g|ml|units?|%)\s*$",
+    re.IGNORECASE,
+)
+
+
+def _normalize_dose_value(v) -> str:
+    return _DOSE_VALUE_TAIL_RE.sub("", str(v)).strip()
 
 _TOBACCO_CURRENT = {"current every day smoker", "current some day smoker",
                      "ongoing", "active", "smoker", "current smoker",
@@ -52,7 +92,16 @@ _TOBACCO_NEVER = {"never smoker", "never", "non-smoker"}
 
 
 def _normalize_ingredient(display: str) -> str:
-    return _DOSE_RE.sub("", display.lower()).strip()
+    s = display.lower().strip()
+    s = _INGREDIENT_PREAMBLE_RE.sub("", s)
+    s = _INGREDIENT_TABLET_SUFFIX_RE.sub("", s)
+    s = _INGREDIENT_PARENS_RE.sub(" ", s)
+    s = _INGREDIENT_INLINE_DOSE_RE.sub(" ", s)
+    s = _INGREDIENT_QUALIFIERS_RE.sub(" ", s)
+    s = _DOSE_RE.sub("", s)
+    s = _INGREDIENT_AND_RE.sub(" / ", s)
+    s = _INGREDIENT_SLASH_SPACING_RE.sub(" / ", s)
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def _normalize_display(text: str) -> str:
@@ -297,7 +346,7 @@ def _match_condition_negated(c: MergedCandidate, idx: ChartIndex) -> _MatchResul
     )
 
 
-_DOSE_IN_TEXT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(mg|mcg|g|ml)\b", re.IGNORECASE)
+_DOSE_IN_TEXT_RE = re.compile(r"(\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)?)\s*(mg|mcg|g|ml)\b", re.IGNORECASE)
 
 
 def _extract_chart_dose(resource: dict) -> str:
@@ -355,7 +404,9 @@ def _match_medication(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
         chart_dose = _extract_chart_dose(matched[0])
 
         matches = [ChartMatch(resource_id=_resource_id(m), display=_fhir_display(m, "medicationCodeableConcept"), match_type="ingredient", resource=m) for m in matched]
-        if cand_dose_val and chart_dose and cand_dose_val != chart_dose:
+        cand_norm = _normalize_dose_value(cand_dose_val)
+        chart_norm = _normalize_dose_value(chart_dose)
+        if cand_norm and chart_norm and cand_norm != chart_norm:
             return ("UPDATING", f"same ingredient '{ing}', dose {chart_dose}->{cand_dose_val}", matches, matched)
         return ("DUPLICATE", f"same ingredient '{ing}'", matches, matched)
 
