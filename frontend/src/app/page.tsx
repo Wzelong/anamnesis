@@ -2,9 +2,11 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { ArrowRight, Check, Copy, ClipboardList } from "lucide-react"
+import { ArrowRight, Check, Copy, ClipboardList, Database } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { api } from "@/lib/api"
 import { useAppStore } from "@/lib/store"
 import {
   Empty,
@@ -14,16 +16,33 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 
-const MCP_URL = "https://ogle-spinach-splendor.ngrok-free.dev/mcp"
+const MCP_URL = process.env.NEXT_PUBLIC_MCP_URL ?? "https://ogle-spinach-splendor.ngrok-free.dev/mcp"
 
 function GettingStarted() {
   const [copied, setCopied] = useState(false)
+  const [seeding, setSeeding] = useState(false)
+  const fetchRuns = useAppStore((s) => s.fetchRuns)
+  const router = useRouter()
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(MCP_URL)
     setCopied(true)
     toast.success("Copied to clipboard")
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleSeedDemo = async () => {
+    setSeeding(true)
+    try {
+      const { run_id } = await api.seedDemo()
+      await fetchRuns()
+      router.push(`/${run_id}`)
+      toast.success("Demo data loaded.")
+    } catch {
+      toast.error("Failed to load demo data.")
+    } finally {
+      setSeeding(false)
+    }
   }
 
   return (
@@ -100,7 +119,7 @@ function GettingStarted() {
           </div>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-4">
           <a
             href="https://app.promptopinion.ai"
             target="_blank"
@@ -110,6 +129,23 @@ function GettingStarted() {
             <span>Open Prompt Opinion</span>
             <ArrowRight className="size-3.5 translate-y-px" />
           </a>
+
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px w-8 bg-border" />
+            <span>or</span>
+            <span className="h-px w-8 bg-border" />
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSeedDemo}
+            disabled={seeding}
+            className="gap-1.5"
+          >
+            <Database className="size-3.5" />
+            {seeding ? "Loading demo data..." : "Load demo data"}
+          </Button>
         </div>
       </div>
     </div>

@@ -1,12 +1,14 @@
 """REST API routes for the frontend review workspace."""
 from __future__ import annotations
 
+import json
 import shutil
 from datetime import datetime, timezone
+from decimal import Decimal
 from pathlib import Path
 
 import jwt
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -401,3 +403,89 @@ async def reset(session: AsyncSession = Depends(get_session)):
             fhir_reset = {"error": str(exc)}
 
     return {"status": "ok", "db": "cleared", "caches_cleared": cleared, "fhir_reset": fhir_reset}
+
+
+_DEMO_FIXTURE_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "demo_fixture.json"
+
+
+@router.post("/seed-demo")
+async def seed_demo(session: AsyncSession = Depends(get_session)):
+    existing = (await session.execute(
+        sa_select(PipelineRun).limit(1)
+    )).scalar_one_or_none()
+    if existing:
+        return {"run_id": existing.id}
+
+    if not _DEMO_FIXTURE_PATH.exists():
+        raise HTTPException(503, "Demo fixture not found. Run scripts.export_demo_fixture first.")
+
+    fixture = json.loads(_DEMO_FIXTURE_PATH.read_text(encoding="utf-8"))
+
+    await session.execute(text("DELETE FROM llm_call"))
+    await session.execute(text("DELETE FROM proposal"))
+    await session.execute(text("DELETE FROM pipeline_run"))
+    await session.execute(text("DELETE FROM review_token"))
+    await session.commit()
+
+    for r in fixture["runs"]:
+        session.add(PipelineRun(
+            id=r["id"],
+            patient_id=r["patient_id"],
+            patient_name=r["patient_name"],
+            triggered_by=r["triggered_by"],
+            status=r["status"],
+            started_at=datetime.fromisoformat(r["started_at"]),
+            finished_at=datetime.fromisoformat(r["finished_at"]) if r["finished_at"] else None,
+            meta_json=r["meta_json"],
+        ))
+
+    for p in fixture["proposals"]:
+        session.add(ProposalRecord(
+            id=p["id"],
+            run_id=p["run_id"],
+            patient_id=p["patient_id"],
+            resource_type=p["resource_type"],
+            classification=p["classification"],
+            confidence_tier=p["confidence_tier"],
+            confidence_score=Decimal(str(p["confidence_score"])),
+            status=p["status"],
+            resource_json=p["resource_json"],
+            citations_json=p["citations_json"],
+            metadata_json=p["metadata_json"],
+            created_at=datetime.fromisoformat(p["created_at"]),
+            reviewed_at=datetime.fromisoformat(p["reviewed_at"]) if p["reviewed_at"] else None,
+            reviewed_by=p["reviewed_by"],
+        ))
+
+    for c in fixture["llm_calls"]:
+        session.add(LLMCall(
+            id=c["id"],
+            run_id=c["run_id"],
+            document_id=c["document_id"],
+            stage=c["stage"],
+            call_type=c["call_type"],
+            model=c["model"],
+            prompt_version=c["prompt_version"],
+            input_tokens=c["input_tokens"],
+            output_tokens=c["output_tokens"],
+            reasoning_tokens=c["reasoning_tokens"],
+            cached_tokens=c["cached_tokens"],
+            latency_ms=c["latency_ms"],
+            usd_cost=Decimal(str(c["usd_cost"])),
+            status=c["status"],
+            error=c["error"],
+            started_at=datetime.fromisoformat(c["started_at"]),
+            finished_at=datetime.fromisoformat(c["finished_at"]),
+        ))
+
+    await session.commit()
+
+    from services import run_snapshot as snap
+    snap.SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+    for run_id, snapshot_data in fixture.get("snapshots", {}).items():
+        snap._path(run_id).write_text(
+            json.dumps(snapshot_data, ensure_ascii=False), encoding="utf-8",
+        )
+
+    first_run_id = fixture["runs"][0]["id"] if fixture["runs"] else None
+    return {"run_id": first_run_id}

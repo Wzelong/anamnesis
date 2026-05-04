@@ -1,0 +1,37 @@
+app = "anamnesis-demo"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DATABASE_URL = "sqlite+aiosqlite:////data/anamnesis.db"
+  FRONTEND_BASE_URL = "https://anamnesis-demo.fly.dev"
+  LOG_LEVEL = "INFO"
+  WARMUP_CODING_ON_STARTUP = "true"
+  NEXT_PUBLIC_API_URL = ""
+  HF_HOME = "/app/hf_cache"
+  HF_HUB_OFFLINE = "1"
+
+[http_service]
+  internal_port = 3042
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "120s"
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/health"
+
+[[mounts]]
+  source = "anamnesis_data"
+  destination = "/data"
+
+[[vm]]
+  memory = "4gb"
+  cpus = 2
+  cpu_kind = "performance"

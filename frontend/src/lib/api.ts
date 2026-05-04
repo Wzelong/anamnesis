@@ -46,6 +46,9 @@ export const api = {
 
   reset: () => apiFetch("/api/reset", { method: "POST" }),
 
+  seedDemo: () =>
+    apiFetch<{ run_id: string; token: string }>("/api/seed-demo", { method: "POST" }),
+
   listProposals: (params: { runId?: string; patientId?: string }) => {
     const q = new URLSearchParams()
     if (params.runId) q.set("run_id", params.runId)

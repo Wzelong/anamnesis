@@ -6,20 +6,6 @@ For the system shape (MCP surface, REST API, frontend, persistence) see [ARCHITE
 
 ![Pipeline](pipeline.png)
 
-```
- FHIR server (or uploaded docs)                            FHIR server
-     │                                                         ▲
-     │ DocumentReference + existing chart          Resource + Provenance
-     ▼                                                         │
- ┌───────┐  ┌──────────┐  ┌──────────┐  ┌────────────┐  ┌─────────┐  ┌──────────┐  ┌────────┐
- │ Load  │─▶│ Preproc. │─▶│ Extract  │─▶│ Cross-note │─▶│Reconcile│─▶│ Assemble │─▶│ Review │
- │ chart │  │          │  │          │  │   dedupe   │  │ vs chart│  │ proposal │  │ + write│
- └───────┘  └──────────┘  └──────────┘  └────────────┘  └─────────┘  └──────────┘  └────────┘
-   fhir/       core/         core/          core/          core/        core/       services/
-   read.py   preprocess.py  extraction.py  extraction.py  reconcile.py augment.py   + fhir/
-   local_                                                 + code_                    write.py
-   bundle.py                                              candidates.py
-```
 
 ## Stage 0 — Chart load (`backend/fhir/read.py`, `backend/fhir/local_bundle.py`)
 
