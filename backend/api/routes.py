@@ -373,6 +373,11 @@ async def edit_proposal(
 
 @router.post("/reset")
 async def reset(session: AsyncSession = Depends(get_session)):
+    latest_run = (await session.execute(
+        sa_select(PipelineRun).order_by(PipelineRun.started_at.desc()).limit(1)
+    )).scalar_one_or_none()
+    fhir_meta = proposal_svc.read_run_fhir_meta(latest_run) if latest_run else None
+
     await session.execute(text("DELETE FROM proposal"))
     await session.execute(text("DELETE FROM pipeline_run"))
     await session.commit()
@@ -384,4 +389,15 @@ async def reset(session: AsyncSession = Depends(get_session)):
             shutil.rmtree(d)
             cleared.append(name)
 
-    return {"status": "ok", "db": "cleared", "caches_cleared": cleared}
+    fhir_reset = None
+    if fhir_meta:
+        from fhir import bootstrap
+        from fhir.client import FhirClient
+        client = FhirClient(fhir_meta["base_url"], fhir_meta["token"])
+        try:
+            patient_id = await bootstrap.run(client)
+            fhir_reset = {"patient_id": patient_id}
+        except Exception as exc:
+            fhir_reset = {"error": str(exc)}
+
+    return {"status": "ok", "db": "cleared", "caches_cleared": cleared, "fhir_reset": fhir_reset}

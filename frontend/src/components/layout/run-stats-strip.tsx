@@ -1,6 +1,6 @@
 "use client"
 
-import { ClipboardList, FileText } from "lucide-react"
+import { ClipboardList, Clock, DollarSign, FileText } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { Run } from "@/lib/types"
 
@@ -44,11 +44,12 @@ function buildItems(run: Run): StatItem[] {
   }
   const duration = formatDuration(run.duration_ms)
   if (duration) {
-    items.push({ value: duration, tooltip: "Processing time" })
+    items.push({ icon: <Clock className="size-3" />, value: duration, tooltip: "Processing time" })
   }
   if (run.total_cost_usd > 0) {
     items.push({
-      value: formatCost(run.total_cost_usd),
+      icon: <DollarSign className="size-3 -mr-1" />,
+      value: formatCost(run.total_cost_usd).replace(/^\$/, ""),
       tooltip: `Estimated cost ($${run.total_cost_usd.toFixed(4)})`,
     })
   }

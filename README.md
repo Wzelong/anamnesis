@@ -12,7 +12,7 @@ The product ships as an **MCP server** (the substantive deliverable, invokable b
 
 Six stages from clinical note to clinician-reviewable proposal, plus a deterministic write-back stage on accept. Deterministic where it can be (sentence splitting, terminology lookup, code matching, FHIR assembly), LLM-driven where it must be (extraction, fuzzy reconciliation). Every accepted change writes back as a transaction Bundle with a `Provenance` resource that points at the source span — an audit trail manual chart review does not produce.
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the system shape and [PIPELINE.md](PIPELINE.md) for the per-stage deep-dive.
+See [Architecture.md](Architecture.md) for the system shape and [PIPELINE.md](PIPELINE.md) for the per-stage deep-dive.
 
 ## What we built
 
@@ -47,28 +47,55 @@ NEW (93%) and DUPLICATE (92%) — the bulk of real clinical findings — both cl
 
 ## Run it locally
 
-Prereqs: Python 3.11+, Node 20+, an OpenAI API key. The demo path uses a local FHIR Bundle so judges don't need a FHIR server.
+Prerequisites: Python 3.11+, Node 20+, ngrok, an OpenAI API key.
 
-### Backend
+### 1. Prepare embeddings and indexes
+
+Download the [embeddings archive](https://drive.google.com/file/d/1Jf72Rb87ZjOSCt9I8d3_HYOl5yEXrJk5/view?usp=sharing) (requires access), unzip it, and place the resulting `embeddings/` folder at the repo root.
 
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-cp .env.example .env               # then fill OPENAI_API_KEY
+python -m scripts.build_indexes    # builds data/indexes/ from embeddings/
+python -m scripts.smoke_test_indexes  # verify indexes work
+```
+
+### 2. Start the backend
+
+```bash
+cp .env.example .env               # fill in OPENAI_API_KEY
 uvicorn main:app --reload --port 8042
 ```
 
-Sanity check: `curl http://localhost:8042/health` → `{"status":"ok","service":"anamnesis"}`.
+Wait for `Coding model and indexes ready` in the log. Sanity check: `curl http://localhost:8042/health` → `{"status":"ok","service":"anamnesis"}`.
 
-### Frontend
+### 3. Expose via ngrok
+
+```bash
+ngrok http --domain=<your-domain>.ngrok-free.dev 8042
+```
+
+Note the public URL (e.g. `https://<your-domain>.ngrok-free.dev`).
+
+### 4. Start the frontend
 
 ```bash
 cd frontend
 npm install
 npm run dev          # http://localhost:3042
 ```
+
+### 5. Configure Prompt Opinion
+
+1. **Register the MCP server.** Go to **Configuration → MCP Servers → Add MCP Server**. Enter the ngrok URL, select **Streamable HTTP**, set authentication to **None**, enable **Prompt Opinion Extension**, and set FHIR Context Permission to **Full Authority** (for testing). Save.
+2. **Create an agent.** Go to **Agents → Add AI Agent**. Set Allowed Contexts to **Patient**. Under **Tools → Additional Tools (MCP Servers)**, select the Anamnesis server you just added. Save.
+3. **Import the demo patient.** Go to **Patient Data → Import**. Under "Upload a FHIR Bundle", select `data/demo_patient/anamnesis-demo-bundle.json` from this repo. Import.
+
+### 6. Run the demo
+
+Go to **Launchpad → Select a Scope → Patient**, select **James Lee (11/15/1958)**, then select the agent you created. In the chat, type **"Augment chart"** and wait ~30 seconds. The agent will respond with a link to the review workspace — open it.
 
 ### Reproduce the benchmark
 
@@ -79,14 +106,6 @@ python run_demo_benchmark.py --runs 5
 
 Re-render the report from a prior run (no API spend): `python run_demo_benchmark.py --rerender results/<timestamp>`.
 
-### Optional — expose to Prompt Opinion via ngrok
-
-```bash
-ngrok http --domain=<your-domain>.ngrok-free.dev 8042
-```
-
-Register the public `/mcp` URL in **Workspace Hub → Add MCP Server** with Streamable HTTP transport and SHARP context enabled.
-
 ## Repo layout
 
 ```
@@ -95,13 +114,13 @@ anamnesis/
   frontend/            Next.js review workspace
   benchmarks/          Eval corpus + multi-run benchmark
   data/demo_patient/   Synthetic Bundle + four notes for offline demos
-  ARCHITECTURE.md      System shape, contracts, invariants
+  Architecture.md      System shape, contracts, invariants
   PIPELINE.md          Per-stage augmentation pipeline deep-dive
 ```
 
 ## Docs
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — system shape, MCP contract, persistence, frontend, contracts, out-of-scope
+- [Architecture.md](Architecture.md) — system shape, MCP contract, persistence, frontend, contracts, out-of-scope
 - [PIPELINE.md](PIPELINE.md) — six-stage augmentation pipeline + write-back, confidence scoring
 - [benchmarks/eval-corpus-v1/README.md](benchmarks/eval-corpus-v1/README.md) — eval corpus design, label schema, reproducibility
 
