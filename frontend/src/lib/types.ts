@@ -2,7 +2,7 @@ export interface Run {
   id: string
   patient_id: string | null
   patient_name: string | null
-  status: "empty" | "pending" | "in_review" | "resolved"
+  status: "empty" | "running" | "pending" | "in_review" | "resolved"
   total_proposals: number
   pending_proposals: number
   pending_by_tier: Partial<Record<"ATTENTION" | "REVIEW" | "CONFIDENT", number>>

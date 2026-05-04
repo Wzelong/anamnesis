@@ -7,6 +7,7 @@ import { readPersistedToken, useAppStore } from "@/lib/store"
 import { ProposalListPanel } from "@/components/layout/proposal-list-panel"
 import { ProposalDetailPanel } from "@/components/layout/proposal-detail-panel"
 import { RightPanel } from "@/components/layout/right-panel"
+import { RunProgressView } from "@/components/layout/run-progress-view"
 
 export default function RunLayout({
   children,
@@ -40,6 +41,16 @@ export default function RunLayout({
   }, [runId, runs, runsLoading, router])
 
   const selectedId = useAppStore((s) => s.selectedId)
+  const currentRun = runs.find((r) => r.id === runId)
+
+  if (currentRun?.status === "running") {
+    return (
+      <div className="flex-1 flex min-w-0 h-full min-h-0 border-b">
+        <RunProgressView runId={runId} patientName={currentRun.patient_name} />
+        {children}
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 flex min-w-0 h-full min-h-0 border-b">

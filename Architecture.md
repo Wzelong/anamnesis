@@ -21,9 +21,9 @@ The backend is self-sufficient: any agent in the Prompt Opinion ecosystem can dr
 ## End-to-end demo flow
 
 1. A clinician (in Prompt Opinion) asks the agent to prepare a chart. The agent calls **`ProposeAugmentations`** over MCP. SHARP headers carry the FHIR base URL, an access token, and the patient ID.
-2. The pipeline pulls the patient's existing chart and notes, runs the six-stage augmentation, and persists proposals as `ProposalRecord` rows. A run snapshot (patient context + documents) is cached to disk.
-3. The MCP tool mints a short opaque review token aliased to the clinician's session and returns a deep link `/{runId}?token=…`.
-4. The clinician opens the link. The review workspace loads proposals, source notes, and the chart slice, and lets the clinician accept / edit / reject each proposal.
+2. The MCP tool creates a `PipelineRun` record, mints a review token, returns a deep link `/{runId}?token=…` immediately, and starts the pipeline as a background task.
+3. The clinician opens the link. The review workspace shows live stage-by-stage progress (guardrail → extraction → deduplication → coding → reconciliation → assembly). The agent polls **`GetRunStatus`** and reports completion.
+4. When the pipeline finishes, proposals appear in the workspace. The clinician reviews source notes, the chart slice, and accepts / edits / rejects each proposal.
 5. The clinician walks into the visit. Mid-encounter, the agent uploads the live transcript text via **`ProposeAugmentationsFromNotes`** (a `list[str]` of raw bodies). The pipeline runs again — same stages, but on inline `Document` objects rather than `DocumentReference`s pulled from the chart. The transcript is **not** written to FHIR at this point.
 6. On accept, `apply_augmentation` builds a single FHIR `transaction` Bundle: the resource (`Condition`, `Observation`, …), a `Provenance` with one entity per source document and one source-span extension per citation, and — for inline notes — a US Core `DocumentReference` bundling the source text. The chart only ever contains ratified evidence behind an approved finding.
 
@@ -39,8 +39,9 @@ Lives under `backend/`. FastAPI app entrypoint at `backend/main.py` mounts the M
 |---|---|
 | `WhoIsPatient` | Returns identifying info for the SHARP-bound patient. |
 | `GetPatientContext` | Counts of existing conditions, meds, allergies, observations, family history, procedures, encounters, documents. |
-| `ProposeAugmentations` | Runs the full pipeline against the patient's chart-resident notes. Returns a deep link to the review UI. |
+| `ProposeAugmentations` | Starts the pipeline asynchronously against the patient's chart-resident notes. Returns a deep link to the review UI immediately; the workspace shows live stage progress. |
 | `ProposeAugmentationsFromNotes` | Runs the pipeline against agent-supplied note text (`list[str]`, ≤ 200KB each). Source documents are written to the chart only when a derived augmentation is accepted. |
+| `GetRunStatus` | Returns the status of a pipeline run: stage progress if running, proposal summary if completed, error if failed. Used by the agent to poll after ProposeAugmentations. |
 | `ListProposals` | Lists proposals for the current patient grouped by tier (ATTENTION / REVIEW / CONFIDENT). |
 | `AcceptProposal` | Accept a proposal; writes the FHIR resource + Provenance as a transaction Bundle. |
 | `RejectProposal` | Archive a proposal with a reason; no FHIR write. |
@@ -52,7 +53,8 @@ Lives under `backend/`. FastAPI app entrypoint at `backend/main.py` mounts the M
 The frontend talks to the backend over a small REST API:
 
 - `GET /api/auth/check` — validate a review token and return the aliased clinician identity.
-- `GET /api/runs` — list pipeline runs with status, counts, total tokens, and USD cost.
+- `GET /api/runs` — list pipeline runs with status (including `running`), counts, total tokens, and USD cost.
+- `GET /api/runs/{run_id}/progress` — stage-by-stage progress for a running pipeline (polled by the frontend every 2s).
 - `GET /api/runs/{run_id}/chart` — patient context as fetched at run time, tagged with its source (FHIR snapshot, FHIR live, or local bundle).
 - `GET /api/runs/{run_id}/documents` — source documents for a run (chart-resident or inline).
 - `GET /api/proposals`, `GET /api/proposals/{id}` — list / fetch proposals.
