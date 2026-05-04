@@ -1,3 +1,8 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 import pytest
 
 from fhir.local_bundle import load_demo_data, load_bundle, BUNDLE_PATH

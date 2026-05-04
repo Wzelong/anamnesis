@@ -515,14 +515,23 @@ async def _execute_stages(patient_context, documents: list[Document]):
     from core.augment import assemble_proposals
     from core.cache import JsonCache
     from core.code_candidates import code_candidates
+    from core.doc_guardrails import RejectedDocument, screen_documents
     from core.extraction import extract_candidates_batch, merge_across_notes
     from core.preprocess import preprocess_documents
     from core.reconcile import reconcile
 
-    notes = preprocess_documents(documents)
     client = AsyncOpenAI(api_key=settings.openai_api_key)
     model = settings.openai_model_fast
     cache_dir = Path(__file__).resolve().parent.parent / ".cache"
+
+    if settings.doc_guardrail_enabled and documents:
+        guardrail_cache = JsonCache(cache_dir / "doc_guardrail")
+        documents, rejected = await screen_documents(
+            documents, client, model=settings.openai_model_nano, cache=guardrail_cache,
+        )
+        await _record_guardrail_outcome(documents, rejected)
+
+    notes = preprocess_documents(documents)
 
     stage2_cache = JsonCache(cache_dir / "stage2_output")
     stage2 = await extract_candidates_batch(notes, client, model=model, cache=stage2_cache)
@@ -533,6 +542,42 @@ async def _execute_stages(patient_context, documents: list[Document]):
     stage4 = await code_candidates(stage3, client, model=model)
     stage5 = await reconcile(stage4, patient_context, client, model=model)
     return assemble_proposals(stage5, notes, patient_context)
+
+
+async def _record_guardrail_outcome(accepted, rejected) -> None:
+    """Persist guardrail outcome on the active run's meta_json."""
+    from sqlalchemy import select
+
+    from core import telemetry
+    from db import AsyncSessionLocal, PipelineRun
+
+    run = telemetry.current_run()
+    if run is None:
+        return
+
+    async with AsyncSessionLocal() as session:
+        row = (await session.execute(
+            select(PipelineRun).where(PipelineRun.id == run.run_id)
+        )).scalar_one_or_none()
+        if row is None:
+            return
+        try:
+            meta = json.loads(row.meta_json) if row.meta_json else {}
+        except json.JSONDecodeError:
+            meta = {}
+        if not isinstance(meta, dict):
+            meta = {}
+        meta["guardrail"] = {
+            "accepted": len(accepted),
+            "rejected": [r.to_dict() for r in rejected],
+        }
+        row.meta_json = json.dumps(meta, default=str)
+        await session.commit()
+
+    if rejected:
+        await telemetry.log_event("doc_guardrail_rejected", {
+            "rejected": [r.to_dict() for r in rejected],
+        })
 
 
 async def list_proposals(

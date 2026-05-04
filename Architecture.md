@@ -2,7 +2,9 @@
 
 Anamnesis is a FHIR augmentation agent. It reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them. The product ships as an **MCP server** (the substantive deliverable) plus a **provider-facing review workspace** that handles the human-in-the-loop hand-off.
 
-This document describes the system as it is, not as it might become.
+This document describes the system as it is, not as it might become. For the augmentation pipeline internals see [PIPELINE.md](PIPELINE.md). For the demo path and quickstart see [README.md](README.md).
+
+![Pipeline](pipeline.png)
 
 ## Top-level layout
 
@@ -10,6 +12,7 @@ This document describes the system as it is, not as it might become.
 anamnesis/
   backend/             FastAPI + FastMCP server, augmentation pipeline, FHIR I/O
   frontend/            Next.js review workspace (thin client)
+  benchmarks/          eval-corpus-v1 + augmentation benchmark runner
   data/demo_patient/   Synthetic patient bundle + four notes for offline demos
 ```
 
@@ -39,7 +42,10 @@ Lives under `backend/`. FastAPI app entrypoint at `backend/main.py` mounts the M
 | `ProposeAugmentations` | Runs the full pipeline against the patient's chart-resident notes. Returns a deep link to the review UI. |
 | `ProposeAugmentationsFromNotes` | Runs the pipeline against agent-supplied note text (`list[str]`, ≤ 200KB each). Source documents are written to the chart only when a derived augmentation is accepted. |
 | `ListProposals` | Lists proposals for the current patient grouped by tier (ATTENTION / REVIEW / CONFIDENT). |
-| `AcceptProposal` / `RejectProposal` / `EditProposal` | Lifecycle operations on a single proposal. |
+| `AcceptProposal` | Accept a proposal; writes the FHIR resource + Provenance as a transaction Bundle. |
+| `RejectProposal` | Archive a proposal with a reason; no FHIR write. |
+| `ReopenProposal` | Return a previously rejected proposal to pending. Accepted proposals cannot be reopened (FHIR write is permanent); rejection history is preserved. |
+| `EditProposal` | Edit the FHIR resource JSON of a pending proposal before accepting. Citations and provenance are preserved. |
 
 ### REST surface (`api/routes.py`, `api/chat_routes.py`)
 
@@ -55,19 +61,12 @@ The frontend talks to the backend over a small REST API:
 
 ### The pipeline (`core/`)
 
-Six stages, each a pure function over typed Pydantic schemas. Telemetry wraps every LLM call.
+Six stages from chart load to clinician-reviewable proposal, plus an input guardrail before Stage 2 and a deterministic write-back stage on accept. Each stage is a pure function over typed Pydantic schemas; LLM calls are wrapped in telemetry. Two service-layer entry points compose the stages:
 
-1. **Preprocess** (`core/preprocess.py`). Tokenize each `Document`, build sentence offsets, attach source-ref handles. Output: `list[PreprocessedNote]`.
-2. **Extract** (`core/extraction.py`). Per-document scan: an LLM proposes candidate FHIR-shaped findings (`Condition`, `Medication*`, `AllergyIntolerance`, `Observation`, `Procedure`, `FamilyMemberHistory`) with sentence-level citations. A cleaner filters obvious noise. Output: one `ScanResult` per note.
-3. **Merge** (also in `core/extraction.py`). Cross-note deduplication: same finding extracted from two notes becomes one candidate with combined source spans.
-4. **Code** (`core/code_candidates.py`). Assigns terminologies (SNOMED, ICD-10, LOINC, RxNorm, UCUM) using a coding-aware LLM pass with the warmup-loaded code indexes.
-5. **Reconcile** (`core/reconcile.py`). Compares each candidate to the existing chart. Deterministic match on (system, code) first; LLM adjudication for fuzzy cases. Outputs a classification — **NEW**, **UPDATING**, or **CONFLICTING** — and a `ConfidenceBreakdown`.
-6. **Assemble** (`core/augment.py`). Validates against US Core profiles, resolves citations to character spans on the source documents, assigns a `confidence_tier` (ATTENTION / REVIEW / CONFIDENT) from the reconcile breakdown, and emits a `Proposal`.
-
-Two service-layer entry points compose those stages:
-
-- `services.proposals.run_pipeline(patient_id, session, fhir_client)` — chart-only path. Loads `PatientContext` and chart `DocumentReference`s, then `_execute_stages`.
+- `services.proposals.run_pipeline(patient_id, session, fhir_client)` — chart-only path. Loads `PatientContext` and chart `DocumentReference`s, then runs the stages.
 - `services.proposals.run_pipeline_with_inline_notes(patient_id, raw_notes, session, …)` — inline path. Builds `Document`s directly from text via `_documents_from_notes` (id = `inline_<sha256[:12]>`, deterministic across re-uploads), then runs the same stages.
+
+For per-stage detail (preprocess, extract, merge, code, reconcile, assemble, review, write-back), confidence scoring, and module layout, see [PIPELINE.md](PIPELINE.md).
 
 ### Persistence (`db/models.py`)
 
@@ -142,9 +141,30 @@ Single Zustand store with localStorage-persisted slices for `token` and the most
 
 The frontend treats the review token as a binary access gate, not a per-action credential. Read endpoints (`/runs`, `/proposals`, `/documents`, `/chart`) are open; **write endpoints require a valid token**. When `tokenValid !== true`, the proposal panel shows a read-only banner and disables the action row, the chat tab shows a "Review token required" empty state, and a tooltip explains the model honestly: this surface is meant to be SSO-embedded in production; the short token is an alias of the clinician's Prompt Opinion session that keeps the demo deep-linkable.
 
+## Contracts
+
+The boundaries another consumer would need to reason about if they swapped the frontend, embedded the MCP elsewhere, or replaced the FHIR server.
+
+- **MCP tool contract** — tool names, input schemas, output shapes, and required SHARP scopes are advertised by the `FastMCP` server in `mcp_server/server.py` and `tools.py`. Inputs and outputs are Pydantic models; the wire format is JSON over Streamable HTTP at `/mcp`.
+- **REST contract** — paths, methods, and response shapes live in `api/routes.py` and `api/chat_routes.py`. The frontend depends only on these endpoints; there is no shared module between frontend and backend.
+- **Review-token contract** — a `rev_xxxxxxxx` string passed as `Authorization: Bearer {token}`. It is an alias of the clinician's Prompt Opinion session (not a credential we mint from scratch) and is the only auth needed for write-side REST calls. The backend never exposes the underlying SHARP access token to the frontend.
+- **FHIR write contract** — every accepted proposal becomes one transaction Bundle: the resource (`Condition` / `MedicationRequest` / `AllergyIntolerance` / `Observation` / `Procedure` / `FamilyMemberHistory`, US Core where a profile exists), a `Provenance` with one `entity` per source document and one `source-text-span` extension per citation, and — for inline notes — a US Core `DocumentReference`. UPDATING uses PUT with `versionId` for optimistic concurrency; CONFLICTING never retires the existing resource.
+- **Source-of-truth contract** — clinical data lives on the FHIR server. The local SQLite holds working state only (runs, proposals, decisions, telemetry, review tokens). Wiping `anamnesis.db` loses history but never clinical data.
+
 ## Invariants
 
 - **Nothing writes silently.** Every chart change passes through `apply_augmentation` and is paired with a `Provenance`. Inline source text only enters the chart when its derived augmentation is accepted, in the same transaction.
 - **Every fact carries provenance.** Source span, classification, confidence breakdown, reviewer identity, and Provenance reference are persisted on every accepted proposal.
 - **FHIR is the source of truth.** Local SQLite holds working state — runs, proposals, decisions, audit log, telemetry. Clinical data lives on the FHIR server.
 - **The MCP is the product.** The frontend is a thin reference consumer; substituting it with another agent or UI does not change the contract.
+
+## Out of scope
+
+What Anamnesis intentionally is not, so reviewers don't ask "why didn't you…":
+
+- **Not an EHR.** No order entry, no billing, no scheduling, no longitudinal patient app.
+- **Not ambient capture.** Notes come from the FHIR server or are uploaded by the calling agent. The system does not record audio or transcribe live encounters.
+- **Not a payer / coding-revenue tool.** The terminology coding exists to enable reconciliation against an existing chart, not to maximize billing codes.
+- **Not multi-tenant.** A single FHIR server per session, scoped by SHARP context. No tenant routing layer.
+- **Not a SHARP token issuer.** The agent platform issues SHARP access tokens; the backend reads the JWT for identity but does not validate the signature. Trust is delegated to the issuing platform.
+- **Not a clinical decision-support system.** Proposals are evidence the clinician reviews; the system never recommends a diagnosis or therapy.

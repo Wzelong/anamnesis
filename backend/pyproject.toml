@@ -34,5 +34,5 @@ py-modules = ["main", "config"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["api*", "core*", "db*", "fhir*", "context*", "mcp_server*", "scripts*"]
+include = ["api*", "core*", "db*", "fhir*", "context*", "mcp_server*", "scripts*", "services*"]
 exclude = ["tests*"]

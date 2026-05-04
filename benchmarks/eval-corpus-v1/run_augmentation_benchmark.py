@@ -33,11 +33,14 @@ from config import settings
 from core.augment import assemble_proposals
 from core.cache import JsonCache
 from core.code_candidates import code_candidates
+from core.doc_guardrails import screen_documents
 from core.extraction import extract_candidates_batch, merge_across_notes
 from core.preprocess import preprocess_documents
 from core.reconcile import reconcile, _normalize_ingredient
 from fhir.local_bundle import load_demo_data
 from fhir.models import Document
+
+from usage_tracker import UsageTracker, stage_scope, wrap_client
 
 NOTES_DIR = ROOT / "notes"
 LABELS_DIR = ROOT / "labels"
@@ -66,18 +69,35 @@ def load_pairs(only: set[str] | None):
         yield stem, aug, ext, note_path, bundle_path
 
 
-async def execute_pipeline(patient_context, documents, client):
-    notes = preprocess_documents(documents)
+async def execute_pipeline(patient_context, documents, client, tracker: UsageTracker | None = None):
+    if tracker is not None:
+        client = wrap_client(client, tracker)
     model = settings.openai_model_fast
-    stage2 = await extract_candidates_batch(
-        notes, client, model=model, cache=JsonCache(CACHE_ROOT / "stage2_output"),
-    )
-    stage3 = await merge_across_notes(
-        stage2, client, model=model, cache=JsonCache(CACHE_ROOT / "stage3"),
-    )
-    stage4 = await code_candidates(stage3, client, model=model)
-    stage5 = await reconcile(stage4, patient_context, client, model=model)
-    return notes, stage5, None
+
+    rejected: list = []
+    if settings.doc_guardrail_enabled and documents:
+        with stage_scope("guardrail"):
+            documents, rejected = await screen_documents(
+                documents, client, model=settings.openai_model_nano,
+                cache=JsonCache(CACHE_ROOT / "doc_guardrail"),
+            )
+
+    with stage_scope("preprocess"):
+        notes = preprocess_documents(documents)
+
+    with stage_scope("stage2_extract"):
+        stage2 = await extract_candidates_batch(
+            notes, client, model=model, cache=JsonCache(CACHE_ROOT / "stage2_output"),
+        )
+    with stage_scope("stage3_merge"):
+        stage3 = await merge_across_notes(
+            stage2, client, model=model, cache=JsonCache(CACHE_ROOT / "stage3"),
+        )
+    with stage_scope("stage4_code"):
+        stage4 = await code_candidates(stage3, client, model=model)
+    with stage_scope("stage5_reconcile"):
+        stage5 = await reconcile(stage4, patient_context, client, model=model)
+    return notes, stage5, rejected
 
 
 def candidate_codes(candidate) -> set[tuple[str, str]]:
@@ -138,7 +158,7 @@ def map_candidate_to_fact(candidate, notes_by_doc, ext_facts, note_text) -> str 
     return None
 
 
-async def run_one(stem, aug, ext, note_path, bundle_path, client):
+async def run_one(stem, aug, ext, note_path, bundle_path, client, tracker: UsageTracker | None = None):
     note_text = note_path.read_text(encoding="utf-8")
     pc, _ = load_demo_data(bundle_path)
     docs = [Document(
@@ -146,7 +166,7 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
         date="2026-04-01", author="bench",
         text=note_text, encounter_id=None,
     )]
-    notes, stage5, _ = await execute_pipeline(pc, docs, client)
+    notes, stage5, _ = await execute_pipeline(pc, docs, client, tracker=tracker)
     notes_by_doc = {n.document_id: n for n in notes}
 
     # Three-pass mapping. Mirrors the production reconciler's matching strategy
@@ -283,13 +303,13 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client):
     return rows, spurious, trap_results
 
 
-async def run_full_pass(only, client) -> tuple[list[dict], dict, list[dict]]:
+async def run_full_pass(only, client, tracker: UsageTracker | None = None) -> tuple[list[dict], dict, list[dict]]:
     rows = []
     spurious = {}
     traps = []
     for stem, aug, ext, note_path, bundle_path in load_pairs(only):
         print(f"  {stem} (bundle={aug['paired_bundle']}) ...", flush=True)
-        r, sp, tr = await run_one(stem, aug, ext, note_path, bundle_path, client)
+        r, sp, tr = await run_one(stem, aug, ext, note_path, bundle_path, client, tracker=tracker)
         rows.extend(r)
         spurious[stem] = sp
         traps.extend(tr)

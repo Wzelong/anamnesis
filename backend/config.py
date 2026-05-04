@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model_fast: str = "gpt-5.4-mini"
     openai_model_smart: str = "gpt-5.5"
+    openai_model_nano: str = "gpt-5.4-nano"
+    doc_guardrail_enabled: bool = True
     fhir_base_url: str = ""
     database_url: str = "sqlite+aiosqlite:///./anamnesis.db"
     log_level: str = "INFO"
