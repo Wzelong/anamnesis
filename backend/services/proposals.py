@@ -1,4 +1,28 @@
-"""Service layer for proposal lifecycle: run pipeline, list, accept, reject, edit."""
+"""Service layer for proposal lifecycle.
+
+Entry points are framework-agnostic: each takes an `AsyncSession` (and a
+`FhirClient` where chart I/O is needed) so both the REST surface
+(`api/routes.py`) and the MCP surface (`mcp_server/tools.py`) can call them
+unchanged. The service layer owns:
+
+  * Pipeline execution — `run_pipeline` (chart-resident notes) and
+    `run_pipeline_with_inline_notes` (agent-supplied text) both funnel into
+    `_run_with_documents` -> `_execute_stages`, which runs the doc guardrail,
+    Stages 2 - 5, and Stage 6 assembly. Persistence to `PipelineRun` and
+    `ProposalRecord` happens at the end.
+  * Proposal lifecycle — `accept_proposal` (writes a FHIR transaction Bundle
+    via `apply_augmentation`), `reject_proposal`, `reopen_proposal`,
+    `edit_proposal`. Status transitions are guarded so accepted proposals
+    cannot be reopened.
+  * Read-side queries — `list_proposals`, `get_proposal`, `run_stats`,
+    `load_run_source`.
+  * FHIR credential lifecycle — `_update_run_fhir_meta`,
+    `refresh_creds_for_patient`, `fhir_token_expires_at` keep stored SHARP
+    creds fresh so the review surface keeps working after token expiry.
+  * Display helpers — `_cc_text`, `_observation_label`, `_display_label`,
+    etc. turn FHIR resource dicts into human-readable strings for the UI
+    and the MCP tool responses.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -382,6 +406,18 @@ async def run_pipeline(
     *,
     fhir_client=None,
 ) -> dict:
+    """Run the augmentation pipeline against the patient's chart-resident notes.
+
+    Pulls the existing PatientContext + DocumentReferences via `_load_source`
+    (live FHIR if `fhir_client` is provided; local demo bundle otherwise),
+    runs the doc guardrail and Stages 2 - 6 via `_execute_stages`, and
+    persists proposals + run metadata.
+
+    Returns a summary dict with `run_id`, `total`, `by_tier` counts, and
+    cost / duration stats from `run_stats`. If pending proposals already
+    exist for this patient, returns the cached run summary instead of
+    re-running (the ~25s pipeline is expensive to repeat).
+    """
     effective_patient_id = patient_id
 
     if effective_patient_id:
@@ -586,6 +622,11 @@ async def list_proposals(
     patient_id: str | None = None,
     run_id: str | None = None,
 ) -> list[dict]:
+    """List proposals, sorted ATTENTION -> REVIEW -> CONFIDENT then by score.
+
+    At least one of `patient_id` or `run_id` is required. Returns the
+    summary (`_record_to_dict` non-full) form for each proposal.
+    """
     if not patient_id and not run_id:
         raise ValueError("patient_id or run_id required")
 
@@ -603,6 +644,7 @@ async def list_proposals(
 
 
 async def get_proposal(proposal_id: str, session: AsyncSession) -> dict:
+    """Fetch the full proposal detail (resource JSON, citations, metadata)."""
     record = await session.get(ProposalRecord, proposal_id)
     if not record:
         raise ValueError(f"proposal {proposal_id} not found")
@@ -616,6 +658,22 @@ async def accept_proposal(
     fhir_client=None,
     reviewer: ReviewerIdentity | None = None,
 ) -> dict:
+    """Accept a pending proposal and write to FHIR if a client is available.
+
+    Side effects:
+      * Status `pending` -> `accepted` (only `pending` accepted; raises
+        otherwise — e.g. you cannot re-accept an already-accepted proposal).
+      * Records `reviewed_at` and `reviewed_by` (from the SHARP-aliased
+        ReviewerIdentity).
+      * If `fhir_client` is provided, calls `apply_augmentation` to write the
+        FHIR resource + Provenance (and US Core DocumentReference for inline
+        notes) as a single transaction Bundle. Stores the returned
+        `WriteResult` references in the proposal's audit metadata.
+      * If no `fhir_client`, the proposal is marked accepted but no chart
+        write happens (offline / demo path).
+
+    Returns the updated proposal dict (full form).
+    """
     record = await session.get(ProposalRecord, proposal_id)
     if not record:
         raise ValueError(f"proposal {proposal_id} not found")
@@ -699,6 +757,11 @@ async def reject_proposal(
     *,
     reviewer: ReviewerIdentity | None = None,
 ) -> dict:
+    """Reject a pending proposal with a clinician-supplied reason.
+
+    Status `pending` -> `rejected`. The reason is stored in the proposal's
+    `metadata_json["rejection_reason"]`. No FHIR write occurs.
+    """
     record = await session.get(ProposalRecord, proposal_id)
     if not record:
         raise ValueError(f"proposal {proposal_id} not found")
@@ -719,6 +782,13 @@ async def reject_proposal(
 
 
 async def reopen_proposal(proposal_id: str, session: AsyncSession) -> dict:
+    """Return a previously rejected proposal to `pending` for re-review.
+
+    Accepted proposals cannot be reopened — the FHIR write is permanent and
+    a new proposal would be needed to express a reversal. The prior rejection
+    (reason, reviewer, timestamp) is preserved in
+    `metadata_json["decision_history"]` so the audit trail survives.
+    """
     record = await session.get(ProposalRecord, proposal_id)
     if not record:
         raise ValueError(f"proposal {proposal_id} not found")
@@ -752,6 +822,12 @@ async def edit_proposal(
     updated_resource: dict,
     session: AsyncSession,
 ) -> dict:
+    """Replace a pending proposal's FHIR resource JSON.
+
+    Only the resource body is mutable — citations, classification, chart
+    matches, and confidence carry forward unchanged. The proposal must be in
+    `pending` status; once accepted or rejected, edits are not allowed.
+    """
     record = await session.get(ProposalRecord, proposal_id)
     if not record:
         raise ValueError(f"proposal {proposal_id} not found")
