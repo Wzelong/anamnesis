@@ -8,15 +8,10 @@ class Settings(BaseSettings):
     openai_model_smart: str = "gpt-5.5"
     openai_model_nano: str = "gpt-5.4-nano"
     doc_guardrail_enabled: bool = True
-    fhir_base_url: str = ""
     database_url: str = "sqlite+aiosqlite:///./anamnesis.db"
     log_level: str = "INFO"
     stage2_cache: bool = True
     stage2_max_concurrent: int = 50
-    openai_regional_endpoint: bool = False
-    price_table_path: str | None = None
-    telemetry_jsonl_dir: str | None = None
-    review_token_secret: str = ""
     frontend_base_url: str = "http://localhost:3042"
     warmup_coding_on_startup: bool = True
 
