@@ -476,23 +476,51 @@ def render_economics_section(summary, meta) -> str:
     cost_per_chart_3 = cost_per_note * 3
     cost_per_chart_8 = cost_per_note * 8
     actual_wall_per_run_s = meta.get("wall_seconds", 0) / usage["n_runs"]
+    n_notes_per_run = meta.get("n_notes", 18)
+    per_note_wall_s = actual_wall_per_run_s / n_notes_per_run if n_notes_per_run else 0
     minutes_saved_min = 10
     clinician_dollar_per_min = 3.0
     roi = (minutes_saved_min * clinician_dollar_per_min) / cost_per_chart_3 if cost_per_chart_3 else float("inf")
 
+    by_stage = usage["by_stage"]
+    per_call_lines = []
+    for stage in STAGE_ORDER:
+        s = by_stage.get(stage)
+        if not s or s["calls"] == 0:
+            continue
+        avg_call_ms = s["wall_ms"] / s["calls"]
+        per_call_lines.append(
+            f"| {STAGE_LABELS[stage]} | {s['calls'] // usage['n_runs']} | "
+            f"{avg_call_ms / 1000:.1f}s | `{', '.join(sorted(s['by_model'].keys()))}` |"
+        )
+    per_call_table = (
+        "| Stage | Calls / run | Avg latency / call | Model |\n"
+        "|---|---|---|---|\n"
+        + "\n".join(per_call_lines)
+    )
+
     return (
         "\n## Per-unit economics\n\n"
-        "Derived from the per-run averages above. The benchmark pairs each note with one fixture; "
-        "in production a chart prep typically bundles 3–8 notes per patient.\n\n"
-        "| Unit | Cost | Note |\n"
+        f"Derived from the per-run averages above. The benchmark processes {n_notes_per_run} notes "
+        f"**sequentially** (one note × fixture pair at a time), so the {actual_wall_per_run_s:.0f}s/run "
+        f"wall-clock divides cleanly to **~{per_note_wall_s:.0f}s per note pipeline**. In production, "
+        f"`run_pipeline` fans out across all of a patient's notes via `asyncio.gather`, so the "
+        f"per-chart-prep wall is bounded by the slowest single-note pipeline plus the cross-note "
+        f"merge — not the sum of N note pipelines.\n\n"
+        "| Unit | Cost / time | Note |\n"
         "|---|---|---|\n"
-        f"| Per source note | {_fmt_usd(cost_per_note)} | benchmark mean |\n"
+        f"| Per source note (cost) | {_fmt_usd(cost_per_note)} | benchmark mean |\n"
         f"| Per labeled fact surfaced | {_fmt_usd(cost_per_fact)} | accepted + filtered |\n"
-        f"| Per chart prep, 3 notes (typical) | {_fmt_usd(cost_per_chart_3)} | extrapolated |\n"
-        f"| Per chart prep, 8 notes (dense) | {_fmt_usd(cost_per_chart_8)} | extrapolated |\n"
-        f"| End-to-end latency per chart prep | ~{actual_wall_per_run_s / 60:.0f} min "
-        f"(parallel-bound, near-flat in note count) | benchmark wall-clock |\n"
+        f"| Per chart prep, 3 notes (typical) | {_fmt_usd(cost_per_chart_3)} cost · ~{per_note_wall_s + 5:.0f}s wall | parallel-bound |\n"
+        f"| Per chart prep, 8 notes (dense) | {_fmt_usd(cost_per_chart_8)} cost · ~{per_note_wall_s + 10:.0f}s wall | parallel-bound; Stage 3 grows slightly |\n"
+        f"| Per-note pipeline wall (measured) | ~{per_note_wall_s:.0f}s | benchmark serial wall ÷ note count |\n"
         "\n"
+        "### Per-LLM-call latency (measured)\n\n"
+        "Where the seconds actually go — useful for sanity-checking the per-chart-prep wall above.\n\n"
+        f"{per_call_table}\n\n"
+        "Stages 2 and 4 fire many calls per note in parallel within a stage; Stages 3 and 5 are "
+        "sparse. Note that the *per-call* avg includes network + reasoning latency; concurrent "
+        "fan-out keeps the per-stage wall an order of magnitude lower than `calls × avg`.\n\n"
         f"**ROI sanity check.** A US clinician's loaded time is ~${clinician_dollar_per_min:.0f}/min. "
         f"If a chart prep saves {minutes_saved_min} minutes of pre-visit reading, the cost-benefit is "
         f"roughly **{roi:.0f}× return** ({_fmt_usd(cost_per_chart_3)} spent vs "

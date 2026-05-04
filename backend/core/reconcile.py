@@ -29,6 +29,7 @@ from core.reconcile_match_rules import (
     ChartIndex,
     NKDA_CODE,
     TOBACCO_LOINC,
+    _normalize_ingredient,
     _resource_id,
     build_chart_index,
 )
@@ -53,6 +54,7 @@ __all__ = [
     "build_chart_index",
     "NKDA_CODE",
     "TOBACCO_LOINC",
+    "_normalize_ingredient",
 ]
 
 

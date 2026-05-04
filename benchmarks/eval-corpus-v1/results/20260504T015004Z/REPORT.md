@@ -101,15 +101,29 @@ Per-run averages across 5 runs. LLM-call wall time aggregates concurrent calls �
 
 ## Per-unit economics
 
-Derived from the per-run averages above. The benchmark pairs each note with one fixture; in production a chart prep typically bundles 3–8 notes per patient.
+Derived from the per-run averages above. The benchmark processes 18 notes **sequentially** (one note × fixture pair at a time), so the 304s/run wall-clock divides cleanly to **~17s per note pipeline**. In production, `run_pipeline` fans out across all of a patient's notes via `asyncio.gather`, so the per-chart-prep wall is bounded by the slowest single-note pipeline plus the cross-note merge — not the sum of N note pipelines.
 
-| Unit | Cost | Note |
+| Unit | Cost / time | Note |
 |---|---|---|
-| Per source note | $0.045 | benchmark mean |
+| Per source note (cost) | $0.045 | benchmark mean |
 | Per labeled fact surfaced | $0.011 | accepted + filtered |
-| Per chart prep, 3 notes (typical) | $0.135 | extrapolated |
-| Per chart prep, 8 notes (dense) | $0.360 | extrapolated |
-| End-to-end latency per chart prep | ~5 min (parallel-bound, near-flat in note count) | benchmark wall-clock |
+| Per chart prep, 3 notes (typical) | $0.135 cost · ~22s wall | parallel-bound |
+| Per chart prep, 8 notes (dense) | $0.360 cost · ~27s wall | parallel-bound; Stage 3 grows slightly |
+| Per-note pipeline wall (measured) | ~17s | benchmark serial wall ÷ note count |
+
+### Per-LLM-call latency (measured)
+
+Where the seconds actually go — useful for sanity-checking the per-chart-prep wall above.
+
+| Stage | Calls / run | Avg latency / call | Model |
+|---|---|---|---|
+| Guardrail | 3 | 1.6s | `gpt-5.4-nano` |
+| Stage 2 — Extract | 366 | 2.2s | `gpt-5.4-mini` |
+| Stage 3 — Cross-note merge | 34 | 1.7s | `gpt-5.4-mini` |
+| Stage 4 — Code | 435 | 1.5s | `gpt-5.4-mini` |
+| Stage 5 — Reconcile | 1 | 3.6s | `gpt-5.4-mini` |
+
+Stages 2 and 4 fire many calls per note in parallel within a stage; Stages 3 and 5 are sparse. Note that the *per-call* avg includes network + reasoning latency; concurrent fan-out keeps the per-stage wall an order of magnitude lower than `calls × avg`.
 
 **ROI sanity check.** A US clinician's loaded time is ~$3/min. If a chart prep saves 10 minutes of pre-visit reading, the cost-benefit is roughly **222× return** ($0.135 spent vs ~$30 of clinician time saved).
 

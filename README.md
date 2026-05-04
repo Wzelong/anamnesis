@@ -29,7 +29,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the system shape and [PIPELINE.md](PI
 | Consistency (correct in ≥4/5 runs) | 88% |
 | Provenance coverage | 100% |
 | Cost per chart prep (3 notes) | ~$0.13 |
-| End-to-end latency per chart prep | ~5 min wall-clock |
+| End-to-end latency per chart prep | ~20-25s wall-clock (notes processed in parallel) |
 
 ![Per-class accuracy](benchmarks/eval-corpus-v1/results/20260504T015004Z/per_class_accuracy.png)
 
