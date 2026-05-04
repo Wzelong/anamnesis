@@ -6,7 +6,6 @@ For the system shape (MCP surface, REST API, frontend, persistence) see [ARCHITE
 
 ![Pipeline](pipeline.png)
 
-
 ## Stage 0 — Chart load (`backend/fhir/read.py`, `backend/fhir/local_bundle.py`)
 
 Pulls the inputs the pipeline reasons over.

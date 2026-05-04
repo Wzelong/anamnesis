@@ -148,14 +148,87 @@ async def _format_run_summary(result: dict, ctx: Context | None) -> str:
     )
 
 
+async def _format_run_started(result: dict, ctx: Context | None) -> str:
+    run_id = result["run_id"]
+
+    from context.sharp import get_clinician_identity
+    from context.auth import mint_review_token
+    from config import settings
+    base = settings.frontend_base_url.rstrip("/")
+    identity = get_clinician_identity(ctx) if ctx else None
+    if identity:
+        token = await mint_review_token(identity)
+        link = f"{base}/{run_id}?token={token}"
+    else:
+        link = f"{base}/{run_id}"
+
+    return (
+        f"Pipeline started (run {run_id}).\n\n"
+        f"Review workspace: {link}\n\n"
+        f"The workspace shows live stage-by-stage progress. "
+        f"Call GetRunStatus with run_id={run_id} to check when proposals are ready."
+    )
+
+
+async def get_run_status(run_id: str, ctx: Context = None) -> str:
+    async with AsyncSessionLocal() as session:
+        from sqlalchemy import select
+        from db.models import PipelineRun, ProposalRecord
+        run = (await session.execute(
+            select(PipelineRun).where(PipelineRun.id == run_id)
+        )).scalar_one_or_none()
+        if not run:
+            return f"Run {run_id} not found."
+
+        if run.status == "running":
+            meta = json.loads(run.meta_json or "{}") if run.meta_json else {}
+            progress = meta.get("progress", {})
+            current = progress.get("current_stage", "starting")
+            completed = progress.get("stages_completed", [])
+            return (
+                f"Run {run_id}: running (stage: {current}, "
+                f"{len(completed)} stages completed)"
+            )
+
+        if run.status == "failed":
+            meta = json.loads(run.meta_json or "{}") if run.meta_json else {}
+            return f"Run {run_id}: failed — {meta.get('error', 'unknown error')}"
+
+        proposals = (await session.execute(
+            select(ProposalRecord).where(ProposalRecord.run_id == run_id)
+        )).scalars().all()
+        by_tier: dict[str, int] = {}
+        for p in proposals:
+            by_tier[p.confidence_tier] = by_tier.get(p.confidence_tier, 0) + 1
+        tier_parts = [f"{t}: {c}" for t, c in sorted(by_tier.items())]
+
+        return (
+            f"Run {run_id}: completed — {len(proposals)} proposals "
+            f"({', '.join(tier_parts)})"
+        )
+
+
 async def propose_augmentations(ctx: Context = None) -> str:
     patient_id = get_patient_id(ctx)
     fhir_client = _get_fhir_client(ctx)
 
     async with AsyncSessionLocal() as session:
-        result = await proposal_svc.run_pipeline(patient_id, session, fhir_client=fhir_client)
+        if patient_id:
+            from sqlalchemy import select
+            from db.models import ProposalRecord
+            existing = (await session.execute(
+                select(ProposalRecord)
+                .where(ProposalRecord.patient_id == patient_id, ProposalRecord.status == "pending")
+                .limit(1)
+            )).scalar_one_or_none()
+            if existing:
+                result = await proposal_svc.run_pipeline(patient_id, session, fhir_client=fhir_client)
+                return await _format_run_summary(result, ctx)
 
-    return await _format_run_summary(result, ctx)
+    result = await proposal_svc.start_pipeline_background(
+        patient_id, fhir_client=fhir_client, triggered_by="mcp",
+    )
+    return await _format_run_started(result, ctx)
 
 
 _MAX_NOTE_BYTES = 200_000

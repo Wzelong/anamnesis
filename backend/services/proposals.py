@@ -544,6 +544,101 @@ async def _run_with_documents(
     }
 
 
+async def start_pipeline_background(
+    patient_id: str | None,
+    *,
+    fhir_client=None,
+    triggered_by: str = "mcp",
+) -> dict:
+    from fhir.local_bundle import load_demo_data
+    import asyncio as _aio
+
+    if fhir_client and patient_id:
+        from fhir.read import read_documents, read_patient_context
+        pc, docs = await _aio.gather(
+            read_patient_context(fhir_client, patient_id),
+            read_documents(fhir_client, patient_id),
+        )
+    else:
+        pc, docs = load_demo_data()
+
+    effective_patient_id = pc.patient["id"]
+    name_parts = (pc.patient.get("name") or [{}])[0]
+    given = " ".join(name_parts.get("given") or [])
+    family = name_parts.get("family") or ""
+    patient_name = f"{given} {family}".strip() or None
+
+    from core import telemetry
+    from services import run_snapshot
+
+    fhir_meta = None
+    if fhir_client is not None:
+        fhir_meta = {"base_url": fhir_client.base_url, "token": fhir_client.token}
+
+    run_id = short_id("run")
+    meta: dict = {"doc_count": len(docs)}
+    if fhir_meta:
+        meta["fhir"] = fhir_meta
+    await telemetry.start_run(
+        run_id=run_id,
+        patient_id=effective_patient_id,
+        patient_name=patient_name,
+        triggered_by=triggered_by,
+        meta=meta,
+    )
+    run_snapshot.write(run_id, pc, docs)
+
+    async def _background():
+        from db import AsyncSessionLocal as _ASL
+        try:
+            stage6 = await _execute_stages(pc, docs)
+            async with _ASL() as session:
+                for proposal in stage6.proposals:
+                    session.add(_proposal_to_record(proposal, run_id, effective_patient_id))
+                await session.commit()
+            await telemetry.finish_run("completed")
+            log.info("background run %s: %d proposals", run_id, len(stage6.proposals))
+        except Exception as exc:
+            log.exception("background run %s failed", run_id)
+            await telemetry.finish_run("failed", error=str(exc))
+
+    import asyncio
+    asyncio.create_task(_background())
+
+    return {
+        "run_id": run_id,
+        "patient_id": effective_patient_id,
+        "patient_name": patient_name,
+    }
+
+
+async def _update_progress(stage_name: str, detail: dict | None = None) -> None:
+    from sqlalchemy import select, update
+    from core import telemetry
+    from db import AsyncSessionLocal, PipelineRun
+
+    run = telemetry.current_run()
+    if run is None:
+        return
+    async with AsyncSessionLocal() as session:
+        row = (await session.execute(
+            select(PipelineRun).where(PipelineRun.id == run.run_id)
+        )).scalar_one_or_none()
+        if row is None:
+            return
+        try:
+            meta = json.loads(row.meta_json) if row.meta_json else {}
+        except json.JSONDecodeError:
+            meta = {}
+        progress = meta.get("progress", {"stages_completed": []})
+        progress["current_stage"] = stage_name
+        if detail:
+            progress["stages_completed"].append({"name": stage_name, **detail})
+        meta["progress"] = progress
+        row.meta_json = json.dumps(meta, default=str)
+        await session.commit()
+
+
 async def _execute_stages(patient_context, documents: list[Document]):
     from openai import AsyncOpenAI
 
@@ -560,24 +655,48 @@ async def _execute_stages(patient_context, documents: list[Document]):
     model = settings.openai_model_fast
     cache_dir = Path(__file__).resolve().parent.parent / ".cache"
 
+    await _update_progress("guardrail")
     if settings.doc_guardrail_enabled and documents:
         guardrail_cache = JsonCache(cache_dir / "doc_guardrail")
         documents, rejected = await screen_documents(
             documents, client, model=settings.openai_model_nano, cache=guardrail_cache,
         )
         await _record_guardrail_outcome(documents, rejected)
+    await _update_progress("guardrail", {"documents_accepted": len(documents)})
 
+    await _update_progress("stage1_preprocess")
     notes = preprocess_documents(documents)
+    total_sentences = sum(len(n.sentences) for n in notes)
+    await _update_progress("stage1_preprocess", {"sentences": total_sentences})
 
+    await _update_progress("stage2_extract")
     stage2_cache = JsonCache(cache_dir / "stage2_output")
     stage2 = await extract_candidates_batch(notes, client, model=model, cache=stage2_cache)
+    total_candidates = sum(
+        sum(len(v) for v in s.candidates.values()) for s in stage2
+    )
+    await _update_progress("stage2_extract", {"candidates": total_candidates})
 
+    await _update_progress("stage3_merge")
     stage3_cache = JsonCache(cache_dir / "stage3")
     stage3 = await merge_across_notes(stage2, client, model=model, cache=stage3_cache)
+    await _update_progress("stage3_merge", {"candidates": len(stage3.candidates)})
 
+    await _update_progress("stage4_code")
     stage4 = await code_candidates(stage3, client, model=model)
+    await _update_progress("stage4_code", {"coded": len(stage4.candidates)})
+
+    await _update_progress("stage5_reconcile")
     stage5 = await reconcile(stage4, patient_context, client, model=model)
-    return assemble_proposals(stage5, notes, patient_context)
+    verdicts: dict[str, int] = {}
+    for r in stage5.results:
+        verdicts[r.classification] = verdicts.get(r.classification, 0) + 1
+    await _update_progress("stage5_reconcile", verdicts)
+
+    await _update_progress("stage6_assemble")
+    result = assemble_proposals(stage5, notes, patient_context)
+    await _update_progress("stage6_assemble", {"proposals": len(result.proposals)})
+    return result
 
 
 async def _record_guardrail_outcome(accepted, rejected) -> None:

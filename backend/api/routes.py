@@ -133,7 +133,9 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
         c = count_map.get(run.id, {"total": 0, "pending": 0})
         total = c["total"]
         pending = c["pending"]
-        if total == 0:
+        if run.status == "running":
+            status = "running"
+        elif total == 0:
             status = "empty"
         elif pending == total:
             status = "pending"
@@ -161,6 +163,25 @@ async def list_runs(session: AsyncSession = Depends(get_session)):
             "total_documents": doc_map.get(run.id, 0),
         })
     return result
+
+
+@router.get("/runs/{run_id}/progress")
+async def get_run_progress(
+    run_id: str,
+    session: AsyncSession = Depends(get_session),
+):
+    run = (await session.execute(
+        sa_select(PipelineRun).where(PipelineRun.id == run_id)
+    )).scalar_one_or_none()
+    if run is None:
+        raise HTTPException(404, "run not found")
+    meta = json.loads(run.meta_json or "{}") if run.meta_json else {}
+    return {
+        "status": run.status,
+        "progress": meta.get("progress"),
+        "started_at": run.started_at.replace(tzinfo=timezone.utc).isoformat() if run.started_at else None,
+        "error": meta.get("error"),
+    }
 
 
 @router.get("/runs/{run_id}/documents")

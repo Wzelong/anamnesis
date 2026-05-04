@@ -57,6 +57,11 @@ mcp.tool(
 )(tools.propose_augmentations_from_notes)
 
 mcp.tool(
+    name="GetRunStatus",
+    description="Check the status and progress of a pipeline run. Returns stage progress if running, or proposal summary if completed.",
+)(tools.get_run_status)
+
+mcp.tool(
     name="ListProposals",
     description="List all augmentation proposals for the current patient, grouped by confidence tier (ATTENTION, REVIEW, CONFIDENT). Shows classification, resource type, confidence, and flags for each proposal.",
 )(tools.list_proposals_tool)

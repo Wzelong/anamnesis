@@ -16,7 +16,7 @@ See [Architecture.md](Architecture.md) for the system shape and [PIPELINE.md](PI
 
 ## What we built
 
-- **MCP server** — nine tools covering patient context, augmentation proposals (chart-resident and inline notes), and proposal lifecycle (accept / reject / reopen / edit). Streamable HTTP at `/mcp`. SHARP-aware.
+- **MCP server** — ten tools covering patient context, augmentation proposals (chart-resident and inline notes), run status polling, and proposal lifecycle (accept / reject / reopen / edit). Streamable HTTP at `/mcp`. SHARP-aware. Pipeline runs asynchronously — the tool returns a workspace link immediately and the frontend shows live stage-by-stage progress.
 - **Augmentation pipeline** — six stages plus a per-doc input guardrail (deterministic + `gpt-5.4-nano`), dual-coded terminology against 1M+ SNOMED / ICD-10 / LOINC / RxNorm concepts via FAISS, deterministic chart reconciliation with LLM adjudication only for ambiguous cases.
 - **Review workspace** — Next.js deep-link UI showing source notes, the chart slice, classification, confidence breakdown, and accept / edit / reject actions. Streaming chat assistant per run.
 - **Eval corpus + benchmark runner** — 18 multi-source clinical notes × 13 patient charts × 77 labeled facts, with multi-run accuracy / consistency / provenance reporting.
@@ -40,10 +40,11 @@ NEW (93%) and DUPLICATE (92%) — the bulk of real clinical findings — both cl
 ## Demo flow
 
 1. **Pre-visit catch-up.** A clinician asks the agent to prepare a chart. The agent calls `ProposeAugmentations` over MCP. SHARP headers carry the FHIR base URL, an access token, and the patient ID.
-2. **Pipeline runs.** Backend pulls the existing chart and notes, runs the six-stage augmentation, and persists proposals tiered by confidence. The MCP tool returns a deep link to the review workspace.
-3. **Clinician reviews.** Each proposal shows the source span highlighted in the original note, the FHIR resource Anamnesis would write, the classification (NEW / UPDATING / CONFLICTING), a confidence breakdown, and any conflict with the existing chart.
-4. **Mid-encounter capture.** The agent uploads transcript text via `ProposeAugmentationsFromNotes`. Same pipeline, same review surface — the transcript itself is **not** written to FHIR yet.
-5. **Accept.** On accept, `apply_augmentation` writes a single transaction Bundle: the resource, a `Provenance` with one entity per source document and one source-span extension per citation, and — for inline notes — a US Core `DocumentReference` carrying the source text. Nothing reaches the chart silently.
+2. **Workspace opens immediately.** The MCP tool returns a deep link within seconds. The review workspace shows live stage-by-stage progress as the pipeline runs in the background.
+3. **Pipeline completes.** Backend pulls the existing chart and notes, runs the six-stage augmentation, and persists proposals tiered by confidence. The agent polls `GetRunStatus` and reports the result.
+4. **Clinician reviews.** Each proposal shows the source span highlighted in the original note, the FHIR resource Anamnesis would write, the classification (NEW / UPDATING / CONFLICTING), a confidence breakdown, and any conflict with the existing chart.
+5. **Mid-encounter capture.** The agent uploads transcript text via `ProposeAugmentationsFromNotes`. Same pipeline, same review surface — the transcript itself is **not** written to FHIR yet.
+6. **Accept.** On accept, `apply_augmentation` writes a single transaction Bundle: the resource, a `Provenance` with one entity per source document and one source-span extension per citation, and — for inline notes — a US Core `DocumentReference` carrying the source text. Nothing reaches the chart silently.
 
 ## Run it locally
 

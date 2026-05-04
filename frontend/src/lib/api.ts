@@ -47,7 +47,7 @@ export const api = {
   reset: () => apiFetch("/api/reset", { method: "POST" }),
 
   seedDemo: () =>
-    apiFetch<{ run_id: string; token: string }>("/api/seed-demo", { method: "POST" }),
+    apiFetch<{ run_id: string }>("/api/seed-demo", { method: "POST" }),
 
   listProposals: (params: { runId?: string; patientId?: string }) => {
     const q = new URLSearchParams()
@@ -57,6 +57,17 @@ export const api = {
   },
 
   getProposal: (id: string) => apiFetch(`/api/proposals/${id}`),
+
+  getRunProgress: (runId: string) =>
+    apiFetch<{
+      status: string
+      progress: {
+        current_stage: string
+        stages_completed: Array<{ name: string; [key: string]: unknown }>
+      } | null
+      started_at: string | null
+      error: string | null
+    }>(`/api/runs/${runId}/progress`),
 
   getDocuments: (runId: string) => apiFetch(`/api/runs/${runId}/documents`),
 

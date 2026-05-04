@@ -20,6 +20,7 @@ import {
 import { useAppStore, useRunPanelOpen, useToggleRunPanel } from "@/lib/store"
 
 const STATUS_VARIANT: Record<string, "destructive" | "secondary" | "default" | "outline"> = {
+  running: "outline",
   pending: "outline",
   in_review: "secondary",
   resolved: "default",
@@ -27,6 +28,7 @@ const STATUS_VARIANT: Record<string, "destructive" | "secondary" | "default" | "
 }
 
 const STATUS_LABEL: Record<string, string> = {
+  running: "Running…",
   pending: "Pending",
   in_review: "In review",
   resolved: "Resolved",
