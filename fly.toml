@@ -10,8 +10,8 @@ primary_region = "ord"
   LOG_LEVEL = "INFO"
   WARMUP_CODING_ON_STARTUP = "true"
   NEXT_PUBLIC_API_URL = ""
-  HF_HOME = "/app/hf_cache"
-  HF_HUB_OFFLINE = "1"
+  HF_HOME = "/data/hf_cache"
+  ANAMNESIS_INDEX_DIR = "/data/indexes"
 
 [http_service]
   internal_port = 3042

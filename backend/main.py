@@ -39,8 +39,11 @@ def _warmup_coding() -> None:
         f"{system}={count:,}" for system, count in result.loaded_indexes.items()
     )
     if result.missing_indexes:
-        raise RuntimeError(
-            "Coding warmup missing indexes: " + ", ".join(result.missing_indexes)
+        log.warning(
+            "Coding warmup missing indexes: %s. Pipeline runs that hit these "
+            "systems will fail until the indexes are seeded under %s.",
+            ", ".join(result.missing_indexes),
+            os.environ.get("ANAMNESIS_INDEX_DIR", "data/indexes"),
         )
     log.info("Coding model and indexes ready%s.", f": {loaded}" if loaded else "")
 

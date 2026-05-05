@@ -20,7 +20,8 @@ import numpy as np
 logger = logging.getLogger(__name__)
 
 DEFAULT_HF_HOME = Path(__file__).resolve().parent.parent / ".cache" / "huggingface"
-DEFAULT_INDEX_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "indexes"
+_REPO_INDEX_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "indexes"
+DEFAULT_INDEX_DIR = Path(os.environ.get("ANAMNESIS_INDEX_DIR", str(_REPO_INDEX_DIR)))
 DEFAULT_MODEL_NAME = "cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
 os.environ.setdefault("HF_HOME", str(DEFAULT_HF_HOME))
 
@@ -132,11 +133,7 @@ class IndexStore:
             if hasattr(index, "nprobe"):
                 index.nprobe = min(128, getattr(index, "nlist", 128))
 
-            if meta_npz_path.exists():
-                meta = np.load(meta_npz_path, allow_pickle=False)
-                codes = meta["codes"].tolist()
-                displays = meta["displays"].tolist()
-            else:
+            if meta_path.exists():
                 import pyarrow.parquet as pq
 
                 meta_table = pq.read_table(meta_path)
@@ -146,6 +143,10 @@ class IndexStore:
 
                 codes = meta_table.column(code_col).to_pylist()
                 displays = meta_table.column(display_col).to_pylist()
+            else:
+                meta = np.load(meta_npz_path, allow_pickle=False)
+                codes = meta["codes"].tolist()
+                displays = meta["displays"].tolist()
 
             logger.info("Loaded %s index: %d vectors", system, index.ntotal)
             self._loaded[system] = (index, codes, displays)

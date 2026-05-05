@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-mkdir -p /data
+mkdir -p /data /data/hf_cache /data/indexes
 
 cd /app/backend && python -m uvicorn main:app --host 127.0.0.1 --port 8042 &
 

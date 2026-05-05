@@ -23,11 +23,22 @@ dependencies = [
     "faiss-cpu>=1.7.4",
     "pyarrow>=15.0",
     "sentence-transformers>=2.2",
+    "torch>=2.0",
     "tqdm>=4.65",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0"]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.setuptools]
 py-modules = ["main", "config"]
