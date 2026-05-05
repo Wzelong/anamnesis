@@ -16,7 +16,7 @@ See [Architecture.md](Architecture.md) for the system shape and [PIPELINE.md](PI
 
 ## What we built
 
-- **MCP server** — ten tools covering patient context, augmentation proposals (chart-resident and inline notes), run status polling, and proposal lifecycle (accept / reject / reopen / edit). Streamable HTTP at `/mcp`. SHARP-aware. Pipeline runs asynchronously — the tool returns a workspace link immediately and the frontend shows live stage-by-stage progress.
+- **MCP server** — twelve tools covering patient context, augmentation proposals (chart-resident and inline notes), run status polling, proposal listing and full-detail retrieval, terminology code search across SNOMED / RxNorm / LOINC / ICD-10, and proposal lifecycle (accept / reject / reopen / edit). Streamable HTTP at `/mcp`. SHARP-aware. Pipeline runs asynchronously — the tool returns a workspace link immediately and the frontend shows live stage-by-stage progress. The MCP is self-sufficient: a chat-only agent can list, drill into, code-shop, edit, and accept without ever opening the review UI.
 - **Augmentation pipeline** — six stages plus a per-doc input guardrail (deterministic + `gpt-5.4-nano`), dual-coded terminology against 1M+ SNOMED / ICD-10 / LOINC / RxNorm concepts via FAISS, deterministic chart reconciliation with LLM adjudication only for ambiguous cases.
 - **Review workspace** — Next.js deep-link UI showing source notes, the chart slice, classification, confidence breakdown, and accept / edit / reject actions. Streaming chat assistant per run.
 - **Eval corpus + benchmark runner** — 18 multi-source clinical notes × 13 patient charts × 77 labeled facts, with multi-run accuracy / consistency / provenance reporting.

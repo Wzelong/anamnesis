@@ -266,6 +266,11 @@ async def propose_augmentations_from_notes(
     return await _format_run_summary(result, ctx)
 
 
+def _truncate(text: str, limit: int = 120) -> str:
+    s = " ".join(text.split())
+    return s if len(s) <= limit else s[: limit - 1].rstrip() + "…"
+
+
 async def list_proposals_tool(ctx: Context = None) -> str:
     patient_id = get_patient_id(ctx)
     if not patient_id:
@@ -273,7 +278,23 @@ async def list_proposals_tool(ctx: Context = None) -> str:
 
     await _top_up_run_creds(ctx)
     async with AsyncSessionLocal() as session:
+        from sqlalchemy import select
+        from db.models import ProposalRecord
         proposals = await proposal_svc.list_proposals(session, patient_id=patient_id)
+        rows = (await session.execute(
+            select(ProposalRecord.id, ProposalRecord.citations_json)
+            .where(ProposalRecord.patient_id == patient_id)
+        )).all()
+        snippets: dict[str, str] = {}
+        for pid, cj in rows:
+            try:
+                items = json.loads(cj or "[]")
+            except json.JSONDecodeError:
+                items = []
+            if items:
+                top = next((c.get("text") for c in items if c.get("text")), "")
+                if top:
+                    snippets[pid] = _truncate(top)
 
     if not proposals:
         return "No proposals found. Run ProposeAugmentations first."
@@ -283,21 +304,69 @@ async def list_proposals_tool(ctx: Context = None) -> str:
         grouped.setdefault(p["confidence_tier"], []).append(p)
 
     lines: list[str] = []
-    tier_labels = {"ATTENTION": "ATTENTION", "REVIEW": "REVIEW", "CONFIDENT": "CONFIDENT"}
     for tier in ("ATTENTION", "REVIEW", "CONFIDENT"):
         items = grouped.get(tier, [])
         if not items:
             continue
-        lines.append(f"\n{tier_labels[tier]} ({len(items)})")
+        lines.append(f"\n{tier} ({len(items)})")
         for p in items:
             flags = " | ".join(p.get("flags", [])[:2])
             status_tag = f" [{p['status']}]" if p["status"] != "pending" else ""
-            lines.append(
+            score = f"{p['confidence_score']:.2f}"
+            head = (
                 f"  {p['id']} | {p['resource_type']} | {p['display_label']} | "
-                f"{p['classification']}{status_tag} | {flags}"
+                f"{p['classification']} {score}{status_tag}"
             )
+            if flags:
+                head += f" | {flags}"
+            lines.append(head)
+            snip = snippets.get(p["id"])
+            if snip:
+                lines.append(f"      “{snip}”")
 
+    lines.append("")
+    lines.append("Use GetProposal(proposal_id) for full citations, reasoning, conflicts, and FHIR resource.")
     return "\n".join(lines)
+
+
+async def get_proposal_tool(proposal_id: str, ctx: Context = None) -> str:
+    await _top_up_run_creds(ctx)
+    async with AsyncSessionLocal() as session:
+        try:
+            detail = await proposal_svc.get_proposal(proposal_id, session)
+        except ValueError as e:
+            return f"Error: {e}"
+
+    return json.dumps(detail, indent=2, default=str)
+
+
+_TERMINOLOGY_SYSTEMS = ("snomed", "rxnorm", "loinc", "icd10")
+
+
+async def search_terminology_tool(
+    query: str,
+    system: str,
+    top_k: int = 10,
+    ctx: Context = None,
+) -> str:
+    if not query or not query.strip():
+        raise ValueError("query must be a non-empty string")
+    norm_system = system.lower().strip()
+    if norm_system not in _TERMINOLOGY_SYSTEMS:
+        raise ValueError(
+            f"system must be one of {_TERMINOLOGY_SYSTEMS}, got {system!r}"
+        )
+    if top_k <= 0 or top_k > 50:
+        raise ValueError("top_k must be between 1 and 50")
+
+    from core import coding
+    results = await asyncio.to_thread(coding.search_code, query.strip(), norm_system, top_k)
+
+    payload = [
+        {"system": norm_system, "code": r.code, "display": r.display, "score": round(r.score, 4), "rank": r.rank}
+        for r in results
+    ]
+    return json.dumps(payload, indent=2)
 
 
 async def accept_proposal_tool(proposal_id: str, ctx: Context = None) -> str:

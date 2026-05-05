@@ -312,7 +312,7 @@ export function ProposalListPanel() {
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="Reason"
-            className="w-full text-sm border rounded-md p-2 min-h-20 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="w-full text-base md:text-sm border rounded-md p-2 min-h-20 outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

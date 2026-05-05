@@ -175,12 +175,27 @@ export function RightPanelNotes({ selectedId, citations, documents, activeDocId,
 
   useEffect(() => {
     if (!activeDoc || ranges.length === 0) return
-    const raf = requestAnimationFrame(() => {
+    let cancelled = false
+    let raf = 0
+    let attempts = 0
+    const maxAttempts = 20
+    const tryScroll = () => {
+      if (cancelled) return
       const target = scrollRef.current?.querySelector('mark[data-citation-idx="0"]')
-      if (target) target.scrollIntoView({ block: "center", behavior: "smooth" })
-    })
-    return () => cancelAnimationFrame(raf)
-  }, [selectedId, activeDoc, ranges.length])
+      if (target) {
+        target.scrollIntoView({ block: "center", behavior: "smooth" })
+        return
+      }
+      if (++attempts < maxAttempts) {
+        raf = requestAnimationFrame(tryScroll)
+      }
+    }
+    raf = requestAnimationFrame(tryScroll)
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(raf)
+    }
+  }, [selectedId, activeDoc, ranges])
 
   if (!documents) {
     return <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">Loading…</div>
