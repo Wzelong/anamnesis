@@ -660,3 +660,19 @@
   }
 }
 
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="number"],
+  input[type="url"],
+  input[type="tel"],
+  input:not([type]),
+  textarea {
+    font-size: 16px;
+  }
+  .cm-editor.cm-focused .cm-content {
+    font-size: 16px;
+  }
+}
+
