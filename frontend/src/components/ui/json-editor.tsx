@@ -34,16 +34,19 @@ interface Props {
 
 const buildBaseTheme = (dark: boolean) => EditorView.theme({
   "&": {
-    fontSize: "12px",
+    fontSize: "16px",
     backgroundColor: "transparent",
     color: "var(--foreground)",
-    height: "100%",
+    height: "auto",
+  },
+  "@media (min-width: 768px)": {
+    "&": { fontSize: "12px" },
   },
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": {
     fontFamily: "var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)",
     lineHeight: "1.6",
-    overflow: "auto",
+    overflow: "visible",
   },
   ".cm-content": { padding: "12px", caretColor: "var(--foreground)", minHeight: "100%" },
   ".cm-activeLine": { backgroundColor: "transparent" },
@@ -192,7 +195,7 @@ export function JsonEditor({ value, editable = false, onChange, hideTypeLabel = 
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col">
       <div className="h-8 shrink-0 border-b bg-muted/30 flex items-center px-3">
         {searchOpen ? (
           <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -203,7 +206,7 @@ export function JsonEditor({ value, editable = false, onChange, hideTypeLabel = 
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleSearchKey}
               placeholder="Find in JSON"
-              className="flex-1 min-w-0 h-7 text-xs bg-transparent outline-none placeholder:text-muted-foreground"
+              className="flex-1 min-w-0 h-7 text-base md:text-xs bg-transparent outline-none placeholder:text-muted-foreground"
             />
             {query && (
               <span className="text-[11px] text-muted-foreground tabular-nums shrink-0 px-1">
@@ -278,7 +281,7 @@ export function JsonEditor({ value, editable = false, onChange, hideTypeLabel = 
         )}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div>
         <CodeMirror
           ref={ref}
           value={value}

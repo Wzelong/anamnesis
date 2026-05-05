@@ -42,7 +42,9 @@ Lives under `backend/`. FastAPI app entrypoint at `backend/main.py` mounts the M
 | `ProposeAugmentations` | Starts the pipeline asynchronously against the patient's chart-resident notes. Returns a deep link to the review UI immediately; the workspace shows live stage progress. |
 | `ProposeAugmentationsFromNotes` | Runs the pipeline against agent-supplied note text (`list[str]`, ≤ 200KB each). Source documents are written to the chart only when a derived augmentation is accepted. |
 | `GetRunStatus` | Returns the status of a pipeline run: stage progress if running, proposal summary if completed, error if failed. Used by the agent to poll after ProposeAugmentations. |
-| `ListProposals` | Lists proposals for the current patient grouped by tier (ATTENTION / REVIEW / CONFIDENT). |
+| `ListProposals` | Lists proposals for the current patient grouped by tier (ATTENTION / REVIEW / CONFIDENT). Each row carries display label, classification, score, status, flags, and a top citation snippet for in-chat triage. |
+| `GetProposal` | Full detail for one proposal: FHIR resource JSON, resolved citations (with char spans), classification + extraction + merge reasoning, confidence breakdown, chart_matches, supersedes, and (if accepted) the Provenance resource and write_result. Lets an agent decide accept/reject/edit without the review UI. |
+| `SearchTerminology` | Vector search over SNOMED, RxNorm, LOINC, or ICD-10. Returns ranked `{code, display, score}` for a free-text query. Useful before `EditProposal` to swap in a more appropriate code. Read-only; no FHIR side effects. |
 | `AcceptProposal` | Accept a proposal; writes the FHIR resource + Provenance as a transaction Bundle. |
 | `RejectProposal` | Archive a proposal with a reason; no FHIR write. |
 | `ReopenProposal` | Return a previously rejected proposal to pending. Accepted proposals cannot be reopened (FHIR write is permanent); rejection history is preserved. |

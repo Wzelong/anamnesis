@@ -63,8 +63,24 @@ mcp.tool(
 
 mcp.tool(
     name="ListProposals",
-    description="List all augmentation proposals for the current patient, grouped by confidence tier (ATTENTION, REVIEW, CONFIDENT). Shows classification, resource type, confidence, and flags for each proposal.",
+    description="List all augmentation proposals for the current patient, grouped by confidence tier (ATTENTION, REVIEW, CONFIDENT). For each proposal shows id, resource type, display label, classification, confidence score, status, flags, and the top citation snippet. Call GetProposal for full detail.",
 )(tools.list_proposals_tool)
+
+mcp.tool(
+    name="GetProposal",
+    description="Return full detail for a single proposal: FHIR resource JSON, resolved citations (document_id, char_start, char_end, text), classification reasoning, extraction reasoning, confidence breakdown, chart_matches (existing FHIR resources the agent reconciled against), supersedes, write_result, and provenance_resource if accepted. Use this to make accept/reject/edit decisions without the review UI.",
+)(tools.get_proposal_tool)
+
+mcp.tool(
+    name="SearchTerminology",
+    description=(
+        "Search a medical terminology by free-text query and return top matching codes. "
+        "Useful before EditProposal when you want to swap a code for a more specific or "
+        "more appropriate one. system must be one of: 'snomed' (clinical findings, conditions, procedures), "
+        "'rxnorm' (medications), 'loinc' (lab/observation panels), or 'icd10' (billing-style diagnoses). "
+        "Returns code, display, similarity score, and rank. Read-only; no FHIR side effects."
+    ),
+)(tools.search_terminology_tool)
 
 mcp.tool(
     name="AcceptProposal",

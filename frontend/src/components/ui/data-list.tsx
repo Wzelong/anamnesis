@@ -276,7 +276,7 @@ export function DataList<T>({
                   placeholder={searchPlaceholder}
                   value={searchInputValue ?? ""}
                   onChange={(e) => { setSearchInputValue(e.target.value); clearSelection() }}
-                  className="pl-6 h-7 text-xs w-full bg-transparent outline-none placeholder:text-muted-foreground"
+                  className="pl-6 h-7 text-base md:text-xs w-full bg-transparent outline-none placeholder:text-muted-foreground"
                 />
               </div>
             ) : (

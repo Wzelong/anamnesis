@@ -78,7 +78,7 @@ export function AutoInput({ value, onChange, onSend, disabled, loading, placehol
         rows={1}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className="flex-1 resize-none bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 transition-[min-height] duration-150"
+        className="flex-1 resize-none bg-transparent px-3 py-2 text-base md:text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 transition-[min-height] duration-150"
         style={{ maxHeight: MAX_HEIGHT, minHeight }}
       />
       <button

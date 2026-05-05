@@ -391,21 +391,15 @@ export function ProposalDetailPanel() {
             </div>
           )}
         </div>
-      ) : (() => {
-        const json = editing ? rawJson : JSON.stringify(activeResource, null, 2)
-        const lineCount = json.split("\n").length
-        return (
-          <div className="flex-1 min-h-0 overflow-auto pb-6">
-            <div style={{ height: lineCount * 20 + 24 }}>
-              <JsonEditor
-                value={json}
-                editable={editing}
-                onChange={editing ? handleJsonChange : undefined}
-              />
-            </div>
-          </div>
-        )
-      })()}
+      ) : (
+        <div className="flex-1 min-h-0 overflow-auto pb-6">
+          <JsonEditor
+            value={editing ? rawJson : JSON.stringify(activeResource, null, 2)}
+            editable={editing}
+            onChange={editing ? handleJsonChange : undefined}
+          />
+        </div>
+      )}
 
       {!confirming && actionError && !editing && (
         <ActionErrorCallout message={actionError} onDismiss={clearActionError} />
@@ -496,7 +490,7 @@ function ConfirmView({ kind, reason, onReasonChange, onCancel, onConfirm, submit
           onChange={(e) => onReasonChange(e.target.value)}
           placeholder="Reason"
           disabled={submitting}
-          className="w-full max-w-sm text-sm border rounded-md p-2 min-h-20 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="w-full max-w-sm text-base md:text-sm border rounded-md p-2 min-h-20 outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
       )}
       <div className="flex items-center gap-2 mt-1">

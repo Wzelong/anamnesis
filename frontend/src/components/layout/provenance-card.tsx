@@ -108,7 +108,6 @@ function ProvenanceForm({ resource }: { resource: Record<string, unknown> }) {
 export function ProvenanceCard({ resource }: Props) {
   const [tab, setTab] = useState<"form" | "json">("form")
   const json = JSON.stringify(resource, null, 2)
-  const lineCount = json.split("\n").length
 
   return (
     <div className="max-w-2xl rounded-lg border">
@@ -151,11 +150,7 @@ export function ProvenanceCard({ resource }: Props) {
           <ProvenanceForm resource={resource} />
         </div>
       ) : (
-        <div className="pb-3">
-          <div style={{ height: lineCount * 20 + 24 }}>
-            <JsonEditor value={json} hideTypeLabel />
-          </div>
-        </div>
+        <JsonEditor value={json} hideTypeLabel />
       )}
     </div>
   )
