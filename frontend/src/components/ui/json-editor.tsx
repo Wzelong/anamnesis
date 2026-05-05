@@ -34,19 +34,16 @@ interface Props {
 
 const buildBaseTheme = (dark: boolean) => EditorView.theme({
   "&": {
-    fontSize: "16px",
+    fontSize: "12px",
     backgroundColor: "transparent",
     color: "var(--foreground)",
     height: "auto",
-  },
-  "@media (min-width: 768px)": {
-    "&": { fontSize: "12px" },
   },
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": {
     fontFamily: "var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)",
     lineHeight: "1.6",
-    overflow: "visible",
+    overflow: "auto",
   },
   ".cm-content": { padding: "12px", caretColor: "var(--foreground)", minHeight: "100%" },
   ".cm-activeLine": { backgroundColor: "transparent" },
