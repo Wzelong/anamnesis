@@ -73,6 +73,7 @@ export function DataList<T>({
   emptyState,
   isFetching,
   headerExtra,
+  getItemClassName,
 }: DataListProps<T>) {
   const [searchInputValue, setSearchInputValue] = useState(searchValue)
   const hasSelection = onSelectAll && onSelectOne
@@ -335,6 +336,7 @@ export function DataList<T>({
                     "absolute inset-x-0 top-0 flex items-start gap-2 px-2 py-2.5 border-b transition-colors select-none",
                     isActive ? "bg-muted" : "hover:bg-muted/50",
                     onItemClick && "cursor-pointer",
+                    getItemClassName?.(item, vRow.index),
                   )}
                   style={{ transform: `translateY(${vRow.start}px)` }}
                   onClick={() => onItemClick?.(item)}
@@ -371,6 +373,7 @@ export function DataList<T>({
                   "flex items-start gap-2 px-2 py-2.5 border-b transition-colors select-none",
                   isActive ? "bg-muted" : "hover:bg-muted/50",
                   onItemClick && "cursor-pointer",
+                  getItemClassName?.(item, idx),
                 )}
                 onClick={() => onItemClick?.(item)}
               >

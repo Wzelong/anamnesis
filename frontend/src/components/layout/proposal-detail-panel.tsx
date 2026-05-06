@@ -31,6 +31,7 @@ import { useAppStore } from "@/lib/store"
 import { TIER_LABEL, TIER_TEXT } from "@/lib/proposal-meta"
 import { ProposalFormView } from "./proposal-form-view"
 import { ProposalConflictCallout } from "./proposal-conflict-callout"
+import { InterProposalConflictCallout } from "./inter-proposal-conflict-callout"
 import { ProvenanceCard } from "./provenance-card"
 import { JsonEditor } from "@/components/ui/json-editor"
 import { useShortcuts } from "@/lib/use-shortcuts"
@@ -360,6 +361,9 @@ export function ProposalDetailPanel() {
           </div>
           {!editing && detail.status === "rejected" && detail.rejection_reason && (
             <RejectionBanner reason={detail.rejection_reason} />
+          )}
+          {!editing && detail.conflict_group_id && !decided && (
+            <InterProposalConflictCallout current={detail} />
           )}
           {!editing && detail.classification === "CONFLICTING" && !decided && (
             <ProposalConflictCallout

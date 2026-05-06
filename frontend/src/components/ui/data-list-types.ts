@@ -47,6 +47,8 @@ export interface DataListProps<T> {
   isFetching?: boolean
   /** Optional content rendered between the toolbar and the list rows. */
   headerExtra?: ReactNode
+  /** Optional per-row className callback for custom styling (e.g., left borders). */
+  getItemClassName?: (item: T, index: number) => string | undefined
 }
 
 export type { FilterConfig, ToolbarButton, BulkAction, SelectionStatus, EmptyStateConfig }

@@ -9,7 +9,8 @@ from core.augment.citations import _build_encounter_map, resolve_citations
 from core.augment.helpers import _is_negated_assertion
 from core.ids import short_id
 from core.preprocess import PreprocessedNote
-from core.reconcile import StageFiveOutput
+from core.reconcile import StageFiveOutput, _DISCONTINUED_STATUSES
+from core.reconcile_match_rules import _normalize_ingredient
 from core.schemas import Proposal
 from fhir.models import PatientContext
 
@@ -94,8 +95,59 @@ def assemble_proposals(
             supersedes=supersedes,
         ))
 
+    proposals = _detect_inter_proposal_conflicts(proposals)
+
     by_class = {}
     for p in proposals:
         by_class[p.classification] = by_class.get(p.classification, 0) + 1
     log.info("stage6 assembled %d proposals: %s", len(proposals), by_class)
     return StageSixOutput(proposals=proposals)
+
+
+def _display_label_for(resource: dict) -> str:
+    cc = resource.get("medicationCodeableConcept", {})
+    return cc.get("text") or next(
+        (c.get("display", "") for c in cc.get("coding", []) if c.get("display")),
+        "",
+    )
+
+
+def _detect_inter_proposal_conflicts(proposals: list[Proposal]) -> list[Proposal]:
+    """Link proposals that contradict each other across notes."""
+    med_by_ingredient: dict[str, list[int]] = {}
+    for i, p in enumerate(proposals):
+        if p.resource_type != "MedicationRequest":
+            continue
+        cc = p.resource.get("medicationCodeableConcept", {})
+        ingredient = None
+        for coding in cc.get("coding", []):
+            ingredient = _normalize_ingredient(coding.get("display", ""))
+            if ingredient:
+                break
+        if not ingredient:
+            ingredient = _normalize_ingredient(cc.get("text", ""))
+        if ingredient:
+            med_by_ingredient.setdefault(ingredient, []).append(i)
+
+    for ingredient, indices in med_by_ingredient.items():
+        if len(indices) < 2:
+            continue
+        stopped = [i for i in indices if proposals[i].resource.get("status") in _DISCONTINUED_STATUSES]
+        active = [i for i in indices if proposals[i].resource.get("status") not in _DISCONTINUED_STATUSES]
+        if not stopped or not active:
+            continue
+        group_id = short_id("cg")
+        all_in_group = stopped + active
+        for i in all_in_group:
+            others = [j for j in all_in_group if j != i]
+            other_labels = [_display_label_for(proposals[j].resource) for j in others]
+            new_flags = list(proposals[i].flags)
+            for lbl in other_labels:
+                new_flags.append(f"Inter-note conflict: contradicts {lbl}")
+            proposals[i] = proposals[i].model_copy(update={
+                "conflict_group_id": group_id,
+                "confidence_tier": "ATTENTION",
+                "flags": new_flags,
+            })
+
+    return proposals

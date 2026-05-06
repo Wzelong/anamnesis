@@ -166,15 +166,16 @@ The augmentation brain. This is the capability text2fhir does *not* have.
 
 For benchmarked classification accuracy by class (NEW / DUPLICATE / UPDATING / CONFLICTING) see [benchmarks/eval-corpus-v1/results/](benchmarks/eval-corpus-v1/results/).
 
-## Stage 6 — Assemble proposal (`backend/core/augment.py`)
+## Stage 6 — Assemble proposal (`backend/core/augment/assembly.py`)
 
 Pure deterministic transform — no LLM calls, no I/O. Converts `StageFiveOutput` into clinician-reviewable `Proposal` records with valid FHIR R4 resource JSON and character-level source citations.
 
-**Three jobs:**
+**Four jobs:**
 
 1. **Filter.** Drop DUPLICATEs (already in chart). Only NEW / UPDATING / CONFLICTING reach the review surface.
 2. **Build FHIR resources.** One builder per resource type, emitting plain dicts that conform to US Core R4. Key mapping: `item["coding"]` → `CodeableConcept.coding[]`, `item["name"]` → `CodeableConcept.text`. Special handling for BP (component-based), tobacco (valueCodeableConcept), and onset age parsing for FamilyMemberHistory.
 3. **Resolve citations.** Sentence numbers → character spans via `PreprocessedNote.sentences`. Contiguous sentences merge into one `ResolvedCitation`; non-contiguous produce multiple.
+4. **Detect inter-proposal conflicts.** After all proposals are assembled, a rule-based pass (`_detect_inter_proposal_conflicts`) groups proposals that contradict each other across notes. For medications: same normalized ingredient + contradictory statuses (one stopped, one active/dose-change) → shared `conflict_group_id`, both forced to ATTENTION tier. On accept, siblings in the same group are auto-rejected. This catches medication reconciliation failures across care settings (e.g., cardiology discontinues lisinopril, neurology increases it one month later).
 
 **Per-type assembly:**
 
@@ -194,6 +195,7 @@ Pure deterministic transform — no LLM calls, no I/O. Converts `StageFiveOutput
 - `citations` (list of `ResolvedCitation` with document_id, char_start/end, text)
 - `confidence_score`, `confidence_tier`, `flags` (carried from Stage 5)
 - `supersedes` (UPDATING), `chart_matches` (any classification with chart hits)
+- `conflict_group_id` (shared ID linking inter-proposal conflicts, null if none)
 - `classification_reasoning`, `extraction_reasoning`, `merge_reasoning`
 
 No FHIR write happens here. The resource JSON is pre-assembled and valid but sits in the working DB (via `ProposalRecord` ORM model) until a clinician acts.

@@ -24,6 +24,7 @@ export interface Proposal {
   status: "pending" | "accepted" | "rejected"
   display_label: string
   flags: string[]
+  conflict_group_id: string | null
 }
 
 export interface ProposalDetail extends Proposal {

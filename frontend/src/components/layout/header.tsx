@@ -2,12 +2,11 @@
 
 import { useState } from "react"
 import Image from "next/image"
-import { Trash2 } from "lucide-react"
+import { Trash2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -23,6 +22,7 @@ import { api } from "@/lib/api"
 import { useAppStore } from "@/lib/store"
 
 export function Header() {
+  const [open, setOpen] = useState(false)
   const [resetting, setResetting] = useState(false)
   const reset = useAppStore((s) => s.reset)
   const fetchRuns = useAppStore((s) => s.fetchRuns)
@@ -36,6 +36,7 @@ export function Header() {
       await fetchRuns()
       router.push("/")
       toast.success("Working state reset.")
+      setOpen(false)
     } catch {
       toast.error("Reset failed. Check that the backend is running.")
     } finally {
@@ -61,7 +62,7 @@ export function Header() {
       <div className="flex items-center gap-1 pr-3">
         <ShortcutsDialog />
         <ThemeToggle />
-        <AlertDialog>
+        <AlertDialog open={open} onOpenChange={setOpen}>
           <AlertDialogTrigger asChild>
             <Button
               variant="ghost"
@@ -81,10 +82,15 @@ export function Header() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleReset} disabled={resetting}>
+              <AlertDialogCancel disabled={resetting}>Cancel</AlertDialogCancel>
+              <Button
+                variant="destructive"
+                onClick={handleReset}
+                disabled={resetting}
+              >
+                {resetting && <Loader2 className="size-3.5 animate-spin" />}
                 {resetting ? "Resetting..." : "Reset"}
-              </AlertDialogAction>
+              </Button>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
