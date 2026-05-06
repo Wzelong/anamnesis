@@ -361,6 +361,7 @@ def _proposal_to_record(proposal, run_id: str, patient_id: str) -> ProposalRecor
         resource_json=json.dumps(proposal.resource),
         citations_json=json.dumps([c.model_dump(mode="json") for c in proposal.citations]),
         metadata_json=json.dumps(metadata),
+        conflict_group_id=proposal.conflict_group_id,
         created_at=datetime.now(timezone.utc),
     )
 
@@ -378,6 +379,7 @@ def _record_to_dict(record: ProposalRecord, *, full: bool = False) -> dict:
         "status": record.status,
         "display_label": _display_label(resource),
         "flags": metadata.get("flags", []),
+        "conflict_group_id": record.conflict_group_id,
     }
     if full:
         d["resource"] = resource
@@ -858,6 +860,22 @@ async def accept_proposal(
     if write_result:
         metadata["write_result"] = write_result
     record.metadata_json = json.dumps(metadata)
+
+    if record.conflict_group_id:
+        siblings = (await session.execute(
+            select(ProposalRecord).where(
+                ProposalRecord.conflict_group_id == record.conflict_group_id,
+                ProposalRecord.id != record.id,
+                ProposalRecord.status == "pending",
+            )
+        )).scalars().all()
+        for sib in siblings:
+            sib.status = "rejected"
+            sib.reviewed_at = datetime.now(timezone.utc)
+            sib.reviewed_by = reviewer.display if reviewer else "system"
+            sib_meta = json.loads(sib.metadata_json)
+            sib_meta["rejection_reason"] = f"Superseded by conflicting proposal {record.id}"
+            sib.metadata_json = json.dumps(sib_meta)
 
     await session.commit()
 

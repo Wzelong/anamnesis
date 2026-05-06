@@ -79,6 +79,7 @@ class ProposalRecord(Base):
     created_at: Mapped[datetime] = mapped_column()
     reviewed_at: Mapped[datetime | None] = mapped_column(nullable=True)
     reviewed_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    conflict_group_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
 
     __table_args__ = (
         Index("ix_proposal_patient_status", "patient_id", "status"),

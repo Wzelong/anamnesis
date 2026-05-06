@@ -78,7 +78,7 @@ Four tables, all indexed for the access patterns the UI hits:
 
 - **`PipelineRun`** — `id`, `patient_id`, `triggered_by` (`api`, `mcp`, `api:inline`), `status`, `started_at`, `finished_at`, `meta_json`.
 - **`LLMCall`** — one row per LLM invocation: `run_id`, `stage`, `model`, token counts (input / output / reasoning / cached), `latency_ms`, `usd_cost`, error fields.
-- **`ProposalRecord`** — one per proposal: `resource_type`, `classification`, `confidence_tier`, `confidence_score`, `status`, `resource_json`, `citations_json`, `metadata_json`, reviewer audit columns.
+- **`ProposalRecord`** — one per proposal: `resource_type`, `classification`, `confidence_tier`, `confidence_score`, `status`, `resource_json`, `citations_json`, `metadata_json`, `conflict_group_id` (nullable; links proposals that contradict each other across notes), reviewer audit columns.
 - **`ReviewToken`** — short opaque tokens (`rev_xxxxxxxx`) aliased to a clinician's display + FHIR reference, with expiry. The frontend never sees the underlying SHARP access token.
 
 Per-run **snapshots** (`services/run_snapshot.py`) are written to `.cache/runs/{run_id}.json` so the review surface can render notes and chart context without round-tripping the FHIR server on every page load.
@@ -121,7 +121,7 @@ The workspace is a deep-link surface: `/{runId}?token=…`. Three panels, plus a
 - **Left rail** — collapses two panels by context:
   - `run-list-panel.tsx` — runs grouped by patient, with status, proposal counts, tokens, USD cost, and duration. Multi-select + bulk delete.
   - `proposal-list-panel.tsx` — proposals in the active run grouped by tier with classification badges and quick filters.
-- **Center** (`proposal-detail-panel.tsx`) — the selected proposal: resource viewer, classification + confidence breakdown, citation list, conflict callout, and the action row (Accept / Reject / Edit). When the review token is missing or invalid, the action row turns into a destructive read-only banner with a tooltip explaining that writes need an alias of the clinician's Prompt Opinion session, with production-SSO honesty about the gap.
+- **Center** (`proposal-detail-panel.tsx`) — the selected proposal: resource viewer, classification + confidence breakdown, citation list, conflict callouts (chart conflicts shown side-by-side with the proposed resource; inter-note conflicts shown side-by-side with the sibling proposal, linked for navigation), and the action row (Accept / Reject / Edit). Accepting a proposal in a conflict group auto-rejects its siblings. When the review token is missing or invalid, the action row turns into a destructive read-only banner with a tooltip explaining that writes need an alias of the clinician's Prompt Opinion session, with production-SSO honesty about the gap.
 - **Right rail** (`right-panel.tsx`) — three tabs:
   - **Notes** — source documents, with cited spans highlighted in place by tier color.
   - **Chart** — the patient context slice the pipeline reconciled against (conditions, meds, allergies, observations, procedures, family history, encounters), tagged with its source label (`FHIR server`, `FHIR server snapshot`, or `Local bundle`) and fetch time.
@@ -159,6 +159,7 @@ The boundaries another consumer would need to reason about if they swapped the f
 
 - **Nothing writes silently.** Every chart change passes through `apply_augmentation` and is paired with a `Provenance`. Inline source text only enters the chart when its derived augmentation is accepted, in the same transaction.
 - **Every fact carries provenance.** Source span, classification, confidence breakdown, reviewer identity, and Provenance reference are persisted on every accepted proposal.
+- **Contradictions are surfaced, not hidden.** Inter-note conflicts (same medication, contradictory actions across providers) are detected deterministically and grouped so the clinician must resolve them as a unit. Accepting one auto-rejects the others.
 - **FHIR is the source of truth.** Local SQLite holds working state — runs, proposals, decisions, audit log, telemetry. Clinical data lives on the FHIR server.
 - **The MCP is the product.** The frontend is a thin reference consumer; substituting it with another agent or UI does not change the contract.
 

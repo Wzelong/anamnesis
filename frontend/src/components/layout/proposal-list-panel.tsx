@@ -42,6 +42,7 @@ type TierFilter = "" | "ATTENTION" | "REVIEW" | "CONFIDENT"
 type TypeFilter = "" | keyof typeof RESOURCE_LABEL
 type ClassFilter = "" | "NEW" | "UPDATING" | "CONFLICTING"
 
+
 export function ProposalListPanel() {
   const router = useRouter()
   const proposals = useAppStore((s) => s.proposals)
@@ -77,6 +78,9 @@ export function ProposalListPanel() {
         return true
       })
       .sort((a, b) => {
+        const ag = a.conflict_group_id
+        const bg = b.conflict_group_id
+        if (ag && bg && ag === bg) return 0
         const t = (tierRank[a.confidence_tier] ?? 99) - (tierRank[b.confidence_tier] ?? 99)
         if (t !== 0) return t
         return a.resource_type.localeCompare(b.resource_type)
@@ -220,6 +224,17 @@ export function ProposalListPanel() {
         <DataList
           data={filtered}
           getItemId={(p) => p.id}
+          getItemClassName={(p) => {
+            if (!p.conflict_group_id) return undefined
+            const groupItems = filtered.filter((x) => x.conflict_group_id === p.conflict_group_id)
+            const idx = groupItems.indexOf(p)
+            const isFirst = idx === 0
+            const isLast = idx === groupItems.length - 1
+            return cn(
+              "border-l-2 border-l-amber-500 !border-b-0",
+              isLast && "!border-b border-b-border",
+            )
+          }}
           renderItem={(p) => {
             const Icon = RESOURCE_ICON[p.resource_type] ?? ClipboardList
             const reviewed = p.status !== "pending"
