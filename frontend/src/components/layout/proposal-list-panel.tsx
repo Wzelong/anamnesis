@@ -228,10 +228,9 @@ export function ProposalListPanel() {
             if (!p.conflict_group_id) return undefined
             const groupItems = filtered.filter((x) => x.conflict_group_id === p.conflict_group_id)
             const idx = groupItems.indexOf(p)
-            const isFirst = idx === 0
             const isLast = idx === groupItems.length - 1
             return cn(
-              "border-l-2 border-l-amber-500 !border-b-0",
+              "shadow-[inset_2px_0_0_0_var(--color-amber-500)] !border-b-0",
               isLast && "!border-b border-b-border",
             )
           }}
