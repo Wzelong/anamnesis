@@ -1,6 +1,6 @@
 # Architecture
 
-Anamnesis is a FHIR augmentation agent. It reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them. The product ships as an **MCP server** (the substantive deliverable) plus a **provider-facing review workspace** that handles the human-in-the-loop hand-off.
+Anamnesis is a FHIR augmentation **MCP server**. It reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them. The MCP is the substantive deliverable; a thin **provider-facing review workspace** ships alongside as a reference consumer for the human-in-the-loop hand-off.
 
 This document describes the system as it is, not as it might become. For the augmentation pipeline internals see [PIPELINE.md](PIPELINE.md). For the demo path and quickstart see [README.md](README.md).
 

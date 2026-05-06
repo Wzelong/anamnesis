@@ -2,9 +2,9 @@
 
 > The data wasn't missing — it was unstructured. Now it's not.
 
-A FHIR augmentation agent for the **Agents Assemble: The Healthcare AI Endgame** hackathon. Anamnesis reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them.
+A FHIR augmentation **MCP server** for the **Agents Assemble: The Healthcare AI Endgame** hackathon (Option 1: Build a Superpower). Anamnesis reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them.
 
-The product ships as an **MCP server** (the substantive deliverable, invokable by any agent in the Prompt Opinion ecosystem) plus a **provider-facing review workspace** that handles the human-in-the-loop hand-off.
+The MCP is the substantive deliverable — invokable by any agent in the Prompt Opinion ecosystem. A thin **provider-facing review workspace** ships alongside as a reference consumer for the human-in-the-loop hand-off.
 
 ## How it works
 
