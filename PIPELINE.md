@@ -241,24 +241,45 @@ Rejections and edits are audited in the working DB — every decision is recover
 
 ```
 backend/core/
-  doc_guardrails.py   # Stage 0.5: deterministic + nano-LLM input gate
-  preprocess.py       # sentence splitter + NoteContext extractor
-  extraction.py       # scan → parse → clean → cross-note merge
-  coding.py           # FAISS index store + SapBERT embedding model
-  code_candidates.py  # US Core fixed codes + LLM CodeSelector
-  reconcile.py        # deterministic match + LLM adjudication → NEW/DUPLICATE/UPDATING/CONFLICTING
-  augment.py          # FHIR builders + citation resolution → Proposal assembly
-  telemetry.py        # RunContext + LLM call wrapper (token + cost accounting)
-  pricing.py          # per-model token pricing for USD cost computation
+  doc_guardrails.py        # Stage 0.5: deterministic + nano-LLM input gate
+  preprocess.py            # sentence splitter + NoteContext extractor
+  extraction.py            # Stage 2: scan → parse → clean (re-exports merge_across_notes)
+  extraction_merge.py      # Stage 3: cross-note dedupe (deterministic + LLM adjudication)
+  validation.py            # post-parse validators for Stage 2 output
+  schemas.py               # Stage 2 Pydantic schemas (source_sentences + reasoning)
+  coding.py                # Stage 4: FAISS index store + SapBERT embedding model
+  code_candidates.py       # Stage 4: US Core fixed codes + LLM CodeSelector
+  reconcile.py             # Stage 5: deterministic match + LLM adjudication → NEW/DUPLICATE/UPDATING/CONFLICTING
+  reconcile_match_rules.py # Stage 5: per-resource-type matchers (ChartIndex)
+  augment/
+    assembly.py            # Stage 6 entry point: filter, build, cite, detect inter-proposal conflicts
+    builders.py            # per-resource-type FHIR builders + dispatch
+    citations.py           # sentence numbers → character spans, encounter resolution
+    config.py              # US Core profile URLs, terminology system URIs, lookup maps
+    helpers.py             # CodeableConcept + parsing helpers shared by builders
+  prompts/
+    stage1_scan.py         # scan-stage system prompt
+    stage2_parse.py        # per-resource-type parser prompts
+    stage3_merge.py        # cross-note dedupe adjudication prompt
+    stage4_coding.py       # CodeSelector prompt
+    stage5_reconcile.py    # reconciliation adjudication prompt
+  cache.py                 # content-addressed JSON cache shared across stages
+  ids.py                   # short Crockford-base32 IDs (run_, prop_, rev_)
+  telemetry.py             # RunContext + LLM call wrapper (token + cost accounting)
+  pricing.py               # per-model token pricing for USD cost computation
 
 backend/services/
-  proposals.py        # proposal lifecycle: run pipeline, list, accept, reject, edit
+  proposals.py             # proposal lifecycle: run pipeline, list, accept, reject, edit
+  run_snapshot.py          # per-run snapshot of source docs + chart context for the review surface
+  chat.py                  # per-run streaming chat over the Responses API with tool dispatch
 
 backend/fhir/
-  client.py           # async FhirClient (read, search, transaction)
-  read.py             # PatientContext + Document loaders
-  write.py            # apply_augmentation: NEW/UPDATING/CONFLICTING write paths
-  local_bundle.py     # offline Bundle loader for demo + tests
+  client.py                # async FhirClient (read, search, transaction)
+  read.py                  # PatientContext + Document loaders
+  write.py                 # apply_augmentation: NEW/UPDATING/CONFLICTING write paths
+  local_bundle.py          # offline Bundle loader for demo + tests
+  bootstrap.py             # idempotent loader for the James Lee demo bundle
+  models.py                # plain dataclasses for FHIR data read into Python
 ```
 
 ---
