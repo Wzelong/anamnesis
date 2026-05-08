@@ -132,7 +132,7 @@ Stages 2 and 4 fire many calls per note in parallel within a stage; Stages 3 and
 2. **Number of source notes** — Stage 2 (extraction) fans out per note × resource type. Linear in notes.
 3. **Note length** — Stage 2 input tokens grow sub-linearly because the scan culls early.
 4. **Chart size** — mostly free. Stage 5 (reconcile) is deterministic-match-first; the LLM fires only on fuzzy display-text overlaps (typically 0–2 calls/run).
-5. **Cache state** — terminology codes (Stage 4) and guardrail verdicts cache across patients and re-runs. Production steady-state is materially cheaper than this cold-cache benchmark.
+5. **Cache state** — guardrail verdicts (Stage 0.5) and Stage 2 extraction cache by note hash, so re-running the same notes is free. Stage 4 (terminology coding) is intentionally **not** cached — a stale cache could silently re-apply a code a clinician corrected via HITL.
 
 ## Reproduce
 
