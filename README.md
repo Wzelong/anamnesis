@@ -2,9 +2,16 @@
 
 > The data wasn't missing — it was unstructured. Now it's not.
 
-A FHIR augmentation agent for the **Agents Assemble: The Healthcare AI Endgame** hackathon. Anamnesis reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them.
+A FHIR augmentation **MCP server** for the **Agents Assemble: The Healthcare AI Endgame** hackathon (Option 1: Build a Superpower). Anamnesis reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them.
 
-The product ships as an **MCP server** (the substantive deliverable, invokable by any agent in the Prompt Opinion ecosystem) plus a **provider-facing review workspace** that handles the human-in-the-loop hand-off.
+The MCP is the substantive deliverable — invokable by any agent in the Prompt Opinion ecosystem. A thin **provider-facing review workspace** ships alongside as a reference consumer for the human-in-the-loop hand-off.
+
+## Try it
+
+- **Demo video** — <https://youtu.be/S1mlkVjZD2s>
+- **Marketplace listing** — <https://app.promptopinion.ai/marketplace/mcp/019df448-2990-7148-981a-72ebf813006b>
+- **MCP endpoint** (Streamable HTTP, register under *Configuration → MCP Servers*) — `https://anamnesis-demo.fly.dev/mcp`
+- **Review workspace** — <https://anamnesis-demo.fly.dev>
 
 ## How it works
 
@@ -16,7 +23,8 @@ See [Architecture.md](Architecture.md) for the system shape and [PIPELINE.md](PI
 
 ## What we built
 
-- **MCP server** — twelve tools covering patient context, augmentation proposals (chart-resident and inline notes), run status polling, proposal listing and full-detail retrieval, terminology code search across SNOMED / RxNorm / LOINC / ICD-10, and proposal lifecycle (accept / reject / reopen / edit). Streamable HTTP at `/mcp`. SHARP-aware. Pipeline runs asynchronously — the tool returns a workspace link immediately and the frontend shows live stage-by-stage progress. The MCP is self-sufficient: a chat-only agent can list, drill into, code-shop, edit, and accept without ever opening the review UI.
+- **MCP server** — twelve tools covering patient context, augmentation proposals, run status polling, proposal listing and full-detail retrieval, terminology code search across SNOMED / RxNorm / LOINC / ICD-10, and proposal lifecycle (accept / reject / reopen / edit). Streamable HTTP at `/mcp`. SHARP-aware. Pipeline runs asynchronously — the tool returns a workspace link immediately and the frontend shows live stage-by-stage progress. The MCP is self-sufficient: a chat-only agent can list, drill into, code-shop, edit, and accept without ever opening the review UI.
+- **Two input paths, one pipeline.** `ProposeAugmentations` runs against chart-resident `DocumentReference`s pulled via SHARP. `ProposeAugmentationsFromNotes` runs against any text the agent has in hand — extracted PDFs, faxed referrals, outside-clinic notes, emails, mid-encounter transcripts. Inline source text only enters the chart on accept, minted as a US Core `DocumentReference` in the same transaction Bundle as the derived finding.
 - **Augmentation pipeline** — six stages plus a per-doc input guardrail (deterministic + `gpt-5.4-nano`), dual-coded terminology against 1M+ SNOMED / ICD-10 / LOINC / RxNorm concepts via FAISS, deterministic chart reconciliation with LLM adjudication only for ambiguous cases.
 - **Review workspace** — Next.js deep-link UI showing source notes, the chart slice, classification, confidence breakdown, and accept / edit / reject actions. Streaming chat assistant per run.
 - **Eval corpus + benchmark runner** — 18 multi-source clinical notes × 13 patient charts × 77 labeled facts, with multi-run accuracy / consistency / provenance reporting.
@@ -124,9 +132,3 @@ anamnesis/
 - [Architecture.md](Architecture.md) — system shape, MCP contract, persistence, frontend, contracts, out-of-scope
 - [PIPELINE.md](PIPELINE.md) — six-stage augmentation pipeline + write-back, confidence scoring
 - [benchmarks/eval-corpus-v1/README.md](benchmarks/eval-corpus-v1/README.md) — eval corpus design, label schema, reproducibility
-
-## Links
-
-- Hackathon: <https://healthcareagents.devpost.com>
-- SHARP-on-MCP spec: <https://sharponmcp.com>
-- Reference MCP: <https://github.com/darena-solutions/darena-health-community-mcp>
