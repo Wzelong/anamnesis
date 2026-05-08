@@ -122,11 +122,12 @@ Indexes and the embedding model load lazily on first use, and backend startup ru
 
 **Per candidate flow:**
 
-1. **US Core short-circuit.** Observations matching known vital signs or smoking status get fixed LOINC codes instantly — no vector search, no LLM call. BP → 85354-9, tobacco → 72166-2, body weight → 29463-7, etc.
-2. **Cache check** by `(PROMPT_VERSION, normalized_term, code_system)`. Hits return immediately.
-3. **Vector search** top-10 via FAISS inner product (cosine on unit vectors).
-4. **LLM CodeSelector** picks the best code from the candidate list, or returns a `refined_search_term` for retry. Max 1 refinement retry.
-5. **Fallback:** text-only coding `[{"text": term}]` if all attempts fail.
+1. **Fixed-code short-circuit.** Observations matching known vital signs or smoking status get fixed LOINC codes instantly (BP → 85354-9, tobacco → 72166-2, body weight → 29463-7, etc.). FamilyMemberHistory relationship gets a fixed v3-RoleCode (`father→FTH`, `mother→MTH`, …). No vector search, no LLM.
+2. **Search-term extraction.** Per resource type, extract one or more `(term, [systems])` jobs from the item (Condition/MedicationRequest/Procedure → name; AllergyIntolerance → substance + reaction separately; FamilyMemberHistory → each `conditions[].name` separately).
+3. **Query-variant expansion.** For each term, generate up to ~7 variants: original, strip laterality (`left/right/bilateral`), strip trailing parens, strip dose tokens (`10 mg`, `5 mcg`, …), strip leading severity (`severe/moderate/mild/acute/chronic/...`), strip trailing qualifiers (`NOS`, `unspecified`), and abbreviation expansion via a built-in map (`htn→hypertension`, `dm2→type 2 diabetes mellitus`, `cad→coronary artery disease`, ~25 entries).
+4. **Batched embedding + FAISS.** All variants across all jobs collected into one set, encoded in a single SapBERT call. Per job, each variant queries FAISS top-5; results merged by code keeping max score, re-ranked, kept top-10. Inner-product on unit vectors = cosine.
+5. **LLM CodeSelector.** Picks the best code from the top-10, or returns a `refined_search_term` for one retry (re-embed → re-search → re-select).
+6. **Fallback.** Text-only coding `[{"text": term}]` if all attempts fail.
 
 **Resource → code system routing:**
 
@@ -139,9 +140,11 @@ Indexes and the embedding model load lazily on first use, and backend startup ru
 | AllergyIntolerance | SNOMED | |
 | FamilyMemberHistory | SNOMED | Each condition coded separately |
 
-All candidates processed in parallel via `asyncio.gather`. Cached by `(term, code_system)` so re-runs are free.
+All candidates processed in parallel via `asyncio.gather`; within a candidate, every `(term, system)` pair runs as its own task in parallel too.
 
-Output: `StageFourOutput` — same `MergedCandidate` list with `coding` field injected into each item dict. Structure mirrors FHIR `CodeableConcept.coding[]`: `[{system, code, display}]`.
+**No term-level cache by design.** A `(term, system) → code` cache could silently re-apply a code that a clinician corrected via the HITL review surface, so it was removed in favor of correctness. With model + indexes warm, the full stage runs in ~6–7s for 50 candidates — the latency cost of skipping the cache is acceptable.
+
+Output: `StageFourOutput` — same `MergedCandidate` list with `coding` field injected into each item dict. Structure mirrors FHIR `CodeableConcept.coding[]`: `[{system, code, display}]`. AllergyIntolerance also writes `reaction_coding` separately; FamilyMemberHistory writes per-condition `conditions[i].coding`.
 
 ## Stage 5 — Reconcile vs existing chart (`backend/core/reconcile.py`)
 
@@ -336,6 +339,6 @@ The tier tells the clinician *how much attention* to pay. The flags tell them *w
 - **Sentence numbers are the universal address.** Every LLM call references sentences by `[N]`; source spans are derived from `sentence_positions`.
 - **Two-tier model routing.** Cheap model for scan/parse/clean; stronger model reserved for ambiguous reconciliation calls. Configurable per call.
 - **Pluggable terminology + embeddings.** No vendor endpoint is hardcoded.
-- **Cache by `(note_hash, resource_type)` and `(term, code_system)`.** Dev re-runs are free; production gets idempotency for retries.
+- **Stage-2 extraction is cached by `(note_hash, model, prompt_version)`** so dev re-runs over the same notes are free. Stage 4 (terminology coding) is intentionally **not** cached — a stale cache could silently re-apply a code that a clinician corrected via HITL.
 - **Provenance is non-negotiable.** A proposal without `source_refs` is a bug; a write without a `Provenance` resource is a bug.
 - **Nothing writes silently.** Stages 0–7 never touch the FHIR server; only Stage 8 does, and only on explicit accept.
