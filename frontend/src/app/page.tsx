@@ -16,7 +16,7 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty"
 
-const MCP_URL = process.env.NEXT_PUBLIC_MCP_URL ?? "https://ogle-spinach-splendor.ngrok-free.dev/mcp"
+const MCP_URL = process.env.NEXT_PUBLIC_MCP_URL ?? "https://anamnesis-demo.fly.dev/mcp"
 
 function GettingStarted() {
   const [copied, setCopied] = useState(false)
