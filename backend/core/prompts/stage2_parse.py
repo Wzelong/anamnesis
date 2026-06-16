@@ -83,6 +83,17 @@ Certainty
 - probable: strongly implied but not explicit ("consistent with", "likely", continuation of known condition).
 - uncertain: hedged, vague, or secondhand ("? possible", "patient reports", "unconfirmed", "rule out").
 
+Code search queries
+- Emit `code_queries`: 2-4 short search strings that retrieve this concept from a keyword-based medical terminology (SNOMED, ICD-10). Phrase them the way the terminology names concepts, not the way the note abbreviates.
+- Expand abbreviations to standard nomenclature (HFrEF -> "systolic heart failure", GERD -> "gastroesophageal reflux disease", CAD -> "coronary artery disease").
+- Drop modifiers that derail keyword match but not the concept: laterality, vessel or lesion counts, severity adjectives, "NOS", "unspecified".
+- Keep modifiers that change the code: type 1 vs type 2, acute vs chronic, primary vs secondary.
+- The LAST query MUST be the bare core concept: the head noun(s) with ALL qualifiers stripped (cause, "due to"/"-induced", onset, site, severity, count), as a retrieval floor. Terminology titles rarely contain these qualifiers, so a stripped fallback is what actually matches:
+  - "stable angina pectoris in the setting of CAD" -> last query "angina pectoris"
+  - "post-stroke fatigue" -> last query "fatigue"
+  - "ACE-inhibitor-induced cough" -> last query "cough"
+- Order from the most precise terminology phrasing to that barest core concept. Never include codes.
+
 Stop
 Return the structured output. Do not deduplicate — the cleaner handles that.
 """
@@ -175,6 +186,11 @@ Certainty
 - probable: value implied or approximate ("elevated blood pressure", "heart rate in the 70s").
 - uncertain: reported secondhand or hedged ("patient states occasional alcohol use", "per outside records").
 
+Code search queries
+- Emit `code_queries`: 2-4 short search strings that retrieve this observation from a keyword-based terminology (LOINC, SNOMED). Phrase them as the terminology names the analyte plus specimen or system: "Hemoglobin A1c", "LDL cholesterol", "Troponin I cardiac".
+- Expand abbreviations (A1c -> "hemoglobin A1c"); drop values, units, and qualifiers. Keep specimen or method when it changes the code.
+- The LAST query MUST be the bare analyte/finding with qualifiers stripped, as a retrieval floor ("LDL cholesterol, fasting" -> "LDL cholesterol"). Never include codes.
+
 Stop
 Return the structured output.
 """
@@ -247,6 +263,11 @@ Certainty
 - probable: medication mentioned in context implying use ("on aspirin", "home medications include").
 - uncertain: dose or drug unclear ("started on some beta blocker", "may have been on a statin").
 
+Code search queries
+- Emit `code_queries`: 2-4 search strings to retrieve this drug from RxNorm. Use the ingredient alone and the ingredient + strength; drop route, frequency, and brand.
+  - "lisinopril 20 mg oral tablet" -> ["lisinopril 20 mg", "lisinopril"]
+- Never include codes.
+
 Stop
 Return the structured output.
 """
@@ -297,6 +318,11 @@ Certainty
 - probable: procedure referenced but details limited ("had a scan", "imaging consistent with").
 - uncertain: procedure mentioned vaguely or from outside records ("reportedly had surgery", "per outside records").
 
+Code search queries
+- Emit `code_queries`: 2-4 search strings that retrieve this procedure from SNOMED, phrased the way the terminology names it ("Left heart catheterization", "Computed tomography of abdomen").
+- Expand abbreviations; drop laterality and incidental qualifiers; keep the core procedure.
+- The LAST query MUST be the bare procedure name with qualifiers stripped, as a retrieval floor ("diagnostic left heart catheterization" -> "heart catheterization"). Never include codes.
+
 Stop
 Return the structured output.
 """
@@ -331,6 +357,11 @@ Certainty
 - probable: reported allergy with plausible history ("patient reports rash with amoxicillin as a child").
 - uncertain: vague or secondhand ("thinks they might be allergic", "family says patient had a reaction").
 
+Code search queries
+- Emit `substance_queries`: 2-4 search strings for the substance, phrased as a terminology names it ("penicillin", "penicillin antibiotic"; "sulfonamide", "sulfa"). The LAST must be the bare substance class/ingredient with brand and formulation stripped, as a retrieval floor ("amoxicillin-clavulanate" -> "amoxicillin").
+- Emit `reaction_queries`: 2-4 search strings for the reaction when one is stated ("anaphylaxis", "urticaria"); leave empty if no reaction is given.
+- Expand abbreviations; drop non-essential modifiers; never include codes.
+
 Stop
 Return the structured output.
 """
@@ -359,6 +390,9 @@ Certainty
 - definite: specific relative with specific condition ("father had MI at age 52").
 - probable: relative and condition named but details vague ("family history of heart disease").
 - uncertain: secondhand or vague ("patient thinks a grandparent may have had diabetes").
+
+Code search queries
+- For each entry in `conditions`, emit `queries`: 2-4 search strings that retrieve that condition from SNOMED, phrased the way the terminology names it (expand abbreviations, drop severity and laterality, keep type and acuity). The LAST must be the bare core concept with all qualifiers stripped ("early-onset coronary artery disease" -> "coronary artery disease"), as a retrieval floor. Never include codes.
 
 Stop
 Return the structured output.

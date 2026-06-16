@@ -44,5 +44,8 @@
       "Bash(.venv/bin/python *)",
       "Bash(backend/.venv/bin/python *)"
     ]
+  },
+  "enabledPlugins": {
+    "mcp-apps@mcp-apps": true
   }
 }

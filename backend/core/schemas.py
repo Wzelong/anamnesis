@@ -48,6 +48,7 @@ class ConditionItem(_Strict):
     certainty: Certainty = "probable"
     category: Literal["diagnosis", "problem"]
     name: str
+    code_queries: list[str] = Field(default_factory=list)
     severity: Literal["mild", "moderate", "severe"] | None = None
     onset: str | None = None
     body_site: list[str] | None = None
@@ -65,6 +66,7 @@ class ObservationItem(_Strict):
     certainty: Certainty = "probable"
     name: str
     full_name: str | None = None
+    code_queries: list[str] = Field(default_factory=list)
     value: str
     unit: str | None = None
     codeset_hint: Literal["LOINC", "SNOMED"] | None = None
@@ -88,6 +90,7 @@ class MedicationItem(_Strict):
     reasoning: str = ""
     certainty: Certainty = "probable"
     name: str
+    code_queries: list[str] = Field(default_factory=list)
     status: Literal[
         "active", "on-hold", "cancelled", "completed", "stopped", "draft", "unknown"
     ]
@@ -109,6 +112,7 @@ class ProcedureItem(_Strict):
     reasoning: str = ""
     certainty: Certainty = "probable"
     name: str
+    code_queries: list[str] = Field(default_factory=list)
     status: Literal[
         "preparation", "in-progress", "not-done", "on-hold",
         "stopped", "completed", "entered-in-error", "unknown",
@@ -129,9 +133,11 @@ class AllergyItem(_Strict):
     reasoning: str = ""
     certainty: Certainty = "probable"
     substance: str
+    substance_queries: list[str] = Field(default_factory=list)
     category: Literal["food", "medication", "environment", "biologic"] | None = None
     criticality: Literal["low", "high", "unable-to-assess"] | None = None
     reaction: str | None = None
+    reaction_queries: list[str] = Field(default_factory=list)
     severity: Literal["mild", "moderate", "severe"] | None = None
     onset_age: str | None = None
     exposure_route: str | None = None
@@ -146,6 +152,7 @@ class AllergyItemList(_Strict):
 
 class FamilyMemberCondition(_Strict):
     name: str
+    queries: list[str] = Field(default_factory=list)
     onset_age: str | None = None
     outcome: str | None = None
 

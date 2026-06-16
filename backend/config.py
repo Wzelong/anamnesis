@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     openai_api_key: str = ""
+    umls_api_key: str = ""
     openai_model_fast: str = "gpt-5.4-mini"
     openai_model_smart: str = "gpt-5.5"
     openai_model_nano: str = "gpt-5.4-nano"
@@ -13,7 +14,9 @@ class Settings(BaseSettings):
     stage2_cache: bool = True
     stage2_max_concurrent: int = 50
     frontend_base_url: str = "http://localhost:3042"
-    warmup_coding_on_startup: bool = True
+    # "api" = live terminology APIs (default); "faiss" = graduated local index path.
+    coding_retriever: str = "api"
+    warmup_coding_on_startup: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

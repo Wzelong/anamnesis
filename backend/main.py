@@ -27,6 +27,9 @@ log = logging.getLogger("anamnesis")
 
 
 def _warmup_coding() -> None:
+    if settings.coding_retriever != "faiss":
+        log.info("Coding retriever is '%s'; skipping FAISS warmup.", settings.coding_retriever)
+        return
     if not settings.warmup_coding_on_startup:
         log.info("Coding warmup disabled.")
         return
