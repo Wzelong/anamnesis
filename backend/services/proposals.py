@@ -641,7 +641,23 @@ async def _update_progress(stage_name: str, detail: dict | None = None) -> None:
         await session.commit()
 
 
-async def _execute_stages(patient_context, documents: list[Document]):
+async def _execute_stages(
+    patient_context,
+    documents: list[Document],
+    *,
+    progress_cb=None,
+    persist_guardrail: bool = True,
+    use_cache: bool = True,
+):
+    """Run Stages (guardrail → assemble) and return the assembled proposals.
+
+    Pure computation: it persists nothing itself. `progress_cb(stage, detail)`,
+    if given, replaces the DB-backed `_update_progress` sink (the stateless
+    path routes stage progress to the MCP request instead). When
+    `persist_guardrail` is False, the guardrail outcome is not written to the DB.
+    When `use_cache` is False, no extracted clinical data touches disk — the
+    stateless path runs entirely in memory (no-PHI-at-rest contract).
+    """
     from openai import AsyncOpenAI
 
     from config import settings
@@ -653,51 +669,58 @@ async def _execute_stages(patient_context, documents: list[Document]):
     from core.preprocess import preprocess_documents
     from core.reconcile import reconcile
 
+    async def emit(stage: str, detail: dict | None = None) -> None:
+        if progress_cb is not None:
+            await progress_cb(stage, detail)
+        else:
+            await _update_progress(stage, detail)
+
     client = AsyncOpenAI(api_key=settings.openai_api_key)
     model = settings.openai_model_fast
     cache_dir = Path(__file__).resolve().parent.parent / ".cache"
 
-    await _update_progress("guardrail")
-    if settings.doc_guardrail_enabled and documents:
-        guardrail_cache = JsonCache(cache_dir / "doc_guardrail")
-        documents, rejected = await screen_documents(
-            documents, client, model=settings.openai_model_nano, cache=guardrail_cache,
-        )
-        await _record_guardrail_outcome(documents, rejected)
-    await _update_progress("guardrail", {"documents_accepted": len(documents)})
+    def _cache(name: str) -> "JsonCache | None":
+        return JsonCache(cache_dir / name) if use_cache else None
 
-    await _update_progress("stage1_preprocess")
+    await emit("guardrail")
+    if settings.doc_guardrail_enabled and documents:
+        documents, rejected = await screen_documents(
+            documents, client, model=settings.openai_model_nano, cache=_cache("doc_guardrail"),
+        )
+        if persist_guardrail:
+            await _record_guardrail_outcome(documents, rejected)
+    await emit("guardrail", {"documents_accepted": len(documents)})
+
+    await emit("stage1_preprocess")
     notes = preprocess_documents(documents)
     total_sentences = sum(len(n.sentences) for n in notes)
-    await _update_progress("stage1_preprocess", {"sentences": total_sentences})
+    await emit("stage1_preprocess", {"sentences": total_sentences})
 
-    await _update_progress("stage2_extract")
-    stage2_cache = JsonCache(cache_dir / "stage2_output")
-    stage2 = await extract_candidates_batch(notes, client, model=model, cache=stage2_cache)
+    await emit("stage2_extract")
+    stage2 = await extract_candidates_batch(notes, client, model=model, cache=_cache("stage2_output"))
     total_candidates = sum(
         sum(len(v) for v in s.candidates.values()) for s in stage2
     )
-    await _update_progress("stage2_extract", {"candidates": total_candidates})
+    await emit("stage2_extract", {"candidates": total_candidates})
 
-    await _update_progress("stage3_merge")
-    stage3_cache = JsonCache(cache_dir / "stage3")
-    stage3 = await merge_across_notes(stage2, client, model=model, cache=stage3_cache)
-    await _update_progress("stage3_merge", {"candidates": len(stage3.candidates)})
+    await emit("stage3_merge")
+    stage3 = await merge_across_notes(stage2, client, model=model, cache=_cache("stage3"))
+    await emit("stage3_merge", {"candidates": len(stage3.candidates)})
 
-    await _update_progress("stage4_code")
+    await emit("stage4_code")
     stage4 = await code_candidates(stage3, client, model=model)
-    await _update_progress("stage4_code", {"coded": len(stage4.candidates)})
+    await emit("stage4_code", {"coded": len(stage4.candidates)})
 
-    await _update_progress("stage5_reconcile")
+    await emit("stage5_reconcile")
     stage5 = await reconcile(stage4, patient_context, client, model=model)
     verdicts: dict[str, int] = {}
     for r in stage5.results:
         verdicts[r.classification] = verdicts.get(r.classification, 0) + 1
-    await _update_progress("stage5_reconcile", verdicts)
+    await emit("stage5_reconcile", verdicts)
 
-    await _update_progress("stage6_assemble")
+    await emit("stage6_assemble")
     result = assemble_proposals(stage5, notes, patient_context)
-    await _update_progress("stage6_assemble", {"proposals": len(result.proposals)})
+    await emit("stage6_assemble", {"proposals": len(result.proposals)})
     return result
 
 
@@ -979,3 +1002,215 @@ async def edit_proposal(
     await session.commit()
 
     return _record_to_dict(record, full=True)
+
+
+# ---------------------------------------------------------------------------
+# Stateless path (MCP App)
+#
+# Pure-function variants for the in-host review app: no PHI is persisted.
+# Proposals + source notes are returned to the caller and held briefly in an
+# in-process TTL cache; the durable store is FHIR (resource + Provenance).
+# ---------------------------------------------------------------------------
+
+async def run_extraction_ephemeral(
+    patient_id: str | None,
+    *,
+    fhir_client=None,
+    inline_notes: list[str] | None = None,
+    note_type: str = "External record",
+    note_date: str | None = None,
+    tenant_key: str | None = None,
+    triggered_by: str = "mcp:app",
+    progress_cb=None,
+) -> dict:
+    from core import telemetry
+    from services import session_cache
+
+    patient_context, chart_docs = await _load_source(patient_id, fhir_client=fhir_client)
+    documents = (
+        _documents_from_notes(inline_notes, note_type, note_date)
+        if inline_notes else chart_docs
+    )
+    effective_patient_id = patient_context.patient["id"]
+
+    run_id = short_id("run")
+    await telemetry.start_run(
+        run_id=run_id,
+        patient_id=None,
+        patient_name=None,
+        triggered_by=triggered_by,
+        meta={"tenant": tenant_key, "doc_count": len(documents)},
+    )
+    try:
+        stage6 = await _execute_stages(
+            patient_context, documents,
+            progress_cb=progress_cb, persist_guardrail=False, use_cache=False,
+        )
+    except Exception as exc:
+        await telemetry.finish_run("failed", error=str(exc))
+        raise
+    run_ctx = telemetry.current_run()
+    stats = _ephemeral_stats(run_ctx, len(documents))
+    await telemetry.finish_run("completed")
+
+    proposals = [
+        _record_to_dict(_proposal_to_record(p, run_id, effective_patient_id), full=True)
+        for p in stage6.proposals
+    ]
+    session_cache.put(run_id, {
+        "patient_id": effective_patient_id,
+        "documents": {d.id: d for d in documents},
+        "proposals": {p["id"]: p for p in proposals},
+    })
+
+    return {
+        "run_id": run_id,
+        "patient_id": effective_patient_id,
+        "documents": [d.__dict__ for d in documents],
+        "proposals": proposals,
+        "stats": stats,
+    }
+
+
+def _ephemeral_stats(run_ctx, doc_count: int) -> dict:
+    """Duration + cost for an ephemeral run, read from the telemetry buffer."""
+    duration_ms: int | None = None
+    total_cost = 0.0
+    if run_ctx is not None:
+        for call in run_ctx.call_buffer:
+            try:
+                total_cost += float(call.get("usd_cost") or 0)
+            except (TypeError, ValueError):
+                pass
+        finished = max(
+            (c.get("finished_at") for c in run_ctx.call_buffer if c.get("finished_at")),
+            default=None,
+        )
+        if finished and run_ctx.started_at:
+            duration_ms = int((finished - run_ctx.started_at).total_seconds() * 1000)
+    return {
+        "duration_ms": duration_ms,
+        "total_documents": doc_count,
+        "total_cost_usd": round(total_cost, 4),
+    }
+
+
+async def accept_augmentation(
+    *,
+    fhir_client,
+    reviewer: ReviewerIdentity | None,
+    patient_id: str | None,
+    run_id: str | None = None,
+    proposal_id: str | None = None,
+    resource: dict | None = None,
+    citations: list[dict] | None = None,
+    classification: str = "NEW",
+    supersedes: list[str] | None = None,
+) -> dict:
+    """Write an accepted augmentation to FHIR with Provenance. Stores no PHI.
+
+    Resolves the proposal from the in-process cache (run_id + proposal_id) when
+    available, else from the supplied payload. Records a non-PHI DecisionAudit row.
+    """
+    from fhir.write import (
+        AugmentationProposal as WriteProposal,
+        Citation,
+        apply_augmentation,
+        build_provenance,
+    )
+    from services import session_cache
+
+    inline_docs: dict[str, Document] = {}
+    if run_id and proposal_id:
+        cached = session_cache.get(run_id)
+        if cached and proposal_id in cached["proposals"]:
+            p = cached["proposals"][proposal_id]
+            resource = resource or p["resource"]
+            citations = citations or p["citations"]
+            classification = p.get("classification", classification)
+            supersedes = supersedes if supersedes is not None else p.get("supersedes", [])
+            inline_docs = cached.get("documents", {})
+
+    if resource is None:
+        raise ValueError("resource not found in cache and not supplied")
+    citations = citations or []
+    supersedes = supersedes or []
+
+    built: list[Citation] = []
+    for c in citations:
+        doc_id = c["document_id"]
+        inline_doc = inline_docs.get(doc_id) if doc_id.startswith(INLINE_DOC_PREFIX) else None
+        built.append(Citation(
+            document_ref=f"DocumentReference/{doc_id}",
+            start=c["char_start"],
+            end=c["char_end"],
+            text=c["text"],
+            inline_document=inline_doc,
+        ))
+
+    write_result = None
+    local_id = proposal_id or short_id("aug")
+    if fhir_client:
+        wp = WriteProposal(
+            classification=classification,
+            resource=resource,
+            citations=built,
+            supersedes_ref=supersedes[0] if supersedes else None,
+        )
+        result = await apply_augmentation(
+            fhir_client, wp, attester=reviewer, patient_id=patient_id,
+        )
+        write_result = {
+            "resource_ref": result.resource_ref,
+            "provenance_ref": result.provenance_ref,
+            "superseded_ref": result.superseded_ref,
+        }
+        target_urn = result.resource_ref or f"urn:local:{local_id}"
+    else:
+        target_urn = f"urn:local:{local_id}"
+
+    activity_code = "UPDATE" if classification == "UPDATING" else "CREATE"
+    provenance_resource = build_provenance(
+        target_urn, built, activity_code=activity_code, attester=reviewer,
+    )
+
+    await record_decision(
+        action="accept",
+        run_id=run_id,
+        resource_type=resource.get("resourceType"),
+        reviewer=reviewer.display if reviewer else None,
+        resource_ref=write_result["resource_ref"] if write_result else None,
+    )
+
+    return {
+        "id": local_id,
+        "status": "accepted",
+        "write_result": write_result,
+        "provenance_resource": provenance_resource,
+    }
+
+
+async def record_decision(
+    *,
+    action: str,
+    run_id: str | None,
+    resource_type: str | None = None,
+    reviewer: str | None = None,
+    resource_ref: str | None = None,
+    reason: str | None = None,
+) -> None:
+    # `reason` is clinician free-text (potential PHI) — accepted for the FHIR
+    # trail but intentionally NOT persisted here (no-PHI-at-rest contract).
+    _ = reason
+    from db import AsyncSessionLocal, DecisionAudit
+    async with AsyncSessionLocal() as session:
+        session.add(DecisionAudit(
+            id=short_id("dec"),
+            run_id=run_id,
+            action=action,
+            resource_type=resource_type,
+            reviewer=reviewer,
+            resource_ref=resource_ref,
+            at=datetime.now(timezone.utc),
+        ))
+        await session.commit()

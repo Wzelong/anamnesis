@@ -1,0 +1,45 @@
+import type { App } from "@modelcontextprotocol/ext-apps"
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
+
+export interface ProgressEvent {
+  progress: number
+  total?: number
+  message?: string
+}
+
+export function parseStructured<T>(res: CallToolResult): T | null {
+  if (res.structuredContent) return res.structuredContent as T
+  const text = (res.content?.[0] as { text?: string } | undefined)?.text
+  if (!text) return null
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    return null
+  }
+}
+
+export function resultText(res: CallToolResult): string {
+  const c = res.content?.[0] as { text?: string } | undefined
+  return c?.text ?? ""
+}
+
+export async function callTool(
+  app: App,
+  name: string,
+  args: Record<string, unknown> = {},
+  onprogress?: (p: ProgressEvent) => void,
+): Promise<CallToolResult> {
+  return app.callServerTool(
+    { name, arguments: args },
+    onprogress ? { onprogress: (p) => onprogress(p as unknown as ProgressEvent) } : undefined,
+  )
+}
+
+export async function setDisplayMode(app: App, fullscreen: boolean): Promise<string> {
+  try {
+    const r = await app.requestDisplayMode({ mode: fullscreen ? "fullscreen" : "inline" })
+    return r.mode
+  } catch {
+    return "inline"
+  }
+}

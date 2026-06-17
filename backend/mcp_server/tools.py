@@ -4,7 +4,7 @@ import json
 
 from mcp.server.fastmcp import Context
 
-from context.sharp import get_fhir_context, get_patient_id
+from context.sharp import get_fhir_context, get_patient_id, get_tenant_key
 from db import AsyncSessionLocal
 from fhir.client import FhirClient
 from fhir.read import read_documents, read_patient_context
@@ -359,8 +359,16 @@ async def search_terminology_tool(
     if top_k <= 0 or top_k > 50:
         raise ValueError("top_k must be between 1 and 50")
 
-    from core import coding
-    results = await asyncio.to_thread(coding.search_code, query.strip(), norm_system, top_k)
+    from config import settings
+    from core.retrieval import ApiRetriever, FaissRetriever
+
+    retriever = FaissRetriever() if settings.coding_retriever == "faiss" else ApiRetriever()
+    try:
+        results = await retriever.search(query.strip(), norm_system, top_k)
+    finally:
+        client = getattr(retriever, "_client", None)
+        if client is not None:
+            await client.aclose()
 
     payload = [
         {"system": norm_system, "code": r.code, "display": r.display, "score": round(r.score, 4), "rank": r.rank}
@@ -417,3 +425,144 @@ async def edit_proposal_tool(proposal_id: str, updated_resource: str, ctx: Conte
         result = await proposal_svc.edit_proposal(proposal_id, resource, session)
 
     return f"Updated {proposal_id}. Resource type: {result['resource_type']}, display: {result['display_label']}"
+
+
+# ---------------------------------------------------------------------------
+# Stateless path (MCP App)
+#
+# The server acts only on accept; everything else is a pure function or
+# client-side. No PHI is persisted on this path.
+# ---------------------------------------------------------------------------
+
+_EXTRACTION_STAGES = [
+    "guardrail",
+    "stage1_preprocess",
+    "stage2_extract",
+    "stage3_merge",
+    "stage4_code",
+    "stage5_reconcile",
+    "stage6_assemble",
+]
+
+
+async def review_launcher_tool(ctx: Context = None) -> dict:
+    """Render the in-host review app and seed its patient header.
+
+    Returns immediately (one Patient read); the app then drives RunExtraction.
+    """
+    fhir = get_fhir_context(ctx)
+    patient_id = get_patient_id(ctx)
+    if not patient_id:
+        raise ValueError("No patient id in SHARP context")
+
+    name = None
+    birth_date = None
+    if fhir:
+        patient = await FhirClient(fhir.url, fhir.token).read(f"Patient/{patient_id}")
+        if patient:
+            np = (patient.get("name") or [{}])[0]
+            given = " ".join(np.get("given") or [])
+            family = np.get("family") or ""
+            name = f"{given} {family}".strip() or None
+            birth_date = patient.get("birthDate")
+
+    return {"patient_id": patient_id, "patient_name": name, "birth_date": birth_date}
+
+
+async def run_extraction_tool(
+    notes: list[str] | None = None,
+    note_type: str = "External record",
+    note_date: str | None = None,
+    ctx: Context = None,
+) -> dict:
+    """Run the augmentation pipeline and return proposals + source notes.
+
+    Streams stage progress over the request; persists no PHI. With `notes`,
+    runs against the supplied text; otherwise against chart-resident notes.
+    """
+    patient_id = get_patient_id(ctx)
+    if not patient_id:
+        raise ValueError("No patient id in SHARP context")
+    fhir_client = _get_fhir_client(ctx)
+    tenant_key = get_tenant_key(ctx)
+
+    total = len(_EXTRACTION_STAGES)
+
+    async def progress_cb(stage: str, detail: dict | None) -> None:
+        if ctx is None:
+            return
+        try:
+            idx = _EXTRACTION_STAGES.index(stage) + 1
+        except ValueError:
+            idx = 0
+        await ctx.report_progress(progress=idx, total=total, message=stage)
+
+    return await proposal_svc.run_extraction_ephemeral(
+        patient_id,
+        fhir_client=fhir_client,
+        inline_notes=notes or None,
+        note_type=note_type,
+        note_date=note_date,
+        tenant_key=tenant_key,
+        progress_cb=progress_cb,
+    )
+
+
+async def accept_augmentation_tool(
+    run_id: str | None = None,
+    proposal_id: str | None = None,
+    resource: str | None = None,
+    citations: str | None = None,
+    classification: str = "NEW",
+    supersedes: list[str] | None = None,
+    ctx: Context = None,
+) -> str:
+    """Accept an augmentation and write it to FHIR with Provenance.
+
+    Pass run_id + proposal_id to resolve from the in-session cache, or pass the
+    full resource (+citations) JSON as a fallback. Stores no PHI.
+    """
+    from context.sharp import get_clinician_identity
+
+    patient_id = get_patient_id(ctx)
+    fhir_client = _get_fhir_client(ctx)
+    identity = get_clinician_identity(ctx) if ctx else None
+
+    resource_obj = json.loads(resource) if resource else None
+    citations_obj = json.loads(citations) if citations else None
+
+    result = await proposal_svc.accept_augmentation(
+        fhir_client=fhir_client,
+        reviewer=identity,
+        patient_id=patient_id,
+        run_id=run_id,
+        proposal_id=proposal_id,
+        resource=resource_obj,
+        citations=citations_obj,
+        classification=classification,
+        supersedes=supersedes,
+    )
+
+    wr = result.get("write_result")
+    if wr:
+        return f"Accepted {result['id']}. Written to FHIR: {wr['resource_ref']}, provenance: {wr['provenance_ref']}"
+    return f"Accepted {result['id']}. FHIR write-back deferred (no FHIR connection)."
+
+
+async def reject_augmentation_tool(
+    run_id: str | None = None,
+    proposal_id: str | None = None,
+    resource_type: str | None = None,
+    ctx: Context = None,
+) -> str:
+    """Record a non-PHI reject decision. The proposal is dropped client-side."""
+    from context.sharp import get_clinician_identity
+
+    identity = get_clinician_identity(ctx) if ctx else None
+    await proposal_svc.record_decision(
+        action="reject",
+        run_id=run_id,
+        resource_type=resource_type,
+        reviewer=identity.display if identity else None,
+    )
+    return f"Rejected {proposal_id or '(client-side)'}."

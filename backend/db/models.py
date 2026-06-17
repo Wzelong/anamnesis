@@ -94,3 +94,17 @@ class ReviewToken(Base):
     fhir_reference: Mapped[str | None] = mapped_column(String(256), nullable=True)
     expires_at: Mapped[datetime] = mapped_column(index=True)
     created_at: Mapped[datetime] = mapped_column()
+
+
+class DecisionAudit(Base):
+    """Non-PHI audit of stateless-path decisions. The durable clinical audit is
+    the FHIR Provenance; this is a fast local trail (no patient id, no content)."""
+    __tablename__ = "decision_audit"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    run_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    action: Mapped[str] = mapped_column(String(16))
+    resource_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    reviewer: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    resource_ref: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    at: Mapped[datetime] = mapped_column()

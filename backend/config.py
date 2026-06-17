@@ -14,9 +14,16 @@ class Settings(BaseSettings):
     stage2_cache: bool = True
     stage2_max_concurrent: int = 50
     frontend_base_url: str = "http://localhost:3042"
+    # Public origin where the in-host React UI assets (review.js/review.css) are
+    # served from. PO's iframe is sandboxed (null origin), so the ui:// shell must
+    # load assets over an absolute URL — the ngrok/public host of this server.
+    app_assets_base_url: str = "http://localhost:8042"
     # "api" = live terminology APIs (default); "faiss" = graduated local index path.
     coding_retriever: str = "api"
     warmup_coding_on_startup: bool = False
+    # Expose the legacy DB-backed MCP tools (PHI-persisting). Off by default;
+    # enable for the standalone web-workspace deployment.
+    expose_legacy_tools: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

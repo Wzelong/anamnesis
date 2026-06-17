@@ -390,7 +390,13 @@ async def extract_candidates(
         cached = cache.get(_note_cache_key(note, model))
         if cached is not None:
             try:
-                return StageTwoOutput.from_json(cached)
+                out = StageTwoOutput.from_json(cached)
+                # Cache key is text-only, so a hit may carry a document_id from a
+                # prior run of the same note (e.g. demo bundle vs live FHIR).
+                # Rebind to the current note so citations resolve.
+                out.document_id = note.document_id
+                out.encounter_id = note.encounter_id
+                return out
             except (ValidationError, KeyError) as exc:
                 log.warning("stale cache entry for %s: %s", note.document_id, exc)
 
