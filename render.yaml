@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: anamnesis
+    runtime: python
+    plan: starter
+    rootDir: backend
+    buildCommand: pip install .
+    startCommand: python po_main.py
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: CODING_RETRIEVER
+        value: api
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: UMLS_API_KEY
+        sync: false

@@ -1,4 +1,7 @@
 """Application settings loaded from environment/.env via pydantic-settings."""
+import os
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,8 +19,9 @@ class Settings(BaseSettings):
     frontend_base_url: str = "http://localhost:3042"
     # Public origin where the in-host React UI assets (review.js/review.css) are
     # served from. PO's iframe is sandboxed (null origin), so the ui:// shell must
-    # load assets over an absolute URL — the ngrok/public host of this server.
-    app_assets_base_url: str = "http://localhost:8042"
+    # load assets over an absolute URL. Explicit env wins; else Render's injected
+    # RENDER_EXTERNAL_URL (prod); else localhost (dev). Resolved in the validator.
+    app_assets_base_url: str = ""
     # "api" = live terminology APIs (default); "faiss" = graduated local index path.
     coding_retriever: str = "api"
     warmup_coding_on_startup: bool = False
@@ -31,6 +35,14 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def _resolve_assets_base_url(self) -> "Settings":
+        if not self.app_assets_base_url:
+            self.app_assets_base_url = (
+                os.environ.get("RENDER_EXTERNAL_URL") or "http://localhost:8042"
+            )
+        return self
 
 
 settings = Settings()

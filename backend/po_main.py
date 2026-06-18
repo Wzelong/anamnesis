@@ -48,6 +48,12 @@ def _add_fhir_context_extension(mcp: FastMCP) -> None:
 mcp = FastMCP(name="Anamnesis", instructions="FHIR chart augmentation with human-in-the-loop review.")
 _add_fhir_context_extension(mcp)
 
+
+@mcp.custom_route("/healthz", methods=["GET"])
+async def _healthz(request):
+    from starlette.responses import JSONResponse
+    return JSONResponse({"status": "ok"})
+
 if _UI == "prefab":
     from mcp_server.prefab_review import review_app
     mcp.add_provider(review_app)
@@ -58,7 +64,7 @@ else:
 
 def main() -> None:
     import asyncio
-    port = int(os.environ.get("PO_PORT", "8042"))
+    port = int(os.environ.get("PORT") or os.environ.get("PO_PORT") or "8042")
     asyncio.run(init_db())
     print(f"Anamnesis ({_UI}/PO) at http://0.0.0.0:{port}/mcp — Ctrl+C to stop.")
     try:
