@@ -67,8 +67,6 @@ async def start_run(
     jsonl_dir: Path | None = None,
     regional: bool = False,
 ) -> RunContext:
-    from db import AsyncSessionLocal, PipelineRun
-
     directory = jsonl_dir or DEFAULT_JSONL_DIR
     directory.mkdir(parents=True, exist_ok=True)
 
@@ -81,18 +79,6 @@ async def start_run(
         jsonl_path=directory / f"{rid}.jsonl",
         regional=regional,
     )
-
-    async with AsyncSessionLocal() as session:
-        session.add(PipelineRun(
-            id=run.run_id,
-            patient_id=run.patient_id,
-            patient_name=patient_name,
-            triggered_by=run.triggered_by,
-            status="running",
-            started_at=run.started_at,
-            meta_json=json.dumps(meta, default=str) if meta else None,
-        ))
-        await session.commit()
 
     _append_jsonl(run.jsonl_path, {
         "event": "run_started",
@@ -108,23 +94,11 @@ async def start_run(
 
 
 async def finish_run(status: str = "success", *, error: str | None = None) -> None:
-    from sqlalchemy import update
-
-    from db import AsyncSessionLocal, PipelineRun
-
     run = _current_run.get()
     if run is None:
         return
 
     now = _now()
-    async with AsyncSessionLocal() as session:
-        await session.execute(
-            update(PipelineRun)
-            .where(PipelineRun.id == run.run_id)
-            .values(finished_at=now, status=status)
-        )
-        await session.commit()
-
     _append_jsonl(run.jsonl_path, {
         "event": "run_finished",
         "ts": now.isoformat(),

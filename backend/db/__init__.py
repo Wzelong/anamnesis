@@ -1,4 +1,4 @@
-from db.models import Base, DecisionAudit, PipelineRun
+from db.models import Base
 from db.session import AsyncSessionLocal, engine, get_session
 
 
@@ -10,8 +10,6 @@ async def init_db() -> None:
 __all__ = [
     "AsyncSessionLocal",
     "Base",
-    "DecisionAudit",
-    "PipelineRun",
     "engine",
     "get_session",
     "init_db",

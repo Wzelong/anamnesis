@@ -3,12 +3,12 @@
 No PHI is persisted. The pipeline runs in memory; proposals + source notes are
 returned to the caller and held briefly in an in-process TTL cache
 (`services.session_cache`). The durable store is FHIR (resource + Provenance).
-Only non-PHI telemetry (PipelineRun) and a DecisionAudit trail persist.
+No DB rows persist: telemetry is JSONL-only and decisions are logged (not stored).
 
 Entry points:
   * `run_extraction_ephemeral` — run the pipeline, return proposals + notes.
   * `accept_augmentation` — write an accepted proposal to FHIR with Provenance.
-  * `record_decision` — append a non-PHI DecisionAudit row.
+  * `record_decision` — emit a non-PHI structured log line.
 """
 from __future__ import annotations
 
@@ -382,7 +382,7 @@ async def accept_augmentation(
     """Write an accepted augmentation to FHIR with Provenance. Stores no PHI.
 
     Resolves the proposal from the in-process cache (run_id + proposal_id) when
-    available, else from the supplied payload. Records a non-PHI DecisionAudit row.
+    available, else from the supplied payload. Logs a non-PHI decision line.
     """
     from fhir.write import (
         AugmentationProposal as WriteProposal,
@@ -471,18 +471,11 @@ async def record_decision(
     resource_ref: str | None = None,
     reason: str | None = None,
 ) -> None:
-    # `reason` is clinician free-text (potential PHI) — accepted for the FHIR
-    # trail but intentionally NOT persisted here (no-PHI-at-rest contract).
+    # Non-PHI structured log only (no DB). The durable clinical record is the
+    # FHIR Provenance written on accept. `reason` is clinician free-text
+    # (potential PHI) and is intentionally not logged.
     _ = reason
-    from db import AsyncSessionLocal, DecisionAudit
-    async with AsyncSessionLocal() as session:
-        session.add(DecisionAudit(
-            id=short_id("dec"),
-            run_id=run_id,
-            action=action,
-            resource_type=resource_type,
-            reviewer=reviewer,
-            resource_ref=resource_ref,
-            at=datetime.now(timezone.utc),
-        ))
-        await session.commit()
+    log.info(
+        "decision action=%s run=%s resource_type=%s reviewer=%s ref=%s",
+        action, run_id, resource_type, reviewer, resource_ref,
+    )
