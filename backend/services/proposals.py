@@ -299,6 +299,8 @@ async def run_extraction_ephemeral(
     triggered_by: str = "mcp:app",
     progress_cb=None,
     gemini_api_key: str | None = None,
+    user_key: str | None = None,
+    workspace_id: str | None = None,
 ) -> dict:
     from core import telemetry
     from services import session_cache
@@ -327,8 +329,30 @@ async def run_extraction_ephemeral(
         await telemetry.finish_run("failed", error=str(exc))
         raise
     run_ctx = telemetry.current_run()
-    stats = _ephemeral_stats(run_ctx, len(documents))
+    agg = _run_aggregate(run_ctx, len(documents))
     await telemetry.finish_run("completed")
+
+    if user_key:
+        from config import settings
+        from services import usage
+        try:
+            await usage.record_run(
+                user_key=user_key, workspace_id=workspace_id,
+                model=settings.gemini_model_fast, triggered_by=triggered_by,
+                input_tokens=agg["input_tokens"], output_tokens=agg["output_tokens"],
+                reasoning_tokens=agg["reasoning_tokens"], cost_usd=agg["cost_usd"],
+                duration_ms=agg["duration_ms"], doc_count=agg["doc_count"],
+            )
+        except Exception as exc:  # ledger is best-effort; never fail a run on it
+            log.warning("usage ledger write failed: %s", exc)
+
+    stats = {
+        "duration_ms": agg["duration_ms"],
+        "total_documents": agg["doc_count"],
+        "total_cost_usd": round(float(agg["cost_usd"]), 4),
+        "input_tokens": agg["input_tokens"],
+        "output_tokens": agg["output_tokens"],
+    }
 
     proposals = [_proposal_to_dict(p, run_id) for p in stage6.proposals]
     session_cache.put(run_id, {
@@ -346,15 +370,21 @@ async def run_extraction_ephemeral(
     }
 
 
-def _ephemeral_stats(run_ctx, doc_count: int) -> dict:
-    """Duration + cost for an ephemeral run, read from the telemetry buffer."""
+def _run_aggregate(run_ctx, doc_count: int) -> dict:
+    """Token / cost / duration totals for a run, from the telemetry buffer."""
+    from decimal import Decimal
+
+    inp = out = rea = 0
+    cost = Decimal("0")
     duration_ms: int | None = None
-    total_cost = 0.0
     if run_ctx is not None:
-        for call in run_ctx.call_buffer:
+        for c in run_ctx.call_buffer:
+            inp += int(c.get("input_tokens") or 0)
+            out += int(c.get("output_tokens") or 0)
+            rea += int(c.get("reasoning_tokens") or 0)
             try:
-                total_cost += float(call.get("usd_cost") or 0)
-            except (TypeError, ValueError):
+                cost += Decimal(str(c.get("usd_cost") or 0))
+            except (TypeError, ValueError, ArithmeticError):
                 pass
         finished = max(
             (c.get("finished_at") for c in run_ctx.call_buffer if c.get("finished_at")),
@@ -363,9 +393,8 @@ def _ephemeral_stats(run_ctx, doc_count: int) -> dict:
         if finished and run_ctx.started_at:
             duration_ms = int((finished - run_ctx.started_at).total_seconds() * 1000)
     return {
-        "duration_ms": duration_ms,
-        "total_documents": doc_count,
-        "total_cost_usd": round(total_cost, 4),
+        "input_tokens": inp, "output_tokens": out, "reasoning_tokens": rea,
+        "cost_usd": cost, "duration_ms": duration_ms, "doc_count": doc_count,
     }
 
 

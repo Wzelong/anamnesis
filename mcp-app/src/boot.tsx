@@ -38,21 +38,25 @@ export async function start(paint: (m: string, c?: string) => void) {
 
   if (!isMcp) {
     const raw = new URLSearchParams(window.location.search).get("preview")
-    const allowed = ["loading", "flow", "ready", "landing", "config"] as const
+    const allowed = ["loading", "flow", "ready", "landing", "config", "connect"] as const
     const preview = (allowed.includes(raw as never) ? raw : "landing") as (typeof allowed)[number]
+    // Dev: pin to the real PO iframe size (800×520) so the layout matches production.
+    document.body.style.cssText = "margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh"
     root.render(
-      <App
-        app={null}
-        header={{
-          patient_id: "demo", patient_name: "James Lee", birth_date: "1958-11-15", sex: "male", mrn: "BAY-0042-LEE",
-          byok_enabled: true,
-          user: {
-            user_key: "sub-demo", display_name: "Dr. Demo", is_returning: true, seen_count: 2,
-            first_seen_at: "2026-06-01T00:00:00Z", last_seen_at: "2026-06-18T00:00:00Z", config: {},
-          },
-        }}
-        preview={preview}
-      />,
+      <div style={{ width: 800, height: 520, overflow: "hidden" }}>
+        <App
+          app={null}
+          header={{
+            patient_id: "demo", patient_name: "James Lee", birth_date: "1958-11-15", sex: "male", mrn: "BAY-0042-LEE",
+            byok_enabled: true,
+            user: {
+              user_key: "sub-demo", display_name: "Dr. Demo", is_returning: true, seen_count: 2,
+              first_seen_at: "2026-06-01T00:00:00Z", last_seen_at: "2026-06-18T00:00:00Z", config: {},
+            },
+          }}
+          preview={preview}
+        />
+      </div>,
     )
     return
   }

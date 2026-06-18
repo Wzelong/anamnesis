@@ -102,6 +102,35 @@ export interface UserConfig {
   [k: string]: unknown
 }
 
+export interface UsageSummary {
+  runs: number
+  total_cost_usd: number
+  input_tokens: number
+  output_tokens: number
+}
+
+export interface UsageRunRow {
+  id: string
+  ts: string
+  model: string | null
+  input_tokens: number
+  output_tokens: number
+  cost_usd: number
+  duration_ms: number | null
+  doc_count: number
+  status: string
+}
+
+export interface UsageData {
+  summary: UsageSummary
+  runs: UsageRunRow[]
+}
+
+export interface PresetMeta {
+  id: string
+  name: string
+}
+
 export interface StageProgress {
   stage: string
   index: number

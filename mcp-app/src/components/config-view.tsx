@@ -1,31 +1,155 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { App } from "@modelcontextprotocol/ext-apps"
-import { Check, ExternalLink, KeyRound, Loader2, ShieldCheck } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import {
+  BookPlus,
+  ChevronsUpDown,
+  KeyRound,
+  Layers,
+  ListChecks,
+  Loader2,
+  MessageSquareDiff,
+  ScrollText,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react"
 import { callTool, parseStructured } from "../mcp"
-import type { UserConfig } from "../types"
+import type { PresetMeta, UsageData, UserConfig } from "../types"
+import { cn } from "../lib/cn"
+import { MOCK_USAGE } from "../mock"
+import { PresetRail } from "./preset-manager"
+
+type Section = "account" | "ig" | "resources" | "coding" | "prompts"
+
+type SectionDef = { id: Section; label: string; icon: LucideIcon }
+
+const ACCOUNT: SectionDef = { id: "account", label: "Account", icon: UserRound }
+// Preset-scoped sections — these change with the active preset.
+const PRESET_SECTIONS: SectionDef[] = [
+  { id: "ig", label: "FHIR IG", icon: ScrollText },
+  { id: "resources", label: "Resources", icon: ListChecks },
+  { id: "coding", label: "Terminology", icon: BookPlus },
+  { id: "prompts", label: "Prompts", icon: MessageSquareDiff },
+]
+const SECTIONS: SectionDef[] = [ACCOUNT, ...PRESET_SECTIONS]
+
+const STUB_DESC: Record<Section, string> = {
+  account: "",
+  ig: "Pick the implementation guide the pipeline conforms to — US Core, or layer mCODE on top for oncology.",
+  resources: "Choose which FHIR resource types the agent may propose, and declare custom extensions.",
+  coding: "Map each resource type to terminology systems and restrict coding to an approved value-set subset.",
+  prompts: "Tune the per-resource extraction prompts against your own test notes, with version history.",
+}
 
 export function ConfigView({
   app,
   config,
-  byokEnabled,
-  logoUrl,
   onSaved,
 }: {
   app: App | null
   config: UserConfig | null
-  byokEnabled: boolean
-  logoUrl: string
   onSaved: (config: UserConfig) => void
 }) {
-  const existing = config?.byok?.gemini_api_key ?? null
+  const [section, setSection] = useState<Section>("account")
+  const [presetMode, setPresetMode] = useState(false)
+  const [presets, setPresets] = useState<PresetMeta[]>([{ id: "default", name: "Default" }])
+  const [activeId, setActiveId] = useState("default")
+  const activeName = presets.find((p) => p.id === activeId)?.name ?? "Default"
+  const stub = SECTIONS.find((s) => s.id === section)
+
+  function addPreset() {
+    const id = crypto.randomUUID()
+    setPresets((ps) => [...ps, { id, name: "New preset" }])
+    setActiveId(id)
+  }
+  function renamePreset(id: string, name: string) {
+    setPresets((ps) => ps.map((p) => (p.id === id ? { ...p, name } : p)))
+  }
+  function deletePreset(id: string) {
+    setPresets((ps) => {
+      const next = ps.filter((p) => p.id !== id)
+      if (id === activeId && next.length) setActiveId(next[0].id)
+      return next
+    })
+  }
+
+  return (
+    <div className="flex-1 min-h-0 flex">
+      <nav className="w-32 shrink-0 border-r flex flex-col select-none">
+        <button
+          onClick={() => setPresetMode((v) => !v)}
+          className={cn(
+            "shrink-0 flex items-center gap-2 px-3 h-10 text-sm font-medium border-b cursor-pointer",
+            presetMode ? "bg-muted text-foreground" : "hover:bg-muted/50",
+          )}
+          title="Configuration preset"
+        >
+          <Layers className="size-4 shrink-0 text-muted-foreground" />
+          <span className="flex-1 text-left truncate">{activeName}</span>
+          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+        </button>
+
+        {presetMode ? (
+          <PresetRail
+            presets={presets}
+            activeId={activeId}
+            onSelect={(id) => { setActiveId(id); setPresetMode(false) }}
+            onAdd={addPreset}
+            onRename={renamePreset}
+            onDelete={deletePreset}
+          />
+        ) : (
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {PRESET_SECTIONS.map((s) => (
+              <RailButton key={s.id} s={s} active={section === s.id} onClick={() => setSection(s.id)} />
+            ))}
+          </div>
+        )}
+
+        <div className="shrink-0 border-t">
+          <RailButton s={ACCOUNT} active={section === "account"} onClick={() => setSection("account")} />
+        </div>
+      </nav>
+
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+        {section === "account" ? (
+          <AccountSection app={app} config={config} onSaved={onSaved} />
+        ) : stub ? (
+          <SectionStub icon={stub.icon} label={stub.label} desc={STUB_DESC[section]} />
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function AccountSection({
+  app,
+  config,
+  onSaved,
+}: {
+  app: App | null
+  config: UserConfig | null
+  onSaved: (config: UserConfig) => void
+}) {
+  const last4 = config?.byok?.gemini_api_key?.last4 ?? null
+  const [editing, setEditing] = useState(false)
   const [key, setKey] = useState("")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [last4, setLast4] = useState<string | null>(existing?.set ? existing.last4 : null)
-  const [replacing, setReplacing] = useState(false)
+  const [usage, setUsage] = useState<UsageData | null>(null)
 
-  const configured = !!last4
-  const showInput = byokEnabled && (!configured || replacing)
+  useEffect(() => {
+    if (!app) { setUsage(MOCK_USAGE); return }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await callTool(app, "GetUsage", {})
+        const data = parseStructured<UsageData>(res)
+        if (!cancelled && data) setUsage(data)
+      } catch { /* usage is best-effort */ }
+    })()
+    return () => { cancelled = true }
+  }, [app])
 
   async function save() {
     const trimmed = key.trim()
@@ -33,20 +157,17 @@ export function ConfigView({
     setSaving(true)
     setError(null)
     try {
-      let l4 = trimmed.slice(-4)
       if (app) {
         const res = await callTool(app, "SetUserConfig", { patch: { byok: { gemini_api_key: trimmed } } })
         const data = parseStructured<{ config: UserConfig }>(res)
-        if (!data?.config) throw new Error("save failed")
-        l4 = data.config.byok?.gemini_api_key?.last4 ?? l4
+        if (!data?.config) throw new Error("Save failed")
         onSaved(data.config)
       } else {
         await new Promise((r) => setTimeout(r, 450))
-        onSaved({ byok: { gemini_api_key: { set: true, last4: l4 } } })
+        onSaved({ byok: { gemini_api_key: { set: true, last4: trimmed.slice(-4) } } })
       }
-      setLast4(l4)
       setKey("")
-      setReplacing(false)
+      setEditing(false)
     } catch (e) {
       setError(String(e))
     } finally {
@@ -55,50 +176,18 @@ export function ConfigView({
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-[420px] flex flex-col items-center space-y-4">
-        <img src={logoUrl} alt="Anamnesis" width={48} height={48} className="size-12" />
-        <div className="text-center space-y-1.5">
-          <h1 className="text-xl font-semibold tracking-tight">
-            {configured && !replacing ? "Gemini connected" : "Connect Gemini"}
-          </h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {configured && !replacing
-              ? "Anamnesis runs on your Gemini key. It's encrypted at rest and never leaves the server."
-              : "Anamnesis runs on your Gemini key — the same one you use for the chat. Paste it to enable augmentation."}
-          </p>
-        </div>
-
-        {!byokEnabled ? (
-          <p className="text-xs text-muted-foreground text-center rounded-md border bg-muted/40 px-3 py-2">
-            BYOK isn't enabled on this server (CONFIG_SECRET_KEY unset), so keys can't be
-            stored. Augmentation is unavailable until the operator enables it.
-          </p>
-        ) : configured && !replacing ? (
-          <div className="w-full space-y-2">
-            <div className="flex items-center gap-2.5 rounded-md border bg-muted/40 px-3 py-2.5">
-              <ShieldCheck className="size-4 text-success-fg shrink-0" />
-              <div className="flex-1 min-w-0 text-left">
-                <div className="text-sm font-medium">API key connected</div>
-                <div className="text-xs text-muted-foreground font-mono tabular-nums">····{last4}</div>
-              </div>
-            </div>
-            <button
-              onClick={() => { setReplacing(true); setError(null) }}
-              className="w-full h-9 text-sm rounded-md border hover:bg-accent transition-colors cursor-pointer font-medium"
-            >
-              Replace key
-            </button>
-          </div>
-        ) : (
-          <div className="w-full space-y-2">
+    <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-4 max-w-md">
+      <section className="space-y-2">
+        <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Gemini API key</h2>
+        {editing ? (
+          <div className="space-y-1.5">
             <div className="relative">
               <KeyRound className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
               <input
                 type="password"
                 value={key}
                 onChange={(e) => { setKey(e.target.value); setError(null) }}
-                onKeyDown={(e) => { if (e.key === "Enter") save() }}
+                onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setEditing(false); setKey(""); setError(null) } }}
                 placeholder="AIza…"
                 autoComplete="off"
                 spellCheck={false}
@@ -107,40 +196,118 @@ export function ConfigView({
               />
             </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
-            <button
-              onClick={save}
-              disabled={saving || !key.trim()}
-              className="w-full h-9 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors cursor-pointer font-medium disabled:opacity-50 inline-flex items-center justify-center gap-2"
-            >
-              {saving && <Loader2 className="size-3.5 animate-spin" />}
-              {saving ? "Saving…" : "Save key"}
-            </button>
-            {replacing && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => { setReplacing(false); setKey(""); setError(null) }}
-                className="w-full h-9 text-sm rounded-md border hover:bg-accent transition-colors cursor-pointer font-medium"
+                onClick={save}
+                disabled={saving || !key.trim()}
+                className="h-8 px-3 text-xs rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 cursor-pointer font-medium inline-flex items-center gap-1.5"
+              >
+                {saving && <Loader2 className="size-3 animate-spin" />}
+                {saving ? "Saving…" : "Save"}
+              </button>
+              <button
+                onClick={() => { setEditing(false); setKey(""); setError(null) }}
+                disabled={saving}
+                className="h-8 px-3 text-xs rounded-md border hover:bg-accent cursor-pointer disabled:opacity-50"
               >
                 Cancel
               </button>
-            )}
-            <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1.5">
-              <Check className="size-3" /> Encrypted at rest · never leaves the server · never shown again
-            </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2.5 rounded-md border bg-muted/40 px-3 py-2.5">
+            <ShieldCheck className="size-4 text-primary shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium">Connected</div>
+              <div className="text-xs text-muted-foreground font-mono tabular-nums">····{last4 ?? "????"}</div>
+            </div>
+            <button
+              onClick={() => { setEditing(true); setKey(""); setError(null) }}
+              className="text-xs px-2.5 h-7 rounded-md border hover:bg-accent cursor-pointer shrink-0"
+            >
+              Replace
+            </button>
           </div>
         )}
+      </section>
 
-        {showInput && (
-          <a
-            href="https://aistudio.google.com/apikey"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
-          >
-            Get a Gemini API key
-            <ExternalLink className="size-3" />
-          </a>
+      <section className="space-y-2">
+        <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Usage</h2>
+        {!usage ? (
+          <div className="text-xs text-muted-foreground">Loading…</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-3 gap-2">
+              <Stat label="Runs" value={String(usage.summary.runs)} />
+              <Stat label="Spend" value={`$${usage.summary.total_cost_usd.toFixed(4)}`} />
+              <Stat label="Tokens" value={fmtTokens(usage.summary.input_tokens + usage.summary.output_tokens)} />
+            </div>
+            <div className="rounded-md border divide-y">
+              {usage.runs.length === 0 ? (
+                <div className="px-3 py-4 text-xs text-muted-foreground text-center">No runs yet</div>
+              ) : (
+                usage.runs.slice(0, 6).map((r) => (
+                  <div key={r.id} className="flex items-center gap-2 px-3 py-1.5 text-xs">
+                    <span className="text-muted-foreground tabular-nums shrink-0">{fmtDate(r.ts)}</span>
+                    <span className="flex-1 truncate text-muted-foreground">{r.model}</span>
+                    <span className="tabular-nums shrink-0">{r.doc_count} docs</span>
+                    <span className="tabular-nums w-16 text-right shrink-0">${r.cost_usd.toFixed(4)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </>
         )}
-      </div>
+      </section>
     </div>
   )
+}
+
+function RailButton({ s, active, onClick }: { s: SectionDef; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "w-full flex items-center gap-2 px-3 h-9 text-sm cursor-pointer transition-colors",
+        active ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-muted/50",
+      )}
+    >
+      <s.icon className="size-4 shrink-0" />
+      <span className="truncate">{s.label}</span>
+    </button>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border px-3 py-2">
+      <div className="text-sm font-semibold tabular-nums truncate">{value}</div>
+      <div className="text-[11px] text-muted-foreground">{label}</div>
+    </div>
+  )
+}
+
+function SectionStub({ icon: Icon, label, desc }: { icon: LucideIcon; label: string; desc: string }) {
+  return (
+    <div className="flex-1 min-h-0 flex flex-col items-center justify-center text-center px-8 gap-2">
+      <Icon className="size-6 text-muted-foreground" />
+      <div className="text-sm font-medium">{label}</div>
+      <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">{desc}</p>
+      <span className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground/70 border rounded-full px-2 py-0.5">
+        Coming soon
+      </span>
+    </div>
+  )
+}
+
+function fmtTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
+  return String(n)
+}
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ""
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" })
 }

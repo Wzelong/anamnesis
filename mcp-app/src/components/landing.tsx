@@ -14,12 +14,12 @@ export function Landing({
 }) {
   const name = header?.patient_name ?? "this patient"
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-[420px] flex flex-col items-center text-center space-y-5">
-        <img src={logoUrl} alt="Anamnesis" width={48} height={48} className="size-12" />
-        <div className="space-y-1.5">
-          <h1 className="text-xl font-semibold tracking-tight">Augment {name}'s chart</h1>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+    <div className="flex-1 min-h-0 overflow-y-auto flex items-center justify-center px-4 py-6">
+      <div className="w-full max-w-[380px] flex flex-col items-center text-center space-y-3">
+        <img src={logoUrl} alt="Anamnesis" width={36} height={36} className="size-9" />
+        <div className="space-y-1">
+          <h1 className="text-base font-semibold tracking-tight">Augment {name}'s chart</h1>
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Reads the source notes and proposes FHIR additions for your review — nothing
             is written until you approve.
           </p>

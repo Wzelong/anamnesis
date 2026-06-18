@@ -1,4 +1,4 @@
-from db.models import AppUser, Base
+from db.models import AppUser, Base, UsageRun
 from db.session import AsyncSessionLocal, engine, get_session
 
 
@@ -11,6 +11,7 @@ __all__ = [
     "AppUser",
     "AsyncSessionLocal",
     "Base",
+    "UsageRun",
     "engine",
     "get_session",
     "init_db",

@@ -174,9 +174,7 @@ async def run_extraction() -> dict:
         message = f"{stage}\x1f{_stage_detail(stage, detail)}" if detail else stage
         await ctx.report_progress(progress=idx, total=len(_STAGES), message=message)
 
-    key = await _byok_gemini_key()
-    if not key:
-        raise ValueError("Connect a Gemini API key in Configuration before running augmentation.")
+    uc, key = await _run_identity()
     return await svc.run_extraction_ephemeral(
         patient_id,
         fhir_client=prefab_fhir_client(),
@@ -184,26 +182,32 @@ async def run_extraction() -> dict:
         triggered_by="mcp:react",
         progress_cb=progress_cb,
         gemini_api_key=key,
+        user_key=uc.user_key,
+        workspace_id=uc.workspace_id,
     )
 
 
-async def _byok_gemini_key() -> str | None:
-    """The clinician's BYOK Gemini key, decrypted in-process.
-
-    BYOK is required: the pipeline runs on the clinician's key, never a shared
-    one. Returns None when BYOK is unprovisioned (no CONFIG_SECRET_KEY), the
-    token is unverified, or no key is stored — callers must refuse to run.
-    """
+async def _run_identity():
+    """Verified clinician + their decrypted BYOK Gemini key. Raises if BYOK is
+    unprovisioned, the token is unverified, or no key is stored — the pipeline
+    runs on the clinician's key, never a shared one."""
     if not settings.config_secret_key:
-        return None
-    try:
-        uc = prefab_verified_user_context()
-    except PermissionError:
-        return None
+        raise ValueError("BYOK is not enabled on this server.")
+    uc = prefab_verified_user_context()
     from core import byok
     from services import users
     cfg = byok.unseal(await users.get_config(uc.user_key))
-    return (cfg.get("byok") or {}).get("gemini_api_key") or None
+    key = (cfg.get("byok") or {}).get("gemini_api_key")
+    if not key:
+        raise ValueError("Connect a Gemini API key in Configuration before running augmentation.")
+    return uc, key
+
+
+async def get_usage() -> dict:
+    """App-only: the current clinician's run history + cumulative spend (non-PHI)."""
+    from services import usage
+    uc = prefab_verified_user_context()
+    return {"summary": await usage.summary(uc.user_key), "runs": await usage.list_runs(uc.user_key)}
 
 
 async def accept_augmentation(
@@ -305,6 +309,7 @@ def register(mcp: FastMCP) -> None:
         (search_terminology, "SearchTerminology"),
         (get_user_config, "GetUserConfig"),
         (set_user_config, "SetUserConfig"),
+        (get_usage, "GetUsage"),
     ]:
         mcp.add_tool(Tool.from_function(
             fn, name=fname, description=(fn.__doc__ or "").strip(),

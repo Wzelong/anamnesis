@@ -58,6 +58,7 @@ import { InterProposalConflictCallout, ProposalConflictCallout } from "./conflic
 import { ProvenanceCard } from "./provenance-card"
 import { Landing } from "./landing"
 import { ConfigView } from "./config-view"
+import { ConnectGemini } from "./connect-gemini"
 
 // PO does not relay real pipeline progress, so the loading screen runs on a
 // timed simulation: one verb per stage, ~50s total for a 4-document chart. The
@@ -175,7 +176,7 @@ export function ReviewApp({
 }: {
   app: App | null
   header: PatientHeader | null
-  preview?: "loading" | "flow" | "ready" | "landing" | "config" | null
+  preview?: "loading" | "flow" | "ready" | "landing" | "config" | "connect" | null
 }) {
   const [phase, setPhase] = useState<Phase>(
     preview === "ready" ? "ready" : preview === "flow" || preview === "loading" ? "running" : "idle",
@@ -244,16 +245,15 @@ export function ReviewApp({
     return () => { cancelled = true }
   }, [app])
 
-  // BYOK is required: with no connected key the config input IS the view — there
-  // is no landing to fall back to, so it can't be toggled away.
+  // BYOK is required: with no connected key the app is fixed on the Connect
+  // gate (settings is disabled) — there is nothing to configure until connected.
   const hasKey = !!userConfig?.byok?.gemini_api_key?.set
   const needsKey = configLoaded && !hasKey
-  const showConfig = configOpen || needsKey
+  const showGate = needsKey || preview === "connect"
 
   useEffect(() => {
-    if (app) return
-    if (preview === "landing" || preview === "config") setUserConfig(MOCK_CONFIG)
-  }, [app, preview])
+    if (!app) setUserConfig(MOCK_CONFIG)
+  }, [app])
 
   function startExtraction() {
     if (started.current) return
@@ -462,19 +462,18 @@ export function ReviewApp({
 
   if (app && !configLoaded && phase === "idle") {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <div className="flex-1 min-h-0 flex items-center justify-center">
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
       </Shell>
     )
   }
-  if (showConfig) {
+  if (showGate) {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
-        <ConfigView
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+        <ConnectGemini
           app={app}
-          config={userConfig}
           byokEnabled={!!header?.byok_enabled}
           logoUrl={LOGO_URL}
           onSaved={setUserConfig}
@@ -482,9 +481,20 @@ export function ReviewApp({
       </Shell>
     )
   }
+  if (configOpen) {
+    return (
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+        <ConfigView
+          app={app}
+          config={userConfig}
+          onSaved={setUserConfig}
+        />
+      </Shell>
+    )
+  }
   if (phase === "error") {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <Centered>
           <TriangleAlert className="size-5 text-destructive" />
           <div className="text-destructive">{error}</div>
@@ -495,7 +505,7 @@ export function ReviewApp({
   if (phase === "running") {
     const verb = progress >= 1 ? "Done" : loadingVerb(progress)
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <div className="flex-1 min-h-0 flex items-center justify-center px-6">
           <div className="w-full max-w-xs space-y-4">
             <img src={LOGO_URL} alt="Anamnesis" width={40} height={40} className="size-10 mx-auto animate-pulse" />
@@ -515,7 +525,7 @@ export function ReviewApp({
   }
   if (phase === "idle") {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <Landing
           header={header}
           logoUrl={LOGO_URL}
@@ -564,7 +574,7 @@ export function ReviewApp({
 
 
   return (
-    <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+    <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
       <div className="flex-1 min-h-0 flex">
         <div className={cn("w-full sm:w-72 sm:border-r flex flex-col min-h-0", selectedId && "hidden sm:flex")}>
           {/* Stats strip: source docs · change breakdown */}
@@ -1196,14 +1206,16 @@ function Shell({
   children,
   onOpenConfig,
   configActive,
+  configDisabled,
 }: {
   header: PatientHeader | null
   children: React.ReactNode
   onOpenConfig?: () => void
   configActive?: boolean
+  configDisabled?: boolean
 }) {
   return (
-    <div className="h-screen p-3 sm:p-4 bg-background text-foreground">
+    <div className="h-full p-3 sm:p-4 bg-background text-foreground">
       <div className="h-full max-w-5xl mx-auto flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-4 h-10 border-b shrink-0">
           <img src={LOGO_URL} alt="Anamnesis" width={24} height={24} className="size-6 shrink-0 -ml-2" />
@@ -1227,7 +1239,7 @@ function Shell({
                 <span className="max-w-32 truncate">{header.user.display_name ?? "Clinician"}</span>
               </span>
             )}
-            <IconBtn label="Settings" onClick={onOpenConfig} active={configActive}>
+            <IconBtn label="Settings" onClick={onOpenConfig} active={configActive} disabled={configDisabled}>
               <Settings className="size-3.5" />
             </IconBtn>
           </div>
