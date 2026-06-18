@@ -6,11 +6,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    openai_api_key: str = ""
+    gemini_api_key: str = ""
     umls_api_key: str = ""
-    openai_model_fast: str = "gpt-5.4-mini"
-    openai_model_smart: str = "gpt-5.5"
-    openai_model_nano: str = "gpt-5.4-nano"
+    gemini_model_fast: str = "gemini-3.5-flash"
+    gemini_model_smart: str = "gemini-3.5-flash"
+    gemini_model_nano: str = "gemini-3.1-flash-lite"
     doc_guardrail_enabled: bool = True
     database_url: str = "sqlite+aiosqlite:///./anamnesis.db"
     log_level: str = "INFO"
@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     # "api" = live terminology APIs (default); "faiss" = graduated local index path.
     coding_retriever: str = "api"
     warmup_coding_on_startup: bool = False
+    # PO token verification (resource-server pillar). Per-user writes (config,
+    # future BYOK secrets) require a PO-signed token; reads stay host-delegated.
+    po_issuer: str = "https://app.promptopinion.ai/"
+    po_jwks_uri: str = "https://app.promptopinion.ai/.well-known/jwks"
+    po_mcp_id: str = ""  # optional pseudo-audience; empty = skip the check
+    verify_config_writes: bool = True
+    # Fernet key for encrypting BYOK secrets in app_user.config at rest. Empty =
+    # BYOK disabled (storing a secret raises; the pipeline uses the server key).
+    config_secret_key: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",

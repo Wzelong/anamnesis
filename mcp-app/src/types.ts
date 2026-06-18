@@ -86,6 +86,20 @@ export interface PatientHeader {
   sex?: string | null
   mrn?: string | null
   user?: UserRecognition | null
+  byok_enabled?: boolean
+}
+
+// A secret field is never sent in plaintext; the server redacts it to presence.
+export interface RedactedSecret {
+  set: boolean
+  last4: string | null
+}
+
+export interface UserConfig {
+  byok?: {
+    gemini_api_key?: RedactedSecret | null
+  } | null
+  [k: string]: unknown
 }
 
 export interface StageProgress {

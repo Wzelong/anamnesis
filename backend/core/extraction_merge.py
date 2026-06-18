@@ -17,7 +17,7 @@ import hashlib
 import re
 from dataclasses import dataclass, field
 
-from openai import AsyncOpenAI
+from google import genai
 from pydantic import BaseModel, ValidationError
 
 from core.cache import JsonCache
@@ -340,7 +340,7 @@ def _merge_cache_key(llm_input: str, model: str) -> str:
 
 async def _adjudicate_groups(
     groups: dict[str, list[_TaggedItem]],
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
     cache: JsonCache | None,
     call_type: str,
@@ -381,7 +381,7 @@ async def _adjudicate_groups(
 
 async def merge_across_notes(
     stage2_outputs: list[StageTwoOutput],
-    client: AsyncOpenAI,
+    client: genai.Client,
     *,
     model: str,
     cache: JsonCache | None = None,

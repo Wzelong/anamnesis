@@ -14,14 +14,8 @@ import time
 from pathlib import Path
 
 from dotenv import load_dotenv
-from openai import AsyncOpenAI
 
-try:
-    from openai import DefaultAioHttpClient
-    _AIO_AVAILABLE = True
-except ImportError:
-    DefaultAioHttpClient = None  # type: ignore[assignment]
-    _AIO_AVAILABLE = False
+from core.llm import build_client
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -238,8 +232,8 @@ async def main() -> int:
     args = parser.parse_args()
 
     load_dotenv()
-    if not settings.openai_api_key:
-        print("error: OPENAI_API_KEY must be set in .env", file=sys.stderr)
+    if not settings.gemini_api_key:
+        print("error: GEMINI_API_KEY must be set in .env", file=sys.stderr)
         return 2
 
     docs: list[Document] = []
@@ -286,35 +280,29 @@ async def main() -> int:
     STAGE2_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     await init_db()
 
-    client_kwargs: dict = {"api_key": settings.openai_api_key}
-    if _AIO_AVAILABLE:
-        client_kwargs["http_client"] = DefaultAioHttpClient()
-    else:
-        print("note: openai[aiohttp] not installed; using default httpx transport", file=sys.stderr)
+    client = build_client()
+    pid = args.patient_id if args.from_stage1_cache else None
+    run_ctx = await telemetry.start_run(
+        patient_id=pid,
+        triggered_by="cli:run_stage2",
+        meta={"doc_count": len(notes), "model": settings.gemini_model_fast},
+    )
+    print(f"run_id={run_ctx.run_id}")
 
-    async with AsyncOpenAI(**client_kwargs) as client:
-        pid = args.patient_id if args.from_stage1_cache else None
-        run_ctx = await telemetry.start_run(
-            patient_id=pid,
-            triggered_by="cli:run_stage2",
-            meta={"doc_count": len(notes), "model": settings.openai_model_fast},
+    t0 = time.perf_counter()
+    try:
+        results = await extract_candidates_batch(
+            notes,
+            client,
+            model=settings.gemini_model_fast,
+            cache=cache,
+            max_concurrent=settings.stage2_max_concurrent,
         )
-        print(f"run_id={run_ctx.run_id}")
-
-        t0 = time.perf_counter()
-        try:
-            results = await extract_candidates_batch(
-                notes,
-                client,
-                model=settings.openai_model_fast,
-                cache=cache,
-                max_concurrent=settings.stage2_max_concurrent,
-            )
-        except Exception as exc:
-            await telemetry.finish_run("failed", error=str(exc))
-            raise
-        elapsed = time.perf_counter() - t0
-        print(f"stage2 complete in {elapsed:.1f}s (model={settings.openai_model_fast})")
+    except Exception as exc:
+        await telemetry.finish_run("failed", error=str(exc))
+        raise
+    elapsed = time.perf_counter() - t0
+    print(f"stage2 complete in {elapsed:.1f}s (model={settings.gemini_model_fast})")
 
     by_doc_id = {n.document_id: n for n in notes}
     for out in results:

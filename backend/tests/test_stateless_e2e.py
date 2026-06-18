@@ -1,6 +1,6 @@
 """Stateless review path: deterministic coverage of the proposal-shaping logic
 (always runs) plus an opt-in end-to-end run of `run_extraction_ephemeral`
-against the demo bundle (RUN_E2E=1; needs OPENAI_API_KEY + network).
+against the demo bundle (RUN_E2E=1; needs GEMINI_API_KEY + network).
 """
 from __future__ import annotations
 
@@ -133,7 +133,7 @@ def test_documents_from_notes_deterministic_ids():
 
 @pytest.mark.skipif(
     not os.environ.get("RUN_E2E"),
-    reason="integration: set RUN_E2E=1 (uses .env OPENAI_API_KEY; hits OpenAI + terminology APIs)",
+    reason="integration: set RUN_E2E=1 (uses .env GEMINI_API_KEY; hits Gemini + terminology APIs)",
 )
 def test_run_extraction_ephemeral_demo():
     import asyncio

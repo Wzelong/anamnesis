@@ -1,6 +1,6 @@
 """Stage 0.5: per-document input guardrail.
 
-Cheap deterministic checks first, then a parallel gpt-5.4-nano semantic check.
+Cheap deterministic checks first, then a parallel minimal-thinking semantic check.
 Filters obvious garbage / non-clinical / prompt-injection inputs before Stage 2
 spends real money. Per-document rejections; never raises, never blocks the run.
 Failures fail open — a transient API error must not drop a real note.
@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Literal
 
-from openai import AsyncOpenAI
+from google import genai
 from pydantic import BaseModel
 
 from core import telemetry
@@ -91,7 +91,7 @@ def deterministic_check(doc: Document) -> RejectedDocument | None:
 
 async def _llm_check(
     doc: Document,
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
     cache: JsonCache | None,
 ) -> GuardrailVerdict | None:
@@ -104,29 +104,17 @@ async def _llm_check(
             except ValueError:
                 pass
 
+    from core.llm import generate_structured
+
     started_at = datetime.now(timezone.utc)
-    usage: dict | None = None
-    status = "ok"
-    error: str | None = None
-    verdict: GuardrailVerdict | None = None
-    try:
-        resp = await client.responses.parse(
-            model=model,
-            reasoning={"effort": "none"},
-            input=[
-                {"role": "developer", "content": DEVELOPER_PROMPT},
-                {"role": "user", "content": doc.text or "<empty>"},
-            ],
-            text_format=GuardrailVerdict,
-        )
-        usage = resp.usage.model_dump() if getattr(resp, "usage", None) else None
-        verdict = resp.output_parsed
-        if verdict is None:
-            status = "error"
-            error = "no_parsed_output"
-    except Exception as exc:
-        status = "error"
-        error = f"{type(exc).__name__}: {exc}"
+    verdict, usage, error = await generate_structured(
+        client, model,
+        system=DEVELOPER_PROMPT,
+        user=doc.text or "<empty>",
+        schema=GuardrailVerdict,
+        thinking="none",
+    )
+    status = "ok" if error is None else "error"
 
     finished_at = datetime.now(timezone.utc)
     await telemetry.record_call(
@@ -150,7 +138,7 @@ async def _llm_check(
 
 async def screen_documents(
     docs: list[Document],
-    client: AsyncOpenAI,
+    client: genai.Client,
     *,
     model: str,
     cache: JsonCache | None = None,

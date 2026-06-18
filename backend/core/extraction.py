@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from openai import AsyncOpenAI
+from google import genai
 from pydantic import BaseModel, ValidationError
 
 from core import telemetry
@@ -108,7 +108,7 @@ def _render_temporal_context(note_context: NoteContext) -> str:
 
 
 async def parse_structured(
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
     developer_prompt: str,
     user_content: str,
@@ -119,38 +119,27 @@ async def parse_structured(
     document_id: str | None = None,
     reasoning_effort: str = "low",
 ) -> BaseModel | None:
-    """Single OpenAI Responses-API call wrapped in telemetry.
+    """Single Gemini structured call wrapped in telemetry.
 
     Used by every LLM-driven stage (extraction, merge, code-select, reconcile
     adjudication). Records latency / token / cost into the active run via
     `telemetry.record_call` and returns `None` on error so callers can decide
-    how to recover (most just skip the candidate).
+    how to recover (most just skip the candidate). `reasoning_effort` maps to a
+    Gemini thinking level (see `core.llm`).
     """
+    from core.llm import generate_structured
+
     started_at = datetime.now(timezone.utc)
-    usage: dict | None = None
-    status = "ok"
-    error: str | None = None
-    parsed: BaseModel | None = None
-    try:
-        response = await client.responses.parse(
-            model=model,
-            reasoning={"effort": reasoning_effort},
-            input=[
-                {"role": "developer", "content": developer_prompt},
-                {"role": "user", "content": user_content},
-            ],
-            text_format=response_model,
-        )
-        usage = response.usage.model_dump() if getattr(response, "usage", None) else None
-        parsed = response.output_parsed
-        if parsed is None:
-            status = "error"
-            error = "no_parsed_output"
-            log.warning("openai returned no parsed output for %s", response_model.__name__)
-    except Exception as exc:
-        status = "error"
-        error = f"{type(exc).__name__}: {exc}"
-        log.warning("openai parse failed (%s): %s", response_model.__name__, exc)
+    parsed, usage, error = await generate_structured(
+        client, model,
+        system=developer_prompt,
+        user=user_content,
+        schema=response_model,
+        thinking=reasoning_effort,
+    )
+    status = "ok" if error is None else "error"
+    if error:
+        log.warning("gemini parse failed (%s): %s", response_model.__name__, error)
 
     finished_at = datetime.now(timezone.utc)
     await telemetry.record_call(
@@ -172,7 +161,7 @@ _parse_structured = parse_structured
 
 async def scan_note(
     note: PreprocessedNote,
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
 ) -> ScanResult:
     parsed = await _parse_structured(
@@ -218,7 +207,7 @@ async def parse_group(
     resource_type: str,
     snippet: str,
     note_context: NoteContext,
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
     allowed_sentences: set[int],
     *,
@@ -293,7 +282,7 @@ def _apply_date_validators(
 async def clean_candidates(
     resource_type: str,
     candidates: list[BaseModel],
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
     *,
     document_id: str | None = None,
@@ -369,7 +358,7 @@ def _note_cache_key(note: PreprocessedNote, model: str) -> str:
 
 async def extract_candidates(
     note: PreprocessedNote,
-    client: AsyncOpenAI,
+    client: genai.Client,
     *,
     model: str,
     cache: JsonCache | None = None,
@@ -462,7 +451,7 @@ async def extract_candidates(
 
 async def extract_candidates_batch(
     notes: list[PreprocessedNote],
-    client: AsyncOpenAI,
+    client: genai.Client,
     *,
     model: str,
     cache: JsonCache | None = None,

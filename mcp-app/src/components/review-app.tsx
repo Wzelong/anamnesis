@@ -28,9 +28,9 @@ import {
 import type { LucideIcon } from "lucide-react"
 import { toast } from "sonner"
 import { callTool, parseStructured, resultText } from "../mcp"
-import type { ExtractionResult, PatientHeader, Proposal, SourceDocument } from "../types"
+import type { ExtractionResult, PatientHeader, Proposal, SourceDocument, UserConfig } from "../types"
 import { cn } from "../lib/cn"
-import { MOCK_RESULT } from "../mock"
+import { MOCK_CONFIG, MOCK_RESULT } from "../mock"
 import {
   CLASSIFICATION_LABEL,
   RESOURCE_LABEL,
@@ -56,6 +56,8 @@ import { CodeSearch } from "./code-search"
 import { ReasoningSections } from "./reasoning-sections"
 import { InterProposalConflictCallout, ProposalConflictCallout } from "./conflict-callouts"
 import { ProvenanceCard } from "./provenance-card"
+import { Landing } from "./landing"
+import { ConfigView } from "./config-view"
 
 // PO does not relay real pipeline progress, so the loading screen runs on a
 // timed simulation: one verb per stage, ~50s total for a 4-document chart. The
@@ -173,11 +175,14 @@ export function ReviewApp({
 }: {
   app: App | null
   header: PatientHeader | null
-  preview?: "loading" | "flow" | "ready" | null
+  preview?: "loading" | "flow" | "ready" | "landing" | "config" | null
 }) {
   const [phase, setPhase] = useState<Phase>(
-    app ? "running" : preview === "ready" ? "ready" : preview ? "running" : "idle",
+    preview === "ready" ? "ready" : preview === "flow" || preview === "loading" ? "running" : "idle",
   )
+  const [configOpen, setConfigOpen] = useState(preview === "config")
+  const [userConfig, setUserConfig] = useState<UserConfig | null>(null)
+  const [configLoaded, setConfigLoaded] = useState(false)
   const [progress, setProgress] = useState(0)
   const [startMs, setStartMs] = useState<number | null>(null)
   const [result, setResult] = useState<ExtractionResult | null>(null)
@@ -223,10 +228,46 @@ export function ReviewApp({
     return { settle, cancel }
   }
 
+  // On open we seed config (for the BYOK gate), but do NOT auto-run the
+  // pipeline — extraction is an explicit action from the landing.
   useEffect(() => {
-    if (!app || started.current) return
+    if (!app) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await callTool(app, "GetUserConfig", {})
+        const data = parseStructured<{ config: UserConfig }>(res)
+        if (!cancelled && data?.config) setUserConfig(data.config)
+      } catch { /* unverified / no config — gate to the config view */ }
+      finally { if (!cancelled) setConfigLoaded(true) }
+    })()
+    return () => { cancelled = true }
+  }, [app])
+
+  // BYOK is required: with no connected key the config input IS the view — there
+  // is no landing to fall back to, so it can't be toggled away.
+  const hasKey = !!userConfig?.byok?.gemini_api_key?.set
+  const needsKey = configLoaded && !hasKey
+  const showConfig = configOpen || needsKey
+
+  useEffect(() => {
+    if (app) return
+    if (preview === "landing" || preview === "config") setUserConfig(MOCK_CONFIG)
+  }, [app, preview])
+
+  function startExtraction() {
+    if (started.current) return
     started.current = true
+    setPhase("running")
     const loop = runLoading(() => setPhase("ready"))
+    if (!app) {
+      setTimeout(() => {
+        setResult(MOCK_RESULT)
+        setSelectedId(MOCK_RESULT.proposals[0]?.id ?? null)
+        loop.settle()
+      }, 6000)
+      return
+    }
     ;(async () => {
       try {
         const res = await callTool(app, "RunExtraction", {})
@@ -241,11 +282,11 @@ export function ReviewApp({
         setPhase("error")
       }
     })()
-    return loop.cancel
-  }, [app])
+  }
 
   useEffect(() => {
     if (!preview || started.current) return
+    if (preview === "landing" || preview === "config") return
     started.current = true
     if (preview === "ready") {
       setResult(MOCK_RESULT)
@@ -419,16 +460,31 @@ export function ReviewApp({
     return failed === 0
   }
 
-  if (phase === "idle") {
+  if (app && !configLoaded && phase === "idle") {
     return (
-      <Shell header={header}>
-        <Centered>Open this from an MCP host to review augmentations.</Centered>
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+        <div className="flex-1 min-h-0 flex items-center justify-center">
+          <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      </Shell>
+    )
+  }
+  if (showConfig) {
+    return (
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+        <ConfigView
+          app={app}
+          config={userConfig}
+          byokEnabled={!!header?.byok_enabled}
+          logoUrl={LOGO_URL}
+          onSaved={setUserConfig}
+        />
       </Shell>
     )
   }
   if (phase === "error") {
     return (
-      <Shell header={header}>
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
         <Centered>
           <TriangleAlert className="size-5 text-destructive" />
           <div className="text-destructive">{error}</div>
@@ -439,27 +495,34 @@ export function ReviewApp({
   if (phase === "running") {
     const verb = progress >= 1 ? "Done" : loadingVerb(progress)
     return (
-      <div className="h-screen flex items-center justify-center px-6 bg-background text-foreground">
-        <div className="w-full max-w-xs space-y-4">
-          <div className="text-center space-y-1.5">
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+        <div className="flex-1 min-h-0 flex items-center justify-center px-6">
+          <div className="w-full max-w-xs space-y-4">
             <img src={LOGO_URL} alt="Anamnesis" width={40} height={40} className="size-10 mx-auto animate-pulse" />
-            <p className="text-sm font-medium">
-              Augmenting {header?.patient_name ? `${header.patient_name}'s` : ""} chart
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-[width] duration-200 ease-out"
+                style={{ width: `${Math.round(progress * 100)}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground text-center tabular-nums">
+              {verb}{startMs && progress < 1 ? ` · ${elapsedLabel(startMs)}` : ""}
             </p>
           </div>
-
-          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-[width] duration-200 ease-out"
-              style={{ width: `${Math.round(progress * 100)}%` }}
-            />
-          </div>
-
-          <p className="text-xs text-muted-foreground text-center tabular-nums">
-            {verb}{startMs && progress < 1 ? ` · ${elapsedLabel(startMs)}` : ""}
-          </p>
         </div>
-      </div>
+      </Shell>
+    )
+  }
+  if (phase === "idle") {
+    return (
+      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
+        <Landing
+          header={header}
+          logoUrl={LOGO_URL}
+          onAugment={startExtraction}
+          onConfigure={() => setConfigOpen(true)}
+        />
+      </Shell>
     )
   }
 
@@ -501,7 +564,7 @@ export function ReviewApp({
 
 
   return (
-    <Shell header={header}>
+    <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={showConfig}>
       <div className="flex-1 min-h-0 flex">
         <div className={cn("w-full sm:w-72 sm:border-r flex flex-col min-h-0", selectedId && "hidden sm:flex")}>
           {/* Stats strip: source docs · change breakdown */}
@@ -1131,9 +1194,13 @@ function formatDob(dob: string | null | undefined): string {
 function Shell({
   header,
   children,
+  onOpenConfig,
+  configActive,
 }: {
   header: PatientHeader | null
   children: React.ReactNode
+  onOpenConfig?: () => void
+  configActive?: boolean
 }) {
   return (
     <div className="h-screen p-3 sm:p-4 bg-background text-foreground">
@@ -1155,23 +1222,12 @@ function Shell({
           </div>
           <div className="ml-auto flex items-center gap-2 shrink-0">
             {header?.user && (
-              <span
-                className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
-                title={
-                  header.user.is_returning
-                    ? `Recognized as the same clinician · ${header.user.seen_count} sessions · first seen ${formatDob(header.user.first_seen_at.slice(0, 10))}`
-                    : "First session for this clinician"
-                }
-              >
+              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <UserRound className="size-3" />
                 <span className="max-w-32 truncate">{header.user.display_name ?? "Clinician"}</span>
-                <Dot className="relative top-px" />
-                <span className="tabular-nums">
-                  {header.user.is_returning ? `returning · #${header.user.seen_count}` : "new"}
-                </span>
               </span>
             )}
-            <IconBtn label="Settings" onClick={() => {}}>
+            <IconBtn label="Settings" onClick={onOpenConfig} active={configActive}>
               <Settings className="size-3.5" />
             </IconBtn>
           </div>

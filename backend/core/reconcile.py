@@ -18,7 +18,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 
-from openai import AsyncOpenAI
+from google import genai
 
 from core.code_candidates import StageFourOutput
 from core.extraction import parse_structured
@@ -77,7 +77,7 @@ def _format_pair(index: int, candidate: MergedCandidate, chart_resource: dict) -
 async def _llm_batch_classify(
     resource_type: str,
     pairs: list[tuple[int, MergedCandidate, list[dict]]],
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
 ) -> dict[int, tuple[str, str]]:
     if not pairs:
@@ -267,7 +267,7 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
 async def reconcile(
     stage4_output: StageFourOutput,
     patient_context: PatientContext,
-    client: AsyncOpenAI,
+    client: genai.Client,
     *,
     model: str,
 ) -> StageFiveOutput:

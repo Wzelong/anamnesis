@@ -130,10 +130,23 @@ not patient PHI; config is configuration. No PHI is persisted.
 
 ## Next steps
 
-1. **Before BYOK:** implement `verify_po_token()` (JWKS signature + `iss` + `exp`,
-   cached `PyJWKClient`) and gate `SetUserConfig` + any future secret tools behind
-   it. Closes the forge-config hole.
+1. **Done.** `verify_po_token()` (`context/token_verify.py`) verifies JWKS
+   signature + `iss` + `exp` via a cached `PyJWKClient`, with an optional
+   `po_mcp_id` pseudo-audience check. Both `GetUserConfig` and `SetUserConfig`
+   are gated behind it (`prefab_verified_user_context`), closing the
+   forge-config hole on the read and write sides. Toggle with
+   `verify_config_writes`; gate future secret tools the same way.
+
+   **Gating rule:** gate anything that reads or writes per-`sub` state that is
+   not independently enforced elsewhere (config, future secrets). Leave FHIR
+   passthrough (`ReviewChart` patient read, `RunExtraction`, `AcceptAugmentation`)
+   host-delegated — the FHIR server is the enforcement point, so a forged token
+   self-fails there and a verification gate would be redundant (and would couple
+   the whole demo's availability to JWKS reachability).
 2. **Audience:** raise the missing `aud` claim with PO (or adopt the `po_mcp_id`
    pseudo-audience check) so verification can bind to this resource.
-3. **BYOK secrets:** envelope-encrypt at rest, decrypt in-process only; never to
-   the iframe; only after (1).
+3. **BYOK secrets — done.** `core/byok.py` Fernet-encrypts secret fields
+   (`openai_api_key`, `umls_api_key`) at rest under `CONFIG_SECRET_KEY`, decrypts
+   in-process only (pipeline use), and redacts to `{set, last4}` on read so
+   plaintext never reaches the iframe. Gated behind (1). Remaining: key rotation
+   / re-encryption tooling.

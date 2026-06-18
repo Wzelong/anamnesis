@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 
-from openai import AsyncOpenAI
+from google import genai
 
 from core.extraction import parse_structured
 from core.prompts.search_terms import PROMPT_CODE_SEARCH_TERMS
@@ -29,7 +29,7 @@ CHUNK = 8
 
 async def generate_search_queries(
     jobs: list[dict],
-    client: AsyncOpenAI,
+    client: genai.Client,
     *,
     model: str,
 ) -> dict[str, list[str]]:

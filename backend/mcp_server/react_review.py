@@ -30,6 +30,7 @@ from context.prefab_ctx import (
     prefab_reviewer,
     prefab_tenant,
     prefab_user_context,
+    prefab_verified_user_context,
 )
 from fhir.client import FhirClient
 from services import proposals as svc
@@ -87,7 +88,10 @@ async def review_chart() -> dict:
                     break
             if not mrn and patient.get("identifier"):
                 mrn = patient["identifier"][0].get("value")
-    result = {"patient_id": patient_id, "patient_name": name, "birth_date": birth_date, "sex": sex, "mrn": mrn}
+    result = {
+        "patient_id": patient_id, "patient_name": name, "birth_date": birth_date,
+        "sex": sex, "mrn": mrn, "byok_enabled": bool(settings.config_secret_key),
+    }
     uc = prefab_user_context()
     if uc:
         from services import users
@@ -98,21 +102,29 @@ async def review_chart() -> dict:
 
 
 async def get_user_config() -> dict:
-    """App-only: the current clinician's persisted framework config."""
+    """App-only: the current clinician's persisted framework config.
+
+    Per-user read: requires a PO-signature-verified token so a forged `sub`
+    cannot read another clinician's config. Secrets are redacted to presence
+    flags ({set, last4}) — plaintext never leaves the server (see AUTH.md).
+    """
+    from core import byok
     from services import users
-    uc = prefab_user_context()
-    if not uc:
-        return {"config": {}}
-    return {"config": await users.get_config(uc.user_key)}
+    uc = prefab_verified_user_context()
+    return {"config": byok.redact(await users.get_config(uc.user_key))}
 
 
 async def set_user_config(patch: dict) -> dict:
-    """App-only: shallow-merge a patch into the clinician's persisted config."""
+    """App-only: deep-merge a patch into the clinician's persisted config.
+
+    Per-user write: requires a PO-signature-verified token so a forged `sub`
+    cannot overwrite another clinician's config. Secret fields are encrypted at
+    rest; the response is redacted (see AUTH.md).
+    """
+    from core import byok
     from services import users
-    uc = prefab_user_context()
-    if not uc:
-        raise ValueError("no user in context")
-    return {"config": await users.set_config(uc.user_key, patch)}
+    uc = prefab_verified_user_context()
+    return {"config": byok.redact(await users.set_config(uc.user_key, patch))}
 
 
 _STAGES = [
@@ -166,13 +178,36 @@ async def run_extraction() -> dict:
         message = f"{stage}\x1f{_stage_detail(stage, detail)}" if detail else stage
         await ctx.report_progress(progress=idx, total=len(_STAGES), message=message)
 
+    key = await _byok_gemini_key()
+    if not key:
+        raise ValueError("Connect a Gemini API key in Configuration before running augmentation.")
     return await svc.run_extraction_ephemeral(
         patient_id,
         fhir_client=prefab_fhir_client(),
         tenant_key=prefab_tenant(),
         triggered_by="mcp:react",
         progress_cb=progress_cb,
+        gemini_api_key=key,
     )
+
+
+async def _byok_gemini_key() -> str | None:
+    """The clinician's BYOK Gemini key, decrypted in-process.
+
+    BYOK is required: the pipeline runs on the clinician's key, never a shared
+    one. Returns None when BYOK is unprovisioned (no CONFIG_SECRET_KEY), the
+    token is unverified, or no key is stored — callers must refuse to run.
+    """
+    if not settings.config_secret_key:
+        return None
+    try:
+        uc = prefab_verified_user_context()
+    except PermissionError:
+        return None
+    from core import byok
+    from services import users
+    cfg = byok.unseal(await users.get_config(uc.user_key))
+    return (cfg.get("byok") or {}).get("gemini_api_key") or None
 
 
 async def accept_augmentation(

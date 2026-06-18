@@ -20,7 +20,7 @@ import re
 from dataclasses import dataclass, field
 
 import numpy as np
-from openai import AsyncOpenAI
+from google import genai
 
 from config import settings
 from core.coding import EmbeddingModel, IndexStore, SearchResult, _get_defaults
@@ -178,7 +178,7 @@ async def _select_code(
     term: str,
     system: str,
     search_results: list[SearchResult],
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
     retriever: "Retriever",
 ) -> dict | None:
@@ -376,7 +376,7 @@ async def _code_candidate(
     ci: int,
     candidate: MergedCandidate,
     search_results: dict[str, list[SearchResult]],
-    client: AsyncOpenAI,
+    client: genai.Client,
     model: str,
     retriever: Retriever,
 ) -> MergedCandidate:
@@ -475,7 +475,7 @@ class StageFourOutput:
 
 async def code_candidates(
     stage3_output,
-    client: AsyncOpenAI,
+    client: genai.Client,
     *,
     model: str,
     top_k: int = 10,

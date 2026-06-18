@@ -69,7 +69,13 @@ async def get_config(user_key: str) -> dict:
 
 
 async def set_config(user_key: str, patch: dict) -> dict:
-    """Shallow-merge `patch` into the clinician's config. Returns the merged config."""
+    """Deep-merge `patch` into the clinician's config; returns the stored config.
+
+    Secret fields are sealed (encrypted) before storage. The returned config
+    carries ciphertext markers, not plaintext — redact before sending to the
+    iframe (see `core.byok`).
+    """
+    from core import byok
     from db import AppUser, AsyncSessionLocal
 
     now = datetime.now(timezone.utc)
@@ -77,7 +83,7 @@ async def set_config(user_key: str, patch: dict) -> dict:
         row = await session.get(AppUser, user_key)
         if row is None:
             raise ValueError("unknown user; open the workspace first")
-        merged = {**(row.config or {}), **(patch or {})}
+        merged = byok.deep_merge(row.config or {}, byok.seal(patch or {}))
         row.config = merged
         row.updated_at = now
         await session.commit()

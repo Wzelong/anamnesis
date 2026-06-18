@@ -219,6 +219,7 @@ async def _execute_stages(
     *,
     progress_cb=None,
     use_cache: bool = False,
+    gemini_api_key: str | None = None,
 ):
     """Run Stages (guardrail → assemble) and return the assembled proposals.
 
@@ -226,14 +227,13 @@ async def _execute_stages(
     stage progress (routed to the MCP request). When `use_cache` is False, no
     extracted clinical data touches disk (no-PHI-at-rest contract).
     """
-    from openai import AsyncOpenAI
-
     from config import settings
     from core.augment import assemble_proposals
     from core.cache import JsonCache
     from core.code_candidates import code_candidates
     from core.doc_guardrails import screen_documents
     from core.extraction import extract_candidates_batch, merge_across_notes
+    from core.llm import build_client
     from core.preprocess import preprocess_documents
     from core.reconcile import reconcile
 
@@ -241,8 +241,8 @@ async def _execute_stages(
         if progress_cb is not None:
             await progress_cb(stage, detail)
 
-    client = AsyncOpenAI(api_key=settings.openai_api_key)
-    model = settings.openai_model_fast
+    client = build_client(gemini_api_key)
+    model = settings.gemini_model_fast
     cache_dir = Path(__file__).resolve().parent.parent / ".cache"
 
     def _cache(name: str) -> "JsonCache | None":
@@ -251,7 +251,7 @@ async def _execute_stages(
     await emit("guardrail")
     if settings.doc_guardrail_enabled and documents:
         documents, _rejected = await screen_documents(
-            documents, client, model=settings.openai_model_nano, cache=_cache("doc_guardrail"),
+            documents, client, model=settings.gemini_model_nano, cache=_cache("doc_guardrail"),
         )
     await emit("guardrail", {"documents_accepted": len(documents)})
 
@@ -298,6 +298,7 @@ async def run_extraction_ephemeral(
     tenant_key: str | None = None,
     triggered_by: str = "mcp:app",
     progress_cb=None,
+    gemini_api_key: str | None = None,
 ) -> dict:
     from core import telemetry
     from services import session_cache
@@ -320,6 +321,7 @@ async def run_extraction_ephemeral(
     try:
         stage6 = await _execute_stages(
             patient_context, documents, progress_cb=progress_cb, use_cache=False,
+            gemini_api_key=gemini_api_key,
         )
     except Exception as exc:
         await telemetry.finish_run("failed", error=str(exc))

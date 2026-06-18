@@ -59,6 +59,30 @@ def prefab_user_context() -> UserContext | None:
     return extract_user_context(token) if token else None
 
 
+def prefab_verified_user_context() -> UserContext:
+    """User context from a PO-signature-verified token. Raises on failure.
+
+    For per-user writes (config, future secrets). Read paths use the unverified
+    `prefab_user_context` (host-delegated; PHI self-fails at FHIR if forged).
+    """
+    from config import settings
+
+    token = _headers().get(_TOKEN)
+    if not token:
+        raise PermissionError("no access token in request")
+    if settings.verify_config_writes:
+        from context.token_verify import TokenVerificationError, verify_po_token
+
+        try:
+            verify_po_token(token)
+        except TokenVerificationError as exc:
+            raise PermissionError(f"token verification failed: {exc}") from exc
+    uc = extract_user_context(token)
+    if uc is None:
+        raise PermissionError("token has no sub claim")
+    return uc
+
+
 def prefab_tenant() -> str | None:
     h = _headers()
     basis = h.get(_URL)

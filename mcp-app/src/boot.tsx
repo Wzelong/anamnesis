@@ -38,13 +38,14 @@ export async function start(paint: (m: string, c?: string) => void) {
 
   if (!isMcp) {
     const raw = new URLSearchParams(window.location.search).get("preview")
-    const preview = (raw === "loading" || raw === "flow" || raw === "ready" ? raw : "flow") as
-      | "loading" | "flow" | "ready"
+    const allowed = ["loading", "flow", "ready", "landing", "config"] as const
+    const preview = (allowed.includes(raw as never) ? raw : "landing") as (typeof allowed)[number]
     root.render(
       <App
         app={null}
         header={{
           patient_id: "demo", patient_name: "James Lee", birth_date: "1958-11-15", sex: "male", mrn: "BAY-0042-LEE",
+          byok_enabled: true,
           user: {
             user_key: "sub-demo", display_name: "Dr. Demo", is_returning: true, seen_count: 2,
             first_seen_at: "2026-06-01T00:00:00Z", last_seen_at: "2026-06-18T00:00:00Z", config: {},

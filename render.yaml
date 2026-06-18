@@ -17,7 +17,9 @@ services:
         value: INFO
       - key: DATABASE_URL
         sync: false
-      - key: OPENAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
       - key: UMLS_API_KEY
         sync: false
+      - key: CONFIG_SECRET_KEY
+        generateValue: true

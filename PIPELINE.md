@@ -20,7 +20,7 @@ Output is the only ground truth the pipeline uses. Nothing else re-reads FHIR un
 
 ## Stage 0.5 — Input guardrail (`backend/core/doc_guardrails.py`)
 
-Per-document gate that runs *before* the expensive Stage 2 spend. Two-tier: deterministic checks first (free, instant), then a parallel `gpt-5.4-nano` semantic classification with `reasoning.effort="none"`. All notes screen concurrently via `asyncio.gather`.
+Per-document gate that runs *before* the expensive Stage 2 spend. Two-tier: deterministic checks first (free, instant), then a parallel `gemini-3.5-flash` semantic classification at `thinking_level="minimal"`. All notes screen concurrently via `asyncio.gather`.
 
 **Why here.** Stage 2 fans out 1 + N parse calls per note; a single bad input costs real money. The gate filters obvious garbage, non-clinical text, and prompt-injection attempts before that fan-out begins.
 
@@ -40,7 +40,7 @@ Per-document gate that runs *before* the expensive Stage 2 spend. Two-tier: dete
 - API failure → fail-open (doc is accepted, rejection telemetry records the error).
 - Result persisted on `PipelineRun.meta_json["guardrail"] = {"accepted": N, "rejected": [{document_id, reason, category, detail}]}` so the review UI can badge skipped docs.
 
-**Cost & latency** (gpt-5.4-nano, `effort="none"`):
+**Cost & latency** (gemini-3.5-flash, `thinking_level="minimal"`):
 
 - Per-call: ~1087 input tokens, ~73 output tokens, p50 ~1.5s, p95 ~2.5s.
 - Per-call cost: ~$0.0003 — trivially cheap.
@@ -67,7 +67,7 @@ Singleton extraction (Patient/Encounter/etc.) is intentionally skipped — Anamn
 
 ## Stage 2 — Extract candidates (`backend/core/extraction.py`)
 
-Scan → parse → clean, per note, all notes in parallel via `asyncio.gather`. Model: `gpt-5.4-mini` with `reasoning.effort="low"`.
+Scan → parse → clean, per note, all notes in parallel via `asyncio.gather`. Model: `gemini-3.5-flash` at `thinking_level="low"`.
 
 1. **Scan.** One LLM call per note classifies which sentence numbers hold clinical content. Output is sentence-number groups per resource type (Condition, Observation, MedicationRequest, Procedure, AllergyIntolerance, FamilyMemberHistory). Routing priority rules prevent cross-type leakage (allergies → AllergyIntolerance only, family history → FamilyMemberHistory only, tobacco → Observation only).
 2. **Parse.** One LLM call per sentence group per resource type, all concurrent within a note. Produces Pydantic structured outputs. Each candidate carries `source_sentences`, `reasoning`, and `certainty` (definite / probable / uncertain — how assertively the source text states the fact).
@@ -98,7 +98,7 @@ Merges duplicate candidates across notes into single items with multi-document `
    - 1 call for patient-level ambiguous groups (e.g. "coronary artery disease" vs "two-vessel coronary artery disease")
    - 1 call per encounter for encounter-level ambiguous groups (if any)
 
-   Model: `gpt-5.4-mini`, `reasoning.effort="low"`. The LLM returns merge / reassign / keep decisions with reasoning. Unconsumed groups pass through as singletons.
+   Model: `gemini-3.5-flash`, `thinking_level="low"`. The LLM returns merge / reassign / keep decisions with reasoning. Unconsumed groups pass through as singletons.
 
 **Output:** `StageThreeOutput` — a flat list of `MergedCandidate`, each with:
 - `resource_type`, `item` (dict), `source_refs` (multi-doc provenance)
@@ -107,7 +107,7 @@ Merges duplicate candidates across notes into single items with multi-document `
 
 ## Stage 4 — Terminology coding (`backend/core/coding.py`, `backend/core/code_candidates.py`)
 
-FAISS vector search + LLM CodeSelector + US Core fixed-code short-circuits. Model: `gpt-5.4-mini` with `reasoning.effort="low"`.
+FAISS vector search + LLM CodeSelector + US Core fixed-code short-circuits. Model: `gemini-3.5-flash` at `thinking_level="low"`.
 
 **Infrastructure:** Pre-computed SapBERT embeddings (dim 768) stored in four FAISS indexes under `data/indexes/`:
 
@@ -163,7 +163,7 @@ The augmentation brain. This is the capability text2fhir does *not* have.
 | Procedure | SNOMED code + date match → DUPLICATE; different date → NEW |  |
 | FamilyMemberHistory | relationship code + condition code match |  |
 
-**LLM batching by resource type.** Ambiguous candidates grouped by type, one LLM call per type (max 6, typically 0–1), all in parallel via `asyncio.gather`. Model: `gpt-5.4-mini`, `reasoning.effort="low"`.
+**LLM batching by resource type.** Ambiguous candidates grouped by type, one LLM call per type (max 6, typically 0–1), all in parallel via `asyncio.gather`. Model: `gemini-3.5-flash`, `thinking_level="low"`.
 
 **Output:** `StageFiveOutput` — `list[ReconciliationResult]`, each wrapping the original `MergedCandidate` + `classification` (NEW / DUPLICATE / UPDATING / CONFLICTING) + `reasoning` + `chart_matches` (refs to matched existing resources) + `confidence_breakdown` (see [Confidence scoring](#confidence-scoring) below).
 
