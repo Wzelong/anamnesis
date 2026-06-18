@@ -22,6 +22,7 @@ import {
   Stamp,
   TriangleAlert,
   Undo2,
+  UserRound,
   X,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -1152,7 +1153,24 @@ function Shell({
             {header?.mrn && <Dot className="relative top-px" />}
             {header?.mrn && <span className="text-muted-foreground tabular-nums truncate">MRN {header.mrn}</span>}
           </div>
-          <div className="ml-auto shrink-0">
+          <div className="ml-auto flex items-center gap-2 shrink-0">
+            {header?.user && (
+              <span
+                className="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                title={
+                  header.user.is_returning
+                    ? `Recognized as the same clinician · ${header.user.seen_count} sessions · first seen ${formatDob(header.user.first_seen_at.slice(0, 10))}`
+                    : "First session for this clinician"
+                }
+              >
+                <UserRound className="size-3" />
+                <span className="max-w-32 truncate">{header.user.display_name ?? "Clinician"}</span>
+                <Dot className="relative top-px" />
+                <span className="tabular-nums">
+                  {header.user.is_returning ? `returning · #${header.user.seen_count}` : "new"}
+                </span>
+              </span>
+            )}
             <IconBtn label="Settings" onClick={() => {}}>
               <Settings className="size-3.5" />
             </IconBtn>

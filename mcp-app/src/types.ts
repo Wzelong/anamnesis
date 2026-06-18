@@ -69,12 +69,23 @@ export interface ExtractionResult {
   stats?: RunStats
 }
 
+export interface UserRecognition {
+  user_key: string
+  display_name: string | null
+  is_returning: boolean
+  seen_count: number
+  first_seen_at: string
+  last_seen_at: string
+  config: Record<string, unknown>
+}
+
 export interface PatientHeader {
   patient_id: string
   patient_name: string | null
   birth_date: string | null
   sex?: string | null
   mrn?: string | null
+  user?: UserRecognition | null
 }
 
 export interface StageProgress {

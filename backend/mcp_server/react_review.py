@@ -29,6 +29,7 @@ from context.prefab_ctx import (
     prefab_patient_id,
     prefab_reviewer,
     prefab_tenant,
+    prefab_user_context,
 )
 from fhir.client import FhirClient
 from services import proposals as svc
@@ -86,7 +87,32 @@ async def review_chart() -> dict:
                     break
             if not mrn and patient.get("identifier"):
                 mrn = patient["identifier"][0].get("value")
-    return {"patient_id": patient_id, "patient_name": name, "birth_date": birth_date, "sex": sex, "mrn": mrn}
+    result = {"patient_id": patient_id, "patient_name": name, "birth_date": birth_date, "sex": sex, "mrn": mrn}
+    uc = prefab_user_context()
+    if uc:
+        from services import users
+        result["user"] = await users.register_session(
+            uc.user_key, display_name=uc.display_name, workspace_id=uc.workspace_id, role=uc.role,
+        )
+    return result
+
+
+async def get_user_config() -> dict:
+    """App-only: the current clinician's persisted framework config."""
+    from services import users
+    uc = prefab_user_context()
+    if not uc:
+        return {"config": {}}
+    return {"config": await users.get_config(uc.user_key)}
+
+
+async def set_user_config(patch: dict) -> dict:
+    """App-only: shallow-merge a patch into the clinician's persisted config."""
+    from services import users
+    uc = prefab_user_context()
+    if not uc:
+        raise ValueError("no user in context")
+    return {"config": await users.set_config(uc.user_key, patch)}
 
 
 _STAGES = [
@@ -246,6 +272,8 @@ def register(mcp: FastMCP) -> None:
         (accept_augmentation, "AcceptAugmentation"),
         (reject_augmentation, "RejectAugmentation"),
         (search_terminology, "SearchTerminology"),
+        (get_user_config, "GetUserConfig"),
+        (set_user_config, "SetUserConfig"),
     ]:
         mcp.add_tool(Tool.from_function(
             fn, name=fname, description=(fn.__doc__ or "").strip(),

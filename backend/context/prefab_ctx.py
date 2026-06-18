@@ -11,7 +11,12 @@ import hashlib
 import jwt
 from fastmcp.server.dependencies import get_http_headers
 
-from context.auth import ReviewerIdentity, extract_clinician_identity
+from context.auth import (
+    ReviewerIdentity,
+    UserContext,
+    extract_clinician_identity,
+    extract_user_context,
+)
 from fhir.client import FhirClient
 
 _URL = "x-fhir-server-url"
@@ -47,6 +52,11 @@ def prefab_patient_id() -> str | None:
 def prefab_reviewer() -> ReviewerIdentity | None:
     token = _headers().get(_TOKEN)
     return extract_clinician_identity(token) if token else None
+
+
+def prefab_user_context() -> UserContext | None:
+    token = _headers().get(_TOKEN)
+    return extract_user_context(token) if token else None
 
 
 def prefab_tenant() -> str | None:

@@ -43,7 +43,13 @@ export async function start(paint: (m: string, c?: string) => void) {
     root.render(
       <App
         app={null}
-        header={{ patient_id: "demo", patient_name: "James Lee", birth_date: "1958-11-15", sex: "male", mrn: "BAY-0042-LEE" }}
+        header={{
+          patient_id: "demo", patient_name: "James Lee", birth_date: "1958-11-15", sex: "male", mrn: "BAY-0042-LEE",
+          user: {
+            user_key: "sub-demo", display_name: "Dr. Demo", is_returning: true, seen_count: 2,
+            first_seen_at: "2026-06-01T00:00:00Z", last_seen_at: "2026-06-18T00:00:00Z", config: {},
+          },
+        }}
         preview={preview}
       />,
     )
