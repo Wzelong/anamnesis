@@ -3,7 +3,7 @@
 No PHI is persisted. The pipeline runs in memory; proposals + source notes are
 returned to the caller and held briefly in an in-process TTL cache
 (`services.session_cache`). The durable store is FHIR (resource + Provenance).
-Only non-PHI telemetry (PipelineRun/LLMCall) and a DecisionAudit trail persist.
+Only non-PHI telemetry (PipelineRun) and a DecisionAudit trail persist.
 
 Entry points:
   * `run_extraction_ephemeral` — run the pipeline, return proposals + notes.

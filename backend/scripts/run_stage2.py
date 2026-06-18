@@ -335,34 +335,9 @@ async def main() -> int:
 
     all_ok = _run_demo_checks(results, docs)
     await telemetry.finish_run("success" if all_ok else "failed")
-    await _print_telemetry_summary(run_ctx.run_id)
     print("\n" + "=" * 72)
     print("OVERALL:", "PASS" if all_ok else "FAIL")
     return 0 if all_ok else 1
-
-
-async def _print_telemetry_summary(run_id: str) -> None:
-    rows = await telemetry.run_summary(run_id)
-    if not rows:
-        return
-    print("\n" + "=" * 72)
-    print("TELEMETRY")
-    header = f"  {'stage':<7} {'call_type':<26} {'calls':>5} {'in_tok':>8} {'cached':>7} {'out_tok':>7} {'cost':>10} {'ms_sum':>8}"
-    print(header)
-    totals = {"calls": 0, "in_tok": 0, "cached_tok": 0, "out_tok": 0, "cost": 0, "ms": 0}
-    for r in rows:
-        print(f"  {r['stage']:<7} {r['call_type']:<26} {r['calls']:>5} "
-              f"{r['in_tok']:>8,} {r['cached_tok']:>7,} {r['out_tok']:>7,} "
-              f"${r['usd_cost']:>9.6f} {r['total_ms']:>8,}")
-        totals["calls"] += r["calls"]
-        totals["in_tok"] += r["in_tok"]
-        totals["cached_tok"] += r["cached_tok"]
-        totals["out_tok"] += r["out_tok"]
-        totals["cost"] += float(r["usd_cost"])
-        totals["ms"] += r["total_ms"]
-    print(f"  {'TOTAL':<7} {'':<26} {totals['calls']:>5} "
-          f"{totals['in_tok']:>8,} {totals['cached_tok']:>7,} {totals['out_tok']:>7,} "
-          f"${totals['cost']:>9.6f} {totals['ms']:>8,}")
 
 
 if __name__ == "__main__":

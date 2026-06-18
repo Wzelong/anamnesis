@@ -8,7 +8,6 @@ import uuid
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -111,7 +110,7 @@ async def start_run(
 async def finish_run(status: str = "success", *, error: str | None = None) -> None:
     from sqlalchemy import update
 
-    from db import AsyncSessionLocal, LLMCall, PipelineRun
+    from db import AsyncSessionLocal, PipelineRun
 
     run = _current_run.get()
     if run is None:
@@ -119,9 +118,6 @@ async def finish_run(status: str = "success", *, error: str | None = None) -> No
 
     now = _now()
     async with AsyncSessionLocal() as session:
-        if run.call_buffer:
-            session.add_all(LLMCall(**row) for row in run.call_buffer)
-            run.call_buffer.clear()
         await session.execute(
             update(PipelineRun)
             .where(PipelineRun.id == run.run_id)
@@ -156,8 +152,6 @@ async def record_call(
     run = _current_run.get()
     if run is None:
         return
-
-    from db import AsyncSessionLocal, LLMCall
 
     input_tokens = int((usage or {}).get("input_tokens") or 0)
     output_tokens = int((usage or {}).get("output_tokens") or 0)
@@ -237,40 +231,3 @@ async def log_event(event: str, payload: dict[str, Any]) -> None:
     log_event_sync(event, payload)
 
 
-async def run_summary(run_id: str) -> list[dict[str, Any]]:
-    from sqlalchemy import func, select
-
-    from db import AsyncSessionLocal, LLMCall
-
-    stmt = (
-        select(
-            LLMCall.stage,
-            LLMCall.call_type,
-            func.count().label("calls"),
-            func.sum(LLMCall.input_tokens).label("in_tok"),
-            func.sum(LLMCall.output_tokens).label("out_tok"),
-            func.sum(LLMCall.cached_tokens).label("cached_tok"),
-            func.sum(LLMCall.usd_cost).label("usd_cost"),
-            func.sum(LLMCall.latency_ms).label("total_ms"),
-        )
-        .where(LLMCall.run_id == run_id)
-        .group_by(LLMCall.stage, LLMCall.call_type)
-        .order_by(LLMCall.stage, LLMCall.call_type)
-    )
-
-    async with AsyncSessionLocal() as session:
-        rows = (await session.execute(stmt)).all()
-
-    return [
-        {
-            "stage": r.stage,
-            "call_type": r.call_type,
-            "calls": int(r.calls or 0),
-            "in_tok": int(r.in_tok or 0),
-            "out_tok": int(r.out_tok or 0),
-            "cached_tok": int(r.cached_tok or 0),
-            "usd_cost": Decimal(r.usd_cost or 0),
-            "total_ms": int(r.total_ms or 0),
-        }
-        for r in rows
-    ]

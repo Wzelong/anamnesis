@@ -69,6 +69,9 @@ mcp-app/*.tsbuildinfo
 # Built MCP UI assets are committed (Render serves them; no Node build in cloud).
 # Regenerate with `npm run build` in mcp-app, or `make build-ui`.
 
+# Python build artifacts
+backend/build/
+
 # Tunnels / local tools
 cloudflared.exe
 cloudflared
