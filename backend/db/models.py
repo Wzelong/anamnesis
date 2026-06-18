@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import ForeignKey, Index, Numeric, String, Text
+from sqlalchemy import DateTime, ForeignKey, Index, Numeric, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -20,8 +20,8 @@ class PipelineRun(Base):
     patient_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
     triggered_by: Mapped[str] = mapped_column(String(64))
     status: Mapped[str] = mapped_column(String(16))
-    started_at: Mapped[datetime] = mapped_column()
-    finished_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     meta_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     calls: Mapped[list["LLMCall"]] = relationship(
@@ -49,8 +49,8 @@ class LLMCall(Base):
     usd_cost: Mapped[Decimal] = mapped_column(Numeric(12, 6), default=Decimal("0"))
     status: Mapped[str] = mapped_column(String(16))
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    started_at: Mapped[datetime] = mapped_column()
-    finished_at: Mapped[datetime] = mapped_column()
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
     run: Mapped[PipelineRun] = relationship(back_populates="calls")
 
@@ -76,8 +76,8 @@ class ProposalRecord(Base):
     resource_json: Mapped[str] = mapped_column(Text)
     citations_json: Mapped[str] = mapped_column(Text)
     metadata_json: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column()
-    reviewed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     reviewed_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
     conflict_group_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
 
@@ -92,8 +92,8 @@ class ReviewToken(Base):
     token: Mapped[str] = mapped_column(String(32), primary_key=True)
     display: Mapped[str] = mapped_column(String(256))
     fhir_reference: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    expires_at: Mapped[datetime] = mapped_column(index=True)
-    created_at: Mapped[datetime] = mapped_column()
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class DecisionAudit(Base):
@@ -107,4 +107,4 @@ class DecisionAudit(Base):
     resource_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     reviewer: Mapped[str | None] = mapped_column(String(256), nullable=True)
     resource_ref: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    at: Mapped[datetime] = mapped_column()
+    at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
