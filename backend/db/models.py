@@ -60,42 +60,6 @@ class LLMCall(Base):
     )
 
 
-class ProposalRecord(Base):
-    __tablename__ = "proposal"
-
-    id: Mapped[str] = mapped_column(String(32), primary_key=True)
-    run_id: Mapped[str] = mapped_column(
-        String(32), ForeignKey("pipeline_run.id", ondelete="CASCADE"), index=True
-    )
-    patient_id: Mapped[str] = mapped_column(String(128), index=True)
-    resource_type: Mapped[str] = mapped_column(String(32))
-    classification: Mapped[str] = mapped_column(String(16))
-    confidence_tier: Mapped[str] = mapped_column(String(16))
-    confidence_score: Mapped[Decimal] = mapped_column(Numeric(4, 3))
-    status: Mapped[str] = mapped_column(String(16), default="pending")
-    resource_json: Mapped[str] = mapped_column(Text)
-    citations_json: Mapped[str] = mapped_column(Text)
-    metadata_json: Mapped[str] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    reviewed_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    conflict_group_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
-
-    __table_args__ = (
-        Index("ix_proposal_patient_status", "patient_id", "status"),
-    )
-
-
-class ReviewToken(Base):
-    __tablename__ = "review_token"
-
-    token: Mapped[str] = mapped_column(String(32), primary_key=True)
-    display: Mapped[str] = mapped_column(String(256))
-    fhir_reference: Mapped[str | None] = mapped_column(String(256), nullable=True)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-
-
 class DecisionAudit(Base):
     """Non-PHI audit of stateless-path decisions. The durable clinical audit is
     the FHIR Provenance; this is a fast local trail (no patient id, no content)."""
