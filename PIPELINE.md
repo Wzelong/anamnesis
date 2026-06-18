@@ -2,7 +2,7 @@
 
 The deep-dive on how a clinical note becomes a clinician-reviewable, provenance-stamped FHIR write. Every stage is a pure function over typed Pydantic schemas; LLM calls are wrapped in telemetry; nothing here is demo-specific.
 
-For the system shape (MCP surface, REST API, frontend, persistence) see [ARCHITECTURE.md](ARCHITECTURE.md). For benchmarked accuracy see [benchmarks/eval-corpus-v1/](benchmarks/eval-corpus-v1/).
+For the system shape (MCP surface, REST API, frontend, persistence) see [Architecture.md](Architecture.md). For benchmarked accuracy see [benchmarks/eval-corpus-v1/](benchmarks/eval-corpus-v1/).
 
 ![Pipeline](pipeline.png)
 
@@ -205,7 +205,7 @@ No FHIR write happens here. The resource JSON is pre-assembled and valid but sit
 
 ## Stage 7 — Review hand-off (`backend/services/proposals.py`)
 
-The pipeline's terminal stage from the augmentation engine's perspective: persist proposals, mint a review token, return a deep link. The interactive review (MCP tools, REST endpoints, frontend) is documented in [ARCHITECTURE.md](ARCHITECTURE.md).
+The pipeline's terminal stage from the augmentation engine's perspective: persist proposals, mint a review token, return a deep link. The interactive review (MCP tools, REST endpoints, frontend) is documented in [Architecture.md](Architecture.md).
 
 What this stage emits:
 

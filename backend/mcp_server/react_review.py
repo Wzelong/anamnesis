@@ -66,8 +66,6 @@ _MIME = {
 
 async def review_chart() -> dict:
     """Open the interactive chart-review workspace and seed the patient header."""
-    from context.debug_token import capture
-    capture("ReviewChart")
     patient_id = prefab_patient_id()
     if not patient_id:
         raise ValueError("No patient in FHIR context")
@@ -156,8 +154,6 @@ async def run_extraction() -> dict:
     """App-only: run the augmentation pipeline; return proposals + source notes."""
     from fastmcp.server.dependencies import get_context
 
-    from context.debug_token import capture
-    capture("RunExtraction")
     patient_id = prefab_patient_id()
     if not patient_id:
         raise ValueError("No patient in FHIR context")

@@ -9,7 +9,7 @@ os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 from services import proposals as svc
 
-OUT = Path(__file__).resolve().parent.parent / "mcp-app" / "src" / "demo" / "proposals.json"
+OUT = Path(__file__).resolve().parent.parent.parent / "mcp-app" / "src" / "demo" / "proposals.json"
 
 
 async def main() -> None:

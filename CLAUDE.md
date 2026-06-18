@@ -44,16 +44,18 @@ Responsibilities:
 
 The backend should remain **complete on its own**. A different consumer (another team's agent, a different UI, a CLI) should be able to use the MCP without the frontend existing.
 
-### `/frontend`
+### `/mcp-app`
 
-The provider-facing review workspace. The deep-linkable, human-in-the-loop surface that makes auditability visible.
+The provider-facing review workspace, delivered as an **MCP App** (Vite + React) that the backend serves and the Prompt Opinion host renders in an iframe. The deep-linkable, human-in-the-loop surface that makes auditability visible.
 
 Responsibilities:
-- Open from a deep link (patient + session) with no friction
+- Open from the host with patient context already in scope (no separate login)
 - Render the patient header, source notes, and the augmentation review queue
 - For each proposal, show: source span highlighted in the original note, extracted FHIR resource, classification, confidence, and conflicts with existing FHIR
 - Accept / reject / edit actions that call backend MCP tools
 - Display the FHIR write outcome with the generated Provenance resource visible
+
+Build with `npm run build` in `mcp-app/`; the bundle is emitted into `backend/mcp_server/ui/assets/` (committed, since Render serves it with no cloud Node build).
 
 The frontend should remain a **thin client**. It calls the backend for everything. No business logic, no parallel data store, no augmentation reasoning. If a feature feels like it wants logic in the frontend, that logic likely belongs in the backend.
 
