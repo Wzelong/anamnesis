@@ -20,6 +20,8 @@ _IDENTITY_CLAIMS = {
     "iss", "sub", "aud", "azp", "client_id", "fhirUser", "name",
     "preferred_username", "email", "tenant", "tenant_id", "workspace",
     "workspace_id", "org", "scope", "scp", "exp", "iat",
+    # Prompt Opinion-specific identity/context claims (non-PHI).
+    "is_client_creds", "role", "po_ws_id", "po_mcp_id", "oi_prst", "oi_tkn_id",
 }
 _REDACT = {"patient", "fhirContext", "encounter"}
 
