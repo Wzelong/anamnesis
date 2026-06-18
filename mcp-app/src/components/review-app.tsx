@@ -26,7 +26,7 @@ import {
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { toast } from "sonner"
-import { callTool, parseStructured } from "../mcp"
+import { callTool, parseStructured, resultText } from "../mcp"
 import type { ExtractionResult, PatientHeader, Proposal, SourceDocument } from "../types"
 import { cn } from "../lib/cn"
 import { MOCK_RESULT } from "../mock"
@@ -230,7 +230,7 @@ export function ReviewApp({
       try {
         const res = await callTool(app, "RunExtraction", {})
         const data = parseStructured<ExtractionResult>(res)
-        if (!data) throw new Error("no extraction result")
+        if (!data) throw new Error(resultText(res) || "no extraction result")
         setResult(data)
         setSelectedId(data.proposals[0]?.id ?? null)
         loop.settle()
