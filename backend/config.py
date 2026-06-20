@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # the target FHIR server's $validate rejects (hard-gate). Default soft: validate
     # opportunistically and attach the result, but never block the write.
     validate_before_write: bool = False
+    # L2b/L3 dedicated validator (CONFORMANCE.md). FHIR base URL of an external HAPI/
+    # org.hl7.fhir.validator service with US Core 6.1.0 + terminology loaded. When set,
+    # its authoritative $validate supersedes the target server's (L2a); empty = disabled.
+    validator_base_url: str = ""
     # Fernet key for encrypting BYOK secrets in app_user.config at rest. Empty =
     # BYOK disabled (storing a secret raises; the pipeline uses the server key).
     config_secret_key: str = ""

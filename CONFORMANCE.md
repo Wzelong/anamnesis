@@ -86,7 +86,12 @@ rewrite when mCODE lands:
   `MedicationRequest.reported`; specific vital-sign profiles (Tier 2). Refactor builders to
   EffectiveProfile-in / profile-list + extension-apply-out (guardrails 1–3).
 - **Stage 3 — L2a opportunistic `$validate`** against the SHARP server; attach profile conformance.
-- **Stage 4 — L2b/L3 dedicated validator + terminology;** coding-subset enforcement; prod gate.
+- **Stage 4 — L2b validator + L3 coding-subset enforcement; prod gate (done).** `fhir/conformance.py`
+  unifies L1 + L3-local coding-subset + the strongest available `$validate` into one verdict.
+  `validator_base_url` points at a dedicated US Core 6.1.0 validator whose authoritative
+  `$validate` (L2b) supersedes the target server's (L2a). `validate_before_write` hard-gates the
+  write on the unified verdict. **L3-remote** (`$validate-code` / `$expand` value-set membership)
+  is deferred — needs per-resource value-set bindings authored first.
 - **Stage 5 — UI:** conformance badge per proposal; per-preset validation strictness.
 
 ## Known gaps / future
@@ -94,3 +99,6 @@ rewrite when mCODE lands:
 - **ICD-O-3 (morphology) + AJCC (staging)** retrievers — required for mCODE, absent today.
 - **Genomics** — out (separate IG, structured).
 - US Core version is currently asserted only via unversioned canonicals; L2b pins the package.
+- **L3-remote terminology** (`$validate-code` / `$expand`) — value-set membership against the
+  dedicated validator. Blocked on authoring per-resource value-set bindings; coding-subset
+  enforcement is system-level (allow-listed terminology systems) until then.

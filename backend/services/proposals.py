@@ -430,6 +430,7 @@ async def accept_augmentation(
     citations: list[dict] | None = None,
     classification: str = "NEW",
     supersedes: list[str] | None = None,
+    effective=None,
 ) -> dict:
     """Write an accepted augmentation to FHIR with Provenance. Stores no PHI.
 
@@ -475,11 +476,19 @@ async def accept_augmentation(
     conformance = None
     if fhir_client:
         from config import settings
-        from fhir.profile_validate import validate_profile
+        from fhir.conformance import assess_conformance, validator_client
+        rt = resource.get("resourceType")
+        allowed_systems = effective.rule(rt).coding_systems if effective is not None else None
         profiles = (resource.get("meta") or {}).get("profile") or []
-        conformance = await validate_profile(fhir_client, resource, profiles)
-        if settings.validate_before_write and conformance.get("supported") and conformance.get("valid") is False:
-            raise ValueError(f"profile validation failed: {conformance.get('issues', [])[:3]}")
+        conformance = await assess_conformance(
+            resource,
+            profiles=profiles,
+            allowed_systems=allowed_systems,
+            target_client=fhir_client,
+            validator=validator_client(),
+        )
+        if settings.validate_before_write and conformance["valid"] is False:
+            raise ValueError(f"conformance gate failed ({conformance['level']}): {conformance['issues'][:3]}")
 
     write_result = None
     local_id = proposal_id or short_id("aug")

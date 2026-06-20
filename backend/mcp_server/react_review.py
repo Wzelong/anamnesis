@@ -238,7 +238,20 @@ async def accept_augmentation(
         citations=citations,
         classification=classification,
         supersedes=supersedes,
+        effective=await _accept_effective(),
     )
+
+
+async def _accept_effective():
+    """Verified clinician's active preset (for the conformance coding-subset gate).
+    Defaults when unconfigured/unverified -- enforcement is opt-in, regression-safe."""
+    from core.effective_profile import resolve_from_config
+    try:
+        uc = prefab_verified_user_context()
+        from services import users
+        return resolve_from_config(await users.get_config(uc.user_key))
+    except Exception:
+        return resolve_from_config(None)
 
 
 async def reject_augmentation(
