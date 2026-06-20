@@ -40,8 +40,21 @@ export interface Proposal {
   confidence_breakdown?: ConfidenceBreakdown | null
   chart_matches: ChartMatch[]
   supersedes: string[]
+  conformance?: Conformance | null
   provenance_resource?: Record<string, unknown>
   write_result?: { resource_ref?: string; provenance_ref?: string } | null
+}
+
+export interface ConformanceIssue {
+  severity: string
+  path: string
+  message: string
+}
+
+export interface Conformance {
+  valid: boolean
+  level: string
+  issues: ConformanceIssue[]
 }
 
 export interface ConfidenceAxis {
@@ -98,8 +111,74 @@ export interface RedactedSecret {
 export interface UserConfig {
   byok?: {
     gemini_api_key?: RedactedSecret | null
+    umls_api_key?: RedactedSecret | null
   } | null
+  active_preset_id?: string
+  presets?: Preset[]
   [k: string]: unknown
+}
+
+export type Code = { system: string; code: string; display?: string }
+
+// A Preset stores SPARSE overrides over the resolved IG; absent keys fall back
+// to the IG defaults (see lib/ig-catalog.ts) at resolve time.
+export interface Preset {
+  id: string
+  name: string
+  ig: { base: string; specialty: string | null }
+  resources: Record<string, { enabled: boolean }>
+  coding: Record<string, CodingOverride>
+  prompts: Record<string, PromptOverride>
+  extensions: UserExtension[]
+}
+
+export interface CodingOverride {
+  systems?: string[]
+  subset?: Code[] | null
+}
+
+export interface PromptVersion {
+  version: number
+  text: string
+  note?: string
+  test_notes_ref?: string | null
+}
+
+export interface PromptOverride {
+  active_version: number
+  versions: PromptVersion[]
+}
+
+export type ExtensionDatatype =
+  | "code" | "string" | "CodeableConcept" | "Quantity" | "boolean" | "integer" | "dateTime"
+
+export interface UserExtension {
+  id: string
+  name: string
+  attach_to: string
+  url: string
+  datatype: ExtensionDatatype
+  binding?: { codes?: Code[] } | null
+  prompt_fragment: { text: string; version: number }
+}
+
+export interface IgResourceDefault {
+  inclusion: "required" | "supported" | "optional"
+  profiles: string[]
+  coding: { systems: string[]; valueSets?: string[] }
+  defaultEnabled: boolean
+}
+
+export interface IgDef {
+  id: string
+  title: string
+  dependsOn?: string[]
+  resources: Record<string, IgResourceDefault>
+}
+
+export interface IgCatalog {
+  base: IgDef[]
+  specialties: IgDef[]
 }
 
 export interface UsageSummary {

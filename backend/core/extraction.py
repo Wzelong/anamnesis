@@ -212,8 +212,9 @@ async def parse_group(
     allowed_sentences: set[int],
     *,
     document_id: str | None = None,
+    prompt: str | None = None,
 ) -> list[BaseModel]:
-    prompt = PROMPTS_BY_TYPE[resource_type]
+    prompt = prompt or PROMPTS_BY_TYPE[resource_type]
     list_model = ITEM_LIST_MODELS[resource_type]
     user_content = (
         f"Temporal context: {_render_temporal_context(note_context)}\n\n"
@@ -346,14 +347,37 @@ def _apply_cleaner(
     return survivors
 
 
-def _note_cache_key(note: PreprocessedNote, model: str) -> str:
+def _note_cache_key(note: PreprocessedNote, model: str, override_digest: str = "") -> str:
     h = hashlib.sha256()
     h.update(note.original_text.encode("utf-8"))
     h.update(b"\x00")
     h.update(model.encode("utf-8"))
     h.update(b"\x00")
     h.update(PROMPT_VERSION.encode("utf-8"))
+    # Only mixed in when a preset overrides a prompt, so the key stays
+    # byte-identical to the no-override default (existing cache entries valid).
+    if override_digest:
+        h.update(b"\x00")
+        h.update(override_digest.encode("utf-8"))
     return h.hexdigest()
+
+
+def _override_digest(effective) -> str:
+    """Stable digest of the active per-type prompt overrides; "" when none."""
+    if effective is None:
+        return ""
+    parts = [f"{rt}:{ov}" for rt in sorted(RESOURCE_TYPES) if (ov := effective.rule(rt).prompt_override)]
+    if not parts:
+        return ""
+    return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def _resolve_prompts(effective) -> dict[str, str]:
+    """Per-type extraction prompt: the preset override if set, else the default."""
+    return {
+        rt: (effective.rule(rt).prompt_override if effective else None) or PROMPTS_BY_TYPE[rt]
+        for rt in RESOURCE_TYPES
+    }
 
 
 async def extract_candidates(
@@ -362,6 +386,7 @@ async def extract_candidates(
     *,
     model: str,
     cache: JsonCache | None = None,
+    effective=None,
 ) -> StageTwoOutput:
     """Run Stage 2 (scan -> parse -> clean) on a single preprocessed note.
 
@@ -375,8 +400,11 @@ async def extract_candidates(
     returns immediately without any LLM call. Stale cache entries are
     silently re-computed.
     """
+    override_digest = _override_digest(effective)
+    prompts = _resolve_prompts(effective)
+
     if cache is not None:
-        cached = cache.get(_note_cache_key(note, model))
+        cached = cache.get(_note_cache_key(note, model, override_digest))
         if cached is not None:
             try:
                 out = StageTwoOutput.from_json(cached)
@@ -415,7 +443,7 @@ async def extract_candidates(
                 rtype,
                 asyncio.create_task(parse_group(
                     rtype, snippet, scan.note_context, client, model, allowed,
-                    document_id=note.document_id,
+                    document_id=note.document_id, prompt=prompts[rtype],
                 )),
             ))
 
@@ -444,7 +472,7 @@ async def extract_candidates(
     )
 
     if cache is not None:
-        cache.put(_note_cache_key(note, model), output.to_json())
+        cache.put(_note_cache_key(note, model, override_digest), output.to_json())
 
     return output
 
@@ -456,6 +484,7 @@ async def extract_candidates_batch(
     model: str,
     cache: JsonCache | None = None,
     max_concurrent: int = 50,
+    effective=None,
 ) -> list[StageTwoOutput]:
     """Run `extract_candidates` over many notes concurrently.
 
@@ -464,7 +493,7 @@ async def extract_candidates_batch(
     `StageTwoOutput` matches the input note order.
     """
     tasks = [
-        extract_candidates(n, client, model=model, cache=cache)
+        extract_candidates(n, client, model=model, cache=cache, effective=effective)
         for n in notes
     ]
     return await asyncio.gather(*tasks)

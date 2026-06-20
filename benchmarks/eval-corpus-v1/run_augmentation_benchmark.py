@@ -27,9 +27,8 @@ ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent.parent
 sys.path.insert(0, str(REPO / "backend"))
 
-from openai import AsyncOpenAI
-
 from config import settings
+from core.llm import build_client
 from core.augment import assemble_proposals
 from core.cache import JsonCache
 from core.code_candidates import code_candidates
@@ -39,8 +38,6 @@ from core.preprocess import preprocess_documents
 from core.reconcile import reconcile, _normalize_ingredient
 from fhir.local_bundle import load_demo_data
 from fhir.models import Document
-
-from usage_tracker import UsageTracker, stage_scope, wrap_client
 
 NOTES_DIR = ROOT / "notes"
 LABELS_DIR = ROOT / "labels"
@@ -69,34 +66,25 @@ def load_pairs(only: set[str] | None):
         yield stem, aug, ext, note_path, bundle_path
 
 
-async def execute_pipeline(patient_context, documents, client, tracker: UsageTracker | None = None):
-    if tracker is not None:
-        client = wrap_client(client, tracker)
-    model = settings.openai_model_fast
+async def execute_pipeline(patient_context, documents, client, tracker=None):
+    model = settings.gemini_model_fast
 
     rejected: list = []
     if settings.doc_guardrail_enabled and documents:
-        with stage_scope("guardrail"):
-            documents, rejected = await screen_documents(
-                documents, client, model=settings.openai_model_nano,
-                cache=JsonCache(CACHE_ROOT / "doc_guardrail"),
-            )
-
-    with stage_scope("preprocess"):
-        notes = preprocess_documents(documents)
-
-    with stage_scope("stage2_extract"):
-        stage2 = await extract_candidates_batch(
-            notes, client, model=model, cache=JsonCache(CACHE_ROOT / "stage2_output"),
+        documents, rejected = await screen_documents(
+            documents, client, model=settings.gemini_model_nano,
+            cache=JsonCache(CACHE_ROOT / "doc_guardrail"),
         )
-    with stage_scope("stage3_merge"):
-        stage3 = await merge_across_notes(
-            stage2, client, model=model, cache=JsonCache(CACHE_ROOT / "stage3"),
-        )
-    with stage_scope("stage4_code"):
-        stage4 = await code_candidates(stage3, client, model=model)
-    with stage_scope("stage5_reconcile"):
-        stage5 = await reconcile(stage4, patient_context, client, model=model)
+
+    notes = preprocess_documents(documents)
+    stage2 = await extract_candidates_batch(
+        notes, client, model=model, cache=JsonCache(CACHE_ROOT / "stage2_output"),
+    )
+    stage3 = await merge_across_notes(
+        stage2, client, model=model, cache=JsonCache(CACHE_ROOT / "stage3"),
+    )
+    stage4 = await code_candidates(stage3, client, model=model)
+    stage5 = await reconcile(stage4, patient_context, client, model=model)
     return notes, stage5, rejected
 
 
@@ -414,11 +402,11 @@ async def main():
     args = parser.parse_args()
 
     only = {x.strip() for x in args.only.split(",")} if args.only else None
-    if not settings.openai_api_key:
-        print("ERROR: OPENAI_API_KEY not set", file=sys.stderr)
+    if not settings.gemini_api_key:
+        print("ERROR: GEMINI_API_KEY not set", file=sys.stderr)
         return 2
 
-    client = AsyncOpenAI(api_key=settings.openai_api_key)
+    client = build_client()
 
     if args.runs <= 1:
         print("running single pass...", flush=True)

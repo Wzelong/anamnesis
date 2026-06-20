@@ -12,12 +12,15 @@ from core.augment.config import (
     _COND_CLINICAL_SYSTEM,
     _NUM_RE,
     _OBS_CATEGORY_SYSTEM,
+    _OCCUPATION_LOINC,
+    _SEXUAL_ORIENTATION_LOINC,
     _TOBACCO_LOINC,
     _TOBACCO_SNOMED,
     _UCUM_CODES,
     CONDITION_CATEGORY_MAP,
     OBS_PROFILES,
     US_CORE_PROFILES,
+    VITAL_PROFILE_BY_LOINC,
 )
 from core.augment.helpers import (
     _allergy_verification,
@@ -86,8 +89,15 @@ def _build_observation(item: dict, patient_id: str, encounter_ref: str | None, *
         profile = OBS_PROFILES["bp"]
     elif is_tobacco:
         profile = OBS_PROFILES["smokingstatus"]
+    elif _OCCUPATION_LOINC in loinc_codes:
+        profile = OBS_PROFILES["occupation"]
+    elif _SEXUAL_ORIENTATION_LOINC in loinc_codes:
+        profile = OBS_PROFILES["sexual-orientation"]
     else:
-        profile = OBS_PROFILES.get(cat)
+        profile = next(
+            (VITAL_PROFILE_BY_LOINC[c] for c in loinc_codes if c in VITAL_PROFILE_BY_LOINC),
+            None,
+        ) or OBS_PROFILES.get(cat)
 
     resource: dict = {
         "resourceType": "Observation",
@@ -268,9 +278,9 @@ def _build_family_member_history(item: dict, patient_id: str) -> dict:
             c["outcome"] = {"text": cond["outcome"]}
         conditions.append(c)
 
+    # Base FHIR R4 — US Core 6.1.0 defines no FamilyMemberHistory profile.
     resource: dict = {
         "resourceType": "FamilyMemberHistory",
-        "meta": {"profile": [US_CORE_PROFILES["FamilyMemberHistory"]]},
         "status": "completed",
         "patient": {"reference": f"Patient/{patient_id}"},
         "relationship": _cc(item.get("coding", []), item.get("relationship", "")),

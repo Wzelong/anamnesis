@@ -75,3 +75,16 @@ class FhirClient:
         response = await self._request("POST", "", json_body=bundle)
         response.raise_for_status()
         return response.json()
+
+    async def validate(
+        self, resource_type: str, resource: dict, profile: str | None = None,
+    ) -> tuple[int, dict | None]:
+        """POST {type}/$validate (optionally ?profile=). Returns (status, body)
+        without raising — $validate reports issues in an OperationOutcome, not
+        via the HTTP status."""
+        params = {"profile": profile} if profile else None
+        response = await self._request("POST", f"{resource_type}/$validate", params=params, json_body=resource)
+        try:
+            return response.status_code, response.json()
+        except Exception:
+            return response.status_code, None

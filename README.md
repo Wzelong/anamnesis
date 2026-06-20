@@ -4,29 +4,29 @@
 
 A FHIR augmentation **MCP server** for the **Agents Assemble: The Healthcare AI Endgame** hackathon (Option 1: Build a Superpower). Anamnesis reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them.
 
-The MCP is the substantive deliverable — invokable by any agent in the Prompt Opinion ecosystem. A thin **provider-facing review workspace** ships alongside as a reference consumer for the human-in-the-loop hand-off.
+The MCP is the substantive deliverable — invokable by any agent in the Prompt Opinion (PO) ecosystem. The provider-facing review workspace ships **inside the same server** as a standard MCP App, rendered in the PO host iframe — no separate frontend deploy.
 
 ## Try it
 
 - **Demo video** — <https://youtu.be/S1mlkVjZD2s>
 - **Marketplace listing** — <https://app.promptopinion.ai/marketplace/mcp/019df448-2990-7148-981a-72ebf813006b>
-- **MCP endpoint** (Streamable HTTP, register under *Configuration → MCP Servers*) — `https://anamnesis-demo.fly.dev/mcp`
-- **Review workspace** — <https://anamnesis-demo.fly.dev>
+- **MCP endpoint** — Streamable HTTP at `/mcp` on the deployed server (Render). Register it under PO *Configuration → MCP Servers*; the review UI opens in-host.
 
 ## How it works
 
 ![Pipeline](pipeline.png)
 
-Six stages from clinical note to clinician-reviewable proposal, plus a deterministic write-back stage on accept. Deterministic where it can be (sentence splitting, terminology lookup, code matching, FHIR assembly), LLM-driven where it must be (extraction, fuzzy reconciliation). Every accepted change writes back as a transaction Bundle with a `Provenance` resource that points at the source span — an audit trail manual chart review does not produce.
+Six stages from clinical note to clinician-reviewable proposal, plus a deterministic write-back stage on accept. Deterministic where it can be (sentence splitting, terminology lookup, code matching, FHIR assembly), LLM-driven where it must be (extraction, fuzzy reconciliation). The pipeline runs **in memory — no PHI at rest**. Every accepted change writes back as a transaction Bundle with a `Provenance` resource that points at the source span — an audit trail manual chart review does not produce.
 
-See [Architecture.md](Architecture.md) for the system shape and [PIPELINE.md](PIPELINE.md) for the per-stage deep-dive.
+See [Architecture.md](Architecture.md) for the system shape, [DIRECTION.md](DIRECTION.md) for where it is headed, and [PIPELINE.md](PIPELINE.md) for the per-stage deep-dive.
 
 ## What we built
 
-- **MCP server** — twelve tools covering patient context, augmentation proposals, run status polling, proposal listing and full-detail retrieval, terminology code search across SNOMED / RxNorm / LOINC / ICD-10, and proposal lifecycle (accept / reject / reopen / edit). Streamable HTTP at `/mcp`. SHARP-aware. Pipeline runs asynchronously — the tool returns a workspace link immediately and the frontend shows live stage-by-stage progress. The MCP is self-sufficient: a chat-only agent can list, drill into, code-shop, edit, and accept without ever opening the review UI.
-- **Two input paths, one pipeline.** `ProposeAugmentations` runs against chart-resident `DocumentReference`s pulled via SHARP. `ProposeAugmentationsFromNotes` runs against any text the agent has in hand — extracted PDFs, faxed referrals, outside-clinic notes, emails, mid-encounter transcripts. Inline source text only enters the chart on accept, minted as a US Core `DocumentReference` in the same transaction Bundle as the derived finding.
-- **Augmentation pipeline** — six stages plus a per-doc input guardrail (deterministic + `gpt-5.4-nano`), dual-coded terminology against 1M+ SNOMED / ICD-10 / LOINC / RxNorm concepts via FAISS, deterministic chart reconciliation with LLM adjudication only for ambiguous cases.
-- **Review workspace** — Next.js deep-link UI showing source notes, the chart slice, classification, confidence breakdown, and accept / edit / reject actions. Streaming chat assistant per run.
+- **MCP server (`backend/po_main.py`)** — one FastMCP v3 server, one transport (Streamable HTTP at `/mcp`). One model-visible tool, `ReviewChart`, opens the in-host review workspace and seeds the patient header. The rest are app-only, invoked by the review app over the MCP-Apps postMessage bridge: `RunExtraction`, `AcceptAugmentation`, `RejectAugmentation`, `SearchTerminology` (SNOMED / RxNorm / LOINC / ICD-10), and the config/usage tools `GetUserConfig` / `SetUserConfig` / `GetUsage`. SHARP-aware: FHIR base URL, access token, and patient id arrive as request headers.
+- **In-host review app (`mcp-app/`)** — a Vite + React 19 + shadcn/ui SPA that builds to a single `review.js` / `review.css` pair served by the backend. It renders in PO's iframe, shows live stage-by-stage progress as the pipeline runs, and surfaces source notes, the chart slice, classification, confidence breakdown, citation spans, conflict callouts, and accept / edit / reject actions.
+- **BYOK, encrypted, required.** The pipeline runs on the clinician's own Gemini key (`gemini-3.5-flash`; guardrail on `gemini-3.1-flash-lite`), never a shared one. Secret fields are Fernet-encrypted at rest in the per-clinician config and only ever decrypted in-process; the iframe sees a `{set, last4}` presence flag.
+- **PO-native auth.** Identity is the SHARP token `sub`. Per-user config/secret writes are gated on a JWKS signature + `iss` + `exp` verification (`context/token_verify.py`); reads stay host-delegated (a forged token self-fails at the FHIR server).
+- **Augmentation pipeline** — six stages plus a per-doc input guardrail, dual-coded terminology against SNOMED / ICD-10 / LOINC / RxNorm via live authoritative APIs (FAISS index path available behind a `Retriever` seam), deterministic chart reconciliation with LLM adjudication only for ambiguous cases.
 - **Eval corpus + benchmark runner** — 18 multi-source clinical notes × 13 patient charts × 77 labeled facts, with multi-run accuracy / consistency / provenance reporting.
 
 ## Benchmark headline
@@ -43,68 +43,62 @@ See [Architecture.md](Architecture.md) for the system shape and [PIPELINE.md](PI
 
 NEW (93%) and DUPLICATE (92%) — the bulk of real clinical findings — both clear 90% with tight variance. UPDATING and CONFLICTING are thin slices (n=3 and n=1); the wide error bars are honest sample-size acknowledgment, not hidden failures.
 
-5 runs · `gpt-5.4-mini` (pipeline) · `gpt-5.4-nano` (guardrail) · 18 notes × 13 fixtures × 77 facts. Full per-class accuracy, confusion matrix, stability buckets, per-stage cost breakdown, and reproducibility instructions in the latest [REPORT.md](benchmarks/eval-corpus-v1/results/20260504T015004Z/REPORT.md).
+> The headline run was captured on the earlier pipeline (`gpt-5.4-mini` / `gpt-5.4-nano`, 5 runs · 18 notes × 13 fixtures × 77 facts). The live stack has since migrated to Gemini + BYOK; a re-run on the Gemini models is pending. Full per-class accuracy, confusion matrix, stability buckets, per-stage cost breakdown, and reproducibility instructions are in the latest [REPORT.md](benchmarks/eval-corpus-v1/results/20260504T015004Z/REPORT.md).
 
 ## Demo flow
 
-1. **Pre-visit catch-up.** A clinician asks the agent to prepare a chart. The agent calls `ProposeAugmentations` over MCP. SHARP headers carry the FHIR base URL, an access token, and the patient ID.
-2. **Workspace opens immediately.** The MCP tool returns a deep link within seconds. The review workspace shows live stage-by-stage progress as the pipeline runs in the background.
-3. **Pipeline completes.** Backend pulls the existing chart and notes, runs the six-stage augmentation, and persists proposals tiered by confidence. The agent polls `GetRunStatus` and reports the result.
-4. **Clinician reviews.** Each proposal shows the source span highlighted in the original note, the FHIR resource Anamnesis would write, the classification (NEW / UPDATING / CONFLICTING), a confidence breakdown, and any conflict with the existing chart.
-5. **Mid-encounter capture.** The agent uploads transcript text via `ProposeAugmentationsFromNotes`. Same pipeline, same review surface — the transcript itself is **not** written to FHIR yet.
-6. **Accept.** On accept, `apply_augmentation` writes a single transaction Bundle: the resource, a `Provenance` with one entity per source document and one source-span extension per citation, and — for inline notes — a US Core `DocumentReference` carrying the source text. Nothing reaches the chart silently.
+1. **Pre-visit catch-up.** A clinician asks the agent to prepare a chart. The agent calls `ReviewChart` over MCP. SHARP headers carry the FHIR base URL, an access token, and the patient id.
+2. **Workspace opens in-host.** The review app renders in PO's iframe. First-time clinicians land on the BYOK connect view; once a Gemini key is connected, the landing shows the patient header and a run action.
+3. **Pipeline runs.** The app calls `RunExtraction`; the backend pulls the existing chart and notes, runs the six-stage augmentation on the clinician's key, and streams stage progress back to the iframe. Nothing is persisted.
+4. **Clinician reviews.** Each proposal shows the source span highlighted in the original note, the FHIR resource Anamnesis would write, the classification (NEW / UPDATING / CONFLICTING), a confidence breakdown, and any conflict with the existing chart. A code-search view swaps in a better terminology code before accepting.
+5. **Accept.** On accept, `AcceptAugmentation` writes a single transaction Bundle: the resource, a `Provenance` with one entity per source document and one source-span extension per citation, and — for inline notes — a US Core `DocumentReference` carrying the source text. Nothing reaches the chart silently.
 
 ## Run it locally
 
-Prerequisites: Python 3.11+, Node 20+, ngrok, an OpenAI API key.
+Prerequisites: Python 3.11+ (3.12 in prod), Node 20+, ngrok, a Gemini API key.
 
-### 1. Prepare embeddings and indexes
-
-Download the [embeddings archive](https://drive.google.com/file/d/1Jf72Rb87ZjOSCt9I8d3_HYOl5yEXrJk5/view?usp=sharing) (requires access), unzip it, and place the resulting `embeddings/` folder at the repo root.
+### 1. Start the backend
 
 ```bash
 cd backend
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-python -m scripts.build_indexes    # builds data/indexes/ from embeddings/
-python -m scripts.smoke_test_indexes  # verify indexes work
+cp .env.example .env               # set GEMINI_API_KEY and CONFIG_SECRET_KEY
+python po_main.py                  # serves http://0.0.0.0:8042/mcp
 ```
 
-### 2. Start the backend
+Sanity check: `curl http://localhost:8042/healthz` → `{"status":"ok"}`.
 
-```bash
-cp .env.example .env               # fill in OPENAI_API_KEY
-uvicorn main:app --reload --port 8042
-```
+The default terminology retriever is `CODING_RETRIEVER=api` (live NLM/UMLS/RxNav APIs). SNOMED retrieval needs a free `UMLS_API_KEY` (<https://uts.nlm.nih.gov>); RxNorm / ICD-10 / LOINC need none. To use the local FAISS index instead, install the `faiss` extra, build indexes (`python -m scripts.build_indexes`), and set `CODING_RETRIEVER=faiss`.
 
-Wait for `Coding model and indexes ready` in the log. Sanity check: `curl http://localhost:8042/health` → `{"status":"ok","service":"anamnesis"}`.
+### 2. Expose the asset origin via ngrok
 
-### 3. Expose via ngrok
+PO's iframe is sandboxed (null origin), so the `ui://` shell loads `review.js` / `review.css` over an absolute URL. Point `APP_ASSETS_BASE_URL` (in `.env`) at a public origin:
 
 ```bash
 ngrok http --domain=<your-domain>.ngrok-free.dev 8042
 ```
 
-Note the public URL (e.g. `https://<your-domain>.ngrok-free.dev`).
-
-### 4. Start the frontend
+### 3. Build the review app
 
 ```bash
-cd frontend
+cd mcp-app
 npm install
-npm run dev          # http://localhost:3042
+npm run build          # outputs review.js / review.css into backend/mcp_server/ui/assets/
 ```
 
-### 5. Configure Prompt Opinion
+For UI development, `npm run dev` serves the app standalone (pinned to PO's 800×520 iframe size) with `?preview=<view>` for offline view work.
 
-1. **Register the MCP server.** Go to **Configuration → MCP Servers → Add MCP Server**. Enter the ngrok URL, select **Streamable HTTP**, set authentication to **None**, enable **Prompt Opinion Extension**, and set FHIR Context Permission to **Full Authority** (for testing). Save.
-2. **Create an agent.** Go to **Agents → Add AI Agent**. Set Allowed Contexts to **Patient**. Under **Tools → Additional Tools (MCP Servers)**, select the Anamnesis server you just added. Save.
-3. **Import the demo patient.** Go to **Patient Data → Import**. Under "Upload a FHIR Bundle", select `data/demo_patient/anamnesis-demo-bundle.json` from this repo. Import.
+### 4. Configure Prompt Opinion
 
-### 6. Run the demo
+1. **Register the MCP server.** *Configuration → MCP Servers → Add MCP Server*. Enter the ngrok URL (`.../mcp`), select **Streamable HTTP**, enable the **Prompt Opinion Extension**, set FHIR Context Permission to **Full Authority** (for testing). Save.
+2. **Create an agent.** *Agents → Add AI Agent*. Set Allowed Contexts to **Patient**. Under **Tools → Additional Tools (MCP Servers)**, select the Anamnesis server. Save.
+3. **Import the demo patient.** *Patient Data → Import* → upload `data/demo_patient/anamnesis-demo-bundle.json`.
 
-Go to **Launchpad → Select a Scope → Patient**, select **James Lee (11/15/1958)**, then select the agent you created. In the chat, type **"Augment chart"** and wait ~30 seconds. The agent will respond with a link to the review workspace — open it.
+### 5. Run the demo
+
+*Launchpad → Select a Scope → Patient*, select **James Lee (11/15/1958)**, then the agent you created. Ask it to review the chart; the review workspace opens in-host. Connect a Gemini key in Configuration, then run augmentation.
 
 ### Reproduce the benchmark
 
@@ -115,20 +109,26 @@ python run_demo_benchmark.py --runs 5
 
 Re-render the report from a prior run (no API spend): `python run_demo_benchmark.py --rerender results/<timestamp>`.
 
+## Deployment
+
+Deployed on **Render** (native Python, no Docker) with a **Neon** Postgres database (`asyncpg`, `NullPool`). `render.yaml` defines the service: `pip install .` then `python po_main.py`, health check at `/healthz`. `CONFIG_SECRET_KEY` is generated by Render; `GEMINI_API_KEY`, `UMLS_API_KEY`, and `DATABASE_URL` are set as secrets. The built UI assets are committed under `backend/mcp_server/ui/assets/`, so deploys do not run a Node build. The only persisted state is non-PHI: per-clinician config and a per-run usage ledger.
+
 ## Repo layout
 
 ```
 anamnesis/
-  backend/             FastAPI + FastMCP server, augmentation pipeline, FHIR I/O
-  frontend/            Next.js review workspace
+  backend/             FastMCP v3 server, augmentation pipeline, FHIR I/O
+  mcp-app/             React review UI (Vite), built into backend/mcp_server/ui/assets
   benchmarks/          Eval corpus + multi-run benchmark
-  data/demo_patient/   Synthetic Bundle + four notes for offline demos
+  data/demo_patient/   Synthetic Bundle + notes for offline demos
   Architecture.md      System shape, contracts, invariants
+  DIRECTION.md         Where Anamnesis is headed (configurable extraction framework)
   PIPELINE.md          Per-stage augmentation pipeline deep-dive
 ```
 
 ## Docs
 
-- [Architecture.md](Architecture.md) — system shape, MCP contract, persistence, frontend, contracts, out-of-scope
+- [Architecture.md](Architecture.md) — system shape, MCP surface, persistence, auth, FHIR write path, contracts, invariants
+- [DIRECTION.md](DIRECTION.md) — the configurable extraction-framework direction (IG layering, presets, BYOK, usage ledger)
 - [PIPELINE.md](PIPELINE.md) — six-stage augmentation pipeline + write-back, confidence scoring
 - [benchmarks/eval-corpus-v1/README.md](benchmarks/eval-corpus-v1/README.md) — eval corpus design, label schema, reproducibility

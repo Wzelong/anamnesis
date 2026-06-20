@@ -22,8 +22,8 @@ PROPOSAL_KEYS = {
     "confidence_score", "status", "display_label", "flags", "conflict_group_id",
     "resource", "citations", "classification_reasoning", "extraction_reasoning",
     "merge_reasoning", "confidence_breakdown", "chart_matches", "supersedes",
-    "reviewed_at", "reviewed_by", "rejection_reason", "provenance_resource",
-    "write_result",
+    "conformance", "reviewed_at", "reviewed_by", "rejection_reason",
+    "provenance_resource", "write_result",
 }
 
 

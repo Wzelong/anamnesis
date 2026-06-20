@@ -120,11 +120,11 @@ Include only observations that are clinically significant — abnormal, decision
 - Labs the note highlights as abnormal, at-goal, above-goal, or that drive a clinical decision.
 - Clinical scores and screenings: PHQ-2, MoCA, A1c, LDL, GCS, staging.
 - Imaging findings with clinical significance (positive findings, incidental findings requiring follow-up).
-- Social-history status facts that affect care: smoking status, pack-years, substance use.
+- Social and behavioral status facts in the USCDI social-determinants set: tobacco use, alcohol use, substance or drug use, occupation, and sexual orientation. These have dedicated US Core observation profiles, so capture them as standing status facts even when stated as routine history rather than tied to a decision — this is the one exception to the clinical-significance filter above. `name` is the status label ("occupation", "alcohol use", "sexual orientation", "tobacco use"); `value` is the stated fact ("welder", "2 drinks/day", "former smoker").
 
 Exclude — do not extract:
 - Administrative data: arrival time, triage level, ESI, bed assignment, disposition time.
-- Non-clinical social facts: marital status, travel status, occupation, living situation — unless the note explicitly ties them to a clinical decision.
+- Demographic facts that belong on other resources, not Observation: marital status, religion, primary language, contact information, living arrangement. (Occupation and sexual orientation ARE captured as social-history observations — see the include list above.)
 - Pertinent negatives: any finding where the value is "absent", "negative", "none", "unremarkable", "within normal limits", "no evidence of", "not seen", "denied". This is a hard rule — if the observation's value would be "absent" or "negative", do not emit it.
 - Routine normal exam findings: "well-appearing", "NSR", "clear to auscultation", "symmetric pulses", "normal axis", "oral intake tolerated".
 - Routine normal vitals: HR, RR, SpO2, Temp within normal range and not flagged by the clinician. A BP like 138/82 in an ED note where it is not called out as elevated is routine.
@@ -179,6 +179,19 @@ Output: name="PHQ-9", full_name="Patient Health Questionnaire-9", value="14/27",
 Snippet:
 [34] Latest A1c (2026-04-12): 6.8%, down from 9.4% at last year's annual visit.
 Output: name="A1c", full_name="hemoglobin A1c", value="6.8", unit="%", category="laboratory", codeset_hint="LOINC", source_sentences=[34]. Use the current encounter value (6.8), not the historical baseline (9.4).
+</example>
+
+<example>
+Snippet: [8] Social history: works as a welder; drinks 3-4 beers on weekends; never smoker.
+Output: three social-history items.
+  - name="occupation", value="welder", category="social-history".
+  - name="alcohol use", value="3-4 beers on weekends", category="social-history".
+  - name="tobacco use", value="never smoker", category="social-history".
+</example>
+
+<example>
+Snippet: [21] Patient identifies as gay and lives with his partner.
+Output: name="sexual orientation", value="gay", category="social-history". Living arrangement and partner status are demographic context — do not emit.
 </example>
 
 Certainty

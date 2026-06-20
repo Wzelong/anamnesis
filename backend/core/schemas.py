@@ -301,3 +301,4 @@ class Proposal(_Strict):
     confidence_breakdown: ConfidenceBreakdown | None = None
     supersedes: list[str] = Field(default_factory=list)
     conflict_group_id: str | None = None
+    conformance: dict | None = None

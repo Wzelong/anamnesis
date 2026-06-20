@@ -6,8 +6,8 @@ adopt and maintain. This doc is the design spec for that framework — the v1 sc
 **decided** (see the decisions table); items under "Open decisions" are not.
 
 For the system as it stands today see [Architecture.md](Architecture.md) and
-[PIPELINE.md](PIPELINE.md); for auth see [AUTH.md](AUTH.md); for the config surface as
-demoed see [DEMO.md](DEMO.md).
+[PIPELINE.md](PIPELINE.md); auth and the config surface are covered in Architecture.md
+(the "Auth & SHARP", "BYOK", and "Review app" sections).
 
 ## Goal
 
@@ -93,10 +93,9 @@ Sources: [mCODE conformance](https://build.fhir.org/ig/HL7/fhir-mCODE-ig/conform
   "extensions": [ UserExtension, ... ],                                  // dim 3 (Q4)
   "coding":   { "<ResourceType>": { "systems": ["snomed","icd10"],      // dim 4
                                     "subset": <valueSetRef | codes | null> } },
-  "prompts":  { "<resourceType|stage>": { "version": 3,                 // dim 5 (Q5)
-                                          "override_text": "...",
-                                          "test_notes_ref": "..." } },
-  "model": { "fast": "gemini-3.5-flash", "smart": "gemini-3.5-flash" }   // optional per-preset
+  "prompts":  { "<resourceType>": { "active_version": 3,                 // dim 5 (Q5)
+                                    "versions": [ { "version": 3, "text": "...",
+                                                    "test_notes_ref": "..." } ] } }
 }
 ```
 

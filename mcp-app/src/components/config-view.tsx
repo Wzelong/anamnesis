@@ -3,18 +3,18 @@ import type { App } from "@modelcontextprotocol/ext-apps"
 import type { LucideIcon } from "lucide-react"
 import {
   BookPlus,
-  ChevronsUpDown,
+  ChevronDown,
   KeyRound,
   Layers,
   ListChecks,
   Loader2,
-  MessageSquareDiff,
+  ScanText,
   ScrollText,
   ShieldCheck,
   UserRound,
 } from "lucide-react"
 import { callTool, parseStructured } from "../mcp"
-import type { PresetMeta, UsageData, UserConfig } from "../types"
+import type { PresetMeta, UsageData, UserConfig, UserRecognition } from "../types"
 import { cn } from "../lib/cn"
 import { MOCK_USAGE } from "../mock"
 import { PresetRail } from "./preset-manager"
@@ -29,7 +29,7 @@ const PRESET_SECTIONS: SectionDef[] = [
   { id: "ig", label: "FHIR IG", icon: ScrollText },
   { id: "resources", label: "Resources", icon: ListChecks },
   { id: "coding", label: "Terminology", icon: BookPlus },
-  { id: "prompts", label: "Prompts", icon: MessageSquareDiff },
+  { id: "prompts", label: "Prompts", icon: ScanText },
 ]
 const SECTIONS: SectionDef[] = [ACCOUNT, ...PRESET_SECTIONS]
 
@@ -45,58 +45,54 @@ export function ConfigView({
   app,
   config,
   onSaved,
+  presets,
+  activeId,
+  onSelectPreset,
+  onAddPreset,
+  onRenamePreset,
+  onDeletePreset,
+  user,
 }: {
   app: App | null
   config: UserConfig | null
   onSaved: (config: UserConfig) => void
+  presets: PresetMeta[]
+  activeId: string
+  onSelectPreset: (id: string) => void
+  onAddPreset: (name: string) => void
+  onRenamePreset: (id: string, name: string) => void
+  onDeletePreset: (id: string) => void
+  user?: UserRecognition | null
 }) {
   const [section, setSection] = useState<Section>("account")
   const [presetMode, setPresetMode] = useState(false)
-  const [presets, setPresets] = useState<PresetMeta[]>([{ id: "default", name: "Default" }])
-  const [activeId, setActiveId] = useState("default")
   const activeName = presets.find((p) => p.id === activeId)?.name ?? "Default"
   const stub = SECTIONS.find((s) => s.id === section)
 
-  function addPreset() {
-    const id = crypto.randomUUID()
-    setPresets((ps) => [...ps, { id, name: "New preset" }])
-    setActiveId(id)
-  }
-  function renamePreset(id: string, name: string) {
-    setPresets((ps) => ps.map((p) => (p.id === id ? { ...p, name } : p)))
-  }
-  function deletePreset(id: string) {
-    setPresets((ps) => {
-      const next = ps.filter((p) => p.id !== id)
-      if (id === activeId && next.length) setActiveId(next[0].id)
-      return next
-    })
-  }
-
   return (
     <div className="flex-1 min-h-0 flex">
-      <nav className="w-32 shrink-0 border-r flex flex-col select-none">
+      <nav className="w-44 shrink-0 border-r flex flex-col select-none">
         <button
           onClick={() => setPresetMode((v) => !v)}
-          className={cn(
-            "shrink-0 flex items-center gap-2 px-3 h-10 text-sm font-medium border-b cursor-pointer",
-            presetMode ? "bg-muted text-foreground" : "hover:bg-muted/50",
-          )}
-          title="Configuration preset"
+          aria-expanded={presetMode}
+          className="shrink-0 flex items-center gap-2 px-3 h-10 text-sm font-medium border-b cursor-pointer text-foreground hover:bg-muted/50"
+          title={presetMode ? "Select preset" : activeName}
         >
-          <Layers className="size-4 shrink-0 text-muted-foreground" />
-          <span className="flex-1 text-left truncate">{activeName}</span>
-          <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
+          <Layers className={cn("size-4 shrink-0", presetMode ? "text-foreground" : "text-muted-foreground")} />
+          <span className={cn("flex-1 text-left truncate", presetMode && "text-muted-foreground font-normal")}>
+            {presetMode ? "Select preset" : activeName}
+          </span>
+          <ChevronDown className={cn("size-3.5 shrink-0 transition-transform", presetMode ? "rotate-180 text-foreground" : "text-muted-foreground")} />
         </button>
 
         {presetMode ? (
           <PresetRail
             presets={presets}
             activeId={activeId}
-            onSelect={(id) => { setActiveId(id); setPresetMode(false) }}
-            onAdd={addPreset}
-            onRename={renamePreset}
-            onDelete={deletePreset}
+            onSelect={(id) => { onSelectPreset(id); setPresetMode(false) }}
+            onAdd={(name) => { onAddPreset(name); setPresetMode(false) }}
+            onRename={onRenamePreset}
+            onDelete={onDeletePreset}
           />
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto">
@@ -113,7 +109,7 @@ export function ConfigView({
 
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {section === "account" ? (
-          <AccountSection app={app} config={config} onSaved={onSaved} />
+          <AccountSection app={app} config={config} onSaved={onSaved} user={user} />
         ) : stub ? (
           <SectionStub icon={stub.icon} label={stub.label} desc={STUB_DESC[section]} />
         ) : null}
@@ -126,10 +122,12 @@ function AccountSection({
   app,
   config,
   onSaved,
+  user,
 }: {
   app: App | null
   config: UserConfig | null
   onSaved: (config: UserConfig) => void
+  user?: UserRecognition | null
 }) {
   const last4 = config?.byok?.gemini_api_key?.last4 ?? null
   const [editing, setEditing] = useState(false)
@@ -177,6 +175,13 @@ function AccountSection({
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-4 max-w-md">
+      <section className="space-y-0.5">
+        <h2 className="text-sm font-semibold truncate">{user?.display_name ?? "Clinician"}</h2>
+        {user && (
+          <p className="text-xs text-muted-foreground">Member since {fmtAccountDate(user.first_seen_at)}</p>
+        )}
+      </section>
+
       <section className="space-y-2">
         <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Gemini API key</h2>
         {editing ? (
@@ -233,6 +238,7 @@ function AccountSection({
 
       <section className="space-y-2">
         <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Usage</h2>
+        <p className="text-[11px] text-muted-foreground">Runs on Gemini 3.5 Flash · guardrail on 3.1 Flash-Lite.</p>
         {!usage ? (
           <div className="text-xs text-muted-foreground">Loading…</div>
         ) : (
@@ -247,11 +253,16 @@ function AccountSection({
                 <div className="px-3 py-4 text-xs text-muted-foreground text-center">No runs yet</div>
               ) : (
                 usage.runs.slice(0, 6).map((r) => (
-                  <div key={r.id} className="flex items-center gap-2 px-3 py-1.5 text-xs">
-                    <span className="text-muted-foreground tabular-nums shrink-0">{fmtDate(r.ts)}</span>
-                    <span className="flex-1 truncate text-muted-foreground">{r.model}</span>
-                    <span className="tabular-nums shrink-0">{r.doc_count} docs</span>
-                    <span className="tabular-nums w-16 text-right shrink-0">${r.cost_usd.toFixed(4)}</span>
+                  <div
+                    key={r.id}
+                    title={fmtExact(r.ts)}
+                    className="grid grid-cols-5 gap-2 px-3 py-1.5 text-xs tabular-nums"
+                  >
+                    <span className="text-muted-foreground truncate">{relativeTime(r.ts)}</span>
+                    <span className="text-muted-foreground text-right">{r.doc_count} docs</span>
+                    <span className="text-muted-foreground text-right">{fmtDuration(r.duration_ms)}</span>
+                    <span className="text-muted-foreground text-right">{fmtTokens(r.input_tokens + r.output_tokens)}</span>
+                    <span className="text-right">${r.cost_usd.toFixed(4)}</span>
                   </div>
                 ))
               )}
@@ -306,8 +317,38 @@ function fmtTokens(n: number): string {
   return String(n)
 }
 
-function fmtDate(iso: string): string {
+function relativeTime(iso: string): string {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ""
+  const s = Math.floor((Date.now() - d.getTime()) / 1000)
+  if (s < 60) return "just now"
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  const days = Math.floor(h / 24)
+  if (days < 7) return `${days}d ago`
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}
+
+function fmtExact(iso: string): string {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return iso
+  return d.toLocaleString(undefined, {
+    month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
+  })
+}
+
+function fmtDuration(ms: number | null): string {
+  if (!ms || ms <= 0) return ""
+  const s = Math.round(ms / 1000)
+  if (s < 60) return `${s}s`
+  return `${Math.floor(s / 60)}m ${s % 60}s`
+}
+
+function fmtAccountDate(iso: string | null | undefined): string {
+  if (!iso) return "—"
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return "—"
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
 }

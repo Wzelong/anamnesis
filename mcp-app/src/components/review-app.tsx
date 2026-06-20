@@ -14,6 +14,7 @@ import {
   Form,
   FilePlusCorner,
   FileText,
+  Layers,
   ListFilter,
   Loader2,
   Pencil,
@@ -22,14 +23,14 @@ import {
   Stamp,
   TriangleAlert,
   Undo2,
-  UserRound,
   X,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { toast } from "sonner"
 import { callTool, parseStructured, resultText } from "../mcp"
-import type { ExtractionResult, PatientHeader, Proposal, SourceDocument, UserConfig } from "../types"
+import type { ExtractionResult, PatientHeader, Preset, PresetMeta, Proposal, SourceDocument, UserConfig } from "../types"
 import { cn } from "../lib/cn"
+import { emptyPreset } from "../lib/ig-catalog"
 import { MOCK_CONFIG, MOCK_RESULT } from "../mock"
 import {
   CLASSIFICATION_LABEL,
@@ -48,6 +49,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
 import { NoteReader } from "./note-reader"
@@ -202,6 +205,46 @@ export function ReviewApp({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkConfirm, setBulkConfirm] = useState<"accept" | "reject" | null>(null)
   const started = useRef(false)
+  const hydrated = useRef(false)
+
+  // Active preset + the preset list. Hydrated from userConfig on load and
+  // persisted back via SetUserConfig (deep-merged into app_user.config).
+  const [presets, setPresets] = useState<Preset[]>([emptyPreset("default", "Default")])
+  const [activePresetId, setActivePresetId] = useState("default")
+
+  async function persistPresets(next: Preset[], activeId: string) {
+    if (!app) return
+    try {
+      const res = await callTool(app, "SetUserConfig", { patch: { presets: next, active_preset_id: activeId } })
+      const data = parseStructured<{ config: UserConfig }>(res)
+      if (data?.config) setUserConfig(data.config)
+    } catch (e) {
+      toast.error("Couldn't save preset", { description: String(e) })
+    }
+  }
+  function addPreset(name: string) {
+    const preset = emptyPreset(crypto.randomUUID(), name)
+    const next = [...presets, preset]
+    setPresets(next)
+    setActivePresetId(preset.id)
+    persistPresets(next, preset.id)
+  }
+  function renamePreset(id: string, name: string) {
+    const next = presets.map((p) => (p.id === id ? { ...p, name } : p))
+    setPresets(next)
+    persistPresets(next, activePresetId)
+  }
+  function deletePreset(id: string) {
+    const next = presets.filter((p) => p.id !== id)
+    const active = id === activePresetId && next.length ? next[0].id : activePresetId
+    setPresets(next)
+    setActivePresetId(active)
+    persistPresets(next, active)
+  }
+  function selectPreset(id: string) {
+    setActivePresetId(id)
+    persistPresets(presets, id)
+  }
 
   // Drives the loading bar: eases 0 → 0.95 over LOADING_TOTAL_MS while the real
   // run is in flight, then `settle()` snaps to 1 and reveals the result. PO does
@@ -254,6 +297,14 @@ export function ReviewApp({
   useEffect(() => {
     if (!app) setUserConfig(MOCK_CONFIG)
   }, [app])
+
+  // Hydrate presets from the persisted config once, on first load.
+  useEffect(() => {
+    if (hydrated.current || !userConfig?.presets?.length) return
+    hydrated.current = true
+    setPresets(userConfig.presets)
+    setActivePresetId(userConfig.active_preset_id ?? userConfig.presets[0].id)
+  }, [userConfig])
 
   function startExtraction() {
     if (started.current) return
@@ -462,7 +513,7 @@ export function ReviewApp({
 
   if (app && !configLoaded && phase === "idle") {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <div className="flex-1 min-h-0 flex items-center justify-center">
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
@@ -471,7 +522,7 @@ export function ReviewApp({
   }
   if (showGate) {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <ConnectGemini
           app={app}
           byokEnabled={!!header?.byok_enabled}
@@ -483,18 +534,25 @@ export function ReviewApp({
   }
   if (configOpen) {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <ConfigView
           app={app}
           config={userConfig}
           onSaved={setUserConfig}
+          presets={presets}
+          activeId={activePresetId}
+          onSelectPreset={selectPreset}
+          onAddPreset={addPreset}
+          onRenamePreset={renamePreset}
+          onDeletePreset={deletePreset}
+          user={header?.user ?? null}
         />
       </Shell>
     )
   }
   if (phase === "error") {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <Centered>
           <TriangleAlert className="size-5 text-destructive" />
           <div className="text-destructive">{error}</div>
@@ -505,7 +563,7 @@ export function ReviewApp({
   if (phase === "running") {
     const verb = progress >= 1 ? "Done" : loadingVerb(progress)
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <div className="flex-1 min-h-0 flex items-center justify-center px-6">
           <div className="w-full max-w-xs space-y-4">
             <img src={LOGO_URL} alt="Anamnesis" width={40} height={40} className="size-10 mx-auto animate-pulse" />
@@ -525,7 +583,7 @@ export function ReviewApp({
   }
   if (phase === "idle") {
     return (
-      <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <Landing
           header={header}
           logoUrl={LOGO_URL}
@@ -574,7 +632,7 @@ export function ReviewApp({
 
 
   return (
-    <Shell header={header} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+    <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
       <div className="flex-1 min-h-0 flex">
         <div className={cn("w-full sm:w-72 sm:border-r flex flex-col min-h-0", selectedId && "hidden sm:flex")}>
           {/* Stats strip: source docs · change breakdown */}
@@ -1183,17 +1241,6 @@ function IconBtn({
   )
 }
 
-function ageFromDob(dob: string | null | undefined): string {
-  if (!dob) return ""
-  const d = new Date(dob)
-  if (isNaN(d.getTime())) return ""
-  const now = new Date()
-  let age = now.getFullYear() - d.getFullYear()
-  const m = now.getMonth() - d.getMonth()
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--
-  return String(age)
-}
-
 function formatDob(dob: string | null | undefined): string {
   if (!dob) return ""
   const d = new Date(dob)
@@ -1207,37 +1254,79 @@ function Shell({
   onOpenConfig,
   configActive,
   configDisabled,
+  presets,
+  activeId,
+  onSelectPreset,
 }: {
   header: PatientHeader | null
   children: React.ReactNode
   onOpenConfig?: () => void
   configActive?: boolean
   configDisabled?: boolean
+  presets?: PresetMeta[]
+  activeId?: string
+  onSelectPreset?: (id: string) => void
 }) {
+  const presetName = (presets ?? []).find((p) => p.id === activeId)?.name ?? "Default"
+  const mrn = header?.mrn
+
+  // Two patient identifiers on screen (name + DOB) per Joint Commission
+  // NPSG.01.01.01. MRN (the unique key) sits one hover away.
+  const identity = (
+    <div className="min-w-0 flex items-baseline gap-2 text-xs">
+      <span className="text-sm font-semibold truncate -ml-1">{header?.patient_name ?? "Patient"}</span>
+      {header?.birth_date && <Dot className="relative top-px" />}
+      {header?.birth_date && (
+        <span className="text-muted-foreground shrink-0 tabular-nums">DOB {formatDob(header.birth_date)}</span>
+      )}
+    </div>
+  )
+
   return (
     <div className="h-full p-3 sm:p-4 bg-background text-foreground">
       <div className="h-full max-w-5xl mx-auto flex flex-col bg-background rounded-xl border shadow-sm overflow-hidden">
         <div className="flex items-center gap-3 px-4 h-10 border-b shrink-0">
           <img src={LOGO_URL} alt="Anamnesis" width={24} height={24} className="size-6 shrink-0 -ml-2" />
-          <div className="min-w-0 flex items-baseline gap-2 text-xs">
-            <span className="text-sm font-semibold shrink-0 -ml-1">{header?.patient_name ?? "Patient"}</span>
-            {(() => {
-              const age = ageFromDob(header?.birth_date)
-              const sex = header?.sex ? header.sex[0].toUpperCase() : ""
-              const agesex = `${age}${sex}`
-              return agesex ? <span className="text-muted-foreground shrink-0">{agesex}</span> : null
-            })()}
-            {header?.birth_date && <Dot className="relative top-px" />}
-            {header?.birth_date && <span className="text-muted-foreground shrink-0">DOB {formatDob(header.birth_date)}</span>}
-            {header?.mrn && <Dot className="relative top-px" />}
-            {header?.mrn && <span className="text-muted-foreground tabular-nums truncate">MRN {header.mrn}</span>}
-          </div>
-          <div className="ml-auto flex items-center gap-2 shrink-0">
-            {header?.user && (
-              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <UserRound className="size-3" />
-                <span className="max-w-32 truncate">{header.user.display_name ?? "Clinician"}</span>
-              </span>
+          {mrn ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="min-w-0 cursor-default">{identity}</div>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="tabular-nums">MRN {mrn}</TooltipContent>
+            </Tooltip>
+          ) : (
+            identity
+          )}
+          <div className="ml-auto flex items-center gap-2.5 shrink-0">
+            {presets && presets.length > 0 && !configDisabled && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    title={presetName}
+                    className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground max-w-32 cursor-pointer transition-colors"
+                  >
+                    <Layers className="size-3 shrink-0" />
+                    <span className="truncate">{presetName}</span>
+                    <ChevronDown className="size-3 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-48">
+                  <DropdownMenuLabel className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Presets
+                  </DropdownMenuLabel>
+                  {presets.map((p) => (
+                    <DropdownMenuItem key={p.id} onClick={() => onSelectPreset?.(p.id)}>
+                      <Check className={cn("size-3.5", p.id === activeId ? "text-primary" : "opacity-0")} />
+                      <span className="truncate">{p.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onOpenConfig} className="text-muted-foreground">
+                    <Settings className="size-3.5" />
+                    Configure presets
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <IconBtn label="Settings" onClick={onOpenConfig} active={configActive} disabled={configDisabled}>
               <Settings className="size-3.5" />

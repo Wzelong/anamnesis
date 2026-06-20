@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from core.ids import short_id
+from core.schemas import RESOURCE_TYPES
 from fhir.models import Document
 
 if TYPE_CHECKING:
@@ -205,12 +206,25 @@ def _proposal_to_dict(proposal, run_id: str) -> dict:
         ),
         "chart_matches": [m.model_dump(mode="json") for m in proposal.chart_matches],
         "supersedes": proposal.supersedes,
+        "conformance": proposal.conformance,
         "reviewed_at": None,
         "reviewed_by": None,
         "rejection_reason": None,
         "provenance_resource": None,
         "write_result": None,
     }
+
+
+def _filter_disabled_types(stage2: list, effective) -> list:
+    """Drop stage-2 candidates for resource types the active preset disabled.
+    No-op when every type is enabled (the unconfigured default), so the stage-2
+    cache key stays preset-independent."""
+    enabled = {rt for rt in RESOURCE_TYPES if effective.rule(rt).enabled}
+    if len(enabled) == len(RESOURCE_TYPES):
+        return stage2
+    for s in stage2:
+        s.candidates = {t: v for t, v in s.candidates.items() if t in enabled}
+    return stage2
 
 
 async def _execute_stages(
@@ -220,6 +234,7 @@ async def _execute_stages(
     progress_cb=None,
     use_cache: bool = False,
     gemini_api_key: str | None = None,
+    effective=None,
 ):
     """Run Stages (guardrail → assemble) and return the assembled proposals.
 
@@ -261,7 +276,8 @@ async def _execute_stages(
     await emit("stage1_preprocess", {"sentences": total_sentences})
 
     await emit("stage2_extract")
-    stage2 = await extract_candidates_batch(notes, client, model=model, cache=_cache("stage2_output"))
+    stage2 = await extract_candidates_batch(notes, client, model=model, cache=_cache("stage2_output"), effective=effective)
+    stage2 = _filter_disabled_types(stage2, effective)
     total_candidates = sum(
         sum(len(v) for v in s.candidates.values()) for s in stage2
     )
@@ -272,7 +288,7 @@ async def _execute_stages(
     await emit("stage3_merge", {"candidates": len(stage3.candidates)})
 
     await emit("stage4_code")
-    stage4 = await code_candidates(stage3, client, model=model)
+    stage4 = await code_candidates(stage3, client, model=model, effective=effective)
     await emit("stage4_code", {"coded": len(stage4.candidates)})
 
     await emit("stage5_reconcile")
@@ -283,7 +299,7 @@ async def _execute_stages(
     await emit("stage5_reconcile", verdicts)
 
     await emit("stage6_assemble")
-    result = assemble_proposals(stage5, notes, patient_context)
+    result = assemble_proposals(stage5, notes, patient_context, effective=effective)
     await emit("stage6_assemble", {"proposals": len(result.proposals)})
     return result
 
@@ -301,9 +317,14 @@ async def run_extraction_ephemeral(
     gemini_api_key: str | None = None,
     user_key: str | None = None,
     workspace_id: str | None = None,
+    effective=None,
 ) -> dict:
     from core import telemetry
+    from core.effective_profile import resolve_effective_profile
     from services import session_cache
+
+    if effective is None:
+        effective = resolve_effective_profile(None)
 
     patient_context, chart_docs = await _load_source(patient_id, fhir_client=fhir_client)
     documents = (
@@ -323,7 +344,7 @@ async def run_extraction_ephemeral(
     try:
         stage6 = await _execute_stages(
             patient_context, documents, progress_cb=progress_cb, use_cache=False,
-            gemini_api_key=gemini_api_key,
+            gemini_api_key=gemini_api_key, effective=effective,
         )
     except Exception as exc:
         await telemetry.finish_run("failed", error=str(exc))
@@ -451,6 +472,15 @@ async def accept_augmentation(
             inline_document=inline_doc,
         ))
 
+    conformance = None
+    if fhir_client:
+        from config import settings
+        from fhir.profile_validate import validate_profile
+        profiles = (resource.get("meta") or {}).get("profile") or []
+        conformance = await validate_profile(fhir_client, resource, profiles)
+        if settings.validate_before_write and conformance.get("supported") and conformance.get("valid") is False:
+            raise ValueError(f"profile validation failed: {conformance.get('issues', [])[:3]}")
+
     write_result = None
     local_id = proposal_id or short_id("aug")
     if fhir_client:
@@ -490,6 +520,7 @@ async def accept_augmentation(
         "status": "accepted",
         "write_result": write_result,
         "provenance_resource": provenance_resource,
+        "conformance": conformance,
     }
 
 

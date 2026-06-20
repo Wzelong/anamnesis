@@ -64,6 +64,8 @@ US_CORE_FIXED: dict[str, tuple[str, str]] = {
     "oxygen saturation": ("2708-6", "Oxygen saturation in arterial blood"),
     "spo2": ("2708-6", "Oxygen saturation in arterial blood"),
     "head circumference": ("9843-4", "Head circumference"),
+    "occupation": ("11341-5", "History of Occupation"),
+    "sexual orientation": ("76690-7", "Sexual orientation"),
 }
 
 US_CORE_SMOKING_TERMS = ("tobacco", "smoking")
@@ -135,7 +137,21 @@ def _observation_systems(item: dict) -> list[str]:
     return ["snomed"]
 
 
-def _extract_search_terms(resource_type: str, item: dict) -> list[tuple[str, list[str], list[str]]]:
+def _systems_override(effective, resource_type: str) -> list[str] | None:
+    """Preset coding-systems override for a type, filtered to known systems.
+    None = use the default routing (regression-safe)."""
+    if effective is None:
+        return None
+    systems = effective.rule(resource_type).coding_systems
+    if not systems:
+        return None
+    valid = [s for s in systems if s in SYSTEM_URIS]
+    return valid or None
+
+
+def _extract_search_terms(
+    resource_type: str, item: dict, systems_override: list[str] | None = None,
+) -> list[tuple[str, list[str], list[str]]]:
     """Return (term, queries, systems). `queries` are the parser-emitted search
     strings (fallback to [term]); `term` is the label shown to the selector."""
     if resource_type == "FamilyMemberHistory":
@@ -160,8 +176,8 @@ def _extract_search_terms(resource_type: str, item: dict) -> list[tuple[str, lis
     if not name:
         return []
 
-    systems = RESOURCE_CODE_SYSTEMS.get(resource_type, ["snomed"])
-    if resource_type == "Observation":
+    systems = systems_override or RESOURCE_CODE_SYSTEMS.get(resource_type, ["snomed"])
+    if resource_type == "Observation" and not systems_override:
         systems = _observation_systems(item)
 
     return [(name, item.get("code_queries") or [name], systems)]
@@ -226,13 +242,15 @@ async def _select_code(
 
 def _collect_search_jobs(
     candidates: list[MergedCandidate],
+    effective=None,
 ) -> list[tuple[int, str, str, list[str], str]]:
     """Return (candidate_index, field_key, term, queries, system) for all searches."""
     jobs: list[tuple[int, str, str, list[str], str]] = []
     for ci, c in enumerate(candidates):
         if match_us_core_fixed(c.resource_type, c.item) is not None:
             continue
-        for ti, (term, queries, systems) in enumerate(_extract_search_terms(c.resource_type, c.item)):
+        override = _systems_override(effective, c.resource_type)
+        for ti, (term, queries, systems) in enumerate(_extract_search_terms(c.resource_type, c.item, override)):
             for system in systems:
                 key = f"{ci}:{ti}:{system}"
                 jobs.append((ci, key, term, queries, system))
@@ -379,6 +397,7 @@ async def _code_candidate(
     client: genai.Client,
     model: str,
     retriever: Retriever,
+    effective=None,
 ) -> MergedCandidate:
     item = dict(candidate.item)
 
@@ -387,7 +406,9 @@ async def _code_candidate(
         item["coding"] = fixed
         return candidate.model_copy(update={"item": item})
 
-    search_terms = _extract_search_terms(candidate.resource_type, item)
+    search_terms = _extract_search_terms(
+        candidate.resource_type, item, _systems_override(effective, candidate.resource_type),
+    )
 
     if candidate.resource_type == "FamilyMemberHistory":
         conditions = list(item.get("conditions") or [])
@@ -480,6 +501,7 @@ async def code_candidates(
     model: str,
     top_k: int = 10,
     retriever: Retriever | None = None,
+    effective=None,
 ) -> StageFourOutput:
     candidates = stage3_output.candidates
 
@@ -487,10 +509,10 @@ async def code_candidates(
     if retriever is None:
         retriever = FaissRetriever() if settings.coding_retriever == "faiss" else ApiRetriever()
     try:
-        jobs = _collect_search_jobs(candidates)
+        jobs = _collect_search_jobs(candidates, effective)
         search_results = await _retrieve_all(jobs, retriever, top_k)
         coded = await asyncio.gather(*(
-            _code_candidate(ci, c, search_results, client, model, retriever)
+            _code_candidate(ci, c, search_results, client, model, retriever, effective)
             for ci, c in enumerate(candidates)
         ))
     finally:

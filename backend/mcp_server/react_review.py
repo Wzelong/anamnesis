@@ -174,7 +174,9 @@ async def run_extraction() -> dict:
         message = f"{stage}\x1f{_stage_detail(stage, detail)}" if detail else stage
         await ctx.report_progress(progress=idx, total=len(_STAGES), message=message)
 
-    uc, key = await _run_identity()
+    from core.effective_profile import resolve_from_config
+
+    uc, key, cfg = await _run_identity()
     return await svc.run_extraction_ephemeral(
         patient_id,
         fhir_client=prefab_fhir_client(),
@@ -184,6 +186,7 @@ async def run_extraction() -> dict:
         gemini_api_key=key,
         user_key=uc.user_key,
         workspace_id=uc.workspace_id,
+        effective=resolve_from_config(cfg),
     )
 
 
@@ -200,7 +203,7 @@ async def _run_identity():
     key = (cfg.get("byok") or {}).get("gemini_api_key")
     if not key:
         raise ValueError("Connect a Gemini API key in Configuration before running augmentation.")
-    return uc, key
+    return uc, key, cfg
 
 
 async def get_usage() -> dict:

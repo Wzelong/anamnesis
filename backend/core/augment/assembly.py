@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 
 from core.augment.builders import build_fhir_resource
 from core.augment.citations import _build_encounter_map, resolve_citations
+from core.augment.overlay import apply_overlay
 from core.augment.helpers import _is_negated_assertion
 from core.ids import short_id
 from core.preprocess import PreprocessedNote
@@ -13,6 +14,7 @@ from core.reconcile import StageFiveOutput, _DISCONTINUED_STATUSES
 from core.reconcile_match_rules import _normalize_ingredient
 from core.schemas import Proposal
 from fhir.models import PatientContext
+from fhir.validate import validate_r4
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ def assemble_proposals(
     stage5: StageFiveOutput,
     notes: list[PreprocessedNote],
     patient_context: PatientContext,
+    effective=None,
 ) -> StageSixOutput:
     """Stage 6: turn reconciled candidates into clinician-reviewable Proposal records.
 
@@ -73,6 +76,11 @@ def assemble_proposals(
             if note_date:
                 break
         resource = build_fhir_resource(result.candidate, patient_id, enc_map, note_date=note_date)
+        if effective is not None:
+            resource = apply_overlay(resource, effective.rule(result.candidate.resource_type))
+        conformance = validate_r4(resource).to_dict()
+        if not conformance["valid"]:
+            log.warning("stage6 resource failed R4 validation: %s %s", resource.get("resourceType"), conformance["issues"])
         citations = resolve_citations(result.candidate.source_refs, notes_by_doc)
         supersedes = (
             [m.resource_id for m in result.chart_matches]
@@ -93,6 +101,7 @@ def assemble_proposals(
             flags=result.flags,
             confidence_breakdown=result.confidence_breakdown,
             supersedes=supersedes,
+            conformance=conformance,
         ))
 
     proposals = _detect_inter_proposal_conflicts(proposals)

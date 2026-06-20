@@ -5,19 +5,26 @@ import re
 
 _BP_LOINC = "85354-9"
 _TOBACCO_LOINC = "72166-2"
+_OCCUPATION_LOINC = "11341-5"
+_SEXUAL_ORIENTATION_LOINC = "76690-7"
 _FHIR_DATE_RE = re.compile(r"^\d{4}(-\d{2}(-\d{2})?)?$")
 _NUM_RE = re.compile(r"^([<>≤≥]?)\s*([\d.]+)$")
 _BP_RE = re.compile(r"(\d+)\s*/\s*(\d+)")
 _AGE_RE = re.compile(r"(\d+)")
 _ICD10_DOT_RE = re.compile(r"^([A-Z]\d{2})(\d+)$")
 
+# Pinned base IG version. Profile canonicals below are unversioned (FHIR norm);
+# this records which US Core package they resolve against (mCODE 4.0.0's substrate).
+US_CORE_VERSION = "6.1.0"
+
+# FamilyMemberHistory is intentionally absent: US Core 6.1.0 defines no FMH
+# profile, so FamilyMemberHistory is emitted as base FHIR R4 (no meta.profile).
 US_CORE_PROFILES: dict[str, str] = {
     "Condition-problem": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns",
     "Condition-encounter": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-encounter-diagnosis",
     "MedicationRequest": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest",
     "Procedure": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure",
     "AllergyIntolerance": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-allergyintolerance",
-    "FamilyMemberHistory": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-familymemberhistory",
     "Provenance": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-provenance",
 }
 
@@ -29,6 +36,32 @@ OBS_PROFILES: dict[str, str] = {
     "imaging": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result",
     "bp": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-blood-pressure",
     "smokingstatus": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-smokingstatus",
+    "occupation": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-occupation",
+    "sexual-orientation": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-sexual-orientation",
+    # Fallback for other USCDI social-history facts (alcohol, substance use).
+    "social-history": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+    "heart-rate": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-heart-rate",
+    "respiratory-rate": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-respiratory-rate",
+    "body-temperature": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-body-temperature",
+    "body-weight": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-body-weight",
+    "body-height": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-body-height",
+    "bmi": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-bmi",
+    "pulse-oximetry": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-pulse-oximetry",
+    "head-circumference": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-head-circumference",
+}
+
+# Specific US Core vital-sign profiles keyed by their required LOINC code. A
+# vital carrying one of these codes uses the specific profile instead of the
+# generic us-core-vital-signs. Codes mirror US_CORE_FIXED in code_candidates.py.
+VITAL_PROFILE_BY_LOINC: dict[str, str] = {
+    "8867-4": OBS_PROFILES["heart-rate"],
+    "9279-1": OBS_PROFILES["respiratory-rate"],
+    "8310-5": OBS_PROFILES["body-temperature"],
+    "29463-7": OBS_PROFILES["body-weight"],
+    "8302-2": OBS_PROFILES["body-height"],
+    "39156-5": OBS_PROFILES["bmi"],
+    "59408-5": OBS_PROFILES["pulse-oximetry"],
+    "9843-4": OBS_PROFILES["head-circumference"],
 }
 
 _COMPARATOR_MAP = {"<": "<", ">": ">", "≤": "<=", "≥": ">="}

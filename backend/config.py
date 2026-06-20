@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     po_jwks_uri: str = "https://app.promptopinion.ai/.well-known/jwks"
     po_mcp_id: str = ""  # optional pseudo-audience; empty = skip the check
     verify_config_writes: bool = True
+    # L2a profile $validate (CONFORMANCE.md). When True, refuse to write a resource
+    # the target FHIR server's $validate rejects (hard-gate). Default soft: validate
+    # opportunistically and attach the result, but never block the write.
+    validate_before_write: bool = False
     # Fernet key for encrypting BYOK secrets in app_user.config at rest. Empty =
     # BYOK disabled (storing a secret raises; the pipeline uses the server key).
     config_secret_key: str = ""
