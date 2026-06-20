@@ -29,6 +29,7 @@ export const IG_CATALOG: IgCatalog = {
       id: "mcode@4.0.0",
       title: "mCODE 4.0.0 (Oncology)",
       dependsOn: ["us-core@6.1.0"],
+      gaps: ["ICD-O-3 morphology", "AJCC staging"],
       resources: {
         Condition: { inclusion: "required", profiles: [`${MCODE}/mcode-primary-cancer-condition`, `${MCODE}/mcode-secondary-cancer-condition`], coding: { systems: ["snomed", "icd10"] }, defaultEnabled: true },
         Observation: { inclusion: "supported", profiles: [`${MCODE}/mcode-tnm-stage-group`, `${MCODE}/mcode-tumor-marker-test`], coding: { systems: ["loinc", "snomed"] }, defaultEnabled: true },

@@ -57,6 +57,7 @@ import { NoteReader } from "./note-reader"
 import { ProposalFormView } from "./proposal-form-view"
 import { CodeSearch } from "./code-search"
 import { ReasoningSections } from "./reasoning-sections"
+import { ConformanceBadge } from "./conformance-badge"
 import { InterProposalConflictCallout, ProposalConflictCallout } from "./conflict-callouts"
 import { ProvenanceCard } from "./provenance-card"
 import { Landing } from "./landing"
@@ -244,6 +245,11 @@ export function ReviewApp({
   function selectPreset(id: string) {
     setActivePresetId(id)
     persistPresets(presets, id)
+  }
+  function updatePreset(id: string, patch: Partial<Preset>) {
+    const next = presets.map((p) => (p.id === id ? { ...p, ...patch } : p))
+    setPresets(next)
+    persistPresets(next, activePresetId)
   }
 
   // Drives the loading bar: eases 0 → 0.95 over LOADING_TOTAL_MS while the real
@@ -545,6 +551,7 @@ export function ReviewApp({
           onAddPreset={addPreset}
           onRenamePreset={renamePreset}
           onDeletePreset={deletePreset}
+          onUpdatePreset={updatePreset}
           user={header?.user ?? null}
         />
       </Shell>
@@ -1049,6 +1056,8 @@ function ProposalDetail({
               </button>
             )}
           </div>
+
+          {!editing && <ConformanceBadge c={proposal.conformance} />}
 
           {!editing && !decision && proposal.conflict_group_id && (
             <InterProposalConflictCallout

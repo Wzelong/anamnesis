@@ -14,9 +14,13 @@ import {
   UserRound,
 } from "lucide-react"
 import { callTool, parseStructured } from "../mcp"
-import type { PresetMeta, UsageData, UserConfig, UserRecognition } from "../types"
+import type { Preset, UsageData, UserConfig, UserRecognition } from "../types"
 import { cn } from "../lib/cn"
+import { BASE_IG } from "../lib/ig-catalog"
 import { MOCK_USAGE } from "../mock"
+import { IgSection } from "./ig-section"
+import { ResourcesSection } from "./resources-section"
+import { TerminologySection } from "./terminology-section"
 import { PresetRail } from "./preset-manager"
 
 type Section = "account" | "ig" | "resources" | "coding" | "prompts"
@@ -51,22 +55,25 @@ export function ConfigView({
   onAddPreset,
   onRenamePreset,
   onDeletePreset,
+  onUpdatePreset,
   user,
 }: {
   app: App | null
   config: UserConfig | null
   onSaved: (config: UserConfig) => void
-  presets: PresetMeta[]
+  presets: Preset[]
   activeId: string
   onSelectPreset: (id: string) => void
   onAddPreset: (name: string) => void
   onRenamePreset: (id: string, name: string) => void
   onDeletePreset: (id: string) => void
+  onUpdatePreset: (id: string, patch: Partial<Preset>) => void
   user?: UserRecognition | null
 }) {
   const [section, setSection] = useState<Section>("account")
   const [presetMode, setPresetMode] = useState(false)
-  const activeName = presets.find((p) => p.id === activeId)?.name ?? "Default"
+  const activePreset = presets.find((p) => p.id === activeId) ?? presets[0]
+  const activeName = activePreset?.name ?? "Default"
   const stub = SECTIONS.find((s) => s.id === section)
 
   return (
@@ -110,6 +117,22 @@ export function ConfigView({
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {section === "account" ? (
           <AccountSection app={app} config={config} onSaved={onSaved} user={user} />
+        ) : section === "ig" && activePreset ? (
+          <IgSection
+            preset={activePreset}
+            onChange={(specialty) => onUpdatePreset(activePreset.id, { ig: { base: activePreset.ig.base || BASE_IG, specialty } })}
+          />
+        ) : section === "resources" && activePreset ? (
+          <ResourcesSection
+            preset={activePreset}
+            onChange={(resources) => onUpdatePreset(activePreset.id, { resources })}
+          />
+        ) : section === "coding" && activePreset ? (
+          <TerminologySection
+            app={app}
+            preset={activePreset}
+            onChange={(coding) => onUpdatePreset(activePreset.id, { coding })}
+          />
         ) : stub ? (
           <SectionStub icon={stub.icon} label={stub.label} desc={STUB_DESC[section]} />
         ) : null}
@@ -174,16 +197,17 @@ function AccountSection({
   }
 
   return (
-    <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-4 max-w-md">
+    <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="px-4 py-3 space-y-4 max-w-md">
       <section className="space-y-0.5">
-        <h2 className="text-sm font-semibold truncate">{user?.display_name ?? "Clinician"}</h2>
+        <h2 className="text-base font-semibold truncate">{user?.display_name ?? "Clinician"}</h2>
         {user && (
           <p className="text-xs text-muted-foreground">Member since {fmtAccountDate(user.first_seen_at)}</p>
         )}
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Gemini API key</h2>
+        <h2 className="text-xs font-medium text-muted-foreground">Gemini API key</h2>
         {editing ? (
           <div className="space-y-1.5">
             <div className="relative">
@@ -237,7 +261,7 @@ function AccountSection({
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Usage</h2>
+        <h2 className="text-xs font-medium text-muted-foreground">Usage</h2>
         <p className="text-[11px] text-muted-foreground">Runs on Gemini 3.5 Flash · guardrail on 3.1 Flash-Lite.</p>
         {!usage ? (
           <div className="text-xs text-muted-foreground">Loading…</div>
@@ -270,6 +294,7 @@ function AccountSection({
           </>
         )}
       </section>
+      </div>
     </div>
   )
 }

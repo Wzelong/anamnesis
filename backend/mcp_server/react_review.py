@@ -269,6 +269,51 @@ async def reject_augmentation(
 _TERMINOLOGY_SYSTEMS = ("snomed", "rxnorm", "loinc", "icd10")
 
 
+async def _resolve_keys(*, require_umls: bool = False) -> tuple[str | None, str | None]:
+    """Verified clinician's BYOK Gemini + UMLS keys; UMLS falls back to the server key.
+    Plaintext stays in-process (unsealed here, never returned to the iframe)."""
+    from config import settings
+    from core import byok
+    from services import users
+
+    uc = prefab_verified_user_context()
+    cfg = byok.unseal(await users.get_config(uc.user_key))
+    bk = cfg.get("byok") or {}
+    gemini = bk.get("gemini_api_key")
+    umls = bk.get("umls_api_key") or settings.umls_api_key or None
+    if require_umls and not umls:
+        raise ValueError("A UMLS API key is required to resolve value sets. Add it in Configuration.")
+    return gemini, umls
+
+
+async def resolve_value_set(ref: str) -> dict:
+    """App-only: resolve a VSAC OID or ValueSet URL to its expanded code list.
+
+    Authoritative path: the codes come straight from the NLM VSAC FHIR $expand, not
+    from the model. Returns {ref, count, codes:[{system,code,display}]}.
+    """
+    from fhir.terminology import expand_valueset
+
+    _gemini, umls = await _resolve_keys(require_umls=True)
+    codes = await expand_valueset((ref or "").strip(), umls)
+    return {"ref": (ref or "").strip(), "count": len(codes), "codes": codes}
+
+
+async def parse_codes_freeform(text: str) -> dict:
+    """App-only: AI-parse a freeform/CSV code list, then ground it against VSAC.
+
+    The model extracts codes from messy input; every code is validated against its
+    code system so no hallucination enters the preset. Returns {codes, parsed, grounded}.
+    """
+    from config import settings
+    from core.value_set import parse_codes
+
+    gemini, umls = await _resolve_keys(require_umls=True)
+    if not gemini:
+        raise ValueError("Connect a Gemini API key in Configuration before parsing codes.")
+    return await parse_codes(text or "", gemini_key=gemini, umls_key=umls, model=settings.gemini_model_smart)
+
+
 async def search_terminology(query: str, system: str, top_k: int = 10) -> dict:
     """App-only: search a terminology (snomed/rxnorm/loinc/icd10) for codes."""
     from config import settings
@@ -323,6 +368,8 @@ def register(mcp: FastMCP) -> None:
         (accept_augmentation, "AcceptAugmentation"),
         (reject_augmentation, "RejectAugmentation"),
         (search_terminology, "SearchTerminology"),
+        (resolve_value_set, "ResolveValueSet"),
+        (parse_codes_freeform, "ParseCodes"),
         (get_user_config, "GetUserConfig"),
         (set_user_config, "SetUserConfig"),
         (get_usage, "GetUsage"),

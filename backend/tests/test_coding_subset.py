@@ -1,5 +1,5 @@
 """Conformance Layer 3 (local): preset coding-subset enforcement."""
-from fhir.coding_subset import check_coding_subset, primary_codings
+from fhir.coding_subset import check_coding_subset, code_in_subset, primary_codings
 
 SNOMED = "http://snomed.info/sct"
 ICD10 = "http://hl7.org/fhir/sid/icd-10-cm"
@@ -60,3 +60,23 @@ def test_structural_codings_not_gated():
         "code": {"coding": [{"system": SNOMED, "code": "1"}]},
     }
     assert check_coding_subset(r, ["snomed"]) == []
+
+
+def test_code_in_subset_no_subset_is_open():
+    assert code_in_subset(_cond(ICD10), None) is True
+    assert code_in_subset(_cond(ICD10), []) is True
+
+
+def test_code_in_subset_match():
+    subset = [{"system": SNOMED, "code": "1"}, {"system": ICD10, "code": "E11"}]
+    assert code_in_subset(_cond(SNOMED), subset) is True
+
+
+def test_code_in_subset_miss():
+    subset = [{"system": SNOMED, "code": "99"}]
+    assert code_in_subset(_cond(SNOMED), subset) is False
+
+
+def test_code_in_subset_system_must_match_too():
+    subset = [{"system": ICD10, "code": "1"}]
+    assert code_in_subset(_cond(SNOMED), subset) is False

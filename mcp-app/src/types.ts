@@ -174,6 +174,9 @@ export interface IgDef {
   title: string
   dependsOn?: string[]
   resources: Record<string, IgResourceDefault>
+  // Coding systems this IG needs that the pipeline has no retriever for yet
+  // (e.g. mCODE's ICD-O-3, AJCC). Surfaced in the IG section, never silently dropped.
+  gaps?: string[]
 }
 
 export interface IgCatalog {

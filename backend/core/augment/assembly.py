@@ -14,6 +14,7 @@ from core.reconcile import StageFiveOutput, _DISCONTINUED_STATUSES
 from core.reconcile_match_rules import _normalize_ingredient
 from core.schemas import Proposal
 from fhir.models import PatientContext
+from fhir.coding_subset import code_in_subset
 from fhir.conformance import assess_local
 
 log = logging.getLogger(__name__)
@@ -80,6 +81,8 @@ def assemble_proposals(
         if effective is not None:
             rule = effective.rule(result.candidate.resource_type)
             resource = apply_overlay(resource, rule)
+            if rule.code_subset and not code_in_subset(resource, rule.code_subset):
+                continue  # scope: preset pins this type to a value set; drop out-of-set codes
             allowed_systems = rule.coding_systems
         conformance = assess_local(resource, allowed_systems)
         if not conformance["valid"]:

@@ -21,6 +21,7 @@ class ResourceRule:
     enabled: bool = True
     profiles: list[str] = field(default_factory=list)     # overlay profiles to ADD (base computed by builder)
     coding_systems: list[str] | None = None               # None = backend default routing
+    code_subset: list[dict] = field(default_factory=list)  # value-set scope: only these (system,code) survive
     extensions: list[dict] = field(default_factory=list)  # UserExtension declarations to apply
     prompt_override: str | None = None                    # replaces the stage-2 per-type prompt
 
@@ -68,6 +69,7 @@ def resolve_effective_profile(preset: dict | None) -> EffectiveProfile:
         rules[rt] = ResourceRule(
             enabled=bool(res.get("enabled", True)),
             coding_systems=(cod.get("systems") or None),
+            code_subset=[c for c in (cod.get("subset") or []) if isinstance(c, dict)],
             extensions=[e for e in extensions if isinstance(e, dict) and e.get("attach_to") == rt],
             prompt_override=_active_prompt_text(prompts.get(rt)),
         )

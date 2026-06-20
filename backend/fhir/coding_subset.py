@@ -46,6 +46,20 @@ def primary_codings(resource: dict) -> list[dict]:
     return _codings(resource.get(key)) if key else []
 
 
+def code_in_subset(resource: dict, subset: list[dict] | None) -> bool:
+    """True if the resource's primary code is in the value-set scope (system+code match).
+
+    Empty subset = no scope constraint -> True (regression-safe). Used to drop
+    out-of-set resources when a preset scopes a type to a value set.
+    """
+    if not subset:
+        return True
+    allowed = {(c.get("system"), c.get("code")) for c in subset if c.get("system") and c.get("code")}
+    if not allowed:
+        return True
+    return any((c.get("system"), c.get("code")) in allowed for c in primary_codings(resource))
+
+
 def check_coding_subset(resource: dict, allowed_systems: list[str] | None) -> list[dict]:
     """Issues for primary codings whose `system` falls outside the preset allow-list.
 
