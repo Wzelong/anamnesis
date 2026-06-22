@@ -372,10 +372,28 @@ def _override_digest(effective) -> str:
     return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()[:16]
 
 
+ADDON_HEADER = "## Site-specific additions"
+
+
+def compose_prompt(base: str, addon: str | None) -> str:
+    """Add-only: append the clinician's addon rules to the validated base prompt.
+
+    The base stays authoritative; the addon layers extra extraction rules on top.
+    Empty addon returns the base unchanged (regression-safe)."""
+    if not addon or not addon.strip():
+        return base
+    return (
+        f"{base}\n\n{ADDON_HEADER}\n"
+        "Additional rules from the reviewing clinician for their own notes. Apply them "
+        "on top of the instructions above; never relax safety or output-format rules.\n"
+        f"{addon.strip()}"
+    )
+
+
 def _resolve_prompts(effective) -> dict[str, str]:
-    """Per-type extraction prompt: the preset override if set, else the default."""
+    """Per-type extraction prompt: the validated base plus the preset's add-only addon."""
     return {
-        rt: (effective.rule(rt).prompt_override if effective else None) or PROMPTS_BY_TYPE[rt]
+        rt: compose_prompt(PROMPTS_BY_TYPE[rt], effective.rule(rt).prompt_override if effective else None)
         for rt in RESOURCE_TYPES
     }
 

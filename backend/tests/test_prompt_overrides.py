@@ -41,7 +41,9 @@ def test_resolve_prompts_default_uses_base():
     assert p["Condition"] == PROMPTS_BY_TYPE["Condition"]
 
 
-def test_resolve_prompts_applies_override():
+def test_resolve_prompts_appends_override():
+    # Add-only: the override appends to the validated base, never replaces it.
     p = _resolve_prompts(resolve_effective_profile(_PRESET))
-    assert p["Condition"] == "MY CONDITION PROMPT"
+    assert p["Condition"].startswith(PROMPTS_BY_TYPE["Condition"])
+    assert "MY CONDITION PROMPT" in p["Condition"]
     assert p["Observation"] == PROMPTS_BY_TYPE["Observation"]

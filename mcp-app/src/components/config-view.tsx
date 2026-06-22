@@ -21,6 +21,7 @@ import { MOCK_USAGE } from "../mock"
 import { IgSection } from "./ig-section"
 import { ResourcesSection } from "./resources-section"
 import { TerminologySection } from "./terminology-section"
+import { PromptsSection } from "./prompts-section"
 import { PresetRail } from "./preset-manager"
 
 type Section = "account" | "ig" | "resources" | "coding" | "prompts"
@@ -36,14 +37,6 @@ const PRESET_SECTIONS: SectionDef[] = [
   { id: "prompts", label: "Prompts", icon: ScanText },
 ]
 const SECTIONS: SectionDef[] = [ACCOUNT, ...PRESET_SECTIONS]
-
-const STUB_DESC: Record<Section, string> = {
-  account: "",
-  ig: "Pick the implementation guide the pipeline conforms to — US Core, or layer mCODE on top for oncology.",
-  resources: "Choose which FHIR resource types the agent may propose, and declare custom extensions.",
-  coding: "Map each resource type to terminology systems and restrict coding to an approved value-set subset.",
-  prompts: "Tune the per-resource extraction prompts against your own test notes, with version history.",
-}
 
 export function ConfigView({
   app,
@@ -74,7 +67,6 @@ export function ConfigView({
   const [presetMode, setPresetMode] = useState(false)
   const activePreset = presets.find((p) => p.id === activeId) ?? presets[0]
   const activeName = activePreset?.name ?? "Default"
-  const stub = SECTIONS.find((s) => s.id === section)
 
   return (
     <div className="flex-1 min-h-0 flex">
@@ -133,8 +125,12 @@ export function ConfigView({
             preset={activePreset}
             onChange={(coding) => onUpdatePreset(activePreset.id, { coding })}
           />
-        ) : stub ? (
-          <SectionStub icon={stub.icon} label={stub.label} desc={STUB_DESC[section]} />
+        ) : section === "prompts" && activePreset ? (
+          <PromptsSection
+            app={app}
+            preset={activePreset}
+            onChange={(prompts) => onUpdatePreset(activePreset.id, { prompts })}
+          />
         ) : null}
       </div>
     </div>
@@ -319,19 +315,6 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="rounded-md border px-3 py-2">
       <div className="text-sm font-semibold tabular-nums truncate">{value}</div>
       <div className="text-[11px] text-muted-foreground">{label}</div>
-    </div>
-  )
-}
-
-function SectionStub({ icon: Icon, label, desc }: { icon: LucideIcon; label: string; desc: string }) {
-  return (
-    <div className="flex-1 min-h-0 flex flex-col items-center justify-center text-center px-8 gap-2">
-      <Icon className="size-6 text-muted-foreground" />
-      <div className="text-sm font-medium">{label}</div>
-      <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">{desc}</p>
-      <span className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground/70 border rounded-full px-2 py-0.5">
-        Coming soon
-      </span>
     </div>
   )
 }

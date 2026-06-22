@@ -314,6 +314,49 @@ async def parse_codes_freeform(text: str) -> dict:
     return await parse_codes(text or "", gemini_key=gemini, umls_key=umls, model=settings.gemini_model_smart)
 
 
+async def draft_prompt_addon(resource_type: str, note: str, ideas: str, current_addon: str = "") -> dict:
+    """App-only: AI-draft an add-only extraction addon from a failing note + intent.
+
+    The validated base prompt is unchanged; the addon layers extra rules on top. The
+    note is used only to draft — never persisted. Returns {resource_type, addon}.
+    """
+    from config import settings
+    from core.prompt_tuning import draft_addon
+    from core.schemas import RESOURCE_TYPES
+
+    if resource_type not in RESOURCE_TYPES:
+        raise ValueError(f"unknown resource type: {resource_type}")
+    gemini, _umls = await _resolve_keys()
+    if not gemini:
+        raise ValueError("Connect a Gemini API key in Configuration before drafting prompts.")
+    addon = await draft_addon(
+        resource_type=resource_type, note=note or "", ideas=ideas or "",
+        current_addon=current_addon or "", gemini_key=gemini, model=settings.gemini_model_smart,
+    )
+    return {"resource_type": resource_type, "addon": addon}
+
+
+async def test_prompt_addon(resource_type: str, note: str, addon: str) -> dict:
+    """App-only: run stage-2 on the note with and without the addon, for a before/after diff.
+
+    Faithful test — the real scan/parse/clean, base vs base+addon. Returns
+    {resource_type, base:[items], addon:[items]}. The note is not persisted.
+    """
+    from config import settings
+    from core.prompt_tuning import test_addon
+    from core.schemas import RESOURCE_TYPES
+
+    if resource_type not in RESOURCE_TYPES:
+        raise ValueError(f"unknown resource type: {resource_type}")
+    gemini, _umls = await _resolve_keys()
+    if not gemini:
+        raise ValueError("Connect a Gemini API key in Configuration before testing prompts.")
+    return await test_addon(
+        resource_type=resource_type, note=note or "", addon=addon or "",
+        gemini_key=gemini, model=settings.gemini_model_smart,
+    )
+
+
 async def search_terminology(query: str, system: str, top_k: int = 10) -> dict:
     """App-only: search a terminology (snomed/rxnorm/loinc/icd10) for codes."""
     from config import settings
@@ -370,6 +413,8 @@ def register(mcp: FastMCP) -> None:
         (search_terminology, "SearchTerminology"),
         (resolve_value_set, "ResolveValueSet"),
         (parse_codes_freeform, "ParseCodes"),
+        (draft_prompt_addon, "DraftPromptAddon"),
+        (test_prompt_addon, "TestPromptAddon"),
         (get_user_config, "GetUserConfig"),
         (set_user_config, "SetUserConfig"),
         (get_usage, "GetUsage"),
