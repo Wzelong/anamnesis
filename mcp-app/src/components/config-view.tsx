@@ -3,9 +3,7 @@ import type { App } from "@modelcontextprotocol/ext-apps"
 import type { LucideIcon } from "lucide-react"
 import {
   BookPlus,
-  ChevronDown,
   KeyRound,
-  Layers,
   ListChecks,
   Loader2,
   ScanText,
@@ -22,7 +20,6 @@ import { IgSection } from "./ig-section"
 import { ResourcesSection } from "./resources-section"
 import { TerminologySection } from "./terminology-section"
 import { PromptsSection } from "./prompts-section"
-import { PresetRail } from "./preset-manager"
 
 type Section = "account" | "ig" | "resources" | "coding" | "prompts"
 
@@ -44,10 +41,6 @@ export function ConfigView({
   onSaved,
   presets,
   activeId,
-  onSelectPreset,
-  onAddPreset,
-  onRenamePreset,
-  onDeletePreset,
   onUpdatePreset,
   user,
 }: {
@@ -56,50 +49,20 @@ export function ConfigView({
   onSaved: (config: UserConfig) => void
   presets: Preset[]
   activeId: string
-  onSelectPreset: (id: string) => void
-  onAddPreset: (name: string) => void
-  onRenamePreset: (id: string, name: string) => void
-  onDeletePreset: (id: string) => void
   onUpdatePreset: (id: string, patch: Partial<Preset>) => void
   user?: UserRecognition | null
 }) {
   const [section, setSection] = useState<Section>("account")
-  const [presetMode, setPresetMode] = useState(false)
   const activePreset = presets.find((p) => p.id === activeId) ?? presets[0]
-  const activeName = activePreset?.name ?? "Default"
 
   return (
     <div className="flex-1 min-h-0 flex">
-      <nav className="w-44 shrink-0 border-r flex flex-col select-none">
-        <button
-          onClick={() => setPresetMode((v) => !v)}
-          aria-expanded={presetMode}
-          className="shrink-0 flex items-center gap-2 px-3 h-10 text-sm font-medium border-b cursor-pointer text-foreground hover:bg-muted/50"
-          title={presetMode ? "Select preset" : activeName}
-        >
-          <Layers className={cn("size-4 shrink-0", presetMode ? "text-foreground" : "text-muted-foreground")} />
-          <span className={cn("flex-1 text-left truncate", presetMode && "text-muted-foreground font-normal")}>
-            {presetMode ? "Select preset" : activeName}
-          </span>
-          <ChevronDown className={cn("size-3.5 shrink-0 transition-transform", presetMode ? "rotate-180 text-foreground" : "text-muted-foreground")} />
-        </button>
-
-        {presetMode ? (
-          <PresetRail
-            presets={presets}
-            activeId={activeId}
-            onSelect={(id) => { onSelectPreset(id); setPresetMode(false) }}
-            onAdd={(name) => { onAddPreset(name); setPresetMode(false) }}
-            onRename={onRenamePreset}
-            onDelete={onDeletePreset}
-          />
-        ) : (
-          <div className="flex-1 min-h-0 overflow-y-auto">
-            {PRESET_SECTIONS.map((s) => (
-              <RailButton key={s.id} s={s} active={section === s.id} onClick={() => setSection(s.id)} />
-            ))}
-          </div>
-        )}
+      <nav className="w-36 shrink-0 border-r flex flex-col select-none">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {PRESET_SECTIONS.map((s) => (
+            <RailButton key={s.id} s={s} active={section === s.id} onClick={() => setSection(s.id)} />
+          ))}
+        </div>
 
         <div className="shrink-0 border-t">
           <RailButton s={ACCOUNT} active={section === "account"} onClick={() => setSection("account")} />
@@ -129,7 +92,7 @@ export function ConfigView({
           <PromptsSection
             app={app}
             preset={activePreset}
-            onChange={(prompts) => onUpdatePreset(activePreset.id, { prompts })}
+            onChange={(patch) => onUpdatePreset(activePreset.id, patch)}
           />
         ) : null}
       </div>
@@ -300,7 +263,7 @@ function RailButton({ s, active, onClick }: { s: SectionDef; active: boolean; on
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-center gap-2 px-3 h-9 text-sm cursor-pointer transition-colors",
+        "w-full flex items-center gap-2 px-3 h-10 text-sm cursor-pointer transition-colors",
         active ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-muted/50",
       )}
     >

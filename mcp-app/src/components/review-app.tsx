@@ -45,14 +45,8 @@ import { Textarea } from "./ui/textarea"
 import { Checkbox } from "./ui/checkbox"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "./ui/empty"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
+import { PresetRail } from "./preset-manager"
 import { NoteReader } from "./note-reader"
 import { ProposalFormView } from "./proposal-form-view"
 import { CodeSearch } from "./code-search"
@@ -519,7 +513,7 @@ export function ReviewApp({
 
   if (app && !configLoaded && phase === "idle") {
     return (
-      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onAddPreset={addPreset} onRenamePreset={renamePreset} onDeletePreset={deletePreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <div className="flex-1 min-h-0 flex items-center justify-center">
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
         </div>
@@ -528,7 +522,7 @@ export function ReviewApp({
   }
   if (showGate) {
     return (
-      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onAddPreset={addPreset} onRenamePreset={renamePreset} onDeletePreset={deletePreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <ConnectGemini
           app={app}
           byokEnabled={!!header?.byok_enabled}
@@ -540,17 +534,13 @@ export function ReviewApp({
   }
   if (configOpen) {
     return (
-      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onAddPreset={addPreset} onRenamePreset={renamePreset} onDeletePreset={deletePreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <ConfigView
           app={app}
           config={userConfig}
           onSaved={setUserConfig}
           presets={presets}
           activeId={activePresetId}
-          onSelectPreset={selectPreset}
-          onAddPreset={addPreset}
-          onRenamePreset={renamePreset}
-          onDeletePreset={deletePreset}
           onUpdatePreset={updatePreset}
           user={header?.user ?? null}
         />
@@ -559,7 +549,7 @@ export function ReviewApp({
   }
   if (phase === "error") {
     return (
-      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onAddPreset={addPreset} onRenamePreset={renamePreset} onDeletePreset={deletePreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <Centered>
           <TriangleAlert className="size-5 text-destructive" />
           <div className="text-destructive">{error}</div>
@@ -570,7 +560,7 @@ export function ReviewApp({
   if (phase === "running") {
     const verb = progress >= 1 ? "Done" : loadingVerb(progress)
     return (
-      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onAddPreset={addPreset} onRenamePreset={renamePreset} onDeletePreset={deletePreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <div className="flex-1 min-h-0 flex items-center justify-center px-6">
           <div className="w-full max-w-xs space-y-4">
             <img src={LOGO_URL} alt="Anamnesis" width={40} height={40} className="size-10 mx-auto animate-pulse" />
@@ -590,7 +580,7 @@ export function ReviewApp({
   }
   if (phase === "idle") {
     return (
-      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+      <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onAddPreset={addPreset} onRenamePreset={renamePreset} onDeletePreset={deletePreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
         <Landing
           header={header}
           logoUrl={LOGO_URL}
@@ -639,7 +629,7 @@ export function ReviewApp({
 
 
   return (
-    <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
+    <Shell header={header} presets={presets} activeId={activePresetId} onSelectPreset={selectPreset} onAddPreset={addPreset} onRenamePreset={renamePreset} onDeletePreset={deletePreset} onOpenConfig={() => setConfigOpen((v) => !v)} configActive={configOpen} configDisabled={showGate}>
       <div className="flex-1 min-h-0 flex">
         <div className={cn("w-full sm:w-72 sm:border-r flex flex-col min-h-0", selectedId && "hidden sm:flex")}>
           {/* Stats strip: source docs · change breakdown */}
@@ -1266,6 +1256,9 @@ function Shell({
   presets,
   activeId,
   onSelectPreset,
+  onAddPreset,
+  onRenamePreset,
+  onDeletePreset,
 }: {
   header: PatientHeader | null
   children: React.ReactNode
@@ -1275,7 +1268,11 @@ function Shell({
   presets?: PresetMeta[]
   activeId?: string
   onSelectPreset?: (id: string) => void
+  onAddPreset?: (name: string) => void
+  onRenamePreset?: (id: string, name: string) => void
+  onDeletePreset?: (id: string) => void
 }) {
+  const [presetOpen, setPresetOpen] = useState(false)
   const presetName = (presets ?? []).find((p) => p.id === activeId)?.name ?? "Default"
   const mrn = header?.mrn
 
@@ -1308,8 +1305,8 @@ function Shell({
           )}
           <div className="ml-auto flex items-center gap-2.5 shrink-0">
             {presets && presets.length > 0 && !configDisabled && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <Popover open={presetOpen} onOpenChange={setPresetOpen}>
+                <PopoverTrigger asChild>
                   <button
                     title={presetName}
                     className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground max-w-32 cursor-pointer transition-colors"
@@ -1318,24 +1315,23 @@ function Shell({
                     <span className="truncate">{presetName}</span>
                     <ChevronDown className="size-3 shrink-0" />
                   </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-48">
-                  <DropdownMenuLabel className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-56 p-1">
+                  <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     Presets
-                  </DropdownMenuLabel>
-                  {presets.map((p) => (
-                    <DropdownMenuItem key={p.id} onClick={() => onSelectPreset?.(p.id)}>
-                      <Check className={cn("size-3.5", p.id === activeId ? "text-primary" : "opacity-0")} />
-                      <span className="truncate">{p.name}</span>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={onOpenConfig} className="text-muted-foreground">
-                    <Settings className="size-3.5" />
-                    Configure presets
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto">
+                    <PresetRail
+                      presets={presets}
+                      activeId={activeId ?? ""}
+                      onSelect={(id) => { onSelectPreset?.(id); setPresetOpen(false) }}
+                      onAdd={(name) => onAddPreset?.(name)}
+                      onRename={(id, name) => onRenamePreset?.(id, name)}
+                      onDelete={(id) => onDeletePreset?.(id)}
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
             <IconBtn label="Settings" onClick={onOpenConfig} active={configActive} disabled={configDisabled}>
               <Settings className="size-3.5" />

@@ -5,10 +5,12 @@ import { visit, SKIP } from "unist-util-visit"
 import type { Root, Element as HastElement, Text as HastText } from "hast"
 import type { Plugin } from "unified"
 import type { ResolvedCitation, SourceDocument } from "../types"
+import { cn } from "../lib/cn"
 
 interface Props {
   document: SourceDocument | null
   citations: ResolvedCitation[]
+  className?: string
 }
 
 interface Range {
@@ -126,7 +128,7 @@ const markComponent: Components["mark"] = ({ node: _node, children, ...props }) 
   </mark>
 )
 
-export function NoteReader({ document, citations }: Props) {
+export function NoteReader({ document, citations, className }: Props) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const activeDoc = document
 
@@ -171,7 +173,7 @@ export function NoteReader({ document, citations }: Props) {
 
   return (
     <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-      <article className="markdown px-4 py-4 text-foreground/90">
+      <article className={cn("markdown text-foreground/90", className ?? "px-4 py-4")}>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           rehypePlugins={rehypePlugins}

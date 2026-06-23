@@ -314,11 +314,14 @@ async def parse_codes_freeform(text: str) -> dict:
     return await parse_codes(text or "", gemini_key=gemini, umls_key=umls, model=settings.gemini_model_smart)
 
 
-async def draft_prompt_addon(resource_type: str, note: str, ideas: str, current_addon: str = "") -> dict:
-    """App-only: AI-draft an add-only extraction addon from a failing note + intent.
+async def draft_prompt_addon(
+    resource_type: str, note: str, ideas: str, current_addon: str = "", lane: str = "extract",
+) -> dict:
+    """App-only: AI-draft an add-only addon from an example note + intent, for one lane.
 
-    The validated base prompt is unchanged; the addon layers extra rules on top. The
-    note is used only to draft — never persisted. Returns {resource_type, addon}.
+    `lane` is "capture" (scan routing / recall) or "extract" (parse shape). The validated
+    base prompt is unchanged; the addon layers extra rules on top. The note is used only to
+    draft — never persisted. Returns {resource_type, lane, addon}.
     """
     from config import settings
     from core.prompt_tuning import draft_addon
@@ -326,21 +329,24 @@ async def draft_prompt_addon(resource_type: str, note: str, ideas: str, current_
 
     if resource_type not in RESOURCE_TYPES:
         raise ValueError(f"unknown resource type: {resource_type}")
+    if lane not in ("capture", "extract"):
+        raise ValueError(f"unknown lane: {lane}")
     gemini, _umls = await _resolve_keys()
     if not gemini:
         raise ValueError("Connect a Gemini API key in Configuration before drafting prompts.")
     addon = await draft_addon(
-        resource_type=resource_type, note=note or "", ideas=ideas or "",
+        lane=lane, resource_type=resource_type, note=note or "", ideas=ideas or "",
         current_addon=current_addon or "", gemini_key=gemini, model=settings.gemini_model_smart,
     )
-    return {"resource_type": resource_type, "addon": addon}
+    return {"resource_type": resource_type, "lane": lane, "addon": addon}
 
 
-async def test_prompt_addon(resource_type: str, note: str, addon: str) -> dict:
-    """App-only: run stage-2 on the note with and without the addon, for a before/after diff.
+async def test_prompt_addon(resource_type: str, note: str, capture: str = "", extract: str = "") -> dict:
+    """App-only: run the production extraction (Stage 1->2: scan/parse/clean) on the note
+    with the draft capture + extract addons applied, scoped to one resource type.
 
-    Faithful test — the real scan/parse/clean, base vs base+addon. Returns
-    {resource_type, base:[items], addon:[items]}. The note is not persisted.
+    Same steps and model as a prod run — only the prompts are replaced and the output is
+    narrowed to one type. Returns {resource_type, items}. The note is not persisted.
     """
     from config import settings
     from core.prompt_tuning import test_addon
@@ -352,9 +358,19 @@ async def test_prompt_addon(resource_type: str, note: str, addon: str) -> dict:
     if not gemini:
         raise ValueError("Connect a Gemini API key in Configuration before testing prompts.")
     return await test_addon(
-        resource_type=resource_type, note=note or "", addon=addon or "",
-        gemini_key=gemini, model=settings.gemini_model_smart,
+        resource_type=resource_type, note=note or "", capture=capture or "", extract=extract or "",
+        gemini_key=gemini, model=settings.gemini_model_fast,
     )
+
+
+async def get_prompt_bases() -> dict:
+    """App-only: the editable base routing rules per resource type, for seeding the Capture
+    lane editor. Returns {capture: {resource_type: rules}}. No key required (read-only text).
+    """
+    from core.extraction import scan_block
+    from core.schemas import RESOURCE_TYPES
+
+    return {"capture": {rt: scan_block(rt) for rt in RESOURCE_TYPES}}
 
 
 async def search_terminology(query: str, system: str, top_k: int = 10) -> dict:
@@ -415,6 +431,7 @@ def register(mcp: FastMCP) -> None:
         (parse_codes_freeform, "ParseCodes"),
         (draft_prompt_addon, "DraftPromptAddon"),
         (test_prompt_addon, "TestPromptAddon"),
+        (get_prompt_bases, "GetPromptBases"),
         (get_user_config, "GetUserConfig"),
         (set_user_config, "SetUserConfig"),
         (get_usage, "GetUsage"),

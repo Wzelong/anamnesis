@@ -83,7 +83,7 @@ export function PresetRail({
                   if (e.key === "Escape") setRenamingId(null)
                 }}
                 onBlur={commitRename}
-                className="flex-1 min-w-0 h-6 px-1 text-sm rounded border bg-transparent outline-none focus:border-foreground/40"
+                className="flex-1 min-w-0 h-6 text-sm bg-transparent outline-none"
               />
             ) : (
               <>
@@ -128,7 +128,7 @@ export function PresetRail({
             }}
             onBlur={commitAdd}
             placeholder="Preset name"
-            className="flex-1 min-w-0 h-6 px-1 text-sm rounded border bg-transparent outline-none focus:border-foreground/40 placeholder:text-muted-foreground"
+            className="flex-1 min-w-0 h-6 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
           />
         </div>
       ) : (

@@ -128,7 +128,8 @@ export interface Preset {
   ig: { base: string; specialty: string | null }
   resources: Record<string, { enabled: boolean }>
   coding: Record<string, CodingOverride>
-  prompts: Record<string, PromptOverride>
+  prompts: Record<string, PromptOverride>          // extract lane (parse)
+  capture_prompts?: Record<string, PromptOverride> // capture lane (scan routing)
   extensions: UserExtension[]
 }
 

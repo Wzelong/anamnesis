@@ -23,7 +23,8 @@ class ResourceRule:
     coding_systems: list[str] | None = None               # None = backend default routing
     code_subset: list[dict] = field(default_factory=list)  # value-set scope: only these (system,code) survive
     extensions: list[dict] = field(default_factory=list)  # UserExtension declarations to apply
-    prompt_override: str | None = None                    # replaces the stage-2 per-type prompt
+    prompt_override: str | None = None                    # add-only EXTRACT rules → stage-2 parse prompt
+    capture_override: str | None = None                   # add-only CAPTURE rules → stage-2 scan routing
 
 
 @dataclass
@@ -60,6 +61,7 @@ def resolve_effective_profile(preset: dict | None) -> EffectiveProfile:
     resources = preset.get("resources") or {}
     coding = preset.get("coding") or {}
     prompts = preset.get("prompts") or {}
+    capture_prompts = preset.get("capture_prompts") or {}
     extensions = preset.get("extensions") or []
 
     rules: dict[str, ResourceRule] = {}
@@ -72,6 +74,7 @@ def resolve_effective_profile(preset: dict | None) -> EffectiveProfile:
             code_subset=[c for c in (cod.get("subset") or []) if isinstance(c, dict)],
             extensions=[e for e in extensions if isinstance(e, dict) and e.get("attach_to") == rt],
             prompt_override=_active_prompt_text(prompts.get(rt)),
+            capture_override=_active_prompt_text(capture_prompts.get(rt)),
         )
     return EffectiveProfile(
         preset_id=preset.get("id"),

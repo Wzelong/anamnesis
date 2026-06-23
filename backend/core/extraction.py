@@ -11,6 +11,7 @@ import asyncio
 import hashlib
 import json
 import logging
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -163,11 +164,13 @@ async def scan_note(
     note: PreprocessedNote,
     client: genai.Client,
     model: str,
+    *,
+    prompt: str | None = None,
 ) -> ScanResult:
     parsed = await _parse_structured(
         client,
         model,
-        PROMPT_SCAN,
+        prompt or PROMPT_SCAN,
         note.numbered_note,
         ScanResult,
         call_type="scan",
@@ -363,10 +366,16 @@ def _note_cache_key(note: PreprocessedNote, model: str, override_digest: str = "
 
 
 def _override_digest(effective) -> str:
-    """Stable digest of the active per-type prompt overrides; "" when none."""
+    """Stable digest of the active per-type capture + extract overrides; "" when none."""
     if effective is None:
         return ""
-    parts = [f"{rt}:{ov}" for rt in sorted(RESOURCE_TYPES) if (ov := effective.rule(rt).prompt_override)]
+    parts: list[str] = []
+    for rt in sorted(RESOURCE_TYPES):
+        rule = effective.rule(rt)
+        if rule.capture_override:
+            parts.append(f"{rt}:cap:{rule.capture_override}")
+        if rule.prompt_override:
+            parts.append(f"{rt}:ext:{rule.prompt_override}")
     if not parts:
         return ""
     return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()[:16]
@@ -396,6 +405,30 @@ def _resolve_prompts(effective) -> dict[str, str]:
         rt: compose_prompt(PROMPTS_BY_TYPE[rt], effective.rule(rt).prompt_override if effective else None)
         for rt in RESOURCE_TYPES
     }
+
+
+def _scan_block_re(rt: str) -> "re.Pattern[str]":
+    return re.compile(rf'(<resource name="{re.escape(rt)}">\n).*?(\n</resource>)', re.DOTALL)
+
+
+def scan_block(rt: str) -> str:
+    """The base scan routing rules for one type — the editable Capture lane content."""
+    m = _scan_block_re(rt).search(PROMPT_SCAN)
+    return m.group(0)[len(m.group(1)):-len(m.group(2))].strip() if m else ""
+
+
+def compose_scan_prompt(base: str, effective) -> str:
+    """Capture lane is edit (not add-only): a clinician override REPLACES that type's
+    routing block in the scan. Types without an override keep the validated base.
+    Empty / no effective returns the base unchanged."""
+    if effective is None:
+        return base
+    out = base
+    for rt in RESOURCE_TYPES:
+        ov = effective.rule(rt).capture_override
+        if ov and ov.strip():
+            out = _scan_block_re(rt).sub(lambda m, ov=ov: m.group(1) + ov.strip() + m.group(2), out, count=1)
+    return out
 
 
 async def extract_candidates(
@@ -435,7 +468,7 @@ async def extract_candidates(
             except (ValidationError, KeyError) as exc:
                 log.warning("stale cache entry for %s: %s", note.document_id, exc)
 
-    scan = await scan_note(note, client, model)
+    scan = await scan_note(note, client, model, prompt=compose_scan_prompt(PROMPT_SCAN, effective))
 
     sentences_by_number = {s.number: s for s in note.sentences}
     all_numbers = set(sentences_by_number.keys())
