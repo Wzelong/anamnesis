@@ -1,21 +1,28 @@
-"""Pluggable terminology retrieval: FAISS (local) or live authoritative APIs.
+"""Live terminology retrieval against authoritative APIs.
 
-Both implementations return the same `SearchResult` shape Stage 4's LLM
-selector consumes, so either is a drop-in for the candidate-retrieval step.
-
-API routing is best-of-breed per system (measured): SNOMED -> UMLS UTS,
+Routing is best-of-breed per system (measured): SNOMED -> UMLS UTS,
 RxNorm -> RxNav approximateTerm, ICD-10/LOINC -> NLM Clinical Tables.
+Returns the `SearchResult` shape Stage 4's LLM selector consumes.
 """
 from __future__ import annotations
 
 import asyncio
 import os
+from dataclasses import dataclass
 from typing import Protocol
 
 import httpx
 
 from config import settings
-from core.coding import SearchResult, _get_defaults
+
+
+@dataclass(frozen=True)
+class SearchResult:
+    code: str
+    display: str
+    score: float
+    rank: int
+
 
 UMLS_SEARCH = "https://uts-ws.nlm.nih.gov/rest/search/current"
 RXNAV_APPROX = "https://rxnav.nlm.nih.gov/REST/approximateTerm.json"
@@ -48,13 +55,6 @@ async def union_search(
     merged = sorted(best.values(), key=lambda r: -r.score)[:top_k]
     return [SearchResult(code=r.code, display=r.display, score=r.score, rank=i + 1)
             for i, r in enumerate(merged)]
-
-
-class FaissRetriever:
-    async def search(self, term: str, system: str, top_k: int = 10) -> list[SearchResult]:
-        store, model = _get_defaults()
-        vec = await asyncio.to_thread(model.encode, [term])
-        return await asyncio.to_thread(store.search, vec, system, top_k)
 
 
 class ApiRetriever:

@@ -1,32 +1,26 @@
-"""Stage 4: terminology coding via FAISS vector search + LLM CodeSelector.
+"""Stage 4: terminology coding via live-API retrieval + LLM CodeSelector.
 
 US Core fixed codes short-circuit known vital signs / smoking status.
-All other candidates go through: vector search top-k -> LLM select ->
+All other candidates go through: API retrieval top-k -> LLM select ->
 optional 1 refinement retry.
 
 No term-level caching by design.  The downstream human-in-the-loop
 review may correct codes; a term cache would silently re-apply a code
-that a clinician already rejected.  With model + indexes warm, the
-full stage runs in ~6-7 s for 50 candidates (all parallel), so the
-latency cost of skipping the cache is acceptable.  A production
-deployment could add a smart cache that invalidates on HITL
-corrections, but for now simplicity wins.
+that a clinician already rejected.  A production deployment could add a
+smart cache that invalidates on HITL corrections, but for now simplicity
+wins.
 """
 from __future__ import annotations
 
 import asyncio
 import logging
-import re
 from dataclasses import dataclass, field
 
-import numpy as np
 from google import genai
 
-from config import settings
-from core.coding import EmbeddingModel, IndexStore, SearchResult, _get_defaults
 from core.extraction import parse_structured
 from core.prompts import PROMPT_CODE_SELECT
-from core.retrieval import ApiRetriever, FaissRetriever, Retriever, union_search
+from core.retrieval import ApiRetriever, Retriever, SearchResult, union_search
 from core.schemas import CodeSelectorResult, MergedCandidate
 
 log = logging.getLogger(__name__)
@@ -47,7 +41,7 @@ RESOURCE_CODE_SYSTEMS: dict[str, list[str]] = {
     "Observation": [],
 }
 
-# -- US Core fixed LOINC codes (bypass vector search) -----------------------
+# -- US Core fixed LOINC codes (bypass retrieval) ---------------------------
 
 US_CORE_FIXED: dict[str, tuple[str, str]] = {
     "blood pressure": ("85354-9", "Blood pressure panel with all children optional"),
@@ -270,124 +264,55 @@ async def _retrieve_all(
     return dict(await asyncio.gather(*(one(j) for j in jobs)))
 
 
-# ===========================================================================
-# GRADUATED — legacy FAISS retrieval (Stage 4 v1).
-# Superseded by parser-emitted `code_queries` + `ApiRetriever` (see
-# `_retrieve_all` / `core/retrieval.py`). Retained for reference and for the
-# `coding_retriever="faiss"` option, which now routes through `FaissRetriever`.
-# The helpers below (`_query_variants`, `_merge_results`, `_batch_search`) are
-# no longer on the live path.
-# ===========================================================================
-
-_ABBREV: dict[str, str] = {
-    "htn": "hypertension",
-    "dm": "diabetes mellitus",
-    "dm2": "type 2 diabetes mellitus",
-    "t2dm": "type 2 diabetes mellitus",
-    "t1dm": "type 1 diabetes mellitus",
-    "mi": "myocardial infarction",
-    "chf": "congestive heart failure",
-    "hfref": "heart failure with reduced ejection fraction",
-    "hfpef": "heart failure with preserved ejection fraction",
-    "cad": "coronary artery disease",
-    "copd": "chronic obstructive pulmonary disease",
-    "afib": "atrial fibrillation",
-    "a-fib": "atrial fibrillation",
-    "ckd": "chronic kidney disease",
-    "esrd": "end-stage renal disease",
-    "uti": "urinary tract infection",
-    "gerd": "gastroesophageal reflux disease",
-    "osa": "obstructive sleep apnea",
-    "dvt": "deep vein thrombosis",
-    "pe": "pulmonary embolism",
-    "ldl": "low-density lipoprotein cholesterol",
-    "hdl": "high-density lipoprotein cholesterol",
-    "bp": "blood pressure",
-    "hr": "heart rate",
-    "rr": "respiratory rate",
-    "spo2": "oxygen saturation",
-    "a1c": "hemoglobin a1c",
-    "hba1c": "hemoglobin a1c",
-}
-
-_LATERALITY_RE = re.compile(r"[,\s]+(?:left|right|bilateral|bilat)\.?\s*$", re.IGNORECASE)
-_PARENS_RE = re.compile(r"\s*\([^)]*\)\s*$")
-_DOSE_RE = re.compile(r"\s+\d+(?:\.\d+)?\s*(?:mg|mcg|µg|g|ml|units?|iu|tabs?|caps?)\b.*$", re.IGNORECASE)
-_LEADING_SEVERITY_RE = re.compile(r"^(?:severe|moderate|mild|acute|subacute|chronic|recurrent|active|resolved|small|large)\s+", re.IGNORECASE)
-_TRAILING_QUALIFIER_RE = re.compile(r",\s*(?:nos|unspecified|nec|stable|improving|worsening)\.?\s*$", re.IGNORECASE)
-
-
-def _query_variants(term: str) -> list[str]:
-    """Generate query variants for first-pass search.
-
-    Returns the original term first, then progressively stripped/expanded forms.
-    Order is deterministic; deduped while preserving first occurrence.
-    """
-    out: list[str] = [term.strip()]
-    seen = {out[0].lower()}
-
-    def _add(v: str) -> None:
-        v = v.strip()
-        key = v.lower()
-        if v and key not in seen:
-            out.append(v)
-            seen.add(key)
-
-    _add(_LATERALITY_RE.sub("", term))
-    _add(_PARENS_RE.sub("", term))
-    _add(_DOSE_RE.sub("", term))
-    _add(_LEADING_SEVERITY_RE.sub("", term))
-    _add(_TRAILING_QUALIFIER_RE.sub("", term))
-
-    lower = term.lower().strip().rstrip(".")
-    if lower in _ABBREV:
-        _add(_ABBREV[lower])
-    for tok in re.findall(r"\b[a-z][a-z0-9-]+\b", lower):
-        if tok in _ABBREV and _ABBREV[tok] not in seen:
-            _add(term.lower().replace(tok, _ABBREV[tok]))
-
+def _tokens(s: str) -> set[str]:
+    out: set[str] = set()
+    cur: list[str] = []
+    for ch in s.lower():
+        if ch.isalnum():
+            cur.append(ch)
+        elif cur:
+            out.add("".join(cur)); cur = []
+    if cur:
+        out.add("".join(cur))
     return out
 
 
-def _merge_results(lists: list[list[SearchResult]], top_k: int) -> list[SearchResult]:
-    """Merge per-variant FAISS hits, dedupe by code, keep best score, re-rank."""
-    best: dict[str, SearchResult] = {}
-    for hits in lists:
-        for r in hits:
-            prev = best.get(r.code)
-            if prev is None or r.score > prev.score:
-                best[r.code] = r
-    merged = sorted(best.values(), key=lambda r: -r.score)[:top_k]
-    return [SearchResult(code=r.code, display=r.display, score=r.score, rank=i + 1) for i, r in enumerate(merged)]
+def _subset_candidates(sys_codes: list[dict], queries: list[str], top_k: int) -> list[SearchResult]:
+    """Rank a value-set's codes (for one system) by lexical overlap with the search
+    queries and return the top_k as selector candidates. The selector then picks the
+    best in-set code, so a scoped type codes to its value set instead of being dropped."""
+    if not sys_codes:
+        return []
+    qtokens: set[str] = set()
+    for qy in queries:
+        qtokens |= _tokens(qy)
+    ranked = sorted(sys_codes, key=lambda c: -len(qtokens & _tokens(c.get("display") or "")))
+    return [
+        SearchResult(code=c["code"], display=c.get("display") or "", score=1.0 - i * 0.02, rank=i + 1)
+        for i, c in enumerate(ranked[:top_k])
+        if c.get("code")
+    ]
 
 
-def _batch_search(
+def _partition_scoped(
     jobs: list[tuple[int, str, str, list[str], str]],
-) -> dict[str, list[SearchResult]]:
-    """Batch-embed unique terms (with variants), run FAISS, merge per-job."""
-    if not jobs:
-        return {}
-
-    store, emb_model = _get_defaults()
-
-    job_variants: dict[str, list[str]] = {}
-    all_terms: set[str] = set()
-    for _, key, term, _queries, _system in jobs:
-        variants = _query_variants(term)
-        job_variants[key] = variants
-        all_terms.update(variants)
-
-    unique_terms = sorted(all_terms)
-    vecs = emb_model.encode(unique_terms)
-    term_to_vec: dict[str, np.ndarray] = {t: vecs[i] for i, t in enumerate(unique_terms)}
-
-    results: dict[str, list[SearchResult]] = {}
-    for _, key, _term, _queries, system in jobs:
-        per_variant = [store.search(term_to_vec[v], system, 5) for v in job_variants[key]]
-        results[key] = _merge_results(per_variant, top_k=10)
-    return results
-
-# =========================== end GRADUATED block ===========================
+    candidates: list[MergedCandidate],
+    effective,
+    top_k: int,
+) -> tuple[dict[str, list[SearchResult]], list[tuple[int, str, str, list[str], str]]]:
+    """Split jobs: scoped types (preset pins a value set) get their candidates FROM the
+    value set; the rest retrieve from the live API. Makes the value set the search space."""
+    scoped: dict[str, list[SearchResult]] = {}
+    api_jobs: list[tuple[int, str, str, list[str], str]] = []
+    for job in jobs:
+        ci, key, _term, queries, system = job
+        subset = effective.rule(candidates[ci].resource_type).code_subset if effective is not None else None
+        if subset:
+            uri = SYSTEM_URIS.get(system)
+            scoped[key] = _subset_candidates([c for c in subset if c.get("system") == uri], queries, top_k)
+        else:
+            api_jobs.append(job)
+    return scoped, api_jobs
 
 
 async def _code_candidate(
@@ -507,10 +432,12 @@ async def code_candidates(
 
     own = retriever is None
     if retriever is None:
-        retriever = FaissRetriever() if settings.coding_retriever == "faiss" else ApiRetriever()
+        retriever = ApiRetriever()
     try:
         jobs = _collect_search_jobs(candidates, effective)
-        search_results = await _retrieve_all(jobs, retriever, top_k)
+        scoped_results, api_jobs = _partition_scoped(jobs, candidates, effective, top_k)
+        api_results = await _retrieve_all(api_jobs, retriever, top_k)
+        search_results = {**scoped_results, **api_results}
         coded = await asyncio.gather(*(
             _code_candidate(ci, c, search_results, client, model, retriever, effective)
             for ci, c in enumerate(candidates)

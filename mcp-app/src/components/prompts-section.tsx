@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react"
 import type { App } from "@modelcontextprotocol/ext-apps"
-import { ArrowUp, Check, ChevronDown, Code, Eye, FileText, ListChecks, Loader2, MoreHorizontal, Play, Plus, Trash2, Undo2, Upload } from "lucide-react"
+import { ArrowUp, Check, ChevronDown, FileText, ListChecks, Loader2, PenTool, Play, Plus, Trash2, Undo2, Upload } from "lucide-react"
 import type { ExtractionResult, Preset, PromptOverride } from "../types"
 import { IG_CATALOG, igById } from "../lib/ig-catalog"
 import { toast } from "sonner"
 import { cn } from "../lib/cn"
 import { callTool, parseStructured } from "../mcp"
 import { NoteReader } from "./note-reader"
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "./ui/empty"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
+import { RT_LABEL } from "../lib/proposal-meta"
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "./ui/empty"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
+import { Button } from "./ui/button"
 import dump from "../demo/proposals.json"
 
 const MAX_HEIGHT = 120
@@ -37,15 +39,6 @@ function uniqueName(base: string, notes: TestNote[]): string {
 }
 
 type Lane = "capture" | "extract"
-
-const RT_LABEL: Record<string, string> = {
-  Condition: "Conditions",
-  MedicationRequest: "Meds",
-  AllergyIntolerance: "Allergies",
-  Observation: "Obs",
-  Procedure: "Procedures",
-  FamilyMemberHistory: "Family Hx",
-}
 
 function laneMap(preset: Preset, lane: Lane): Record<string, PromptOverride> {
   return (lane === "capture" ? preset.capture_prompts : preset.prompts) ?? {}
@@ -215,6 +208,7 @@ export function PromptsSection({
 
   const [drafting, setDrafting] = useState(false)
   const [running, setRunning] = useState(false)
+  const [confirming, setConfirming] = useState<"save" | "revert" | null>(null)
 
   const draftPrompt = async (ideas: string) => {
     setDrafting(true)
@@ -249,6 +243,8 @@ export function PromptsSection({
     const name = uniqueName("Untitled note", notes)
     setNotes((ns) => [...ns, { id, name, text: "" }])
     setActiveId(id)
+    setLeftView("note")
+    setView("raw")
   }
 
   const uploadNote = async (file: File) => {
@@ -285,6 +281,7 @@ export function PromptsSection({
             onRename={renameNote}
             onDelete={deleteNote}
           />
+          {leftView === "note" && active && <ViewToggle value={view} onChange={setView} />}
           <div className="flex-1" />
           <div className="flex items-center gap-0.5 shrink-0">
             <HdrBtn active={leftView === "note"} onClick={() => setLeftView("note")} label="Note">
@@ -296,7 +293,7 @@ export function PromptsSection({
           </div>
         </header>
 
-        <div className="flex-1 min-h-0 flex flex-col relative">
+        <div className="flex-1 min-h-0 flex flex-col">
           {leftView === "testing" ? (
             running ? (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -333,78 +330,90 @@ export function PromptsSection({
               className="px-3 py-3"
             />
           )}
-          {leftView === "note" && active && (
-            <div className="absolute top-2.5 right-3 z-10">
-              <ViewToggle value={view} onChange={setView} />
-            </div>
-          )}
         </div>
       </section>
 
       <section className="flex-1 min-w-0 flex flex-col min-h-0">
         <header className="h-10 shrink-0 border-b px-3 flex items-center gap-2 min-w-0">
-          <ResourceSelect types={types} active={activeRt} onSelect={setActiveRt} />
+          <ResourceSelect
+            types={types}
+            active={activeRt}
+            onSelect={(rt) => { setActiveRt(rt); setConfirming(null) }}
+            lane={lane}
+            onLane={(l) => { setLane(l); setConfirming(null) }}
+          />
           <div className="flex-1" />
           <div className="flex items-center gap-0.5 shrink-0">
-            {(["capture", "extract"] as Lane[]).map((l) => (
+            <Tip label="Test on note">
               <button
-                key={l}
-                onClick={() => setLane(l)}
+                onClick={runTest}
+                disabled={!active || drafting || running || confirming !== null}
+                aria-label="Test on note"
+                className="size-7 inline-flex items-center justify-center rounded-md text-primary hover:bg-primary/10 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              >
+                {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-3.5" />}
+              </button>
+            </Tip>
+            <Tip label="Save">
+              <button
+                onClick={() => setConfirming("save")}
+                disabled={!dirty || drafting || running}
+                aria-label="Save"
                 className={cn(
-                  "h-7 px-2 rounded-md text-xs capitalize cursor-pointer transition-colors",
-                  lane === l ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                  "size-7 inline-flex items-center justify-center rounded-md text-primary hover:bg-primary/10 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                  confirming === "save" && "bg-primary/10",
                 )}
               >
-                {l}
+                <Check className="size-4" />
               </button>
-            ))}
-            <button
-              onClick={runTest}
-              disabled={!active || drafting || running}
-              aria-label="Test on note"
-              title="Test on note"
-              className="size-7 inline-flex items-center justify-center rounded-md text-primary hover:bg-primary/10 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-            >
-              {running ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-3.5" />}
-            </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  aria-label="Actions"
-                  className="size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors outline-none"
-                >
-                  {drafting ? <Loader2 className="size-4 animate-spin" /> : <MoreHorizontal className="size-4" />}
-                </button>
-              </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem disabled={!dirty || drafting || running} onClick={revert}>
-                <Undo2 className="size-3.5" /> Revert to saved
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!dirty || drafting || running} onClick={save}>
-                <Check className="size-3.5" /> Save
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </Tip>
+            <Tip label="Revert to saved">
+              <button
+                onClick={() => setConfirming("revert")}
+                disabled={!dirty || drafting || running}
+                aria-label="Revert to saved"
+                className={cn(
+                  "size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                  confirming === "revert" && "bg-accent text-foreground",
+                )}
+              >
+                <Undo2 className="size-3.5" />
+              </button>
+            </Tip>
           </div>
         </header>
 
-        <div className="flex-1 min-h-0 flex flex-col">
-          <textarea
-            value={addonText}
-            onChange={(e) => editAddon(e.target.value)}
-            placeholder={lane === "capture"
-              ? `Add capture rules — which sentences count as ${activeRt}…`
-              : `Add extraction rules for ${activeRt}…`}
-            spellCheck={false}
-            className="flex-1 min-h-0 w-full resize-none bg-transparent p-3 font-mono text-xs leading-relaxed outline-none placeholder:text-muted-foreground"
+        {confirming ? (
+          <PromptConfirmView
+            action={confirming}
+            rt={activeRt}
+            lane={lane}
+            onCancel={() => setConfirming(null)}
+            onConfirm={() => { confirming === "save" ? save() : revert(); setConfirming(null) }}
           />
-        </div>
+        ) : (
+          <>
+            <div className="flex-1 min-h-0 flex flex-col">
+              <textarea
+                value={addonText}
+                onChange={(e) => editAddon(e.target.value)}
+                placeholder={lane === "capture"
+                  ? `Add capture rules — which sentences count as ${activeRt}…`
+                  : `Add extraction rules for ${activeRt}…`}
+                spellCheck={false}
+                disabled={running}
+                className="flex-1 min-h-0 w-full resize-none bg-transparent p-3 font-mono text-xs leading-relaxed outline-none placeholder:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
 
-        <Composer
-          onSend={draftPrompt}
-          isLoading={drafting}
-          placeholder={lane === "capture" ? "Describe what it should capture…" : "Describe a rule to add…"}
-        />
+            <Composer
+              onSend={draftPrompt}
+              isLoading={drafting}
+              disabled={running}
+              placeholder={lane === "capture" ? "Describe what it should capture…" : "Describe a rule to add…"}
+            />
+          </>
+        )}
       </section>
     </div>
   )
@@ -456,13 +465,15 @@ function NoteSelect({
       ) : (
         <span className="text-sm font-medium text-muted-foreground px-1">No note</span>
       )}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-label="Switch note"
-        className="shrink-0 size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
-      >
-        <ChevronDown className="size-3.5" />
-      </button>
+      <Tip label="Switch note">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          aria-label="Switch note"
+          className="shrink-0 size-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer"
+        >
+          <ChevronDown className="size-3.5" />
+        </button>
+      </Tip>
 
       {open && (
         <div className="absolute left-0 top-8 z-20 w-44 rounded-md border bg-card text-card-foreground shadow-md py-1">
@@ -554,6 +565,58 @@ function ResultList({ result }: { result: TestResult }) {
   )
 }
 
+function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={4}>{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+function PromptConfirmView({
+  action,
+  rt,
+  lane,
+  onCancel,
+  onConfirm,
+}: {
+  action: "save" | "revert"
+  rt: string
+  lane: Lane
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  const isSave = action === "save"
+  const label = RT_LABEL[rt] ?? rt
+  return (
+    <Empty className="flex-1 min-h-0">
+      <EmptyHeader>
+        <EmptyMedia variant="icon" className={cn(isSave ? "text-primary" : "text-destructive")}>
+          {isSave ? <Check className="size-5" /> : <Undo2 className="size-5" />}
+        </EmptyMedia>
+        <EmptyTitle>{isSave ? "Save prompt" : "Revert changes"}</EmptyTitle>
+        <EmptyDescription>
+          {isSave ? (
+            <>Saves your <span className="font-medium text-foreground">{lane}</span> rules for <span className="font-medium text-foreground">{label}</span> as the active version used in extraction.</>
+          ) : (
+            <>Discards your unsaved edits to the <span className="font-medium text-foreground">{lane}</span> rules for <span className="font-medium text-foreground">{label}</span> and restores the last saved version.</>
+          )}
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent>
+        <div className="flex items-center justify-center gap-2">
+          <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+          <Button size="sm" variant={isSave ? "default" : "destructive"} onClick={onConfirm}>
+            {isSave ? <Check className="size-3.5" /> : <Undo2 className="size-3.5" />}
+            {isSave ? "Save" : "Revert"}
+          </Button>
+        </div>
+      </EmptyContent>
+    </Empty>
+  )
+}
+
 function HdrBtn({
   children,
   active,
@@ -566,16 +629,18 @@ function HdrBtn({
   label: string
 }) {
   return (
-    <button
-      onClick={onClick}
-      aria-label={label}
-      className={cn(
-        "size-7 inline-flex items-center justify-center rounded-md cursor-pointer transition-colors",
-        active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
-      )}
-    >
-      {children}
-    </button>
+    <Tip label={label}>
+      <button
+        onClick={onClick}
+        aria-label={label}
+        className={cn(
+          "size-7 inline-flex items-center justify-center rounded-md cursor-pointer transition-colors",
+          active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
+        )}
+      >
+        {children}
+      </button>
+    </Tip>
   )
 }
 
@@ -583,10 +648,14 @@ function ResourceSelect({
   types,
   active,
   onSelect,
+  lane,
+  onLane,
 }: {
   types: string[]
   active: string
   onSelect: (rt: string) => void
+  lane: Lane
+  onLane: (l: Lane) => void
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -604,20 +673,38 @@ function ResourceSelect({
     <div className="relative min-w-0" ref={ref}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-1 text-sm font-medium cursor-pointer hover:opacity-80 outline-none max-w-full"
+        className="inline-flex items-center gap-1.5 text-sm font-medium cursor-pointer hover:opacity-80 outline-none max-w-full"
       >
         <span className="truncate max-w-[120px]">{RT_LABEL[active] ?? active ?? "Resource"}</span>
+        <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          {lane === "capture" ? "C" : "E"}
+        </span>
         <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-8 z-20 w-44 rounded-md border bg-card text-card-foreground shadow-md py-1">
+        <div className="absolute left-0 top-8 z-20 w-52 rounded-md border bg-card text-card-foreground shadow-md p-1">
+          <div className="flex gap-0.5 rounded-md bg-muted/50 p-0.5">
+            {(["capture", "extract"] as Lane[]).map((l) => (
+              <button
+                key={l}
+                onClick={() => onLane(l)}
+                className={cn(
+                  "h-6 flex-1 rounded text-xs capitalize cursor-pointer transition-colors",
+                  lane === l ? "bg-background font-medium text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
+          <div className="mt-1" />
           {types.map((rt) => (
             <div
               key={rt}
               onClick={() => { onSelect(rt); setOpen(false) }}
               className={cn(
-                "flex items-center px-2 py-1.5 text-xs cursor-pointer",
+                "flex items-center rounded px-2 py-1.5 text-xs cursor-pointer",
                 active === rt ? "bg-muted font-medium" : "hover:bg-accent",
               )}
             >
@@ -637,25 +724,33 @@ function ViewToggle({
   value: "raw" | "rendered"
   onChange: (v: "raw" | "rendered") => void
 }) {
-  const raw = value === "raw"
+  const editing = value === "raw"
   return (
-    <button
-      onClick={() => onChange(raw ? "rendered" : "raw")}
-      aria-label={raw ? "Show rendered" : "Show raw"}
-      className="size-7 inline-flex items-center justify-center rounded-md border border-border/60 bg-background/70 backdrop-blur-sm shadow-sm text-muted-foreground opacity-60 hover:opacity-100 hover:text-foreground transition-all cursor-pointer"
-    >
-      {raw ? <Eye className="size-3.5" /> : <Code className="size-3.5" />}
-    </button>
+    <Tip label={editing ? "Done editing" : "Edit note"}>
+      <button
+        onClick={() => onChange(editing ? "rendered" : "raw")}
+        aria-label="Edit note"
+        aria-pressed={editing}
+        className={cn(
+          "size-6 inline-flex items-center justify-center rounded-md transition-colors cursor-pointer",
+          editing ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-accent hover:text-foreground",
+        )}
+      >
+        <PenTool className="size-3.5" />
+      </button>
+    </Tip>
   )
 }
 
 function Composer({
   onSend,
   isLoading = false,
+  disabled = false,
   placeholder = "Describe a rule to add…",
 }: {
   onSend: (text: string) => void
   isLoading?: boolean
+  disabled?: boolean
   placeholder?: string
 }) {
   const [value, setValue] = useState("")
@@ -672,13 +767,13 @@ function Composer({
 
   const send = useCallback(() => {
     const msg = value.trim()
-    if (!msg || isLoading) return
+    if (!msg || isLoading || disabled) return
     setValue("")
     if (ref.current) ref.current.style.height = "auto"
     onSend(msg)
-  }, [value, isLoading, onSend])
+  }, [value, isLoading, disabled, onSend])
 
-  const canSend = value.trim().length > 0 && !isLoading
+  const canSend = value.trim().length > 0 && !isLoading && !disabled
 
   return (
     <div className="shrink-0 border-t bg-background px-2.5 py-1.5 flex items-end gap-1.5">
@@ -691,7 +786,8 @@ function Composer({
         }}
         placeholder={placeholder}
         rows={1}
-        className="flex-1 resize-none bg-transparent px-1 py-1 text-sm leading-5 outline-none placeholder:text-muted-foreground"
+        disabled={disabled}
+        className="flex-1 resize-none bg-transparent px-1 py-1 text-sm leading-5 outline-none placeholder:text-muted-foreground disabled:opacity-50 disabled:cursor-not-allowed"
         style={{ minHeight: 28, maxHeight: MAX_HEIGHT }}
       />
       <button

@@ -26,7 +26,7 @@ See [Architecture.md](Architecture.md) for the system shape, [DIRECTION.md](DIRE
 - **In-host review app (`mcp-app/`)** — a Vite + React 19 + shadcn/ui SPA that builds to a single `review.js` / `review.css` pair served by the backend. It renders in PO's iframe, shows live stage-by-stage progress as the pipeline runs, and surfaces source notes, the chart slice, classification, confidence breakdown, citation spans, conflict callouts, and accept / edit / reject actions.
 - **BYOK, encrypted, required.** The pipeline runs on the clinician's own Gemini key (`gemini-3.5-flash`; guardrail on `gemini-3.1-flash-lite`), never a shared one. Secret fields are Fernet-encrypted at rest in the per-clinician config and only ever decrypted in-process; the iframe sees a `{set, last4}` presence flag.
 - **PO-native auth.** Identity is the SHARP token `sub`. Per-user config/secret writes are gated on a JWKS signature + `iss` + `exp` verification (`context/token_verify.py`); reads stay host-delegated (a forged token self-fails at the FHIR server).
-- **Augmentation pipeline** — six stages plus a per-doc input guardrail, dual-coded terminology against SNOMED / ICD-10 / LOINC / RxNorm via live authoritative APIs (FAISS index path available behind a `Retriever` seam), deterministic chart reconciliation with LLM adjudication only for ambiguous cases.
+- **Augmentation pipeline** — six stages plus a per-doc input guardrail, dual-coded terminology against SNOMED / ICD-10 / LOINC / RxNorm via live authoritative APIs (NLM / UMLS / RxNav) behind a pluggable `Retriever` seam, deterministic chart reconciliation with LLM adjudication only for ambiguous cases.
 - **Eval corpus + benchmark runner** — 18 multi-source clinical notes × 13 patient charts × 77 labeled facts, with multi-run accuracy / consistency / provenance reporting.
 
 ## Benchmark headline
@@ -70,7 +70,7 @@ python po_main.py                  # serves http://0.0.0.0:8042/mcp
 
 Sanity check: `curl http://localhost:8042/healthz` → `{"status":"ok"}`.
 
-The default terminology retriever is `CODING_RETRIEVER=api` (live NLM/UMLS/RxNav APIs). SNOMED retrieval needs a free `UMLS_API_KEY` (<https://uts.nlm.nih.gov>); RxNorm / ICD-10 / LOINC need none. To use the local FAISS index instead, install the `faiss` extra, build indexes (`python -m scripts.build_indexes`), and set `CODING_RETRIEVER=faiss`.
+Terminology coding uses live NLM/UMLS/RxNav APIs. SNOMED retrieval needs a free `UMLS_API_KEY` (<https://uts.nlm.nih.gov>); RxNorm / ICD-10 / LOINC need none.
 
 ### 2. Expose the asset origin via ngrok
 

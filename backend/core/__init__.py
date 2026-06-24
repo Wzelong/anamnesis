@@ -2,14 +2,7 @@ from core import telemetry
 from core.augment import StageSixOutput, assemble_proposals
 from core.cache import JsonCache
 from core.code_candidates import StageFourOutput, code_candidates
-from core.coding import (
-    EmbeddingModel,
-    IndexStore,
-    SearchResult,
-    WarmupResult,
-    search_code,
-    warmup,
-)
+from core.retrieval import SearchResult
 from core.pricing import estimate_cost
 from core.reconcile import StageFiveOutput, reconcile
 from core.validation import FHIR_DATE_RE, validate_fhir_date
@@ -60,8 +53,6 @@ from core.schemas import (
 __all__ = [
     "AllergyItem",
     "ChartMatch",
-    "EmbeddingModel",
-    "IndexStore",
     "CleanerResult",
     "assemble_proposals",
     "code_candidates",
@@ -104,8 +95,5 @@ __all__ = [
     "preprocess_documents",
     "reconcile",
     "scan_note",
-    "search_code",
     "split_sentences",
-    "WarmupResult",
-    "warmup",
 ]

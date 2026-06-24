@@ -375,8 +375,7 @@ async def get_prompt_bases() -> dict:
 
 async def search_terminology(query: str, system: str, top_k: int = 10) -> dict:
     """App-only: search a terminology (snomed/rxnorm/loinc/icd10) for codes."""
-    from config import settings
-    from core.retrieval import ApiRetriever, FaissRetriever
+    from core.retrieval import ApiRetriever
 
     norm = system.lower().strip()
     if norm not in _TERMINOLOGY_SYSTEMS:
@@ -384,7 +383,7 @@ async def search_terminology(query: str, system: str, top_k: int = 10) -> dict:
     if not query or not query.strip():
         return {"system": norm, "results": []}
 
-    retriever = FaissRetriever() if settings.coding_retriever == "faiss" else ApiRetriever()
+    retriever = ApiRetriever()
     try:
         results = await retriever.search(query.strip(), norm, max(1, min(top_k, 25)))
     finally:

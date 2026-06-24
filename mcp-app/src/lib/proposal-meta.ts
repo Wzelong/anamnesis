@@ -26,6 +26,16 @@ export const RESOURCE_LABEL: Record<string, string> = {
   FamilyMemberHistory: "Family hx",
 }
 
+// Short labels for the config resourceType dropdowns (Prompts, Terminology).
+export const RT_LABEL: Record<string, string> = {
+  Condition: "Conditions",
+  MedicationRequest: "Meds",
+  AllergyIntolerance: "Allergies",
+  Observation: "Observations",
+  Procedure: "Procedures",
+  FamilyMemberHistory: "Family Hx",
+}
+
 export const CLASSIFICATION_LABEL: Record<string, string> = {
   NEW: "New",
   UPDATING: "Update",

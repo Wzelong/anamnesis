@@ -136,6 +136,12 @@ export interface Preset {
 export interface CodingOverride {
   systems?: string[]
   subset?: Code[] | null
+  query_rules?: QueryRule[]
+}
+
+export interface QueryRule {
+  from: string
+  to: string
 }
 
 export interface PromptVersion {

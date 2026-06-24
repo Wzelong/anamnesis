@@ -21,9 +21,6 @@ class Settings(BaseSettings):
     # load assets over an absolute URL. Explicit env wins; else Render's injected
     # RENDER_EXTERNAL_URL (prod); else localhost (dev). Resolved in the validator.
     app_assets_base_url: str = ""
-    # "api" = live terminology APIs (default); "faiss" = graduated local index path.
-    coding_retriever: str = "api"
-    warmup_coding_on_startup: bool = False
     # PO token verification (resource-server pillar). Per-user writes (config,
     # future BYOK secrets) require a PO-signed token; reads stay host-delegated.
     po_issuer: str = "https://app.promptopinion.ai/"
