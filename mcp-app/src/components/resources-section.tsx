@@ -44,7 +44,7 @@ export function ResourcesSection({
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto">
-      <div className="px-4 py-3 space-y-3 max-w-md">
+      <div className="px-3 py-3 space-y-3 max-w-md">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold">Resources</h2>
           <span className="text-xs text-muted-foreground tabular-nums">{onCount} of {rows.length} on</span>
