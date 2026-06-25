@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from core.augment.builders import build_fhir_resource
 from core.augment.citations import _build_encounter_map, resolve_citations
 from core.augment.overlay import apply_overlay
+from core.augment.mcode import apply_specialty_profiles, body_site_tokens, classify_cancer_condition
 from core.augment.helpers import _is_negated_assertion
 from core.ids import short_id
 from core.preprocess import PreprocessedNote
@@ -14,7 +15,7 @@ from core.reconcile import StageFiveOutput, _DISCONTINUED_STATUSES
 from core.reconcile_match_rules import _normalize_ingredient
 from core.schemas import Proposal
 from fhir.models import PatientContext
-from fhir.coding_subset import code_in_subset
+from fhir.coding_subset import code_allowed
 from fhir.conformance import assess_local
 
 log = logging.getLogger(__name__)
@@ -65,7 +66,9 @@ def assemble_proposals(
         if note.document_date:
             doc_dates[note.document_id] = note.document_date.strftime("%Y-%m-%d")
 
-    proposals: list[Proposal] = []
+    # Pass 1: filter + build resources. Pass 2 needs all of them (cancer body
+    # sites) before it can tag cancer-related surgical procedures by site.
+    built: list[tuple] = []
     for result in stage5.results:
         if result.classification == "DUPLICATE":
             continue
@@ -76,15 +79,31 @@ def assemble_proposals(
             note_date = doc_dates.get(sr.document_id)
             if note_date:
                 break
-        resource = build_fhir_resource(result.candidate, patient_id, enc_map, note_date=note_date)
+        built.append((result, build_fhir_resource(result.candidate, patient_id, enc_map, note_date=note_date)))
+
+    cancer_sites: set[str] = set()
+    for result, resource in built:
+        if result.candidate.resource_type == "Condition" and classify_cancer_condition(resource) is not None:
+            cancer_sites |= body_site_tokens(resource)
+
+    proposals: list[Proposal] = []
+    for result, resource in built:
         allowed_systems = None
+        pinned = None
+        fixed = None
         if effective is not None:
             rule = effective.rule(result.candidate.resource_type)
             resource = apply_overlay(resource, rule)
-            if rule.code_subset and not code_in_subset(resource, rule.code_subset):
-                continue  # scope: preset pins this type to a value set; drop out-of-set codes
+            resource = apply_specialty_profiles(
+                resource, result.candidate.resource_type, rule.candidate_profiles,
+                result.candidate.item, cancer_sites,
+            )
+            if not code_allowed(resource, rule.coding_systems, rule.pinned, rule.fixed):
+                continue  # codeset: system not open and code not pinned/fixed -> drop
             allowed_systems = rule.coding_systems
-        conformance = assess_local(resource, allowed_systems)
+            pinned = rule.pinned
+            fixed = rule.fixed
+        conformance = assess_local(resource, allowed_systems, pinned, fixed)
         if not conformance["valid"]:
             log.warning("stage6 resource failed R4 validation: %s %s", resource.get("resourceType"), conformance["issues"])
         citations = resolve_citations(result.candidate.source_refs, notes_by_doc)

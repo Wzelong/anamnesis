@@ -376,35 +376,45 @@ def _override_digest(effective) -> str:
             parts.append(f"{rt}:cap:{rule.capture_override}")
         if rule.prompt_override:
             parts.append(f"{rt}:ext:{rule.prompt_override}")
+        if rule.specialty_capture_addon:
+            parts.append(f"{rt}:scap:{rule.specialty_capture_addon}")
+        if rule.specialty_prompt_addon:
+            parts.append(f"{rt}:sext:{rule.specialty_prompt_addon}")
     if not parts:
         return ""
     return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()[:16]
 
 
 ADDON_HEADER = "## Site-specific additions"
+ADDON_INTRO = ("Additional rules from the reviewing clinician for their own notes. Apply them "
+               "on top of the instructions above; never relax safety or output-format rules.")
+SPECIALTY_HEADER = "## Specialty IG additions"
+SPECIALTY_INTRO = ("Extraction rules contributed by the active specialty implementation guide. Apply "
+                   "them on top of the instructions above; never relax safety or output-format rules.")
 
 
-def compose_prompt(base: str, addon: str | None) -> str:
-    """Add-only: append the clinician's addon rules to the validated base prompt.
+def compose_prompt(base: str, addon: str | None, *, header: str = ADDON_HEADER, intro: str = ADDON_INTRO) -> str:
+    """Add-only: append addon rules to the validated base prompt.
 
     The base stays authoritative; the addon layers extra extraction rules on top.
     Empty addon returns the base unchanged (regression-safe)."""
     if not addon or not addon.strip():
         return base
-    return (
-        f"{base}\n\n{ADDON_HEADER}\n"
-        "Additional rules from the reviewing clinician for their own notes. Apply them "
-        "on top of the instructions above; never relax safety or output-format rules.\n"
-        f"{addon.strip()}"
-    )
+    return f"{base}\n\n{header}\n{intro}\n{addon.strip()}"
 
 
 def _resolve_prompts(effective) -> dict[str, str]:
-    """Per-type extraction prompt: the validated base plus the preset's add-only addon."""
-    return {
-        rt: compose_prompt(PROMPTS_BY_TYPE[rt], effective.rule(rt).prompt_override if effective else None)
-        for rt in RESOURCE_TYPES
-    }
+    """Per-type extraction prompt: validated base, then the specialty IG addon, then
+    the preset's own addon on top (user override is highest priority)."""
+    out: dict[str, str] = {}
+    for rt in RESOURCE_TYPES:
+        rule = effective.rule(rt) if effective else None
+        prompt = compose_prompt(
+            PROMPTS_BY_TYPE[rt], rule.specialty_prompt_addon if rule else None,
+            header=SPECIALTY_HEADER, intro=SPECIALTY_INTRO,
+        )
+        out[rt] = compose_prompt(prompt, rule.prompt_override if rule else None)
+    return out
 
 
 def _scan_block_re(rt: str) -> "re.Pattern[str]":
@@ -417,17 +427,27 @@ def scan_block(rt: str) -> str:
     return m.group(0)[len(m.group(1)):-len(m.group(2))].strip() if m else ""
 
 
+def _append_scan_block(text: str, rt: str, addon: str) -> str:
+    """Append addon text inside a type's scan block (additive, before the close tag)."""
+    pat = re.compile(rf'(<resource name="{re.escape(rt)}">\n)(.*?)(\n</resource>)', re.DOTALL)
+    return pat.sub(lambda m: m.group(1) + m.group(2) + "\n" + addon.strip() + m.group(3), text, count=1)
+
+
 def compose_scan_prompt(base: str, effective) -> str:
-    """Capture lane is edit (not add-only): a clinician override REPLACES that type's
-    routing block in the scan. Types without an override keep the validated base.
-    Empty / no effective returns the base unchanged."""
+    """Capture lane: a clinician `capture_override` REPLACES that type's routing block;
+    a specialty IG `specialty_capture_addon` is appended additively (it broadens routing,
+    not replaces it). Types with neither keep the validated base. No effective -> base."""
     if effective is None:
         return base
     out = base
     for rt in RESOURCE_TYPES:
-        ov = effective.rule(rt).capture_override
+        rule = effective.rule(rt)
+        ov = rule.capture_override
         if ov and ov.strip():
             out = _scan_block_re(rt).sub(lambda m, ov=ov: m.group(1) + ov.strip() + m.group(2), out, count=1)
+        addon = rule.specialty_capture_addon
+        if addon and addon.strip():
+            out = _append_scan_block(out, rt, addon)
     return out
 
 
@@ -438,6 +458,7 @@ async def extract_candidates(
     model: str,
     cache: JsonCache | None = None,
     effective=None,
+    only: set[str] | None = None,
 ) -> StageTwoOutput:
     """Run Stage 2 (scan -> parse -> clean) on a single preprocessed note.
 
@@ -446,6 +467,10 @@ async def extract_candidates(
       2. **Parse** — one LLM call per (resource type, sentence group) emits
          typed candidates with `source_sentences` citations.
       3. **Clean** — one LLM call per resource type discards within-note dupes.
+
+    `only` restricts parse + clean to those resource types (the scan still routes
+    everything in its single call) — used by prompt testing to avoid running the
+    whole pipeline just to preview one type. None = all types (production).
 
     Output is cached by `(note_hash, model, prompt_version)`. A cache hit
     returns immediately without any LLM call. Stale cache entries are
@@ -484,6 +509,8 @@ async def extract_candidates(
 
     parse_tasks: list[tuple[str, asyncio.Task]] = []
     for rtype, groups in groups_by_type.items():
+        if only is not None and rtype not in only:
+            continue
         for group in groups:
             valid_group = [n for n in group if n in all_numbers]
             if not valid_group:

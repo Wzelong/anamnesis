@@ -4,7 +4,6 @@ import type { LucideIcon } from "lucide-react"
 import {
   BookPlus,
   KeyRound,
-  ListChecks,
   Loader2,
   ScanText,
   ScrollText,
@@ -14,22 +13,19 @@ import {
 import { callTool, parseStructured } from "../mcp"
 import type { Preset, UsageData, UserConfig, UserRecognition } from "../types"
 import { cn } from "../lib/cn"
-import { BASE_IG } from "../lib/ig-catalog"
 import { MOCK_USAGE } from "../mock"
-import { IgSection } from "./ig-section"
-import { ResourcesSection } from "./resources-section"
+import { ConformanceSection } from "./conformance-section"
 import { TerminologySection } from "./terminology-section"
 import { PromptsSection } from "./prompts-section"
 
-type Section = "account" | "ig" | "resources" | "coding" | "prompts"
+type Section = "account" | "conformance" | "coding" | "prompts"
 
 type SectionDef = { id: Section; label: string; icon: LucideIcon }
 
 const ACCOUNT: SectionDef = { id: "account", label: "Account", icon: UserRound }
 // Preset-scoped sections — these change with the active preset.
 const PRESET_SECTIONS: SectionDef[] = [
-  { id: "ig", label: "FHIR IG", icon: ScrollText },
-  { id: "resources", label: "Resources", icon: ListChecks },
+  { id: "conformance", label: "Conformance", icon: ScrollText },
   { id: "coding", label: "Terminology", icon: BookPlus },
   { id: "prompts", label: "Prompts", icon: ScanText },
 ]
@@ -72,15 +68,10 @@ export function ConfigView({
       <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {section === "account" ? (
           <AccountSection app={app} config={config} onSaved={onSaved} user={user} />
-        ) : section === "ig" && activePreset ? (
-          <IgSection
+        ) : section === "conformance" && activePreset ? (
+          <ConformanceSection
             preset={activePreset}
-            onChange={(specialty) => onUpdatePreset(activePreset.id, { ig: { base: activePreset.ig.base || BASE_IG, specialty } })}
-          />
-        ) : section === "resources" && activePreset ? (
-          <ResourcesSection
-            preset={activePreset}
-            onChange={(resources) => onUpdatePreset(activePreset.id, { resources })}
+            onPatch={(patch) => onUpdatePreset(activePreset.id, patch)}
           />
         ) : section === "coding" && activePreset ? (
           <TerminologySection

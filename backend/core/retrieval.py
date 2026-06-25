@@ -1,8 +1,8 @@
 """Live terminology retrieval against authoritative APIs.
 
-Routing is best-of-breed per system (measured): SNOMED -> UMLS UTS,
-RxNorm -> RxNav approximateTerm, ICD-10/LOINC -> NLM Clinical Tables.
-Returns the `SearchResult` shape Stage 4's LLM selector consumes.
+Routing is best-of-breed per system (measured): SNOMED / ICD-10-PCS / HCPCS ->
+UMLS UTS, RxNorm -> RxNav approximateTerm, ICD-10-CM / LOINC -> NLM Clinical
+Tables. Returns the `SearchResult` shape Stage 4's LLM selector consumes.
 """
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from typing import Protocol
 import httpx
 
 from config import settings
+from core.systems import UMLS_SAB
 
 
 @dataclass(frozen=True)
@@ -29,8 +30,6 @@ RXNAV_APPROX = "https://rxnav.nlm.nih.gov/REST/approximateTerm.json"
 RXNAV_PROP = "https://rxnav.nlm.nih.gov/REST/rxcui/{rxcui}/property.json"
 CT_ICD10 = "https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search"
 CT_LOINC = "https://clinicaltables.nlm.nih.gov/api/loinc_items/v3/search"
-
-UMLS_SAB = {"snomed": "SNOMEDCT_US"}
 
 
 class Retriever(Protocol):
@@ -71,8 +70,8 @@ class ApiRetriever:
 
     async def search(self, term: str, system: str, top_k: int = 10) -> list[SearchResult]:
         async with self._sem:
-            if system == "snomed":
-                return await self._snomed(term, top_k)
+            if system in UMLS_SAB:
+                return await self._umls(term, system, top_k)
             if system == "rxnorm":
                 return await self._rxnorm(term, top_k)
             if system == "icd10":
@@ -81,11 +80,11 @@ class ApiRetriever:
                 return await self._loinc(term, top_k)
             return []
 
-    async def _snomed(self, term: str, top_k: int) -> list[SearchResult]:
+    async def _umls(self, term: str, system: str, top_k: int) -> list[SearchResult]:
         if not self._umls_key:
-            raise RuntimeError("UMLS_API_KEY required for SNOMED retrieval")
+            raise RuntimeError(f"UMLS_API_KEY required for {system} retrieval")
         params = {
-            "string": term, "sabs": UMLS_SAB["snomed"], "returnIdType": "code",
+            "string": term, "sabs": UMLS_SAB[system], "returnIdType": "code",
             "pageSize": top_k, "apiKey": self._umls_key,
         }
         r = await self._client.get(UMLS_SEARCH, params=params)

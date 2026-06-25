@@ -281,8 +281,6 @@ export function PromptsSection({
             onRename={renameNote}
             onDelete={deleteNote}
           />
-          {leftView === "note" && active && <ViewToggle value={view} onChange={setView} />}
-          <div className="flex-1" />
           <div className="flex items-center gap-0.5 shrink-0">
             <HdrBtn active={leftView === "note"} onClick={() => setLeftView("note")} label="Note">
               <FileText className="size-3.5" />
@@ -291,6 +289,8 @@ export function PromptsSection({
               <ListChecks className="size-3.5" />
             </HdrBtn>
           </div>
+          <div className="flex-1" />
+          {leftView === "note" && active && <ViewToggle value={view} onChange={setView} />}
         </header>
 
         <div className="flex-1 min-h-0 flex flex-col">

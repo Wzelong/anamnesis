@@ -379,6 +379,76 @@ async def _adjudicate_groups(
     return _groups_to_candidates(groups)
 
 
+_LATERAL = ("left", "right")
+
+
+def _laterality(item: dict) -> set[str]:
+    sites = " ".join(item.get("body_site") or []).lower()
+    return {s for s in _LATERAL if s in sites}
+
+
+def _laterality_conflict(a: set[str], b: set[str]) -> bool:
+    """Two foci conflict only if both name a side and the sides are disjoint
+    (left vs right) — i.e. bilateral primaries, which must stay separate."""
+    return bool(a) and bool(b) and not (a & b)
+
+
+def _merge_condition_cluster(members: list[MergedCandidate]) -> MergedCandidate:
+    if len(members) == 1:
+        return members[0]
+    survivor = max(members, key=lambda c: sum(1 for v in c.item.values() if v not in (None, "", [])))
+    item = dict(survivor.item)
+    sites: list[str] = []
+    for c in members:
+        for s in c.item.get("body_site") or []:
+            if s not in sites:
+                sites.append(s)
+    if sites:
+        item["body_site"] = sites
+    refs: list[SourceRef] = []
+    seen: set = set()
+    for c in members:
+        for r in c.source_refs:
+            k = (r.document_id, tuple(r.source_sentences))
+            if k not in seen:
+                seen.add(k)
+                refs.append(r)
+    return MergedCandidate(
+        resource_type="Condition", item=item, source_refs=refs,
+        encounter_key=survivor.encounter_key,
+        merge_reasoning=f"multifocal: merged {len(members)} foci of the same cancer",
+    )
+
+
+def _collapse_multifocal_conditions(candidates: list[MergedCandidate]) -> list[MergedCandidate]:
+    """Collapse same-named (identical-name) Conditions into one with a combined
+    bodySite — multifocal cancer is one condition, not one per focus. Conservative:
+    identical names only (acute vs chronic stay distinct), laterality-aware (bilateral
+    stay separate), negated assertions untouched (they drive conflict detection)."""
+    out: list[MergedCandidate] = []
+    groups: dict[str, list[MergedCandidate]] = {}
+    for c in candidates:
+        if c.resource_type != "Condition" or c.item.get("negated"):
+            out.append(c)
+            continue
+        key = re.sub(r"\s+", " ", (c.item.get("name") or "").strip().lower())
+        groups.setdefault(key, []).append(c)
+
+    for group in groups.values():
+        clusters: list[tuple[set[str], list[MergedCandidate]]] = []
+        for c in group:
+            lat = _laterality(c.item)
+            for cl_lat, members in clusters:
+                if not _laterality_conflict(cl_lat, lat):
+                    cl_lat |= lat
+                    members.append(c)
+                    break
+            else:
+                clusters.append((set(lat), [c]))
+        out.extend(_merge_condition_cluster(members) for _lat, members in clusters)
+    return out
+
+
 async def merge_across_notes(
     stage2_outputs: list[StageTwoOutput],
     client: genai.Client,
@@ -417,7 +487,7 @@ async def merge_across_notes(
         resolved.extend(_groups_to_candidates(protected_groups))
 
     if not ambiguous:
-        return StageThreeOutput(candidates=resolved)
+        return StageThreeOutput(candidates=_collapse_multifocal_conditions(resolved))
 
     patient_ambiguous = {
         k: v for k, v in ambiguous.items()
@@ -451,4 +521,4 @@ async def merge_across_notes(
     for result in await asyncio.gather(*tasks):
         resolved.extend(result)
 
-    return StageThreeOutput(candidates=resolved)
+    return StageThreeOutput(candidates=_collapse_multifocal_conditions(resolved))

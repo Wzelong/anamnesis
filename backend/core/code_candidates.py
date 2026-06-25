@@ -21,21 +21,22 @@ from google import genai
 from core.extraction import parse_structured
 from core.prompts import PROMPT_CODE_SELECT
 from core.retrieval import ApiRetriever, Retriever, SearchResult, union_search
+from core.mcode_obs import (
+    ROLE_TUMOR_MARKER,
+    fixed_coding as _mcode_fixed_coding,
+    is_tumor_marker,
+    match_mcode_obs,
+    match_tnm_category,
+)
 from core.schemas import CodeSelectorResult, MergedCandidate
+from core.systems import RETRIEVABLE, SYSTEM_URIS, URI_TO_KEY
 
 log = logging.getLogger(__name__)
-
-SYSTEM_URIS: dict[str, str] = {
-    "snomed": "http://snomed.info/sct",
-    "loinc": "http://loinc.org",
-    "rxnorm": "http://www.nlm.nih.gov/research/umls/rxnorm",
-    "icd10": "http://hl7.org/fhir/sid/icd-10-cm",
-}
 
 RESOURCE_CODE_SYSTEMS: dict[str, list[str]] = {
     "Condition": ["snomed", "icd10"],
     "MedicationRequest": ["rxnorm"],
-    "Procedure": ["snomed"],
+    "Procedure": ["snomed", "icd10pcs", "hcpcs"],
     "AllergyIntolerance": ["snomed"],
     "FamilyMemberHistory": ["snomed"],
     "Observation": [],
@@ -111,6 +112,58 @@ def match_us_core_fixed(resource_type: str, item: dict) -> list[dict] | None:
     return None
 
 
+def _mcode_obs_active(effective) -> bool:
+    rule = effective.rule("Observation") if effective is not None else None
+    return bool(rule and rule.candidate_profiles)
+
+
+def _tag_mcode_roles(candidate: MergedCandidate, effective) -> MergedCandidate:
+    """Tag tumor-marker observations (mCODE active only) so the retrieved-code path
+    routes to LOINC and the builder/selector shape the marker structure. Fixed-code
+    mCODE observations are handled by `match_fixed`, so they are left untagged."""
+    if candidate.resource_type != "Observation" or not _mcode_obs_active(effective):
+        return candidate
+    name = candidate.item.get("full_name") or candidate.item.get("name") or ""
+    if match_mcode_obs(name) is None and is_tumor_marker(name):
+        item = dict(candidate.item)
+        item["mcode_role"] = ROLE_TUMOR_MARKER
+        item.setdefault("codeset_hint", "LOINC")
+        return candidate.model_copy(update={"item": item})
+    return candidate
+
+
+def _match_code_override(overrides: list[dict], item: dict) -> list[dict] | None:
+    """A preset term->code override whose `match` is a substring of the term name."""
+    name = (item.get("full_name") or item.get("name") or item.get("substance") or "").lower()
+    if not name:
+        return None
+    for o in overrides or []:
+        m = (o.get("match") or "").lower()
+        if m and m in name:
+            return [{"system": o.get("system"), "code": o["code"], "display": o.get("display", "")}]
+    return None
+
+
+def match_fixed(resource_type: str, item: dict, effective=None) -> list[dict] | None:
+    """Fixed coding for a candidate. Preset term->code overrides win (reproducible
+    coding the user chose); then mCODE concepts when active; then US Core vitals.
+
+    All short-circuit retrieval — a matched term keeps the same code every run."""
+    rule = effective.rule(resource_type) if effective is not None else None
+    if rule is not None:
+        ov = _match_code_override(rule.code_overrides, item)
+        if ov is not None:
+            return ov
+    if resource_type == "Observation" and _mcode_obs_active(effective):
+        tnm = match_tnm_category(item.get("value") or "")  # value-specific; beats the broad "stage" term
+        if tnm is not None:
+            return tnm
+        spec = match_mcode_obs(item.get("full_name") or item.get("name") or "")
+        if spec is not None:
+            return _mcode_fixed_coding(spec)
+    return match_us_core_fixed(resource_type, item)
+
+
 def _fmh_relationship_coding(relationship: str) -> list[dict]:
     key = relationship.strip().lower()
     if key in FMH_RELATIONSHIP_CODES:
@@ -131,50 +184,85 @@ def _observation_systems(item: dict) -> list[str]:
     return ["snomed"]
 
 
-def _systems_override(effective, resource_type: str) -> list[str] | None:
-    """Preset coding-systems override for a type, filtered to known systems.
-    None = use the default routing (regression-safe)."""
-    if effective is None:
-        return None
-    systems = effective.rule(resource_type).coding_systems
-    if not systems:
-        return None
-    valid = [s for s in systems if s in SYSTEM_URIS]
-    return valid or None
+_BESPOKE = {"FamilyMemberHistory", "AllergyIntolerance"}  # snomed-only coding paths
+
+
+def _default_systems(resource_type: str, item: dict) -> list[str]:
+    if resource_type == "Observation":
+        return _observation_systems(item)
+    return RESOURCE_CODE_SYSTEMS.get(resource_type, ["snomed"])
+
+
+def _resolve_coding(effective, resource_type: str, item: dict) -> tuple[list[str], dict[str, list[dict]]]:
+    """(open_systems, pinned_by_system) for a candidate.
+
+    open_systems: retrievable systems to free-code (preset OPEN list, or default).
+    pinned_by_system: short system key -> the preset's pinned codes for it (any system).
+    """
+    rule = effective.rule(resource_type) if effective is not None else None
+    raw = rule.coding_systems if rule is not None else None
+    base = _default_systems(resource_type, item) if raw is None else raw
+    open_systems = [s for s in base if s in RETRIEVABLE]
+
+    pinned: dict[str, list[dict]] = {}
+    for c in (rule.pinned if rule is not None else []):
+        key = URI_TO_KEY.get(c.get("system"))
+        if key and c.get("code"):
+            pinned.setdefault(key, []).append(c)
+    return open_systems, pinned
+
+
+def _systems_for(resource_type: str, term_systems: list[str], pinned: dict[str, list[dict]]) -> list[str]:
+    """Systems to produce a coding for: the term's open systems plus any pinned-only
+    systems (additive). Bespoke types code snomed only — pins don't apply."""
+    if resource_type in _BESPOKE:
+        return term_systems
+    return list(dict.fromkeys([*term_systems, *pinned]))
+
+
+def _code_body_site(effective, resource_type: str, item: dict) -> bool:
+    """Code Condition.bodySite to SNOMED only when a specialty IG (mCODE) is active
+    for Condition and a body site was extracted. Off otherwise -> output unchanged."""
+    if resource_type != "Condition" or not item.get("body_site"):
+        return False
+    rule = effective.rule(resource_type) if effective is not None else None
+    return bool(rule and rule.candidate_profiles)
 
 
 def _extract_search_terms(
-    resource_type: str, item: dict, systems_override: list[str] | None = None,
-) -> list[tuple[str, list[str], list[str]]]:
-    """Return (term, queries, systems). `queries` are the parser-emitted search
-    strings (fallback to [term]); `term` is the label shown to the selector."""
+    resource_type: str, item: dict, open_systems: list[str], code_body_site: bool = False,
+) -> list[tuple[str, str, list[str], list[str]]]:
+    """Return (field, term, queries, systems). `field` is 'code' for the primary
+    coding or 'body_site'; `queries` are the parser-emitted search strings
+    (fallback to [term]); `term` is the label shown to the selector."""
     if resource_type == "FamilyMemberHistory":
         terms = []
         for cond in item.get("conditions") or []:
             name = cond.get("name", "")
             if name:
-                terms.append((name, cond.get("queries") or [name], ["snomed"]))
+                terms.append(("code", name, cond.get("queries") or [name], ["snomed"]))
         return terms
 
     if resource_type == "AllergyIntolerance":
         terms = []
         substance = item.get("substance") or ""
         if substance:
-            terms.append((substance, item.get("substance_queries") or [substance], ["snomed"]))
+            terms.append(("code", substance, item.get("substance_queries") or [substance], ["snomed"]))
         reaction = item.get("reaction") or ""
         if reaction:
-            terms.append((reaction, item.get("reaction_queries") or [reaction], ["snomed"]))
+            terms.append(("code", reaction, item.get("reaction_queries") or [reaction], ["snomed"]))
         return terms
 
     name = item.get("full_name") or item.get("name") or ""
     if not name:
         return []
 
-    systems = systems_override or RESOURCE_CODE_SYSTEMS.get(resource_type, ["snomed"])
-    if resource_type == "Observation" and not systems_override:
-        systems = _observation_systems(item)
-
-    return [(name, item.get("code_queries") or [name], systems)]
+    terms = [("code", name, item.get("code_queries") or [name], open_systems)]
+    if code_body_site:
+        for site in item.get("body_site") or []:
+            if site:
+                terms.append(("body_site", site, [site], ["snomed"]))
+    return terms
 
 
 def _format_candidates_for_llm(results: list[SearchResult]) -> str:
@@ -241,11 +329,13 @@ def _collect_search_jobs(
     """Return (candidate_index, field_key, term, queries, system) for all searches."""
     jobs: list[tuple[int, str, str, list[str], str]] = []
     for ci, c in enumerate(candidates):
-        if match_us_core_fixed(c.resource_type, c.item) is not None:
+        if match_fixed(c.resource_type, c.item, effective) is not None:
             continue
-        override = _systems_override(effective, c.resource_type)
-        for ti, (term, queries, systems) in enumerate(_extract_search_terms(c.resource_type, c.item, override)):
-            for system in systems:
+        open_systems, pinned = _resolve_coding(effective, c.resource_type, c.item)
+        cbs = _code_body_site(effective, c.resource_type, c.item)
+        for ti, (field, term, queries, systems) in enumerate(_extract_search_terms(c.resource_type, c.item, open_systems, cbs)):
+            syslist = systems if field == "body_site" else _systems_for(c.resource_type, systems, pinned)
+            for system in syslist:
                 key = f"{ci}:{ti}:{system}"
                 jobs.append((ci, key, term, queries, system))
     return jobs
@@ -294,25 +384,38 @@ def _subset_candidates(sys_codes: list[dict], queries: list[str], top_k: int) ->
     ]
 
 
-def _partition_scoped(
+def _split_jobs(
     jobs: list[tuple[int, str, str, list[str], str]],
     candidates: list[MergedCandidate],
     effective,
     top_k: int,
 ) -> tuple[dict[str, list[SearchResult]], list[tuple[int, str, str, list[str], str]]]:
-    """Split jobs: scoped types (preset pins a value set) get their candidates FROM the
-    value set; the rest retrieve from the live API. Makes the value set the search space."""
-    scoped: dict[str, list[SearchResult]] = {}
+    """Per job, gather pinned candidates from the preset's codeset, and queue API
+    retrieval for open retrievable systems. The two are unioned downstream, so an
+    open system free-codes AND its pinned codes are available (additive)."""
+    pinned_results: dict[str, list[SearchResult]] = {}
     api_jobs: list[tuple[int, str, str, list[str], str]] = []
     for job in jobs:
         ci, key, _term, queries, system = job
-        subset = effective.rule(candidates[ci].resource_type).code_subset if effective is not None else None
-        if subset:
-            uri = SYSTEM_URIS.get(system)
-            scoped[key] = _subset_candidates([c for c in subset if c.get("system") == uri], queries, top_k)
-        else:
+        open_systems, pinned = _resolve_coding(effective, candidates[ci].resource_type, candidates[ci].item)
+        pins = pinned.get(system) or []
+        if pins:
+            pinned_results[key] = _subset_candidates(pins, queries, top_k)
+        if system in open_systems and system in RETRIEVABLE:
             api_jobs.append(job)
-    return scoped, api_jobs
+    return pinned_results, api_jobs
+
+
+def _merge_results(results: list[SearchResult], top_k: int) -> list[SearchResult]:
+    """Union candidates by code (best score wins), re-rank, cap at top_k."""
+    best: dict[str, SearchResult] = {}
+    for r in results:
+        prev = best.get(r.code)
+        if prev is None or r.score > prev.score:
+            best[r.code] = r
+    ordered = sorted(best.values(), key=lambda r: -r.score)[:top_k]
+    return [SearchResult(code=r.code, display=r.display, score=r.score, rank=i + 1)
+            for i, r in enumerate(ordered)]
 
 
 async def _code_candidate(
@@ -326,14 +429,14 @@ async def _code_candidate(
 ) -> MergedCandidate:
     item = dict(candidate.item)
 
-    fixed = match_us_core_fixed(candidate.resource_type, item)
+    fixed = match_fixed(candidate.resource_type, item, effective)
     if fixed is not None:
         item["coding"] = fixed
         return candidate.model_copy(update={"item": item})
 
-    search_terms = _extract_search_terms(
-        candidate.resource_type, item, _systems_override(effective, candidate.resource_type),
-    )
+    open_systems, pinned = _resolve_coding(effective, candidate.resource_type, item)
+    cbs = _code_body_site(effective, candidate.resource_type, item)
+    search_terms = _extract_search_terms(candidate.resource_type, item, open_systems, cbs)
 
     if candidate.resource_type == "FamilyMemberHistory":
         conditions = list(item.get("conditions") or [])
@@ -382,18 +485,24 @@ async def _code_candidate(
             item["reaction_coding"] = [react_coding]
         return candidate.model_copy(update={"item": item})
 
-    all_codings: list[dict] = []
-    tasks = []
-    for ti, (term, _queries, systems) in enumerate(search_terms):
-        for system in systems:
+    tasks: list[tuple[str, int, object]] = []  # (field, term-index, coro)
+    for ti, (field, term, _queries, systems) in enumerate(search_terms):
+        syslist = systems if field == "body_site" else _systems_for(candidate.resource_type, systems, pinned)
+        for system in syslist:
             key = f"{ci}:{ti}:{system}"
             sr = search_results.get(key, [])
-            tasks.append(_select_code(term, system, sr, client, model, retriever))
+            tasks.append((field, ti, _select_code(term, system, sr, client, model, retriever)))
 
+    all_codings: list[dict] = []
+    site_by_ti: dict[int, dict] = {}
     if tasks:
-        results = await asyncio.gather(*tasks)
-        for r in results:
-            if r is not None:
+        results = await asyncio.gather(*(c for _, _, c in tasks))
+        for (field, ti, _), r in zip(tasks, results):
+            if r is None:
+                continue
+            if field == "body_site":
+                site_by_ti.setdefault(ti, r)
+            else:
                 all_codings.append(r)
 
     if not all_codings:
@@ -402,6 +511,9 @@ async def _code_candidate(
         all_codings = [{"text": term_name}]
 
     item["coding"] = all_codings
+    site_tis = [ti for ti, (field, *_) in enumerate(search_terms) if field == "body_site"]
+    if site_tis:
+        item["body_site_coding"] = [site_by_ti.get(ti) for ti in site_tis]
     return candidate.model_copy(update={"item": item})
 
 
@@ -428,16 +540,19 @@ async def code_candidates(
     retriever: Retriever | None = None,
     effective=None,
 ) -> StageFourOutput:
-    candidates = stage3_output.candidates
+    candidates = [_tag_mcode_roles(c, effective) for c in stage3_output.candidates]
 
     own = retriever is None
     if retriever is None:
         retriever = ApiRetriever()
     try:
         jobs = _collect_search_jobs(candidates, effective)
-        scoped_results, api_jobs = _partition_scoped(jobs, candidates, effective, top_k)
+        pinned_results, api_jobs = _split_jobs(jobs, candidates, effective, top_k)
         api_results = await _retrieve_all(api_jobs, retriever, top_k)
-        search_results = {**scoped_results, **api_results}
+        search_results = {
+            key: _merge_results(api_results.get(key, []) + pinned_results.get(key, []), top_k)
+            for key in set(api_results) | set(pinned_results)
+        }
         coded = await asyncio.gather(*(
             _code_candidate(ci, c, search_results, client, model, retriever, effective)
             for ci, c in enumerate(candidates)

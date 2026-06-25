@@ -118,7 +118,7 @@ export interface UserConfig {
   [k: string]: unknown
 }
 
-export type Code = { system: string; code: string; display?: string }
+export type Code = { system: string; code: string; display?: string; bundle?: string }
 
 // A Preset stores SPARSE overrides over the resolved IG; absent keys fall back
 // to the IG defaults (see lib/ig-catalog.ts) at resolve time.
@@ -134,8 +134,8 @@ export interface Preset {
 }
 
 export interface CodingOverride {
-  systems?: string[]
-  subset?: Code[] | null
+  systems?: string[]      // OPEN systems (whole-vocabulary bundles); absent = all default-open
+  codes?: Code[] | null   // pinned codes (any system); value-set imports tagged with `bundle`
   query_rules?: QueryRule[]
 }
 
@@ -173,6 +173,7 @@ export interface IgResourceDefault {
   inclusion: "required" | "supported" | "optional"
   profiles: string[]
   coding: { systems: string[]; valueSets?: string[] }
+  fixed?: { system: string; code: string; display: string }[]  // profile-pinned codings (read-only)
   defaultEnabled: boolean
 }
 

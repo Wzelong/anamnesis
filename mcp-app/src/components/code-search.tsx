@@ -3,6 +3,7 @@ import type { App } from "@modelcontextprotocol/ext-apps"
 import { Plus, Search, Loader2 } from "lucide-react"
 import { callTool, parseStructured } from "../mcp"
 import { cn } from "../lib/cn"
+import { SYSTEMS, uriOf } from "../lib/systems"
 import { Input } from "./ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
@@ -14,19 +15,7 @@ interface CodeResult {
   rank: number
 }
 
-const SYSTEMS: { value: string; label: string }[] = [
-  { value: "snomed", label: "SNOMED CT" },
-  { value: "rxnorm", label: "RxNorm" },
-  { value: "loinc", label: "LOINC" },
-  { value: "icd10", label: "ICD-10-CM" },
-]
-
-const SYSTEM_URI: Record<string, string> = {
-  snomed: "http://snomed.info/sct",
-  rxnorm: "http://www.nlm.nih.gov/research/umls/rxnorm",
-  loinc: "http://loinc.org",
-  icd10: "http://hl7.org/fhir/sid/icd-10-cm",
-}
+const SYSTEM_OPTIONS = Object.values(SYSTEMS).map((s) => ({ value: s.key, label: s.label }))
 
 // Mocked results for standalone preview (no MCP host).
 const MOCK: CodeResult[] = [
@@ -96,7 +85,7 @@ export function CodeSearch({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {SYSTEMS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+            {SYSTEM_OPTIONS.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -108,7 +97,7 @@ export function CodeSearch({
           </div>
         ) : results.length === 0 ? (
           <div className="flex items-center justify-center py-10 text-sm text-muted-foreground px-6 text-center">
-            {query.trim() ? "No matches" : "Type to search SNOMED, RxNorm, LOINC, or ICD-10."}
+            {query.trim() ? "No matches" : "Type to search terminology."}
           </div>
         ) : (
           results.map((r) => (
@@ -118,7 +107,7 @@ export function CodeSearch({
               <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">{Math.round(r.score * 100)}%</span>
               {onApply && (
                 <button
-                  onClick={() => onApply({ system: SYSTEM_URI[r.system] ?? r.system, code: r.code, display: r.display })}
+                  onClick={() => onApply({ system: uriOf(r.system), code: r.code, display: r.display })}
                   className={cn("h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer opacity-0 group-hover:opacity-100")}
                   aria-label="Apply code"
                   title="Apply to resource"

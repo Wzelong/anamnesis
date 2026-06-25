@@ -11,6 +11,9 @@ VALID = {"resourceType": "Condition", "subject": {"reference": "Patient/1"},
 ICD_ONLY = {"resourceType": "Condition", "subject": {"reference": "Patient/1"},
             "code": {"coding": [{"system": ICD10, "code": "E11", "display": "x"}]}}
 BAD_R4 = {"resourceType": "Condition", "subject": {"reference": "Patient/1"}, "code": "notacodeableconcept"}
+MCODE_NS = "http://hl7.org/fhir/us/mcode/StructureDefinition"
+US_CORE_NS = "http://hl7.org/fhir/us/core/StructureDefinition"
+MCODE_COND = dict(VALID, meta={"profile": [f"{MCODE_NS}/mcode-primary-cancer-condition"]})
 
 OK_OO = (200, {"resourceType": "OperationOutcome", "issue": [{"severity": "information"}]})
 ERR_OO = (200, {"resourceType": "OperationOutcome",
@@ -48,6 +51,24 @@ def test_local_coding_subset_blocks():
 
 def test_local_no_constraint_passes():
     assert assess_local(ICD_ONLY, None)["valid"] is True
+
+
+def test_asserted_specialty_profile_informational_not_supported():
+    r = assess_local(MCODE_COND)
+    assert r["valid"] is True and r["supported"] is False
+    notes = [i for i in r["issues"] if i["severity"] == "information" and i["path"] == "meta.profile"]
+    assert notes and "mcode-primary-cancer-condition" in notes[0]["message"]
+
+
+def test_us_core_profile_not_flagged():
+    res = dict(VALID, meta={"profile": [f"{US_CORE_NS}/us-core-condition-problems-health-concerns"]})
+    assert not any(i["path"] == "meta.profile" for i in assess_local(res)["issues"])
+
+
+def test_remote_validation_clears_unverified_note():
+    r = _run(assess_conformance(MCODE_COND, profiles=["http://p"], target_client=_Stub(OK_OO)))
+    assert r["supported"] is True
+    assert not any("not validated locally" in str(i.get("message", "")) for i in r["issues"])
 
 
 def test_no_client_stays_local():

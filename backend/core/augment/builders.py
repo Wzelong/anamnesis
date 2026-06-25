@@ -33,7 +33,25 @@ from core.augment.helpers import (
     _parse_onset_age,
     _strip_none,
 )
+from core.mcode_obs import ROLE_TUMOR_MARKER, parse_int, spec_for_codings
 from core.schemas import MergedCandidate
+
+
+def _quantity_from(value_str: str | None, unit: str | None) -> dict | None:
+    """A FHIR Quantity from a leading numeric value + optional unit/comparator, or None."""
+    m = _NUM_RE.match((value_str or "").strip())
+    if not m:
+        return None
+    qty: dict = {"value": float(m.group(2))}
+    if m.group(1) in _COMPARATOR_MAP:
+        qty["comparator"] = _COMPARATOR_MAP[m.group(1)]
+    if unit:
+        qty["unit"] = unit
+        ucum = _UCUM_CODES.get(unit)
+        if ucum:
+            qty["system"] = "http://unitsofmeasure.org"
+            qty["code"] = ucum
+    return qty
 
 
 def _build_condition(item: dict, patient_id: str, encounter_ref: str | None) -> dict:
@@ -70,7 +88,11 @@ def _build_condition(item: dict, patient_id: str, encounter_ref: str | None) -> 
     if item.get("severity"):
         resource["severity"] = {"text": item["severity"]}
     if item.get("body_site"):
-        resource["bodySite"] = [{"text": s} for s in item["body_site"]]
+        codings = item.get("body_site_coding") or []
+        resource["bodySite"] = [
+            {"coding": [codings[i]], "text": s} if i < len(codings) and codings[i] else {"text": s}
+            for i, s in enumerate(item["body_site"])
+        ]
     if encounter_ref:
         resource["encounter"] = {"reference": encounter_ref}
     return _strip_none(resource)
@@ -118,7 +140,32 @@ def _build_observation(item: dict, patient_id: str, encounter_ref: str | None, *
     value_str = item.get("value", "")
     unit = item.get("unit")
 
-    if is_bp:
+    mcode_spec = spec_for_codings(codings)
+    is_tumor_marker_role = item.get("mcode_role") == ROLE_TUMOR_MARKER
+
+    if mcode_spec:
+        kind = mcode_spec["value"]
+        if kind == "integer":
+            iv = parse_int(value_str)
+            if iv is not None:
+                resource["valueInteger"] = iv
+            else:
+                resource["valueString"] = value_str
+        elif kind == "quantity":
+            qty = _quantity_from(value_str, unit)
+            if qty is not None:
+                resource["valueQuantity"] = qty
+            else:
+                resource["valueString"] = value_str
+        else:
+            resource["valueCodeableConcept"] = {"text": value_str}
+    elif is_tumor_marker_role:
+        qty = _quantity_from(value_str, unit)
+        if qty is not None:
+            resource["valueQuantity"] = qty
+        else:
+            resource["valueCodeableConcept"] = {"text": value_str}
+    elif is_bp:
         bp = _parse_bp(value_str)
         if bp:
             resource["component"] = [
@@ -144,16 +191,8 @@ def _build_observation(item: dict, patient_id: str, encounter_ref: str | None, *
     elif cat == "social-history":
         resource["valueCodeableConcept"] = {"text": value_str}
     elif unit and _is_numeric(value_str):
-        m = _NUM_RE.match(value_str.strip())
-        if m:
-            comp_char, num_str = m.group(1), m.group(2)
-            qty: dict = {"value": float(num_str), "unit": unit}
-            if comp_char and comp_char in _COMPARATOR_MAP:
-                qty["comparator"] = _COMPARATOR_MAP[comp_char]
-            ucum = _UCUM_CODES.get(unit)
-            if ucum:
-                qty["system"] = "http://unitsofmeasure.org"
-                qty["code"] = ucum
+        qty = _quantity_from(value_str, unit)
+        if qty is not None:
             resource["valueQuantity"] = qty
         else:
             resource["valueString"] = f"{value_str} {unit}".strip()

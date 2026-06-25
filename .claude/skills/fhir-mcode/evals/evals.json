@@ -1,0 +1,26 @@
+{
+  "skill_name": "fhir-mcode",
+  "evals": [
+    {
+      "id": 0,
+      "name": "breast-cancer-staging-bundle",
+      "prompt": "I'm building a FHIR R4 bundle for an oncology app. Generate the FHIR resources for this patient: 58-year-old woman, newly diagnosed invasive ductal carcinoma of the left breast, clinically staged cT2 cN1 cM0, AJCC 8th edition stage group IIB. I need the primary cancer condition plus the TNM staging (the individual T/N/M categories and the overall stage group), wired together correctly. Output the JSON resources.",
+      "expected_output": "mCODE-conformant Condition (mcode-primary-cancer-condition) with SNOMED code + left breast bodySite, three TNM category Observations (cT/cN/cM with correct staging-type codes and category values), and a TNMStageGroup observation that references the cancer via focus and the categories via hasMember, method=AJCC 8th (897275008). Correct profile URLs and code-system URIs.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "ecog-and-disease-status",
+      "prompt": "For our cancer registry FHIR feed I need two Observations for patient James Lee: an ECOG performance status of 1, and a cancer disease status indicating the disease is stable. Give me the FHIR JSON conforming to the relevant oncology profiles.",
+      "expected_output": "Two Observations: ECOG (mcode-ecog-performance-status, fixed code LOINC 89247-1, grade 1 in interpretation/value) and Cancer Disease Status (mcode-cancer-disease-status, fixed code LOINC 97509-4, value = SNOMED 359746009 'Patient status stable' from ConditionStatusTrendVS). Correct fixed codes used verbatim, correct profile meta.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "egfr-genomic-variant",
+      "prompt": "Build a FHIR genomic variant Observation for an oncology genomics report: an EGFR L858R somatic point mutation found in a lung adenocarcinoma patient. Use the appropriate mCODE/genomics-reporting structure with the component slices for gene and the protein change. JSON please.",
+      "expected_output": "Observation conforming to mcode-genomic-variant: fixed code LOINC 69548-6, category laboratory, component slices with fixed LOINC codes for gene-studied (48018-6, EGFR via HGNC), amino-acid/protein change p.HGVS (48005-3, p.Leu858Arg), genomic source class (48002-0 = somatic). Correct component.code pinning and code systems.",
+      "files": []
+    }
+  ]
+}

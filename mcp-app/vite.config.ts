@@ -10,6 +10,10 @@ export default defineConfig({
   resolve: {
     alias: { "@": here("./src") },
   },
+  server: {
+    // Allow importing the shared IG catalog from the repo root (outside mcp-app/).
+    fs: { allow: [here(".."), here("./")] },
+  },
   build: {
     outDir: here("../backend/mcp_server/ui/assets"),
     emptyOutDir: true,

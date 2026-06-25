@@ -34,15 +34,22 @@ def build_extension(declaration: dict, value) -> dict | None:
     return {"url": url, key: value}
 
 
+def merge_profiles(resource: dict, profiles: list[str]) -> dict:
+    """Add profile canonicals to `meta.profile` as a deduped list (order preserved)."""
+    if not profiles:
+        return resource
+    meta = resource.setdefault("meta", {})
+    existing = list(meta.get("profile") or [])
+    for p in profiles:
+        if p not in existing:
+            existing.append(p)
+    meta["profile"] = existing
+    return resource
+
+
 def apply_overlay(resource: dict, rule) -> dict:
     """Layer a ResourceRule onto a built resource: extra profiles + valued extensions."""
-    if getattr(rule, "profiles", None):
-        meta = resource.setdefault("meta", {})
-        profiles = list(meta.get("profile") or [])
-        for p in rule.profiles:
-            if p not in profiles:
-                profiles.append(p)
-        meta["profile"] = profiles
+    merge_profiles(resource, getattr(rule, "profiles", None) or [])
 
     built = []
     for declaration in getattr(rule, "extensions", None) or []:

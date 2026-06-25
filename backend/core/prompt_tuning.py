@@ -124,6 +124,6 @@ async def test_addon(
     if capture.strip():
         preset["capture_prompts"] = {resource_type: _ov(capture)}
     eff = resolve_effective_profile(preset) if preset else None
-    out = await extract_candidates(pnote, client, model=model, effective=eff)
+    out = await extract_candidates(pnote, client, model=model, effective=eff, only={resource_type})
     items = [i.model_dump(mode="json") for i in (out.candidates.get(resource_type) or [])]
     return {"resource_type": resource_type, "items": items}

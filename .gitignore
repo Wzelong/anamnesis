@@ -68,3 +68,5 @@ backend/build/
 # Tunnels / local tools
 cloudflared.exe
 cloudflared
+
+/ref

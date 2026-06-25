@@ -478,12 +478,17 @@ async def accept_augmentation(
         from config import settings
         from fhir.conformance import assess_conformance, validator_client
         rt = resource.get("resourceType")
-        allowed_systems = effective.rule(rt).coding_systems if effective is not None else None
+        rule = effective.rule(rt) if effective is not None else None
+        allowed_systems = rule.coding_systems if rule is not None else None
+        pinned = rule.pinned if rule is not None else None
+        fixed = rule.fixed if rule is not None else None
         profiles = (resource.get("meta") or {}).get("profile") or []
         conformance = await assess_conformance(
             resource,
             profiles=profiles,
             allowed_systems=allowed_systems,
+            pinned=pinned,
+            fixed=fixed,
             target_client=fhir_client,
             validator=validator_client(),
         )

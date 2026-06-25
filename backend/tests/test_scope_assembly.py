@@ -37,18 +37,26 @@ def _preset(coding):
     return {"id": "p", "ig": {"base": "us-core@6.1.0", "specialty": None}, "coding": coding}
 
 
-def test_resolve_reads_code_subset():
+def test_legacy_subset_migrates_to_pinned_restrict():
     eff = resolve_effective_profile(_preset({"Condition": {"subset": [{"system": SNOMED, "code": "44054006"}]}}))
-    assert eff.rule("Condition").code_subset == [{"system": SNOMED, "code": "44054006"}]
+    rule = eff.rule("Condition")
+    assert rule.pinned == [{"system": SNOMED, "code": "44054006"}]
+    assert rule.coding_systems == []  # restrict: no open system
 
 
-def test_scope_drops_out_of_set():
-    eff = resolve_effective_profile(_preset({"Condition": {"subset": [{"system": SNOMED, "code": "44054006"}]}}))
+def test_restrict_drops_out_of_set():
+    eff = resolve_effective_profile(_preset({"Condition": {"systems": [], "codes": [{"system": SNOMED, "code": "44054006"}]}}))
     out = assemble_proposals(_stage5(), [], _ctx(), effective=eff)
-    assert _codes(out) == ["44054006"]  # Hypertension (ICD-10 I10) dropped, out of set
+    assert _codes(out) == ["44054006"]  # Hypertension (ICD-10 I10) not open, not pinned -> dropped
 
 
-def test_no_subset_keeps_all():
+def test_extend_keeps_open_plus_pinned():
+    eff = resolve_effective_profile(_preset({"Condition": {"systems": ["snomed", "icd10"], "codes": [{"system": SNOMED, "code": "44054006"}]}}))
+    out = assemble_proposals(_stage5(), [], _ctx(), effective=eff)
+    assert sorted(_codes(out)) == ["44054006", "I10"]  # both systems open -> nothing dropped
+
+
+def test_no_codeset_keeps_all():
     eff = resolve_effective_profile(_preset({}))
     out = assemble_proposals(_stage5(), [], _ctx(), effective=eff)
     assert sorted(_codes(out)) == ["44054006", "I10"]

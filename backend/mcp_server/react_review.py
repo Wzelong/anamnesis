@@ -266,7 +266,9 @@ async def reject_augmentation(
     return {"id": proposal_id, "status": "rejected"}
 
 
-_TERMINOLOGY_SYSTEMS = ("snomed", "rxnorm", "loinc", "icd10")
+from core.systems import RETRIEVABLE as _RETRIEVABLE
+
+_TERMINOLOGY_SYSTEMS = tuple(_RETRIEVABLE)
 
 
 async def _resolve_keys(*, require_umls: bool = False) -> tuple[str | None, str | None]:

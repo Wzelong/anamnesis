@@ -11,15 +11,9 @@ relationship, units) are builder-fixed and never subject to the preset allow-lis
 """
 from __future__ import annotations
 
-# Canonical FHIR system URIs for the short names a preset's coding allow-list uses.
-# Mirrors core.code_candidates.SYSTEM_URIS; kept local so the fhir layer stays free
-# of the core/LLM import graph.
-SYSTEM_URIS: dict[str, str] = {
-    "snomed": "http://snomed.info/sct",
-    "loinc": "http://loinc.org",
-    "rxnorm": "http://www.nlm.nih.gov/research/umls/rxnorm",
-    "icd10": "http://hl7.org/fhir/sid/icd-10-cm",
-}
+# core.systems is pure data (no LLM/heavy imports), so the fhir layer can share the
+# single source of truth for system URIs without dragging in the core graph.
+from core.systems import SYSTEM_URIS
 
 _PRIMARY_CODE_KEY: dict[str, str] = {
     "Condition": "code",
@@ -46,39 +40,60 @@ def primary_codings(resource: dict) -> list[dict]:
     return _codings(resource.get(key)) if key else []
 
 
-def code_in_subset(resource: dict, subset: list[dict] | None) -> bool:
-    """True if the resource's primary code is in the value-set scope (system+code match).
+def _open_uris(open_systems: list[str] | None) -> set[str] | None:
+    """None = no constraint (default all open). Else the open systems' URIs."""
+    if open_systems is None:
+        return None
+    return {SYSTEM_URIS[s] for s in open_systems if s in SYSTEM_URIS}
 
-    Empty subset = no scope constraint -> True (regression-safe). Used to drop
-    out-of-set resources when a preset scopes a type to a value set.
+
+def _pinned_keys(pinned: list[dict] | None) -> set[tuple]:
+    return {(c.get("system"), c.get("code")) for c in (pinned or []) if c.get("system") and c.get("code")}
+
+
+def code_allowed(
+    resource: dict, open_systems: list[str] | None,
+    pinned: list[dict] | None = None, fixed: list[dict] | None = None,
+) -> bool:
+    """True if a primary code is permitted: its system is OPEN, or the exact
+    (system, code) is pinned or profile-fixed. `open_systems` None = no constraint
+    (regression-safe). A resource with no codeable primary code is not gated.
     """
-    if not subset:
+    open_uris = _open_uris(open_systems)
+    if open_uris is None and not pinned and not fixed:
         return True
-    allowed = {(c.get("system"), c.get("code")) for c in subset if c.get("system") and c.get("code")}
-    if not allowed:
+    pins = _pinned_keys(pinned) | _pinned_keys(fixed)
+    codings = primary_codings(resource)
+    if not codings:
         return True
-    return any((c.get("system"), c.get("code")) in allowed for c in primary_codings(resource))
+    for c in codings:
+        system = c.get("system")
+        if open_uris is None or system in open_uris:
+            return True
+        if (system, c.get("code")) in pins:
+            return True
+    return False
 
 
-def check_coding_subset(resource: dict, allowed_systems: list[str] | None) -> list[dict]:
-    """Issues for primary codings whose `system` falls outside the preset allow-list.
-
-    `allowed_systems` is short names (e.g. ["snomed", "icd10"]). None / empty means
-    no preset constraint -> no issues (regression-safe for unconfigured clinicians).
+def check_coding_subset(
+    resource: dict, open_systems: list[str] | None,
+    pinned: list[dict] | None = None, fixed: list[dict] | None = None,
+) -> list[dict]:
+    """Issues for primary codings outside the preset allow-list: system not OPEN and
+    code neither pinned nor profile-fixed. `open_systems` None = no constraint.
     """
-    if not allowed_systems:
+    open_uris = _open_uris(open_systems)
+    if open_uris is None:
         return []
-    allowed_uris = {SYSTEM_URIS[s] for s in allowed_systems if s in SYSTEM_URIS}
-    if not allowed_uris:
-        return []
+    pins = _pinned_keys(pinned) | _pinned_keys(fixed)
     rt = resource.get("resourceType")
     issues: list[dict] = []
     for coding in primary_codings(resource):
         system = coding.get("system")
-        if system and system not in allowed_uris:
+        if system and system not in open_uris and (system, coding.get("code")) not in pins:
             issues.append({
                 "severity": "error",
                 "path": f"{rt}.code",
-                "message": f"coding system {system} outside preset allow-list {sorted(allowed_uris)}",
+                "message": f"coding {system}|{coding.get('code')} outside preset allow-list",
             })
     return issues

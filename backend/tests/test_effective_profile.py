@@ -56,3 +56,16 @@ def test_resolve_from_config_picks_active():
 def test_resolve_from_config_empty_is_defaults():
     ep = resolve_from_config({})
     assert ep.preset_id is None and ep.rule("Condition").enabled is True
+
+
+def test_specialty_populates_candidate_profiles():
+    preset = {"id": "p", "ig": {"base": "us-core@6.1.0", "specialty": "mcode@4.0.0"}}
+    ep = resolve_effective_profile(preset)
+    assert ep.rule("Condition").candidate_profiles[0].endswith("mcode-primary-cancer-condition")
+    assert ep.rule("Condition").profiles == []  # candidates are not blanket-attached
+    assert ep.rule("FamilyMemberHistory").candidate_profiles == []  # absent from mcode manifest
+
+
+def test_no_specialty_has_no_candidate_profiles():
+    ep = resolve_effective_profile({"id": "p", "ig": {"base": "us-core@6.1.0", "specialty": None}})
+    assert all(ep.rule(rt).candidate_profiles == [] for rt in RESOURCE_TYPES)

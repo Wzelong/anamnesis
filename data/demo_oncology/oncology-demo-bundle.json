@@ -1,0 +1,1230 @@
+{
+  "resourceType": "Bundle",
+  "id": "anamnesis-demo-oncology-sullivan",
+  "type": "transaction",
+  "timestamp": "2027-03-01T08:30:00-06:00",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:b65bb04c-9cec-5014-a010-d65100e09ee5",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "oakwood",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-organization"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://oakwoodcancer.example.org/org-id",
+            "value": "OAKWOOD"
+          }
+        ],
+        "active": true,
+        "name": "Oakwood Cancer Center",
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                "code": "prov",
+                "display": "Healthcare Provider"
+              }
+            ],
+            "text": "Healthcare Provider"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+1-312-555-0170",
+            "use": "work"
+          }
+        ],
+        "address": [
+          {
+            "line": [
+              "240 Oakwood Parkway"
+            ],
+            "city": "Chicago",
+            "state": "IL",
+            "postalCode": "60601",
+            "country": "US"
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Organization"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:8a0e5232-ab61-511d-b6ae-01260d821ba3",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "lakeshore",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-organization"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://lakeshoreimaging.example.org/org-id",
+            "value": "LAKESHORE"
+          }
+        ],
+        "active": true,
+        "name": "Lakeshore Imaging",
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                "code": "prov",
+                "display": "Healthcare Provider"
+              }
+            ],
+            "text": "Healthcare Provider"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+1-312-555-0190",
+            "use": "work"
+          }
+        ],
+        "address": [
+          {
+            "line": [
+              "88 Lakeshore Blvd"
+            ],
+            "city": "Chicago",
+            "state": "IL",
+            "postalCode": "60611",
+            "country": "US"
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Organization"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "rao",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://hl7.org/fhir/sid/us-npi",
+            "value": "5234567890"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Rao",
+            "given": [
+              "Priya"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Practitioner"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cbe6b6c7-7f34-5b08-81e2-412f402c9f3b",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "voss",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://hl7.org/fhir/sid/us-npi",
+            "value": "6345678901"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Voss",
+            "given": [
+              "Ellen"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Practitioner"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:bef1f1f3-1416-54bb-928d-1625ff11897a",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "liu",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://hl7.org/fhir/sid/us-npi",
+            "value": "7456789012"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Liu",
+            "given": [
+              "Mark"
+            ],
+            "prefix": [
+              "Dr."
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Practitioner"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "sullivan-margaret",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2106-3",
+                  "display": "White"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "White"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2186-5",
+                  "display": "Not Hispanic or Latino"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Not Hispanic or Latino"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "valueCode": "F"
+          }
+        ],
+        "identifier": [
+          {
+            "use": "usual",
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "MR",
+                  "display": "Medical Record Number"
+                }
+              ],
+              "text": "Medical Record Number"
+            },
+            "system": "http://oakwoodcancer.example.org/mrn",
+            "value": "OAK-0117-SUL"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Sullivan",
+            "given": [
+              "Margaret"
+            ]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "+1-312-555-0117",
+            "use": "home"
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1966-09-12",
+        "address": [
+          {
+            "use": "home",
+            "line": [
+              "55 Linden Court"
+            ],
+            "city": "Chicago",
+            "state": "IL",
+            "postalCode": "60614",
+            "country": "US"
+          }
+        ],
+        "managingOrganization": {
+          "reference": "urn:uuid:b65bb04c-9cec-5014-a010-d65100e09ee5",
+          "display": "Oakwood Cancer Center"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Patient"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:78602dc2-be95-5d29-975b-f976847d9a1e",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "breast-ca",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ],
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "C50.911",
+              "display": "Malignant neoplasm of unspecified site of right female breast"
+            }
+          ],
+          "text": "Malignant neoplasm of right breast"
+        },
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "onsetDateTime": "2025-09-04",
+        "recordedDate": "2025-09-08",
+        "recorder": {
+          "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+          "display": "Dr. Priya Rao"
+        },
+        "asserter": {
+          "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+          "display": "Dr. Priya Rao"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:bc20bdf1-f8ad-54b3-bcc2-05caff651fc6",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "htn",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ],
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "59621000",
+              "display": "Essential hypertension"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "I10",
+              "display": "Essential (primary) hypertension"
+            }
+          ],
+          "text": "Essential hypertension"
+        },
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "onsetDateTime": "2014-06-01",
+        "recordedDate": "2014-06-01",
+        "recorder": {
+          "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+          "display": "Dr. Priya Rao"
+        },
+        "asserter": {
+          "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+          "display": "Dr. Priya Rao"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:d0d5b9f4-0616-5046-bfe4-40d8c5bda323",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "osteopenia",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ]
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "problem-list-item",
+                "display": "Problem List Item"
+              }
+            ],
+            "text": "Problem List Item"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "312894000",
+              "display": "Osteopenia"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "M85.80",
+              "display": "Other specified disorders of bone density and structure, unspecified site"
+            }
+          ],
+          "text": "Osteopenia"
+        },
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "onsetDateTime": "2022-03-01",
+        "recordedDate": "2022-03-01",
+        "recorder": {
+          "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+          "display": "Dr. Priya Rao"
+        },
+        "asserter": {
+          "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+          "display": "Dr. Priya Rao"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Condition"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:db088e27-1ad8-5265-9c3d-be116d8c32de",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "lisinopril-10",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+          ]
+        },
+        "status": "active",
+        "intent": "order",
+        "reportedBoolean": false,
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "314076",
+              "display": "Lisinopril 10 MG Oral Tablet"
+            }
+          ],
+          "text": "Lisinopril 10 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "authoredOn": "2024-01-15",
+        "requester": {
+          "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+          "display": "Dr. Priya Rao"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1 tablet (10 mg) by mouth once daily",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:1b24976c-89d8-59ce-8d8c-8af8b91a9dd4",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "cal-vitd",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+          ]
+        },
+        "status": "active",
+        "intent": "order",
+        "reportedBoolean": false,
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1303736",
+              "display": "Calcium Carbonate 600 MG / Cholecalciferol 400 unit Oral Tablet"
+            }
+          ],
+          "text": "Calcium Carbonate 600 MG / Cholecalciferol 400 unit Oral Tablet"
+        },
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "authoredOn": "2022-03-01",
+        "requester": {
+          "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+          "display": "Dr. Priya Rao"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take 1 tablet by mouth twice daily",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "MedicationRequest"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:87783ddd-5696-5d20-878e-5ef6df8aac52",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "mammo-birads",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result"
+          ]
+        },
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "imaging",
+                "display": "Imaging"
+              }
+            ],
+            "text": "Imaging"
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "42168-6",
+              "display": "Breast - Mammogram diagnostic"
+            }
+          ],
+          "text": "Breast - Mammogram diagnostic"
+        },
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "effectiveDateTime": "2025-08-28",
+        "performer": [
+          {
+            "reference": "urn:uuid:bef1f1f3-1416-54bb-928d-1625ff11897a",
+            "display": "Dr. Mark Liu"
+          }
+        ],
+        "valueCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "LA25911-2",
+              "display": "BI-RADS 5: Highly suggestive of malignancy"
+            }
+          ],
+          "text": "BI-RADS 5: Highly suggestive of malignancy"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Observation"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:61d3b46c-7477-573a-b832-d0c5e883e921",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "core-biopsy",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
+          ]
+        },
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "122548005",
+              "display": "Biopsy of breast"
+            }
+          ],
+          "text": "Biopsy of breast"
+        },
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "performedDateTime": "2025-09-04",
+        "bodySite": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "73056007",
+                "display": "Right breast structure"
+              }
+            ],
+            "text": "Right breast structure"
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "Procedure"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:36016e83-17d4-5667-a4e6-4786cae458aa",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "onc-consult",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://oakwoodcancer.example.org/encounter-id",
+            "value": "ENC-ONC-CONSULT"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "11429006",
+                "display": "Consultation"
+              },
+              {
+                "system": "http://loinc.org",
+                "code": "11488-4",
+                "display": "Consult note"
+              }
+            ],
+            "text": "Medical Oncology Consultation"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "participant": [
+          {
+            "individual": {
+              "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+              "display": "Dr. Priya Rao"
+            },
+            "period": {
+              "start": "2025-09-18T09:00:00-05:00",
+              "end": "2025-09-18T10:04:00-05:00"
+            }
+          }
+        ],
+        "period": {
+          "start": "2025-09-18T09:00:00-05:00",
+          "end": "2025-09-18T10:04:00-05:00"
+        },
+        "serviceProvider": {
+          "reference": "urn:uuid:b65bb04c-9cec-5014-a010-d65100e09ee5"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:50a2523a-a7ca-5cbb-9260-e3bdf8f93cdc",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "onc-surgery",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://oakwoodcancer.example.org/encounter-id",
+            "value": "ENC-ONC-SURGERY"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "274441001",
+                "display": "Breast surgery"
+              },
+              {
+                "system": "http://loinc.org",
+                "code": "11526-1",
+                "display": "Pathology study"
+              }
+            ],
+            "text": "Breast Surgery and Pathology"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "participant": [
+          {
+            "individual": {
+              "reference": "urn:uuid:cbe6b6c7-7f34-5b08-81e2-412f402c9f3b",
+              "display": "Dr. Ellen Voss"
+            },
+            "period": {
+              "start": "2025-12-03T07:30:00-06:00",
+              "end": "2025-12-03T11:00:00-06:00"
+            }
+          }
+        ],
+        "period": {
+          "start": "2025-12-03T07:30:00-06:00",
+          "end": "2025-12-03T11:00:00-06:00"
+        },
+        "serviceProvider": {
+          "reference": "urn:uuid:b65bb04c-9cec-5014-a010-d65100e09ee5"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:9acba8ee-8172-5c9f-9751-f517fc8a6611",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "onc-followup",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-encounter"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://oakwoodcancer.example.org/encounter-id",
+            "value": "ENC-ONC-FOLLOWUP"
+          }
+        ],
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "185349003",
+                "display": "Encounter for check up"
+              },
+              {
+                "system": "http://loinc.org",
+                "code": "11488-4",
+                "display": "Consult note"
+              }
+            ],
+            "text": "Medical Oncology Follow-up"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "participant": [
+          {
+            "individual": {
+              "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+              "display": "Dr. Priya Rao"
+            },
+            "period": {
+              "start": "2027-02-10T10:30:00-06:00",
+              "end": "2027-02-10T11:18:00-06:00"
+            }
+          }
+        ],
+        "period": {
+          "start": "2027-02-10T10:30:00-06:00",
+          "end": "2027-02-10T11:18:00-06:00"
+        },
+        "serviceProvider": {
+          "reference": "urn:uuid:b65bb04c-9cec-5014-a010-d65100e09ee5"
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "Encounter"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:aec6033b-3812-5a96-b3de-a4d9ad6b36e2",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "onc-consult-note",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-documentreference"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://oakwoodcancer.example.org/document-id",
+            "value": "DOC-ONC-CONSULT-NOTE"
+          }
+        ],
+        "status": "current",
+        "docStatus": "final",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Consult note"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category",
+                "code": "clinical-note",
+                "display": "Clinical Note"
+              }
+            ],
+            "text": "Clinical Note"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "date": "2025-09-18T10:04:00-05:00",
+        "author": [
+          {
+            "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+            "display": "Dr. Priya Rao"
+          }
+        ],
+        "custodian": {
+          "reference": "urn:uuid:b65bb04c-9cec-5014-a010-d65100e09ee5",
+          "display": "Oakwood Cancer Center"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "en-US",
+              "data": "4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCiAgIE9BS1dPT0QgQ0FOQ0VSIENFTlRFUiAgfCAgRElWSVNJT04gT0YgTUVESUNBTCBPTkNPTE9HWQogICBOZXcgUGF0aWVudCBDb25zdWx0YXRpb24gTm90ZQrilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAKClBhdGllbnQ6ICAgICAgICAgICBTVUxMSVZBTiwgTUFSR0FSRVQKTVJOOiAgICAgICAgICAgICAgIE9BSy0wMTE3LVNVTApET0I6ICAgICAgICAgICAgICAgMDkvMTIvMTk2NiAgKDU4IHksIEYpCkVuY291bnRlciBEYXRlOiAgICAwOS8xOC8yMDI1ICAwOTowMCBDRFQKRW5jb3VudGVyIElEOiAgICAgIEVOQy1PTkMtQ09OU1VMVApWaXNpdCBUeXBlOiAgICAgICAgTmV3IFBhdGllbnQgQ29uc3VsdGF0aW9uClNlcnZpY2U6ICAgICAgICAgICBNZWRpY2FsIE9uY29sb2d5IOKAlCBCcmVhc3QKQXR0ZW5kaW5nOiAgICAgICAgIFByaXlhIFJhbywgTUQKUmVmZXJyaW5nOiAgICAgICAgIEVsbGVuIFZvc3MsIE1EICAoT2Frd29vZCBCcmVhc3QgU3VyZ2VyeSkK4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCgoKUkVBU09OIEZPUiBDT05TVUxUQVRJT04KTmV3bHkgZGlhZ25vc2VkIHJpZ2h0IGJyZWFzdCBjYXJjaW5vbWE7IGV2YWx1YXRpb24gZm9yIHN5c3RlbWljCnRoZXJhcHkgYW5kIGNvb3JkaW5hdGlvbiBvZiBtdWx0aWRpc2NpcGxpbmFyeSB0cmVhdG1lbnQuCgoKSElTVE9SWSBPRiBQUkVTRU5UIElMTE5FU1MKTXMuIE1hcmdhcmV0IFN1bGxpdmFuIGlzIGEgNTgteWVhci1vbGQgcG9zdG1lbm9wYXVzYWwgd29tYW4gd2hvCnByZXNlbnRzIGZvciBldmFsdWF0aW9uIG9mIGEgbmV3bHkgZGlhZ25vc2VkIHJpZ2h0IGJyZWFzdCBjYW5jZXIuClNoZSBmaXJzdCBub3RlZCBhIHBhbHBhYmxlIGx1bXAgaW4gdGhlIHVwcGVyIG91dGVyIHF1YWRyYW50IG9mIHRoZQpyaWdodCBicmVhc3QgYXBwcm94aW1hdGVseSB0d28gbW9udGhzIGFnby4gQSBkaWFnbm9zdGljIG1hbW1vZ3JhbQphbmQgdGFyZ2V0ZWQgdWx0cmFzb3VuZCBvbiAwOC8yOC8yMDI1IGRlbW9uc3RyYXRlZCBhIHNwaWN1bGF0ZWQKbWFzcyBhdCB0aGUgMTAgbydjbG9jayBwb3NpdGlvbiBvZiB0aGUgcmlnaHQgYnJlYXN0LCBCSS1SQURTIDUsCndpdGggYW4gYWJub3JtYWwgcmlnaHQgYXhpbGxhcnkgbHltcGggbm9kZS4KClNoZSB1bmRlcndlbnQgdWx0cmFzb3VuZC1ndWlkZWQgY29yZSBuZWVkbGUgYmlvcHN5IG9mIHRoZSByaWdodApicmVhc3QgbWFzcyBvbiAwOS8wNC8yMDI1LiBQYXRob2xvZ3kgcmV2ZWFsZWQgaW52YXNpdmUgZHVjdGFsCmNhcmNpbm9tYSwgTm90dGluZ2hhbSBoaXN0b2xvZ2ljIGdyYWRlIDIgKHR1YnVsZSAzLCBudWNsZWFyIDIsCm1pdG90aWMgMTsgdG90YWwgc2NvcmUgNiBvZiA5KS4gQmlvbWFya2VyIHN0dWRpZXMgd2VyZSBwZXJmb3JtZWQKb24gdGhlIGNvcmUgYmlvcHN5IGFuZCBhcmUgcmV2aWV3ZWQgYmVsb3cuCgpPbiBleGFtaW5hdGlvbiB0b2RheSB0aGUgZG9taW5hbnQgcmlnaHQgYnJlYXN0IG1hc3MgbWVhc3VyZXMKYXBwcm94aW1hdGVseSAzLjIgY20gaW4gZ3JlYXRlc3QgZGltZW5zaW9uLiBUaGUgcGF0aWVudCByZXBvcnRzCm5vIGJvbmUgcGFpbiwgbm8gc2hvcnRuZXNzIG9mIGJyZWF0aCwgbm8gYWJkb21pbmFsIHN5bXB0b21zLCBhbmQKbm8gdW5pbnRlbnRpb25hbCB3ZWlnaHQgbG9zcy4gU2hlIHJlbWFpbnMgZnVsbHkgYWN0aXZlIGFuZCBpcyBhYmxlCnRvIGNhcnJ5IG91dCBhbGwgb2YgaGVyIG5vcm1hbCBkYWlseSBhY3Rpdml0aWVzIHdpdGhvdXQgcmVzdHJpY3Rpb24uCgoKUEFTVCBNRURJQ0FMIEhJU1RPUlkKLSBFc3NlbnRpYWwgaHlwZXJ0ZW5zaW9uCi0gT3N0ZW9wZW5pYQotIFJpZ2h0IGJyZWFzdCBjYXJjaW5vbWEgKG5ld2x5IGRpYWdub3NlZCwgYXMgYWJvdmUpCgoKUEFTVCBTVVJHSUNBTCBISVNUT1JZCi0gQ2hvbGVjeXN0ZWN0b215ICgyMDA5KQoKCk1FRElDQVRJT05TCi0gTGlzaW5vcHJpbCAxMCBtZyBQTyBkYWlseQotIENhbGNpdW0gY2FyYm9uYXRlIC8gdml0YW1pbiBEMyBzdXBwbGVtZW50IGRhaWx5CgoKQUxMRVJHSUVTCk5vIGtub3duIGRydWcgYWxsZXJnaWVzLgoKCkZBTUlMWSBISVNUT1JZCi0gTW90aGVyOiBicmVhc3QgY2FuY2VyIGRpYWdub3NlZCBhdCBhZ2UgNjQuCi0gTWF0ZXJuYWwgYXVudDogb3ZhcmlhbiBjYW5jZXIuCi0gRmF0aGVyOiBhbGl2ZSBhbmQgd2VsbC4KCgpTT0NJQUwgSElTVE9SWQpMaXZlcyB3aXRoIGhlciBodXNiYW5kLiBSZXRpcmVkIHNjaG9vbHRlYWNoZXIuIE5ldmVyIHNtb2tlci4KQWxjb2hvbCBzb2NpYWxseSwgb25lIHRvIHR3byBkcmlua3MgcGVyIHdlZWsuIE5vIGlsbGljaXQgc3Vic3RhbmNlcy4KCgpCSU9NQVJLRVIgQU5EIFBBVEhPTE9HWSBSRVZJRVcgIChyaWdodCBicmVhc3QgY29yZSBiaW9wc3ksIDA5LzA0LzIwMjUpCi0gSGlzdG9sb2d5OiAgICAgICAgICAgSW52YXNpdmUgZHVjdGFsIGNhcmNpbm9tYQotIEhpc3RvbG9naWMgZ3JhZGU6ICAgIE5vdHRpbmdoYW0gZ3JhZGUgMiAoc2NvcmUgNi85KQotIEVzdHJvZ2VuIHJlY2VwdG9yOiAgIFBPU0lUSVZFLCBzdHJvbmcgbnVjbGVhciBzdGFpbmluZyBpbiA5NSUgb2YKICAgICAgICAgICAgICAgICAgICAgICB0dW1vciBjZWxscyAoQWxscmVkIDgvOCkuCi0gUHJvZ2VzdGVyb25lIHJlY2VwdG9yOiBQT1NJVElWRSwgbnVjbGVhciBzdGFpbmluZyBpbiA4MCUgb2YKICAgICAgICAgICAgICAgICAgICAgICB0dW1vciBjZWxscyAoQWxscmVkIDcvOCkuCi0gSEVSMiAoSUhDKTogICAgICAgICAgTkVHQVRJVkUgKHNjb3JlIDErKSwgbm90IGFtcGxpZmllZC4gTm8gcmVmbGV4CiAgICAgICAgICAgICAgICAgICAgICAgRklTSCByZXF1aXJlZCBwZXIgc2NvcmluZyBhbGdvcml0aG0uCi0gS2ktNjc6ICAgICAgICAgICAgICAgYXBwcm94aW1hdGVseSAxOCUgKGludGVybWVkaWF0ZSkuCgoKU1RBR0lORwpCaWxhdGVyYWwgbWFtbW9ncmFwaHkgYW5kIHJpZ2h0IGJyZWFzdC9heGlsbGFyeSB1bHRyYXNvdW5kIGFzIGFib3ZlLgpTdGFnaW5nIGxhYm9yYXRvcnkgc3R1ZGllcyBpbmNsdWRpbmcgQ0JDLCBjb21wcmVoZW5zaXZlIG1ldGFib2xpYwpwYW5lbCwgYW5kIGFsa2FsaW5lIHBob3NwaGF0YXNlIHdlcmUgd2l0aGluIG5vcm1hbCBsaW1pdHMuIE5vCmluZGljYXRpb24gZm9yIGJhc2VsaW5lIHN5c3RlbWljIGltYWdpbmcgZ2l2ZW4gY2xpbmljYWwgc3RhZ2UgSUkKcHJlc2VudGF0aW9uIHdpdGhvdXQgc3ltcHRvbXMuCgpDbGluaWNhbCBzdGFnZTogIGNUMiBjTjEgY00wLCBBSkNDIGFuYXRvbWljIHN0YWdlIGdyb3VwIElJQi4KCgpQSFlTSUNBTCBFWEFNSU5BVElPTgpFQ09HIHBlcmZvcm1hbmNlIHN0YXR1czogMS4KR2VuZXJhbDogICBXZWxsLWFwcGVhcmluZyB3b21hbiBpbiBubyBhY3V0ZSBkaXN0cmVzcy4KVml0YWxzOiAgICBCUCAxMzQvODIsIEhSIDcyLCBSUiAxNCwgVGVtcCAzNi43IEMsIFd0IDcxIGtnLCBIdCAxNjMgY20uCkJyZWFzdDogICAgUmlnaHQgYnJlYXN0IHdpdGggYSBmaXJtLCBmaXhlZCBtYXNzIGluIHRoZSB1cHBlciBvdXRlcgogICAgICAgICAgIHF1YWRyYW50LCBhcHByb3hpbWF0ZWx5IDMuMiBjbSwgYXQgdGhlIDEwIG8nY2xvY2sgcG9zaXRpb24uCiAgICAgICAgICAgQSBmaXJtLCBtb2JpbGUgcmlnaHQgYXhpbGxhcnkgbm9kZSBpcyBwYWxwYWJsZS4gTGVmdAogICAgICAgICAgIGJyZWFzdCBhbmQgbGVmdCBheGlsbGEgdW5yZW1hcmthYmxlLiBObyBza2luIGNoYW5nZXMsCiAgICAgICAgICAgbmlwcGxlIHJldHJhY3Rpb24sIG9yIGNoZXN0IHdhbGwgZml4YXRpb24uCkx5bXBoOiAgICAgUmlnaHQgYXhpbGxhcnkgYWRlbm9wYXRoeSBhcyBhYm92ZS4gTm8gc3VwcmFjbGF2aWN1bGFyCiAgICAgICAgICAgb3IgY2VydmljYWwgYWRlbm9wYXRoeS4KTHVuZ3M6ICAgICBDbGVhciB0byBhdXNjdWx0YXRpb24gYmlsYXRlcmFsbHkuCkFiZDogICAgICAgU29mdCwgbm9uLXRlbmRlci4gTm8gaGVwYXRvbWVnYWx5LgpFeHQ6ICAgICAgIE5vIGVkZW1hLiBObyBmb2NhbCBib25lIHRlbmRlcm5lc3MuCgoKQVNTRVNTTUVOVApNcy4gU3VsbGl2YW4gaXMgYSA1OC15ZWFyLW9sZCBwb3N0bWVub3BhdXNhbCB3b21hbiB3aXRoIG5ld2x5CmRpYWdub3NlZCBjbGluaWNhbCBzdGFnZSBJSUIgKGNUMiBjTjEgY00wKSBpbnZhc2l2ZSBkdWN0YWwKY2FyY2lub21hIG9mIHRoZSByaWdodCBicmVhc3QsIE5vdHRpbmdoYW0gZ3JhZGUgMiwgc3Ryb25nbHkKaG9ybW9uZS1yZWNlcHRvciBwb3NpdGl2ZSAoRVIgOTUlLCBQUiA4MCUpIGFuZCBIRVIyIG5lZ2F0aXZlLgpUaGlzIGlzIGEgaG9ybW9uZS1yZWNlcHRvci1wb3NpdGl2ZSwgSEVSMi1uZWdhdGl2ZSBicmVhc3QgY2FuY2VyLgoKClBMQU4KCjEuIFJpZ2h0IGJyZWFzdCBpbnZhc2l2ZSBkdWN0YWwgY2FyY2lub21hLCBjbGluaWNhbCBzdGFnZSBJSUIuCiAgIC0gUmV2aWV3ZWQgdGhlIGRpYWdub3Npcywgc3RhZ2luZywgYW5kIGJpb21hcmtlciBwcm9maWxlIHdpdGggdGhlCiAgICAgcGF0aWVudCBhbmQgaGVyIGh1c2JhbmQgaW4gZGV0YWlsLgogICAtIEdpdmVuIHRoZSBub2RlLXBvc2l0aXZlIHByZXNlbnRhdGlvbiBhbmQgdHVtb3Igc2l6ZSwgd2UKICAgICByZWNvbW1lbmQgbmVvYWRqdXZhbnQgc3lzdGVtaWMgY2hlbW90aGVyYXB5IHRvIGRvd25zdGFnZSB0aGUKICAgICBkaXNlYXNlIHByaW9yIHRvIHN1cmdlcnkuIElOSVRJQVRFIG5lb2FkanV2YW50IGRvc2UtZGVuc2UKICAgICBkb3hvcnViaWNpbiBhbmQgY3ljbG9waG9zcGhhbWlkZSAoQUMpIGV2ZXJ5IHR3byB3ZWVrcyBmb3IgZm91cgogICAgIGN5Y2xlcywgZm9sbG93ZWQgYnkgcGFjbGl0YXhlbCwgZm9yIHRyZWF0bWVudCBvZiBoZXIgYnJlYXN0CiAgICAgY2FuY2VyLgogICAtIEVuZG9jcmluZSB0aGVyYXB5IHdpdGggYW4gYXJvbWF0YXNlIGluaGliaXRvciB3aWxsIGZvbGxvdyBpbgogICAgIHRoZSBhZGp1dmFudCBzZXR0aW5nIGFmdGVyIHN1cmdlcnksIGdpdmVuIGhlciBwb3N0bWVub3BhdXNhbCwKICAgICBzdHJvbmdseSBFUi1wb3NpdGl2ZSBzdGF0dXMuCiAgIC0gUmVmZXJyYWwgdG8gYnJlYXN0IHN1cmdlcnkgKERyLiBWb3NzKSBmb3IgZGVmaW5pdGl2ZSBzdXJnaWNhbAogICAgIHBsYW5uaW5nIGZvbGxvd2luZyBuZW9hZGp1dmFudCB0aGVyYXB5LgogICAtIFJlZmVycmFsIHRvIHJhZGlhdGlvbiBvbmNvbG9neSBmb3IgY29uc3VsdGF0aW9uIHJlZ2FyZGluZwogICAgIHBvc3Qtb3BlcmF0aXZlIHJhZGlvdGhlcmFweS4KCjIuIFBlcmZvcm1hbmNlIHN0YXR1cyBhbmQgc3VwcG9ydGl2ZSBjYXJlLgogICAtIEVDT0cgMTsgZXhjZWxsZW50IGNhbmRpZGF0ZSBmb3IgdGhlIHBsYW5uZWQgcmVnaW1lbi4KICAgLSBBbnRpZW1ldGljIHByb3BoeWxheGlzLCBncm93dGggZmFjdG9yIHN1cHBvcnQsIGFuZCBhIHBvcnQKICAgICBwbGFjZW1lbnQgdG8gYmUgYXJyYW5nZWQgcHJpb3IgdG8gY3ljbGUgMS4KCjMuIEdlbmV0aWMgY291bnNlbGluZy4KICAgLSBHaXZlbiBmYW1pbHkgaGlzdG9yeSBvZiBicmVhc3QgYW5kIG92YXJpYW4gY2FuY2VyLCByZWZlcnJhbAogICAgIHRvIGdlbmV0aWMgY291bnNlbGluZyBmb3IgZ2VybWxpbmUgdGVzdGluZyBpcyByZWNvbW1lbmRlZC4KCjQuIEJvbmUgaGVhbHRoLgogICAtIEJhc2VsaW5lIERFWEEgcmVjb21tZW5kZWQgZ2l2ZW4gb3N0ZW9wZW5pYSBhbmQgcGxhbm5lZAogICAgIGFyb21hdGFzZSBpbmhpYml0b3IgdGhlcmFweS4KCgpGT0xMT1ctVVAKUmV0dXJuIHRvIG1lZGljYWwgb25jb2xvZ3kgdG8gYmVnaW4gY3ljbGUgMSBvZiBuZW9hZGp1dmFudCB0aGVyYXB5CmZvbGxvd2luZyBwb3J0IHBsYWNlbWVudC4gVGhlIHBhdGllbnQgdmVyYmFsaXplZCB1bmRlcnN0YW5kaW5nIG9mCnRoZSBkaWFnbm9zaXMgYW5kIHRyZWF0bWVudCBwbGFuIGFuZCB3aXNoZXMgdG8gcHJvY2VlZC4KCgrilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKClByaXlhIFJhbywgTUQKT2Frd29vZCBDYW5jZXIgQ2VudGVyIOKAlCBNZWRpY2FsIE9uY29sb2d5Ck5QSTogNTIzNDU2Nzg5MApFbGVjdHJvbmljYWxseSBzaWduZWQ6IDA5LzE4LzIwMjUgIDEwOjA0IENEVAo=",
+              "title": "Consult note"
+            },
+            "format": {
+              "system": "http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
+              "code": "urn:ihe:iti:xds:2017:mimeTypeSufficient",
+              "display": "mimeType Sufficient"
+            }
+          }
+        ],
+        "context": {
+          "encounter": [
+            {
+              "reference": "urn:uuid:36016e83-17d4-5667-a4e6-4786cae458aa"
+            }
+          ],
+          "period": {
+            "start": "2025-09-18T10:04:00-05:00",
+            "end": "2025-09-18T10:04:00-05:00"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:2a3fe597-e115-5e1e-bfae-5e9879124b1d",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "surgical-pathology-report",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-documentreference"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://oakwoodcancer.example.org/document-id",
+            "value": "DOC-SURGICAL-PATHOLOGY-REPORT"
+          }
+        ],
+        "status": "current",
+        "docStatus": "final",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11526-1",
+              "display": "Pathology study"
+            }
+          ],
+          "text": "Pathology study"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category",
+                "code": "clinical-note",
+                "display": "Clinical Note"
+              }
+            ],
+            "text": "Clinical Note"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "date": "2025-12-05T09:00:00-06:00",
+        "author": [
+          {
+            "reference": "urn:uuid:cbe6b6c7-7f34-5b08-81e2-412f402c9f3b",
+            "display": "Dr. Ellen Voss"
+          }
+        ],
+        "custodian": {
+          "reference": "urn:uuid:b65bb04c-9cec-5014-a010-d65100e09ee5",
+          "display": "Oakwood Cancer Center"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "en-US",
+              "data": "4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCiAgIE9BS1dPT0QgQ0FOQ0VSIENFTlRFUiAgfCAgREVQQVJUTUVOVCBPRiBQQVRIT0xPR1kKICAgU3VyZ2ljYWwgUGF0aG9sb2d5IFJlcG9ydArilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAKClBhdGllbnQ6ICAgICAgICAgICBTVUxMSVZBTiwgTUFSR0FSRVQKTVJOOiAgICAgICAgICAgICAgIE9BSy0wMTE3LVNVTApET0I6ICAgICAgICAgICAgICAgMDkvMTIvMTk2NiAgKDU5IHksIEYpCkRhdGUgb2YgU2VydmljZTogICAxMi8wMy8yMDI1CkFjY2Vzc2lvbjogICAgICAgICBTMjUtMDE0NzgyCkVuY291bnRlciBJRDogICAgICBFTkMtT05DLVNVUkdFUlkKT3JkZXJpbmcgUHJvdmlkZXI6IEVsbGVuIFZvc3MsIE1EICAoT2Frd29vZCBCcmVhc3QgU3VyZ2VyeSkK4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCgoKQ0xJTklDQUwgSElTVE9SWQpSaWdodCBicmVhc3QgaW52YXNpdmUgZHVjdGFsIGNhcmNpbm9tYSwgY2xpbmljYWwgc3RhZ2UgSUlCCihjVDIgY04xIGNNMCksIHN0YXR1cyBwb3N0IG5lb2FkanV2YW50IGNoZW1vdGhlcmFweS4gRXhjaXNpb24gZm9yCmRlZmluaXRpdmUgbG9jYWwgdHJlYXRtZW50LgoKClBST0NFRFVSRQpSaWdodCBicmVhc3QgcGFydGlhbCBtYXN0ZWN0b215IChsdW1wZWN0b215KSBhbmQgc2VudGluZWwgbHltcGgKbm9kZSBiaW9wc3ksIHBlcmZvcm1lZCAxMi8wMy8yMDI1IGJ5IERyLiBWb3NzLgoKClNQRUNJTUVOUyBTVUJNSVRURUQKQS4gUmlnaHQgYnJlYXN0LCBwYXJ0aWFsIG1hc3RlY3RvbXksIG9yaWVudGVkIHdpdGggc3V0dXJlcy4KQi4gUmlnaHQgYXhpbGxhcnkgc2VudGluZWwgbHltcGggbm9kZXMgKHRocmVlIG5vZGVzKS4KCgpHUk9TUyBERVNDUklQVElPTgpBLiBUaGUgc3BlY2ltZW4gaXMgYSA1LjUgeCA0LjAgeCAzLjAgY20gZmlicm9mYXR0eSBwYXJ0aWFsCiAgIG1hc3RlY3RvbXkgd2l0aCBhbiBvdmVybHlpbmcgZWxsaXBzZSBvZiBza2luLiBTZXJpYWwgc2VjdGlvbmluZwogICByZXZlYWxzIHR3byBmaXJtLCBpbGwtZGVmaW5lZCBncmF5LXdoaXRlIGZvY2kuIFRoZSBkb21pbmFudAogICBmb2N1cyBtZWFzdXJlcyAxLjEgY20gaW4gZ3JlYXRlc3QgZGltZW5zaW9uOyBhIHNlY29uZCBmb2N1cywKICAgOCBtbSBmcm9tIHRoZSBmaXJzdCwgbWVhc3VyZXMgMC42IGNtLiBUaGUgY2xvc2VzdCBtYXJnaW4KICAgKHBvc3RlcmlvcikgaXMgNCBtbSBmcm9tIHR1bW9yLgpCLiBUaHJlZSBseW1waCBub2RlcyByYW5naW5nIGZyb20gMC42IHRvIDEuNCBjbSwgYmlzZWN0ZWQgYW5kCiAgIGVudGlyZWx5IHN1Ym1pdHRlZC4KCgpNSUNST1NDT1BJQyBERVNDUklQVElPTiBBTkQgRElBR05PU0lTCgpBLiBSSUdIVCBCUkVBU1QsIFBBUlRJQUwgTUFTVEVDVE9NWToKICAgLSBSZXNpZHVhbCBpbnZhc2l2ZSBkdWN0YWwgY2FyY2lub21hLCBtdWx0aWZvY2FsICh0d28gZm9jaSwKICAgICAxLjEgY20gYW5kIDAuNiBjbSksIHdpdGggYXNzb2NpYXRlZCB0cmVhdG1lbnQgZWZmZWN0LgogICAtIE5vdHRpbmdoYW0gaGlzdG9sb2dpYyBncmFkZSAyICh0dWJ1bGUgMywgbnVjbGVhciAyLCBtaXRvdGljIDEpLgogICAtIEx5bXBob3Zhc2N1bGFyIGludmFzaW9uOiBub3QgaWRlbnRpZmllZC4KICAgLSBNYXJnaW5zOiBuZWdhdGl2ZTsgY2xvc2VzdCBwb3N0ZXJpb3IgbWFyZ2luIDQgbW0uCiAgIC0gVHJlYXRtZW50IHJlc3BvbnNlOiBwYXJ0aWFsIHJlc3BvbnNlIHdpdGggcmVzaWR1YWwgdHVtb3IKICAgICAoTWlsbGVyLVBheW5lIGdyYWRlIDMpLgoKQi4gUklHSFQgQVhJTExBUlkgU0VOVElORUwgTFlNUEggTk9ERVMgKDAgb2YgMyBwb3NpdGl2ZSk6CiAgIC0gVGhyZWUgbHltcGggbm9kZXMgbmVnYXRpdmUgZm9yIG1ldGFzdGF0aWMgY2FyY2lub21hLgogICAtIE5vIGlzb2xhdGVkIHR1bW9yIGNlbGxzIGlkZW50aWZpZWQgb24gY3l0b2tlcmF0aW4gc3RhaW4uCgpQYXRob2xvZ2ljIHN0YWdlIChwb3N0LW5lb2FkanV2YW50KTogeXBUMWMgeXBOMC4KCgpTWU5PUFRJQyBTVU1NQVJZCkhpc3RvbG9naWMgdHlwZTogICAgICAgIEludmFzaXZlIGR1Y3RhbCBjYXJjaW5vbWEKSGlzdG9sb2dpYyBncmFkZTogICAgICAgTm90dGluZ2hhbSBncmFkZSAyClR1bW9yIGZvY2FsaXR5OiAgICAgICAgIE11bHRpZm9jYWwgKDEuMSBjbSBhbmQgMC42IGNtKQpNYXJnaW5zOiAgICAgICAgICAgICAgICBOZWdhdGl2ZSAoNCBtbSkKTHltcGggbm9kZXM6ICAgICAgICAgICAgMCBvZiAzIHNlbnRpbmVsIG5vZGVzIHBvc2l0aXZlCkx5bXBob3Zhc2N1bGFyIGludmFzaW9uOiBOb3QgaWRlbnRpZmllZApQYXRob2xvZ2ljIHN0YWdlOiAgICAgICB5cFQxYyB5cE4wCgoKQ09NTUVOVApFc3Ryb2dlbiByZWNlcHRvciwgcHJvZ2VzdGVyb25lIHJlY2VwdG9yLCBhbmQgSEVSMiBzdGF0dXMgd2VyZQpwcmV2aW91c2x5IGVzdGFibGlzaGVkIG9uIHRoZSBkaWFnbm9zdGljIGNvcmUgYmlvcHN5IGFuZCBhcmUgbm90CnJlcGVhdGVkLiBUaGUgZmluZGluZ3MgYXJlIGNvbnNpc3RlbnQgd2l0aCBhIHBhcnRpYWwgcmVzcG9uc2UgdG8KbmVvYWRqdXZhbnQgdGhlcmFweS4KCgrilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKCkVsZWN0cm9uaWNhbGx5IHNpZ25lZCBieSBTdXJnaWNhbCBQYXRob2xvZ3kKT2Frd29vZCBDYW5jZXIgQ2VudGVyIOKAlCBEZXBhcnRtZW50IG9mIFBhdGhvbG9neQpSZXBvcnRlZDogMTIvMDUvMjAyNQo=",
+              "title": "Pathology study"
+            },
+            "format": {
+              "system": "http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
+              "code": "urn:ihe:iti:xds:2017:mimeTypeSufficient",
+              "display": "mimeType Sufficient"
+            }
+          }
+        ],
+        "context": {
+          "encounter": [
+            {
+              "reference": "urn:uuid:50a2523a-a7ca-5cbb-9260-e3bdf8f93cdc"
+            }
+          ],
+          "period": {
+            "start": "2025-12-05T09:00:00-06:00",
+            "end": "2025-12-05T09:00:00-06:00"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:98e1ec19-b2a8-537f-823d-c6c0d24225d0",
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "onc-followup-note",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-documentreference"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://oakwoodcancer.example.org/document-id",
+            "value": "DOC-ONC-FOLLOWUP-NOTE"
+          }
+        ],
+        "status": "current",
+        "docStatus": "final",
+        "type": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "11488-4",
+              "display": "Consult note"
+            }
+          ],
+          "text": "Consult note"
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category",
+                "code": "clinical-note",
+                "display": "Clinical Note"
+              }
+            ],
+            "text": "Clinical Note"
+          }
+        ],
+        "subject": {
+          "reference": "urn:uuid:90a511ad-aa4e-5a0a-833f-2f8df86b9c88",
+          "display": "Margaret Sullivan"
+        },
+        "date": "2027-02-10T11:18:00-06:00",
+        "author": [
+          {
+            "reference": "urn:uuid:8d75e08f-6ed4-5a95-ac02-1a79f3fb4d78",
+            "display": "Dr. Priya Rao"
+          }
+        ],
+        "custodian": {
+          "reference": "urn:uuid:b65bb04c-9cec-5014-a010-d65100e09ee5",
+          "display": "Oakwood Cancer Center"
+        },
+        "content": [
+          {
+            "attachment": {
+              "contentType": "text/plain; charset=utf-8",
+              "language": "en-US",
+              "data": "4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQ4pWQCiAgIE9BS1dPT0QgQ0FOQ0VSIENFTlRFUiAgfCAgRElWSVNJT04gT0YgTUVESUNBTCBPTkNPTE9HWQogICBPdXRwYXRpZW50IEZvbGxvdy11cCBOb3RlCuKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkOKVkAoKUGF0aWVudDogICAgICAgICAgIFNVTExJVkFOLCBNQVJHQVJFVApNUk46ICAgICAgICAgICAgICAgT0FLLTAxMTctU1VMCkRPQjogICAgICAgICAgICAgICAwOS8xMi8xOTY2ICAoNjAgeSwgRikKRW5jb3VudGVyIERhdGU6ICAgIDAyLzEwLzIwMjcgIDEwOjMwIENTVApFbmNvdW50ZXIgSUQ6ICAgICAgRU5DLU9OQy1GT0xMT1dVUApWaXNpdCBUeXBlOiAgICAgICAgRXN0YWJsaXNoZWQgUGF0aWVudCBGb2xsb3ctdXAKU2VydmljZTogICAgICAgICAgIE1lZGljYWwgT25jb2xvZ3kg4oCUIEJyZWFzdApBdHRlbmRpbmc6ICAgICAgICAgUHJpeWEgUmFvLCBNRArilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZDilZAKCgpSRUFTT04gRk9SIFZJU0lUCkZvbGxvdy11cCBvZiByaWdodCBicmVhc3QgY2FuY2VyOyBldmFsdWF0aW9uIG9mIG5ldyBiYWNrIHBhaW4uCgoKSU5URVJWQUwgSElTVE9SWQpNcy4gU3VsbGl2YW4gaXMgYSA2MC15ZWFyLW9sZCBwb3N0bWVub3BhdXNhbCB3b21hbiB3aXRoIGEgaGlzdG9yeQpvZiByaWdodCBicmVhc3QgaW52YXNpdmUgZHVjdGFsIGNhcmNpbm9tYSAob3JpZ2luYWxseSBjbGluaWNhbApzdGFnZSBJSUIsIEVSL1BSIHBvc2l0aXZlLCBIRVIyIG5lZ2F0aXZlKSwgdHJlYXRlZCB3aXRoIG5lb2FkanV2YW50CmNoZW1vdGhlcmFweSBmb2xsb3dlZCBieSByaWdodCBwYXJ0aWFsIG1hc3RlY3RvbXkgYW5kIHNlbnRpbmVsIG5vZGUKYmlvcHN5IGluIERlY2VtYmVyIDIwMjUsIGFkanV2YW50IHJhZGlhdGlvbiwgYW5kIGFkanV2YW50IGFuYXN0cm96b2xlCnNpbmNlIEZlYnJ1YXJ5IDIwMjYuIFNoZSBoYXMgYmVlbiBkb2luZyB3ZWxsIG9uIGVuZG9jcmluZSB0aGVyYXB5CnVudGlsIHJlY2VudGx5LgoKT3ZlciB0aGUgcGFzdCBzaXggd2Vla3Mgc2hlIGhhcyBkZXZlbG9wZWQgcHJvZ3Jlc3NpdmUgbG93IGJhY2sgcGFpbiwKd29yc2UgYXQgbmlnaHQgYW5kIG5vdCByZWxpZXZlZCBieSBhY2V0YW1pbm9waGVuLiBTaGUgZGVuaWVzCnNhZGRsZSBhbmVzdGhlc2lhLCBib3dlbCBvciBibGFkZGVyIGluY29udGluZW5jZSwgb3IgbG93ZXIgZXh0cmVtaXR5CndlYWtuZXNzLiBTaGUgcmVwb3J0cyBtaWxkIGZhdGlndWUgYnV0IG5vIGZldmVycywgd2VpZ2h0IGxvc3MsIG9yCnJlc3BpcmF0b3J5IHN5bXB0b21zLgoKQSBib25lIHNjYW4gb24gMDEvMjgvMjAyNyBzaG93ZWQgYSBmb2N1cyBvZiBpbmNyZWFzZWQgdXB0YWtlIGluIHRoZQpMMyB2ZXJ0ZWJyYWwgYm9keS4gTVJJIG9mIHRoZSBsdW1iYXIgc3BpbmUgZGVtb25zdHJhdGVkIGFuCmluZmlsdHJhdGl2ZSBtYXJyb3ctcmVwbGFjaW5nIGxlc2lvbiBvZiBMMyB3aXRoIGEgc21hbGwgcG9zdGVyaW9yCnNvZnQgdGlzc3VlIGNvbXBvbmVudCwgd2l0aG91dCBjb3JkIGNvbXByZXNzaW9uLiBDVC1ndWlkZWQgYmlvcHN5Cm9mIHRoZSBMMyBsZXNpb24gb24gMDIvMDMvMjAyNyByZXZlYWxlZCBtZXRhc3RhdGljIGFkZW5vY2FyY2lub21hCmNvbnNpc3RlbnQgd2l0aCBicmVhc3QgcHJpbWFyeSwgRVIgcG9zaXRpdmUsIFBSIHBvc2l0aXZlLCBIRVIyCm5lZ2F0aXZlIOKAlCBjb25jb3JkYW50IHdpdGggaGVyIG9yaWdpbmFsIHR1bW9yIHByb2ZpbGUuCgpIZXIgRUNPRyBwZXJmb3JtYW5jZSBzdGF0dXMgdG9kYXkgaXMgMS4KCgpQQVNUIE9OQ09MT0dJQyBISVNUT1JZCi0gUmlnaHQgYnJlYXN0IGludmFzaXZlIGR1Y3RhbCBjYXJjaW5vbWEsIGRpYWdub3NlZCAwOS8yMDI1LAogIGNUMiBjTjEgY00wIChzdGFnZSBJSUIpLCBOb3R0aW5naGFtIGdyYWRlIDIsIEVSKy9QUisvSEVSMi0uCi0gTmVvYWRqdXZhbnQgZG9zZS1kZW5zZSBBQyBmb2xsb3dlZCBieSBwYWNsaXRheGVsICgyMDI1KS4KLSBSaWdodCBwYXJ0aWFsIG1hc3RlY3RvbXkgKyBzZW50aW5lbCBub2RlIGJpb3BzeSwgMTIvMjAyNQogICh5cFQxYyB5cE4wKS4KLSBBZGp1dmFudCBicmVhc3QgcmFkaWF0aW9uIChlYXJseSAyMDI2KS4KLSBBZGp1dmFudCBhbmFzdHJvem9sZSBzaW5jZSAwMi8yMDI2LgoKCk1FRElDQVRJT05TCi0gQW5hc3Ryb3pvbGUgMSBtZyBQTyBkYWlseQotIExpc2lub3ByaWwgMTAgbWcgUE8gZGFpbHkKLSBDYWxjaXVtIC8gdml0YW1pbiBEMyBzdXBwbGVtZW50IGRhaWx5CgoKQUxMRVJHSUVTCk5vIGtub3duIGRydWcgYWxsZXJnaWVzLgoKClBIWVNJQ0FMIEVYQU1JTkFUSU9OCkVDT0cgcGVyZm9ybWFuY2Ugc3RhdHVzOiAxLgpHZW5lcmFsOiAgIFdlbGwtYXBwZWFyaW5nLCBpbiBubyBhY3V0ZSBkaXN0cmVzcy4KVml0YWxzOiAgICBCUCAxMjgvNzgsIEhSIDc2LCBSUiAxNCwgVGVtcCAzNi42IEMuCkJhY2s6ICAgICAgVGVuZGVybmVzcyB0byBwYWxwYXRpb24gb3ZlciB0aGUgbG93ZXIgbHVtYmFyIHNwaW5lLiBObwogICAgICAgICAgIHN0ZXAtb2ZmIG9yIGRlZm9ybWl0eS4KTmV1cm86ICAgICBTdHJlbmd0aCA1LzUgaW4gYm90aCBsb3dlciBleHRyZW1pdGllcy4gU2Vuc2F0aW9uIGludGFjdC4KICAgICAgICAgICBSZWZsZXhlcyBzeW1tZXRyaWMuIEdhaXQgbm9ybWFsLgpCcmVhc3Q6ICAgIFJpZ2h0IGJyZWFzdCBwb3N0LXN1cmdpY2FsIGNoYW5nZXMsIHdlbGwgaGVhbGVkLiBObwogICAgICAgICAgIHBhbHBhYmxlIHJlY3VycmVuY2UuIExlZnQgYnJlYXN0IHVucmVtYXJrYWJsZS4KCgpBU1NFU1NNRU5UCk1zLiBTdWxsaXZhbiBub3cgaGFzIGJpb3BzeS1jb25maXJtZWQgbWV0YXN0YXRpYyBicmVhc3QgY2FyY2lub21hCmludm9sdmluZyB0aGUgTDMgdmVydGVicmEsIEVSIHBvc2l0aXZlIC8gUFIgcG9zaXRpdmUgLyBIRVIyCm5lZ2F0aXZlLCByZXByZXNlbnRpbmcgZGlzdGFudCByZWN1cnJlbmNlIGFuZCBkaXNlYXNlIHByb2dyZXNzaW9uCm9uIGFkanV2YW50IGVuZG9jcmluZSB0aGVyYXB5LiBUaGlzIGlzIG5vdyBzdGFnZSBJViAobWV0YXN0YXRpYykKaG9ybW9uZS1yZWNlcHRvci1wb3NpdGl2ZSwgSEVSMi1uZWdhdGl2ZSBicmVhc3QgY2FuY2VyLiBIZXIgZGlzZWFzZQppcyBwcm9ncmVzc2luZy4KCgpQTEFOCgoxLiBNZXRhc3RhdGljIGJyZWFzdCBjYXJjaW5vbWEgdG8gYm9uZSAoTDMpLCBob3Jtb25lLXJlY2VwdG9yCiAgIHBvc2l0aXZlLCBIRVIyIG5lZ2F0aXZlLgogICAtIERpc2NvbnRpbnVlIGFuYXN0cm96b2xlIGdpdmVuIHByb2dyZXNzaW9uIG9uIGEgbm9uLXN0ZXJvaWRhbAogICAgIGFyb21hdGFzZSBpbmhpYml0b3IuCiAgIC0gSU5JVElBVEUgcGFsYm9jaWNsaWIgMTI1IG1nIFBPIGRhaWx5ICgyMSBkYXlzIG9uLCA3IG9mZikgaW4KICAgICBjb21iaW5hdGlvbiB3aXRoIGZ1bHZlc3RyYW50IDUwMCBtZyBJTSBmb3IgdHJlYXRtZW50IG9mIGhlcgogICAgIG1ldGFzdGF0aWMgYnJlYXN0IGNhbmNlci4KICAgLSBJTklUSUFURSBkZW5vc3VtYWIgMTIwIG1nIHN1YmN1dGFuZW91c2x5IGV2ZXJ5IDQgd2Vla3MgYXMgYQogICAgIGJvbmUtbW9kaWZ5aW5nIGFnZW50IGZvciBoZXIgYm9uZSBtZXRhc3Rhc2lzOyBlbnN1cmUgYWRlcXVhdGUKICAgICBjYWxjaXVtIGFuZCB2aXRhbWluIEQgYW5kIGRlbnRhbCBldmFsdWF0aW9uLgoKMi4gUGFpbmZ1bCBMMyBtZXRhc3Rhc2lzLgogICAtIFJlZmVycmFsIHRvIHJhZGlhdGlvbiBvbmNvbG9neSBmb3IgY29uc2lkZXJhdGlvbiBvZiBwYWxsaWF0aXZlCiAgICAgcmFkaW90aGVyYXB5IHRvIEwzLgogICAtIFNob3J0IGNvdXJzZSBvZiBzY2hlZHVsZWQgYW5hbGdlc2lhOyByZWFzc2VzcyBhdCBuZXh0IHZpc2l0LgoKMy4gU3RhZ2luZy4KICAgLSBDVCBjaGVzdC9hYmRvbWVuL3BlbHZpcyB0byBjb21wbGV0ZSBzeXN0ZW1pYyByZXN0YWdpbmcuCgo0LiBTdXBwb3J0aXZlIGNhcmUgYW5kIGdvYWxzIG9mIGNhcmUuCiAgIC0gUmV2aWV3ZWQgdGhlIHRyYW5zaXRpb24gZnJvbSBjdXJhdGl2ZS1pbnRlbnQgdG8KICAgICBtZXRhc3RhdGljLWRpc2Vhc2UgbWFuYWdlbWVudCB3aXRoIHRoZSBwYXRpZW50IGFuZCBoZXIgaHVzYmFuZC4KICAgLSBHZW5ldGljIHJlc3VsdHMgZnJvbSBwcmlvciBjb3Vuc2VsaW5nIHJldmlld2VkOyBubyBhY3Rpb25hYmxlCiAgICAgZ2VybWxpbmUgZmluZGluZy4KCgpGT0xMT1ctVVAKUmV0dXJuIGluIDQgd2Vla3MgdG8gYXNzZXNzIHRvbGVyYWJpbGl0eSBvZiBwYWxib2NpY2xpYiBhbmQKZnVsdmVzdHJhbnQsIHdpdGggbGFib3JhdG9yeSBtb25pdG9yaW5nLiBTb29uZXIgZm9yIGFueSBuZXcKbmV1cm9sb2dpYyBzeW1wdG9tcywgdW5jb250cm9sbGVkIHBhaW4sIG9yIGZldmVyLgoKCuKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgOKUgAoKUHJpeWEgUmFvLCBNRApPYWt3b29kIENhbmNlciBDZW50ZXIg4oCUIE1lZGljYWwgT25jb2xvZ3kKTlBJOiA1MjM0NTY3ODkwCkVsZWN0cm9uaWNhbGx5IHNpZ25lZDogMDIvMTAvMjAyNyAgMTE6MTggQ1NUCg==",
+              "title": "Consult note"
+            },
+            "format": {
+              "system": "http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
+              "code": "urn:ihe:iti:xds:2017:mimeTypeSufficient",
+              "display": "mimeType Sufficient"
+            }
+          }
+        ],
+        "context": {
+          "encounter": [
+            {
+              "reference": "urn:uuid:9acba8ee-8172-5c9f-9751-f517fc8a6611"
+            }
+          ],
+          "period": {
+            "start": "2027-02-10T11:18:00-06:00",
+            "end": "2027-02-10T11:18:00-06:00"
+          }
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "DocumentReference"
+      }
+    }
+  ]
+}

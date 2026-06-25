@@ -11,14 +11,10 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from core.llm import build_client, generate_structured
+from core.systems import SYSTEM_URIS as SUPPORTED_SYSTEMS
+from core.systems import VALIDATABLE_URIS
 from fhir.terminology import ground_codes
 
-SUPPORTED_SYSTEMS: dict[str, str] = {
-    "snomed": "http://snomed.info/sct",
-    "loinc": "http://loinc.org",
-    "rxnorm": "http://www.nlm.nih.gov/research/umls/rxnorm",
-    "icd10": "http://hl7.org/fhir/sid/icd-10-cm",
-}
 _SUPPORTED_URIS = set(SUPPORTED_SYSTEMS.values())
 
 _SYSTEM_PROMPT = """\
@@ -32,14 +28,18 @@ URI. Only these systems are supported:
 - LOINC -> http://loinc.org
 - RxNorm -> http://www.nlm.nih.gov/research/umls/rxnorm
 - ICD-10-CM -> http://hl7.org/fhir/sid/icd-10-cm
+- ICD-10-PCS -> http://www.cms.gov/Medicare/Coding/ICD10
+- HCPCS -> http://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets
 
 Identify the system from explicit labels in the text first (e.g. a column header or \
 "ICD-10:" prefix), then from the code's format as a fallback (ICD-10-CM has a letter \
-then digits with an optional dot like E11.9; LOINC is digits-dash-digit like 4548-4; \
-RxNorm and SNOMED CT are plain integers, distinguished by surrounding context). If a \
-code's system is ambiguous or not one of the four supported systems, omit that code \
-rather than guessing. Preserve any display text given for a code; leave it empty if \
-none is provided. Do not invent codes that are not present in the input.\
+then digits with an optional dot like E11.9; ICD-10-PCS is a 7-character alphanumeric \
+string like 0DTJ0ZZ; HCPCS Level II is a letter then four digits like E1130 or J1885; \
+LOINC is digits-dash-digit like 4548-4; RxNorm and SNOMED CT are plain integers, \
+distinguished by surrounding context). If a code's system is ambiguous or not one of \
+the supported systems, omit that code rather than guessing. Preserve any display text \
+given for a code; leave it empty if none is provided. Do not invent codes that are not \
+present in the input.\
 """
 
 
@@ -54,7 +54,7 @@ class ParsedCodes(BaseModel):
 
 
 def _supported(codes: list[dict]) -> list[dict]:
-    """Keep codes whose system is one of the four supported URIs and has a code value."""
+    """Keep codes whose system is one of the supported URIs and has a code value."""
     return [c for c in codes if c.get("system") in _SUPPORTED_URIS and c.get("code")]
 
 
@@ -75,5 +75,10 @@ async def parse_codes(text: str, *, gemini_key: str, umls_key: str, model: str, 
         return {"codes": [], "parsed": 0, "grounded": 0, "error": error or "no_output"}
 
     raw = _supported([{"system": c.system, "code": c.code, "display": c.display} for c in parsed.codes])
-    grounded = await ground_codes(raw, umls_key, **({"get": get} if get is not None else {}))
-    return {"codes": grounded, "parsed": len(raw), "grounded": len(grounded), "error": None}
+    # Validate only systems we can $validate-code; trust asserted codes from systems
+    # we can't (CPT, ICD-O-3, ...) — they enter the codeset ungrounded by design.
+    checkable = [c for c in raw if c["system"] in VALIDATABLE_URIS]
+    asserted = [c for c in raw if c["system"] not in VALIDATABLE_URIS]
+    grounded = await ground_codes(checkable, umls_key, **({"get": get} if get is not None else {}))
+    codes = grounded + asserted
+    return {"codes": codes, "parsed": len(raw), "grounded": len(grounded), "error": None}

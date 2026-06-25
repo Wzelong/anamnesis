@@ -1,0 +1,292 @@
+{
+  "base": [
+    {
+      "id": "us-core@6.1.0",
+      "title": "US Core 6.1.0",
+      "resources": {
+        "Condition": {
+          "inclusion": "supported",
+          "profiles": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+          ],
+          "coding": {
+            "systems": [
+              "snomed",
+              "icd10"
+            ]
+          },
+          "defaultEnabled": true
+        },
+        "MedicationRequest": {
+          "inclusion": "supported",
+          "profiles": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-medicationrequest"
+          ],
+          "coding": {
+            "systems": [
+              "rxnorm"
+            ]
+          },
+          "defaultEnabled": true
+        },
+        "AllergyIntolerance": {
+          "inclusion": "supported",
+          "profiles": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-allergyintolerance"
+          ],
+          "coding": {
+            "systems": [
+              "snomed",
+              "rxnorm"
+            ]
+          },
+          "defaultEnabled": true
+        },
+        "Observation": {
+          "inclusion": "supported",
+          "profiles": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result"
+          ],
+          "coding": {
+            "systems": [
+              "loinc",
+              "snomed"
+            ]
+          },
+          "defaultEnabled": true,
+          "fixed": [
+            {
+              "system": "loinc",
+              "code": "85354-9",
+              "display": "Blood pressure panel with all children optional"
+            },
+            {
+              "system": "loinc",
+              "code": "8480-6",
+              "display": "Systolic blood pressure"
+            },
+            {
+              "system": "loinc",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            },
+            {
+              "system": "loinc",
+              "code": "29463-7",
+              "display": "Body weight"
+            },
+            {
+              "system": "loinc",
+              "code": "8302-2",
+              "display": "Body height"
+            },
+            {
+              "system": "loinc",
+              "code": "8310-5",
+              "display": "Body temperature"
+            },
+            {
+              "system": "loinc",
+              "code": "8867-4",
+              "display": "Heart rate"
+            },
+            {
+              "system": "loinc",
+              "code": "9279-1",
+              "display": "Respiratory rate"
+            },
+            {
+              "system": "loinc",
+              "code": "39156-5",
+              "display": "Body mass index"
+            },
+            {
+              "system": "loinc",
+              "code": "59408-5",
+              "display": "Oxygen saturation by pulse oximetry"
+            },
+            {
+              "system": "loinc",
+              "code": "2708-6",
+              "display": "Oxygen saturation in arterial blood"
+            },
+            {
+              "system": "loinc",
+              "code": "9843-4",
+              "display": "Head circumference"
+            },
+            {
+              "system": "loinc",
+              "code": "11341-5",
+              "display": "History of Occupation"
+            },
+            {
+              "system": "loinc",
+              "code": "76690-7",
+              "display": "Sexual orientation"
+            },
+            {
+              "system": "loinc",
+              "code": "72166-2",
+              "display": "Tobacco smoking status"
+            }
+          ]
+        },
+        "Procedure": {
+          "inclusion": "supported",
+          "profiles": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
+          ],
+          "coding": {
+            "systems": [
+              "snomed",
+              "icd10pcs",
+              "hcpcs"
+            ]
+          },
+          "defaultEnabled": true
+        },
+        "FamilyMemberHistory": {
+          "inclusion": "optional",
+          "profiles": [],
+          "coding": {
+            "systems": [
+              "snomed"
+            ]
+          },
+          "defaultEnabled": true
+        }
+      }
+    }
+  ],
+  "specialties": [
+    {
+      "id": "mcode@4.0.0",
+      "title": "mCODE 4.0.0 (Oncology)",
+      "dependsOn": [
+        "us-core@6.1.0"
+      ],
+      "gaps": [
+        "ICD-O-3 morphology",
+        "AJCC staging"
+      ],
+      "resources": {
+        "Condition": {
+          "inclusion": "required",
+          "profiles": [
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-primary-cancer-condition",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-secondary-cancer-condition"
+          ],
+          "coding": {
+            "systems": [
+              "snomed",
+              "icd10"
+            ]
+          },
+          "defaultEnabled": true
+        },
+        "Observation": {
+          "inclusion": "supported",
+          "profiles": [
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-stage-group",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-distant-metastases-category",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tumor-marker-test",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-disease-status",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-ecog-performance-status",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-karnofsky-performance-status",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-histologic-grade",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-histologic-behavior-and-type",
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tumor-size"
+          ],
+          "coding": {
+            "systems": [
+              "loinc",
+              "snomed"
+            ]
+          },
+          "defaultEnabled": true,
+          "fixed": [
+            {
+              "system": "loinc",
+              "code": "89247-1",
+              "display": "ECOG performance status"
+            },
+            {
+              "system": "loinc",
+              "code": "89243-0",
+              "display": "Karnofsky Performance Status score"
+            },
+            {
+              "system": "loinc",
+              "code": "97509-4",
+              "display": "Cancer disease status"
+            },
+            {
+              "system": "ncit",
+              "code": "C18000",
+              "display": "Grade"
+            },
+            {
+              "system": "loinc",
+              "code": "31206-6",
+              "display": "Histology and behavior ICD-O-3"
+            },
+            {
+              "system": "loinc",
+              "code": "21908-9",
+              "display": "Stage group.clinical Cancer"
+            },
+            {
+              "system": "loinc",
+              "code": "21889-1",
+              "display": "Size.maximum dimension Tumor"
+            },
+            {
+              "system": "loinc",
+              "code": "21905-5",
+              "display": "Primary tumor.clinical [Class] Cancer"
+            },
+            {
+              "system": "loinc",
+              "code": "21906-3",
+              "display": "Regional lymph nodes.clinical [Class] Cancer"
+            },
+            {
+              "system": "loinc",
+              "code": "21907-1",
+              "display": "Distant metastases.clinical [Class] Cancer"
+            }
+          ]
+        },
+        "MedicationRequest": {
+          "inclusion": "supported",
+          "profiles": [
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-related-medication-request"
+          ],
+          "coding": {
+            "systems": [
+              "rxnorm"
+            ]
+          },
+          "defaultEnabled": true
+        },
+        "Procedure": {
+          "inclusion": "supported",
+          "profiles": [
+            "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-related-surgical-procedure"
+          ],
+          "coding": {
+            "systems": [
+              "snomed",
+              "icd10pcs",
+              "hcpcs"
+            ]
+          },
+          "defaultEnabled": true
+        }
+      }
+    }
+  ]
+}
