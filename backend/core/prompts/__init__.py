@@ -15,7 +15,7 @@ working unchanged.
 # prompt_version), and the doc guardrail (model, prompt_version, sha256(text)).
 # Bump on any prompt edit so cached results from the old prompt don't bleed
 # into a new run.
-PROMPT_VERSION = "2026-06-25.01"
+PROMPT_VERSION = "2026-06-26.02"
 
 from core.prompts.stage1_scan import PROMPT_SCAN
 from core.prompts.stage2_parse import (

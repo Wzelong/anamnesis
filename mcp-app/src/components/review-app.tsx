@@ -18,6 +18,7 @@ import {
   ListFilter,
   Loader2,
   Pencil,
+  ScrollText,
   Search,
   Settings,
   Stamp,
@@ -28,9 +29,10 @@ import {
 import type { LucideIcon } from "lucide-react"
 import { toast } from "sonner"
 import { callTool, parseStructured, resultText } from "../mcp"
-import type { ExtractionResult, PatientHeader, Preset, PresetMeta, Proposal, SourceDocument, UserConfig } from "../types"
+import type { ExtractionResult, PatientHeader, Preset, Proposal, SourceDocument, UserConfig } from "../types"
 import { cn } from "../lib/cn"
-import { emptyPreset } from "../lib/ig-catalog"
+import { emptyPreset, igById } from "../lib/ig-catalog"
+import { keyOfUri } from "../lib/systems"
 import { MOCK_CONFIG, MOCK_RESULT } from "../mock"
 import {
   CLASSIFICATION_LABEL,
@@ -566,7 +568,7 @@ export function ReviewApp({
             <img src={LOGO_URL} alt="Anamnesis" width={40} height={40} className="size-10 mx-auto animate-pulse" />
             <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full bg-primary rounded-full transition-[width] duration-200 ease-out"
+                className="h-full bg-[#3A4660] rounded-full transition-[width] duration-200 ease-out"
                 style={{ width: `${Math.round(progress * 100)}%` }}
               />
             </div>
@@ -951,6 +953,13 @@ function ProposalDetail({
     return cc?.text || proposal.display_label
   })()
 
+  const currentCoding = (() => {
+    const r = activeResource as Record<string, unknown>
+    const cc = (r.medicationCodeableConcept ?? r.code) as { coding?: { system?: string; code?: string }[] } | undefined
+    const c = cc?.coding?.find((x) => x.code)
+    return c?.code ? { system: keyOfUri(c.system ?? ""), code: c.code } : null
+  })()
+
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       {/* Sub-header: tabs left, contextual actions right */}
@@ -1095,7 +1104,8 @@ function ProposalDetail({
         <CodeSearch
           app={app}
           initialQuery={codeQuery}
-          initialSystem={systemForResource(activeResource)}
+          resourceType={(activeResource as Record<string, unknown>).resourceType as string | undefined}
+          current={currentCoding}
           onApply={editing ? applyCode : undefined}
         />
       ) : (
@@ -1265,7 +1275,7 @@ function Shell({
   onOpenConfig?: () => void
   configActive?: boolean
   configDisabled?: boolean
-  presets?: PresetMeta[]
+  presets?: Preset[]
   activeId?: string
   onSelectPreset?: (id: string) => void
   onAddPreset?: (name: string) => void
@@ -1273,7 +1283,11 @@ function Shell({
   onDeletePreset?: (id: string) => void
 }) {
   const [presetOpen, setPresetOpen] = useState(false)
-  const presetName = (presets ?? []).find((p) => p.id === activeId)?.name ?? "Default"
+  const activePreset = (presets ?? []).find((p) => p.id === activeId)
+  const presetName = activePreset?.name ?? "Default"
+  const specialtyLabel = activePreset?.ig?.specialty
+    ? igById(activePreset.ig.specialty)?.title.split(" ")[0] ?? null
+    : null
   const mrn = header?.mrn
 
   // Two patient identifiers on screen (name + DOB) per Joint Commission
@@ -1304,6 +1318,15 @@ function Shell({
             identity
           )}
           <div className="ml-auto flex items-center gap-2.5 shrink-0">
+            {specialtyLabel && (
+              <span
+                title={`${specialtyLabel} specialty overlay active`}
+                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-medium text-muted-foreground shrink-0"
+              >
+                <ScrollText className="size-3" />
+                {specialtyLabel}
+              </span>
+            )}
             {presets && presets.length > 0 && !configDisabled && (
               <Popover open={presetOpen} onOpenChange={setPresetOpen}>
                 <PopoverTrigger asChild>
@@ -1356,14 +1379,6 @@ function relativeTime(ms: number): string {
   if (m < 60) return `${m}m ago`
   const h = Math.floor(m / 60)
   return `${h}h ago`
-}
-
-function systemForResource(r: Record<string, unknown>): string {
-  switch (r.resourceType) {
-    case "MedicationRequest": return "rxnorm"
-    case "Observation": return "loinc"
-    default: return "snomed"
-  }
 }
 
 function shortDate(iso: string | null | undefined): string {

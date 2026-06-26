@@ -376,8 +376,12 @@ async def get_prompt_bases() -> dict:
 
 
 async def search_terminology(query: str, system: str, top_k: int = 10) -> dict:
-    """App-only: search a terminology (snomed/rxnorm/loinc/icd10) for codes."""
-    from core.retrieval import ApiRetriever
+    """App-only: search a terminology (snomed/rxnorm/loinc/icd10) for codes.
+
+    Uses the same head-concept backoff as the pipeline auto-coder, so a verbose
+    manual query ("ultrasound-guided core needle biopsy") still resolves.
+    """
+    from core.retrieval import ApiRetriever, search_with_backoff
 
     norm = system.lower().strip()
     if norm not in _TERMINOLOGY_SYSTEMS:
@@ -387,7 +391,7 @@ async def search_terminology(query: str, system: str, top_k: int = 10) -> dict:
 
     retriever = ApiRetriever()
     try:
-        results = await retriever.search(query.strip(), norm, max(1, min(top_k, 25)))
+        results = await search_with_backoff(retriever, query.strip(), norm, max(1, min(top_k, 25)))
     finally:
         client = getattr(retriever, "_client", None)
         if client is not None:

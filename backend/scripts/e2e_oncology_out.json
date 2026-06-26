@@ -1,13 +1,13 @@
 [
   {
-    "id": "prop_bkm33t2n",
+    "id": "prop_358cf5h8",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "REVIEW",
     "confidence_score": 0.65,
     "status": "pending",
-    "display_label": "increased radionuclide uptake in L3 vertebral body",
+    "display_label": "bone scan imaging finding",
     "flags": [
       "Stated assertively in source",
       "No terminology code found \u2014 verify manually"
@@ -27,7 +27,7 @@
         }
       ],
       "code": {
-        "text": "increased radionuclide uptake in L3 vertebral body"
+        "text": "bone scan imaging finding"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -38,7 +38,7 @@
         ]
       },
       "effectiveDateTime": "2027-01-28",
-      "valueString": "present"
+      "valueString": "increased uptake in the L3 vertebral body"
     },
     "citations": [
       {
@@ -52,7 +52,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "A clinically significant finding on a bone scan imaging study showing increased uptake in the L3 vertebral body.",
+    "extraction_reasoning": "A clinically significant bone scan finding of increased uptake in the L3 vertebral body.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -84,7 +84,7 @@
     "write_result": null
   },
   {
-    "id": "prop_6krdrgym",
+    "id": "prop_sk9mv55c",
     "run_id": "e2e",
     "resource_type": "FamilyMemberHistory",
     "classification": "NEW",
@@ -133,7 +133,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "The patient's maternal aunt has a confirmed diagnosis of ovarian cancer.",
+    "extraction_reasoning": "The patient's maternal aunt was diagnosed with ovarian cancer.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -165,7 +165,7 @@
     "write_result": null
   },
   {
-    "id": "prop_rmx5rj7y",
+    "id": "prop_a4cgaq76",
     "run_id": "e2e",
     "resource_type": "FamilyMemberHistory",
     "classification": "NEW",
@@ -258,7 +258,7 @@
     "write_result": null
   },
   {
-    "id": "prop_mvyy8py0",
+    "id": "prop_n6rq9zts",
     "run_id": "e2e",
     "resource_type": "MedicationRequest",
     "classification": "NEW",
@@ -298,9 +298,6 @@
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
-      "requester": {
-        "reference": "Patient/sullivan-margaret"
-      },
       "authoredOn": "2025-09-18",
       "reasonCode": [
         {
@@ -320,7 +317,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Endocrine therapy with an aromatase inhibitor will follow",
+    "extraction_reasoning": "Endocrine therapy with an aromatase inhibitor will follow in the adjuvant setting",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -358,7 +355,7 @@
     "write_result": null
   },
   {
-    "id": "prop_0xe810rz",
+    "id": "prop_p82vcwx8",
     "run_id": "e2e",
     "resource_type": "MedicationRequest",
     "classification": "NEW",
@@ -404,13 +401,10 @@
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
-      "requester": {
-        "reference": "Patient/sullivan-margaret"
-      },
       "authoredOn": "2025-09-18",
       "dosageInstruction": [
         {
-          "text": "every two weeks"
+          "text": "every two weeks for four cycles"
         }
       ],
       "reasonCode": [
@@ -469,7 +463,7 @@
     "write_result": null
   },
   {
-    "id": "prop_xg3g7f8c",
+    "id": "prop_8cfgm0gx",
     "run_id": "e2e",
     "resource_type": "MedicationRequest",
     "classification": "NEW",
@@ -512,9 +506,6 @@
         "text": "denosumab 120 mg"
       },
       "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "requester": {
         "reference": "Patient/sullivan-margaret"
       },
       "authoredOn": "2027-02-10",
@@ -581,7 +572,7 @@
     "write_result": null
   },
   {
-    "id": "prop_1egyy0jw",
+    "id": "prop_0kqxs414",
     "run_id": "e2e",
     "resource_type": "MedicationRequest",
     "classification": "NEW",
@@ -627,13 +618,10 @@
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
-      "requester": {
-        "reference": "Patient/sullivan-margaret"
-      },
       "authoredOn": "2025-09-18",
       "dosageInstruction": [
         {
-          "text": "every two weeks"
+          "text": "every two weeks for four cycles"
         }
       ],
       "reasonCode": [
@@ -692,7 +680,7 @@
     "write_result": null
   },
   {
-    "id": "prop_dx1qhjyd",
+    "id": "prop_ns6wvxfd",
     "run_id": "e2e",
     "resource_type": "MedicationRequest",
     "classification": "NEW",
@@ -738,9 +726,6 @@
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
-      "requester": {
-        "reference": "Patient/sullivan-margaret"
-      },
       "authoredOn": "2027-02-10",
       "dosageInstruction": [
         {
@@ -773,7 +758,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "INITIATE ... fulvestrant 500 mg IM",
+    "extraction_reasoning": "in combination with fulvestrant 500 mg IM",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -811,7 +796,7 @@
     "write_result": null
   },
   {
-    "id": "prop_8ewa9z5y",
+    "id": "prop_4vatdnkk",
     "run_id": "e2e",
     "resource_type": "MedicationRequest",
     "classification": "NEW",
@@ -855,9 +840,6 @@
         "text": "paclitaxel"
       },
       "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "requester": {
         "reference": "Patient/sullivan-margaret"
       },
       "authoredOn": "2025-09-18",
@@ -917,7 +899,7 @@
     "write_result": null
   },
   {
-    "id": "prop_53kn9vr0",
+    "id": "prop_v46w4jje",
     "run_id": "e2e",
     "resource_type": "MedicationRequest",
     "classification": "NEW",
@@ -961,9 +943,6 @@
         "text": "palbociclib 125 mg PO"
       },
       "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "requester": {
         "reference": "Patient/sullivan-margaret"
       },
       "authoredOn": "2027-02-10",
@@ -1036,274 +1015,17 @@
     "write_result": null
   },
   {
-    "id": "prop_jgs3fscb",
+    "id": "prop_fv9wer1z",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "REVIEW",
     "confidence_score": 0.65,
     "status": "pending",
-    "display_label": "axillary lymph node status",
+    "display_label": "alcohol consumption status: one to two drinks per week",
     "flags": [
       "Stated assertively in source",
       "No terminology code found \u2014 verify manually"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Observation",
-      "status": "final",
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "imaging"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "text": "axillary lymph node status"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result"
-        ]
-      },
-      "effectiveDateTime": "2025-08-28",
-      "valueString": "abnormal"
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          13
-        ],
-        "char_start": 1069,
-        "char_end": 1263,
-        "text": "A diagnostic mammogram\nand targeted ultrasound on 08/28/2025 demonstrated a spiculated\nmass at the 10 o'clock position of the right breast, BI-RADS 5,\nwith an abnormal right axillary lymph node."
-      }
-    ],
-    "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "The clinician notes an abnormal right axillary lymph node, which is clinically significant for staging and management.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 0.3,
-        "weight": 0.5,
-        "contribution": 0.15,
-        "reason": "No terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_vjgsfchy",
-    "run_id": "e2e",
-    "resource_type": "Observation",
-    "classification": "NEW",
-    "confidence_tier": "REVIEW",
-    "confidence_score": 0.65,
-    "status": "pending",
-    "display_label": "Breast Imaging Reporting and Data System category",
-    "flags": [
-      "Stated assertively in source",
-      "No terminology code found \u2014 verify manually"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Observation",
-      "status": "final",
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "imaging"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "text": "Breast Imaging Reporting and Data System category"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result"
-        ]
-      },
-      "effectiveDateTime": "2025-08-28",
-      "valueString": "5"
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          13
-        ],
-        "char_start": 1069,
-        "char_end": 1263,
-        "text": "A diagnostic mammogram\nand targeted ultrasound on 08/28/2025 demonstrated a spiculated\nmass at the 10 o'clock position of the right breast, BI-RADS 5,\nwith an abnormal right axillary lymph node."
-      }
-    ],
-    "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "BI-RADS assessment of 5 is a standardized clinical score for breast imaging, indicating highly suggestive of malignancy.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 0.3,
-        "weight": 0.5,
-        "contribution": 0.15,
-        "reason": "No terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_yhdadf1s",
-    "run_id": "e2e",
-    "resource_type": "Observation",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "mammography mass finding",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Observation",
-      "status": "final",
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "imaging"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "coding": [
-          {
-            "system": "http://snomed.info/sct",
-            "code": "129788004",
-            "display": "Mammographic mass of breast"
-          }
-        ],
-        "text": "mammography mass finding"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result"
-        ]
-      },
-      "effectiveDateTime": "2025-08-28",
-      "valueString": "spiculated mass at the 10 o'clock position of the right breast"
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          13
-        ],
-        "char_start": 1069,
-        "char_end": 1263,
-        "text": "A diagnostic mammogram\nand targeted ultrasound on 08/28/2025 demonstrated a spiculated\nmass at the 10 o'clock position of the right breast, BI-RADS 5,\nwith an abnormal right axillary lymph node."
-      }
-    ],
-    "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "A spiculated mass was identified on imaging, which is a clinically significant finding.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_v0bwewpp",
-    "run_id": "e2e",
-    "resource_type": "Observation",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "alcohol use pattern: one to two drinks per week",
-    "flags": [
-      "Stated assertively in source"
     ],
     "conflict_group_id": null,
     "resource": {
@@ -1320,14 +1042,7 @@
         }
       ],
       "code": {
-        "coding": [
-          {
-            "system": "http://snomed.info/sct",
-            "code": "228308009",
-            "display": "Pattern of drinking"
-          }
-        ],
-        "text": "alcohol use pattern"
+        "text": "alcohol consumption status"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -1357,7 +1072,103 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Social-history observation representing alcohol intake. Capturing frequency of intake as reported.",
+    "extraction_reasoning": "Extract social alcohol consumption as a standard USCDI social-history fact.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 0.3,
+        "weight": 0.5,
+        "contribution": 0.15,
+        "reason": "No terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_2k1nrz8q",
+    "run_id": "e2e",
+    "resource_type": "Observation",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "Allred score for Progesterone receptor: 7/8",
+    "flags": [
+      "Stated assertively in source"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Observation",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "laboratory"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "16113-3",
+            "display": "Progesterone receptor [Interpretation] in Tissue"
+          }
+        ],
+        "text": "Allred score for Progesterone receptor"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab",
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tumor-marker-test"
+        ]
+      },
+      "effectiveDateTime": "2025-09-18",
+      "valueCodeableConcept": {
+        "text": "7/8"
+      },
+      "encounter": {
+        "reference": "Encounter/onc-consult"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-consult-note",
+        "sentence_numbers": [
+          35
+        ],
+        "char_start": 2741,
+        "char_end": 2851,
+        "text": "- Progesterone receptor: POSITIVE, nuclear staining in 80% of\n                       tumor cells (Allred 7/8)."
+      }
+    ],
+    "classification_reasoning": "no LOINC match in chart",
+    "extraction_reasoning": "Extracting PR Allred score.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -1379,7 +1190,13 @@
       "valid": true,
       "level": "r4",
       "profile": null,
-      "issues": [],
+      "issues": [
+        {
+          "severity": "information",
+          "path": "meta.profile",
+          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tumor-marker-test"
+        }
+      ],
       "supported": false
     },
     "reviewed_at": null,
@@ -1389,14 +1206,14 @@
     "write_result": null
   },
   {
-    "id": "prop_bf7nrpkx",
+    "id": "prop_dc7q5jb8",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "clinical distant metastasis category: cM0",
+    "display_label": "clinical distant metastasis stage: cM0",
     "flags": [
       "Stated assertively in source"
     ],
@@ -1422,7 +1239,7 @@
             "display": "Distant metastases.clinical [Class] Cancer"
           }
         ],
-        "text": "clinical distant metastasis category"
+        "text": "clinical distant metastasis stage"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -1450,19 +1267,10 @@
         "char_start": 3342,
         "char_end": 3402,
         "text": "Clinical stage:  cT2 cN1 cM0, AJCC anatomic stage group IIB."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          58
-        ],
-        "char_start": 4152,
-        "char_end": 4394,
-        "text": "Ms. Sullivan is a 58-year-old postmenopausal woman with newly\ndiagnosed clinical stage IIB (cT2 cN1 cM0) invasive ductal\ncarcinoma of the right breast, Nottingham grade 2, strongly\nhormone-receptor positive (ER 95%, PR 80%) and HER2 negative."
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of clinical distant metastasis staging (cM0) from the clinical stage string.",
+    "extraction_reasoning": "Extraction of clinical distant metastases category (cM0) per oncology IG additions.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -1500,229 +1308,7 @@
     "write_result": null
   },
   {
-    "id": "prop_bcw4dwgc",
-    "run_id": "e2e",
-    "resource_type": "Observation",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "clinical regional lymph nodes category: cN1",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Observation",
-      "status": "final",
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "coding": [
-          {
-            "system": "http://loinc.org",
-            "code": "21906-3",
-            "display": "Regional lymph nodes.clinical [Class] Cancer"
-          }
-        ],
-        "text": "clinical regional lymph nodes category"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category"
-        ]
-      },
-      "effectiveDateTime": "2025-09-18",
-      "valueCodeableConcept": {
-        "text": "cN1"
-      },
-      "encounter": {
-        "reference": "Encounter/onc-consult"
-      }
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          43
-        ],
-        "char_start": 3342,
-        "char_end": 3402,
-        "text": "Clinical stage:  cT2 cN1 cM0, AJCC anatomic stage group IIB."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          58
-        ],
-        "char_start": 4152,
-        "char_end": 4394,
-        "text": "Ms. Sullivan is a 58-year-old postmenopausal woman with newly\ndiagnosed clinical stage IIB (cT2 cN1 cM0) invasive ductal\ncarcinoma of the right breast, Nottingham grade 2, strongly\nhormone-receptor positive (ER 95%, PR 80%) and HER2 negative."
-      }
-    ],
-    "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of clinical regional lymph nodes staging (cN1) from the clinical stage string.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [
-        {
-          "severity": "information",
-          "path": "meta.profile",
-          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category"
-        }
-      ],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_qzwm1wdw",
-    "run_id": "e2e",
-    "resource_type": "Observation",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "clinical primary tumor category: cT2",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Observation",
-      "status": "final",
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "coding": [
-          {
-            "system": "http://loinc.org",
-            "code": "21905-5",
-            "display": "Primary tumor.clinical [Class] Cancer"
-          }
-        ],
-        "text": "clinical primary tumor category"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category"
-        ]
-      },
-      "effectiveDateTime": "2025-09-18",
-      "valueCodeableConcept": {
-        "text": "cT2"
-      },
-      "encounter": {
-        "reference": "Encounter/onc-consult"
-      }
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          43
-        ],
-        "char_start": 3342,
-        "char_end": 3402,
-        "text": "Clinical stage:  cT2 cN1 cM0, AJCC anatomic stage group IIB."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          58
-        ],
-        "char_start": 4152,
-        "char_end": 4394,
-        "text": "Ms. Sullivan is a 58-year-old postmenopausal woman with newly\ndiagnosed clinical stage IIB (cT2 cN1 cM0) invasive ductal\ncarcinoma of the right breast, Nottingham grade 2, strongly\nhormone-receptor positive (ER 95%, PR 80%) and HER2 negative."
-      }
-    ],
-    "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of clinical primary tumor staging (cT2) from the clinical stage string.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [
-        {
-          "severity": "information",
-          "path": "meta.profile",
-          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category"
-        }
-      ],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_xyg9fref",
+    "id": "prop_t6khz2j9",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
@@ -1784,7 +1370,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of ECOG performance status as specified in the Oncology IG additions.",
+    "extraction_reasoning": "Performance status (ECOG) is a clinically significant oncology-specific observation with value '1'.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -1822,14 +1408,404 @@
     "write_result": null
   },
   {
-    "id": "prop_0j0mkm4a",
+    "id": "prop_tfzw4brk",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "AJCC anatomic stage group: IIB",
+    "display_label": "Nottingham histologic score",
+    "flags": [
+      "Stated assertively in source"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Observation",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "laboratory"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "44648-4",
+            "display": "Histologic grade [Score] in Breast cancer specimen by Nottingham"
+          }
+        ],
+        "text": "Nottingham histologic score"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab"
+        ]
+      },
+      "effectiveDateTime": "2025-09-18",
+      "valueString": "6 of 9",
+      "encounter": {
+        "reference": "Encounter/onc-consult"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-consult-note",
+        "sentence_numbers": [
+          15
+        ],
+        "char_start": 1356,
+        "char_end": 1485,
+        "text": "Pathology revealed invasive ductal\ncarcinoma, Nottingham histologic grade 2 (tubule 3, nuclear 2,\nmitotic 1; total score 6 of 9)."
+      }
+    ],
+    "classification_reasoning": "no LOINC match in chart",
+    "extraction_reasoning": "Nottingham total score is a clinically significant scoring result indicating tumor grade.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "1 terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_j272j514",
+    "run_id": "e2e",
+    "resource_type": "Observation",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "palpable lump of right breast",
+    "flags": [
+      "Stated assertively in source"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Observation",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "exam"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://snomed.info/sct",
+            "code": "12240221000119106",
+            "display": "Mass of right breast"
+          }
+        ],
+        "text": "palpable lump of right breast"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation"
+        ]
+      },
+      "effectiveDateTime": "2025-09-18",
+      "valueString": "present",
+      "encounter": {
+        "reference": "Encounter/onc-consult"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-consult-note",
+        "sentence_numbers": [
+          12
+        ],
+        "char_start": 959,
+        "char_end": 1068,
+        "text": "She first noted a palpable lump in the upper outer quadrant of the\nright breast approximately two months ago."
+      }
+    ],
+    "classification_reasoning": "no LOINC match in chart",
+    "extraction_reasoning": "Palpable breast lump noted approximately two months prior to the September 2025 note.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "1 terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_r816ma4d",
+    "run_id": "e2e",
+    "resource_type": "Observation",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "clinical primary tumor stage: cT2",
+    "flags": [
+      "Stated assertively in source"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Observation",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "exam"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "21905-5",
+            "display": "Primary tumor.clinical [Class] Cancer"
+          }
+        ],
+        "text": "clinical primary tumor stage"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category"
+        ]
+      },
+      "effectiveDateTime": "2025-09-18",
+      "valueCodeableConcept": {
+        "text": "cT2"
+      },
+      "encounter": {
+        "reference": "Encounter/onc-consult"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-consult-note",
+        "sentence_numbers": [
+          43
+        ],
+        "char_start": 3342,
+        "char_end": 3402,
+        "text": "Clinical stage:  cT2 cN1 cM0, AJCC anatomic stage group IIB."
+      }
+    ],
+    "classification_reasoning": "no LOINC match in chart",
+    "extraction_reasoning": "Extraction of clinical primary tumor category (cT2) per oncology IG additions.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "1 terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [
+        {
+          "severity": "information",
+          "path": "meta.profile",
+          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category"
+        }
+      ],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_zt017ycg",
+    "run_id": "e2e",
+    "resource_type": "Observation",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "clinical regional lymph nodes stage: cN1",
+    "flags": [
+      "Stated assertively in source"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Observation",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "exam"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "21906-3",
+            "display": "Regional lymph nodes.clinical [Class] Cancer"
+          }
+        ],
+        "text": "clinical regional lymph nodes stage"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category"
+        ]
+      },
+      "effectiveDateTime": "2025-09-18",
+      "valueCodeableConcept": {
+        "text": "cN1"
+      },
+      "encounter": {
+        "reference": "Encounter/onc-consult"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-consult-note",
+        "sentence_numbers": [
+          43
+        ],
+        "char_start": 3342,
+        "char_end": 3402,
+        "text": "Clinical stage:  cT2 cN1 cM0, AJCC anatomic stage group IIB."
+      }
+    ],
+    "classification_reasoning": "no LOINC match in chart",
+    "extraction_reasoning": "Extraction of clinical regional nodes category (cN1) per oncology IG additions.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "1 terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [
+        {
+          "severity": "information",
+          "path": "meta.profile",
+          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category"
+        }
+      ],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_c2r62svw",
+    "run_id": "e2e",
+    "resource_type": "Observation",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "AJCC stage group: IIB",
     "flags": [
       "Stated assertively in source"
     ],
@@ -1855,7 +1831,7 @@
             "display": "Stage group.clinical Cancer"
           }
         ],
-        "text": "AJCC anatomic stage group"
+        "text": "AJCC stage group"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -1883,19 +1859,10 @@
         "char_start": 3342,
         "char_end": 3402,
         "text": "Clinical stage:  cT2 cN1 cM0, AJCC anatomic stage group IIB."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          58
-        ],
-        "char_start": 4152,
-        "char_end": 4394,
-        "text": "Ms. Sullivan is a 58-year-old postmenopausal woman with newly\ndiagnosed clinical stage IIB (cT2 cN1 cM0) invasive ductal\ncarcinoma of the right breast, Nottingham grade 2, strongly\nhormone-receptor positive (ER 95%, PR 80%) and HER2 negative."
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of overall stage group (IIB) as specified in the Oncology specialty IG.",
+    "extraction_reasoning": "Extraction of AJCC stage group IIB.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -1933,14 +1900,14 @@
     "write_result": null
   },
   {
-    "id": "prop_0e577k7w",
+    "id": "prop_z4mzyfpz",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "tobacco use status: never smoker",
+    "display_label": "Tobacco smoking status: never smoker",
     "flags": [
       "Stated assertively in source"
     ],
@@ -1966,7 +1933,7 @@
             "display": "Tobacco smoking status"
           }
         ],
-        "text": "tobacco use status"
+        "text": "Tobacco smoking status"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -2003,7 +1970,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Standard social history element for tobacco use",
+    "extraction_reasoning": "Standard social history element for tobacco use. Categorized as social-history.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -2035,56 +2002,145 @@
     "write_result": null
   },
   {
-    "id": "prop_gmp6aabq",
+    "id": "prop_gg7m0yqa",
     "run_id": "e2e",
-    "resource_type": "Observation",
+    "resource_type": "Procedure",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "size of tumor 3.2 cm",
+    "display_label": "Cholecystectomy",
+    "flags": [
+      "Stated assertively in source",
+      "Coded in 2 systems (ICD10, sct)"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Procedure",
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
+        ]
+      },
+      "status": "completed",
+      "code": {
+        "coding": [
+          {
+            "system": "http://snomed.info/sct",
+            "code": "38102005",
+            "display": "Cholecystectomy"
+          },
+          {
+            "system": "http://www.cms.gov/Medicare/Coding/ICD10",
+            "code": "0FT40ZZ",
+            "display": "Resection of Gallbladder, Open Approach"
+          }
+        ],
+        "text": "Cholecystectomy"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "performedDateTime": "2009",
+      "bodySite": [
+        {
+          "text": "gallbladder"
+        }
+      ],
+      "encounter": {
+        "reference": "Encounter/onc-consult"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-consult-note",
+        "sentence_numbers": [
+          21
+        ],
+        "char_start": 2005,
+        "char_end": 2051,
+        "text": "PAST SURGICAL HISTORY\n- Cholecystectomy (2009)"
+      }
+    ],
+    "classification_reasoning": "no match in chart",
+    "extraction_reasoning": "Extraction of past surgical history of cholecystectomy from 2009.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Coded in 2 systems (ICD10, sct)"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_9yz8m5er",
+    "run_id": "e2e",
+    "resource_type": "Procedure",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "diagnostic mammogram",
     "flags": [
       "Stated assertively in source"
     ],
     "conflict_group_id": null,
     "resource": {
-      "resourceType": "Observation",
-      "status": "final",
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
-            }
-          ]
-        }
-      ],
+      "resourceType": "Procedure",
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
+        ]
+      },
+      "status": "completed",
       "code": {
         "coding": [
           {
-            "system": "http://loinc.org",
-            "code": "21889-1",
-            "display": "Size.maximum dimension Tumor"
+            "system": "http://snomed.info/sct",
+            "code": "71651007",
+            "display": "Mammography"
           }
         ],
-        "text": "size of tumor"
+        "text": "diagnostic mammogram"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tumor-size"
-        ]
-      },
-      "effectiveDateTime": "2025-09-18",
-      "valueQuantity": {
-        "value": 3.2,
-        "unit": "cm",
-        "system": "http://unitsofmeasure.org",
-        "code": "cm"
+      "performedDateTime": "2025-08-28",
+      "bodySite": [
+        {
+          "text": "right breast"
+        }
+      ],
+      "reasonCode": [
+        {
+          "text": "breast cancer"
+        }
+      ],
+      "outcome": {
+        "text": "spiculated mass at the 10 o'clock position, BI-RADS 5"
       },
       "encounter": {
         "reference": "Encounter/onc-consult"
@@ -2094,15 +2150,15 @@
       {
         "document_id": "onc-consult-note",
         "sentence_numbers": [
-          47
+          13
         ],
-        "char_start": 3508,
-        "char_end": 3774,
-        "text": "Vitals:    BP 134/82, HR 72, RR 14, Temp 36.7 C, Wt 71 kg, Ht 163 cm.\nBreast:    Right breast with a firm, fixed mass in the upper outer\n           quadrant, approximately 3.2 cm, at the 10 o'clock position.\n           A firm, mobile right axillary node is palpable."
+        "char_start": 1069,
+        "char_end": 1263,
+        "text": "A diagnostic mammogram\nand targeted ultrasound on 08/28/2025 demonstrated a spiculated\nmass at the 10 o'clock position of the right breast, BI-RADS 5,\nwith an abnormal right axillary lymph node."
       }
     ],
-    "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Tumor size measurement as per Oncology specialty IG guidelines.",
+    "classification_reasoning": "no match in chart",
+    "extraction_reasoning": "Diagnostic mammogram performed on 08/28/2025 showing a BI-RADS 5 spiculated mass.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -2124,13 +2180,7 @@
       "valid": true,
       "level": "r4",
       "profile": null,
-      "issues": [
-        {
-          "severity": "information",
-          "path": "meta.profile",
-          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tumor-size"
-        }
-      ],
+      "issues": [],
       "supported": false
     },
     "reviewed_at": null,
@@ -2140,14 +2190,14 @@
     "write_result": null
   },
   {
-    "id": "prop_japm75d1",
+    "id": "prop_ms85ejhx",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
     "confidence_tier": "REVIEW",
     "confidence_score": 0.65,
     "status": "pending",
-    "display_label": "diagnostic mammogram",
+    "display_label": "targeted ultrasound",
     "flags": [
       "Stated assertively in source",
       "No terminology code found \u2014 verify manually"
@@ -2162,7 +2212,7 @@
       },
       "status": "completed",
       "code": {
-        "text": "diagnostic mammogram"
+        "text": "targeted ultrasound"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -2171,6 +2221,9 @@
       "bodySite": [
         {
           "text": "right breast"
+        },
+        {
+          "text": "right axillary lymph node"
         }
       ],
       "reasonCode": [
@@ -2179,7 +2232,7 @@
         }
       ],
       "outcome": {
-        "text": "spiculated mass at the 10 o'clock position of the right breast, BI-RADS 5"
+        "text": "spiculated mass at the 10 o'clock position of the right breast, BI-RADS 5, abnormal right axillary lymph node"
       },
       "encounter": {
         "reference": "Encounter/onc-consult"
@@ -2197,7 +2250,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Diagnostic mammogram performed on 08/28/2025 showing a spiculated mass in the right breast.",
+    "extraction_reasoning": "Targeted ultrasound performed on 08/28/2025 showing a spiculated mass and abnormal lymph node.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -2229,105 +2282,7 @@
     "write_result": null
   },
   {
-    "id": "prop_pe4z9cyx",
-    "run_id": "e2e",
-    "resource_type": "Procedure",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "targeted ultrasound",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Procedure",
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
-        ]
-      },
-      "status": "completed",
-      "code": {
-        "coding": [
-          {
-            "system": "http://snomed.info/sct",
-            "code": "16310003",
-            "display": "Ultrasonography"
-          }
-        ],
-        "text": "targeted ultrasound"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "performedDateTime": "2025-08-28",
-      "bodySite": [
-        {
-          "text": "right breast"
-        },
-        {
-          "text": "right axillary lymph node"
-        }
-      ],
-      "reasonCode": [
-        {
-          "text": "breast cancer"
-        }
-      ],
-      "outcome": {
-        "text": "abnormal right axillary lymph node"
-      },
-      "encounter": {
-        "reference": "Encounter/onc-consult"
-      }
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          13
-        ],
-        "char_start": 1069,
-        "char_end": 1263,
-        "text": "A diagnostic mammogram\nand targeted ultrasound on 08/28/2025 demonstrated a spiculated\nmass at the 10 o'clock position of the right breast, BI-RADS 5,\nwith an abnormal right axillary lymph node."
-      }
-    ],
-    "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Targeted ultrasound performed on 08/28/2025 showing an abnormal right axillary lymph node and right breast mass.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_yg4n17bk",
+    "id": "prop_x4de2n1k",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
@@ -2368,12 +2323,9 @@
       ],
       "reasonCode": [
         {
-          "text": "breast cancer"
+          "text": "breast mass"
         }
       ],
-      "outcome": {
-        "text": "invasive ductal carcinoma, Nottingham histologic grade 2"
-      },
       "encounter": {
         "reference": "Encounter/onc-consult"
       }
@@ -2382,16 +2334,15 @@
       {
         "document_id": "onc-consult-note",
         "sentence_numbers": [
-          14,
-          15
+          14
         ],
         "char_start": 1265,
-        "char_end": 1485,
-        "text": "She underwent ultrasound-guided core needle biopsy of the right\nbreast mass on 09/04/2025. Pathology revealed invasive ductal\ncarcinoma, Nottingham histologic grade 2 (tubule 3, nuclear 2,\nmitotic 1; total score 6 of 9)."
+        "char_end": 1355,
+        "text": "She underwent ultrasound-guided core needle biopsy of the right\nbreast mass on 09/04/2025."
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Completed ultrasound-guided core needle biopsy of the right breast mass performed on 09/04/2025 showing invasive ductal carcinoma.",
+    "extraction_reasoning": "The patient underwent an ultrasound-guided core needle biopsy of the right breast mass on September 4, 2025. This is a completed diagnostic/surgical cancer-related procedure with an explicit date.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -2423,14 +2374,14 @@
     "write_result": null
   },
   {
-    "id": "prop_n758naz3",
+    "id": "prop_1xbbjfy8",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "Nottingham histologic grade: Nottingham grade 2 (score 6/9)",
+    "display_label": "Histologic Grade: Nottingham grade 2 (score 6/9)",
     "flags": [
       "Mentioned in 2 notes",
       "Stated assertively in source"
@@ -2457,7 +2408,7 @@
             "display": "Grade"
           }
         ],
-        "text": "Nottingham histologic grade"
+        "text": "Histologic Grade"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -2500,20 +2451,11 @@
         "char_start": 2451,
         "char_end": 2740,
         "text": "BIOMARKER AND PATHOLOGY REVIEW  (right breast core biopsy, 09/04/2025)\n- Histology:           Invasive ductal carcinoma\n- Histologic grade:    Nottingham grade 2 (score 6/9)\n- Estrogen receptor:   POSITIVE, strong nuclear staining in 95% of\n                       tumor cells (Allred 8/8)."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          58
-        ],
-        "char_start": 4152,
-        "char_end": 4394,
-        "text": "Ms. Sullivan is a 58-year-old postmenopausal woman with newly\ndiagnosed clinical stage IIB (cT2 cN1 cM0) invasive ductal\ncarcinoma of the right breast, Nottingham grade 2, strongly\nhormone-receptor positive (ER 95%, PR 80%) and HER2 negative."
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extracting histologic grade as required by the Oncology IG. Value is 'grade 2 (score 6/9)'.",
-    "merge_reasoning": "Both observations record the histologic grade. Group 8 is the survivor because it provides the more specific Nottingham grade classification and scoring detail.",
+    "extraction_reasoning": "In oncology notes, histologic grade is a clinically significant staging-related observation that should be extracted.",
+    "merge_reasoning": "Both describe the histologic grade of the tumor. Group 6 is more specific as it details the grading system ('Nottingham grade 2 (score 6/9)') and has a precise effective date.",
     "confidence_breakdown": {
       "certainty": {
         "score": 1.0,
@@ -2550,14 +2492,14 @@
     "write_result": null
   },
   {
-    "id": "prop_xwjqmfex",
+    "id": "prop_zz8nyck8",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "distant metastasis staging: cM0",
+    "display_label": "AJCC clinical distant metastasis stage: cM0",
     "flags": [
       "Stated assertively in source"
     ],
@@ -2570,7 +2512,7 @@
           "coding": [
             {
               "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "code": "imaging"
             }
           ]
         }
@@ -2583,14 +2525,14 @@
             "display": "Distant metastases.clinical [Class] Cancer"
           }
         ],
-        "text": "distant metastasis staging"
+        "text": "AJCC clinical distant metastasis stage"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result",
           "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-distant-metastases-category"
         ]
       },
@@ -2611,7 +2553,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Distant metastasis stage cM0 is a distinct observation in mCODE TNM criteria.",
+    "extraction_reasoning": "Distant metastasis stage (cM0) from the stated TNM staging.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -2649,14 +2591,14 @@
     "write_result": null
   },
   {
-    "id": "prop_bs6dsq2c",
+    "id": "prop_qc6et67g",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "primary tumor staging: cT2",
+    "display_label": "AJCC clinical primary tumor stage: cT2",
     "flags": [
       "Stated assertively in source"
     ],
@@ -2669,7 +2611,7 @@
           "coding": [
             {
               "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "code": "imaging"
             }
           ]
         }
@@ -2682,14 +2624,14 @@
             "display": "Primary tumor.clinical [Class] Cancer"
           }
         ],
-        "text": "primary tumor staging"
+        "text": "AJCC clinical primary tumor stage"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result",
           "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category"
         ]
       },
@@ -2710,7 +2652,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Primary tumor stage cT2 is a distinct observation in mCODE TNM criteria.",
+    "extraction_reasoning": "Primary tumor stage (cT2) from the stated TNM staging.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -2748,14 +2690,14 @@
     "write_result": null
   },
   {
-    "id": "prop_mcdtn3jh",
+    "id": "prop_sf4w5hn2",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "regional lymph nodes staging: cN1",
+    "display_label": "AJCC clinical regional lymph node stage: cN1",
     "flags": [
       "Stated assertively in source"
     ],
@@ -2768,7 +2710,7 @@
           "coding": [
             {
               "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "code": "imaging"
             }
           ]
         }
@@ -2781,14 +2723,14 @@
             "display": "Regional lymph nodes.clinical [Class] Cancer"
           }
         ],
-        "text": "regional lymph nodes staging"
+        "text": "AJCC clinical regional lymph node stage"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result",
           "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category"
         ]
       },
@@ -2809,7 +2751,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Regional lymph node stage cN1 is a distinct observation in mCODE TNM criteria.",
+    "extraction_reasoning": "Regional lymph node stage (cN1) from the stated TNM staging.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -2847,14 +2789,14 @@
     "write_result": null
   },
   {
-    "id": "prop_nk8fnzrk",
+    "id": "prop_1b5qm0cb",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "cancer stage group: IIB",
+    "display_label": "AJCC stage group: stage IIB",
     "flags": [
       "Stated assertively in source"
     ],
@@ -2867,7 +2809,7 @@
           "coding": [
             {
               "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "code": "imaging"
             }
           ]
         }
@@ -2880,20 +2822,20 @@
             "display": "Stage group.clinical Cancer"
           }
         ],
-        "text": "cancer stage group"
+        "text": "AJCC stage group"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-clinical-result",
           "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-stage-group"
         ]
       },
       "effectiveDateTime": "2025-09",
       "valueCodeableConcept": {
-        "text": "IIB"
+        "text": "stage IIB"
       }
     },
     "citations": [
@@ -2917,7 +2859,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Overall stage group (stage IIB) is emitted as a key oncology observation.",
+    "extraction_reasoning": "Overall stage group (stage IIB) of the breast cancer.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -2955,7 +2897,7 @@
     "write_result": null
   },
   {
-    "id": "prop_61gep4f7",
+    "id": "prop_nhkv29hq",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
@@ -3028,7 +2970,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of the treatment response trend as cancer disease status per oncology guidelines.",
+    "extraction_reasoning": "Under the Oncology IG rules, cancer disease status trend (value 'partial response') is captured as a clinically significant observation.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -3066,14 +3008,14 @@
     "write_result": null
   },
   {
-    "id": "prop_a1t076ah",
+    "id": "prop_ax5waqm4",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "clinical distant metastasis category: cM0",
+    "display_label": "closest posterior surgical margin 4 mm",
     "flags": [
       "Stated assertively in source"
     ],
@@ -3094,21 +3036,121 @@
       "code": {
         "coding": [
           {
-            "system": "http://loinc.org",
-            "code": "21907-1",
-            "display": "Distant metastases.clinical [Class] Cancer"
+            "system": "http://snomed.info/sct",
+            "code": "4420001000004100",
+            "display": "Posterior surgical margin"
           }
         ],
-        "text": "clinical distant metastasis category"
+        "text": "closest posterior surgical margin"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-distant-metastases-category"
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation"
         ]
+      },
+      "effectiveDateTime": "2025-12-05",
+      "valueQuantity": {
+        "value": 4.0,
+        "unit": "mm",
+        "system": "http://unitsofmeasure.org",
+        "code": "mm"
+      },
+      "encounter": {
+        "reference": "Encounter/onc-consult"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "surgical-pathology-report",
+        "sentence_numbers": [
+          21
+        ],
+        "char_start": 1743,
+        "char_end": 1794,
+        "text": "- Margins: negative; closest posterior margin 4 mm."
+      },
+      {
+        "document_id": "surgical-pathology-report",
+        "sentence_numbers": [
+          30
+        ],
+        "char_start": 2282,
+        "char_end": 2321,
+        "text": "Margins:                Negative (4 mm)"
+      }
+    ],
+    "classification_reasoning": "no LOINC match in chart",
+    "extraction_reasoning": "Quantitative measurement of the closest posterior surgical margin distance.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "1 terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_abdpyhdd",
+    "run_id": "e2e",
+    "resource_type": "Observation",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "clinical distant metastasis stage: cM0",
+    "flags": [
+      "Stated assertively in source"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Observation",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "21907-1",
+            "display": "Distant metastases.clinical [Class] Cancer"
+          }
+        ],
+        "text": "clinical distant metastasis stage"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
       },
       "effectiveDateTime": "2025-12-05",
       "valueCodeableConcept": {
@@ -3116,6 +3158,11 @@
       },
       "encounter": {
         "reference": "Encounter/onc-consult"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-distant-metastases-category"
+        ]
       }
     },
     "citations": [
@@ -3130,7 +3177,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of clinical M category from TNM string.",
+    "extraction_reasoning": "Extraction of clinical distant metastases (cM) according to specialty mCODE rules.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -3168,14 +3215,14 @@
     "write_result": null
   },
   {
-    "id": "prop_0ht86an6",
+    "id": "prop_fhgkdewf",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "Nottingham histologic grade: grade 2",
+    "display_label": "Nottingham histologic grade: 2",
     "flags": [
       "Stated assertively in source"
     ],
@@ -3214,7 +3261,7 @@
       },
       "effectiveDateTime": "2025-12-05",
       "valueCodeableConcept": {
-        "text": "grade 2"
+        "text": "2"
       },
       "encounter": {
         "reference": "Encounter/onc-consult"
@@ -3241,7 +3288,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of histologic grade based on oncology IG additions. The Nottingham system uses a 3-tier grading scale.",
+    "extraction_reasoning": "Extracting histologic grade as requested by the Oncology (mCODE) specialty guide additions.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -3279,14 +3326,14 @@
     "write_result": null
   },
   {
-    "id": "prop_54xc5jnw",
+    "id": "prop_04z9zrsf",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "Miller-Payne histologic grade: grade 3",
+    "display_label": "histologic grade: Miller-Payne grade 3",
     "flags": [
       "Stated assertively in source"
     ],
@@ -3299,7 +3346,7 @@
           "coding": [
             {
               "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "code": "laboratory"
             }
           ]
         }
@@ -3312,20 +3359,20 @@
             "display": "Grade"
           }
         ],
-        "text": "Miller-Payne histologic grade"
+        "text": "histologic grade"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab",
           "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-histologic-grade"
         ]
       },
       "effectiveDateTime": "2025-12-05",
       "valueCodeableConcept": {
-        "text": "grade 3"
+        "text": "Miller-Payne grade 3"
       },
       "encounter": {
         "reference": "Encounter/onc-consult"
@@ -3343,7 +3390,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of the specific histologic/treatment response grade (Miller-Payne grade 3).",
+    "extraction_reasoning": "Under the Oncology IG rules, histologic grade with values like 'grade 3' is captured as a distinct observation.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -3381,110 +3428,14 @@
     "write_result": null
   },
   {
-    "id": "prop_ek04429w",
-    "run_id": "e2e",
-    "resource_type": "Observation",
-    "classification": "NEW",
-    "confidence_tier": "REVIEW",
-    "confidence_score": 0.65,
-    "status": "pending",
-    "display_label": "number of positive sentinel lymph nodes",
-    "flags": [
-      "Stated assertively in source",
-      "No terminology code found \u2014 verify manually"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Observation",
-      "status": "final",
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "laboratory"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "text": "number of positive sentinel lymph nodes"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab"
-        ]
-      },
-      "effectiveDateTime": "2025-12-05",
-      "valueString": "0/3",
-      "encounter": {
-        "reference": "Encounter/onc-consult"
-      }
-    },
-    "citations": [
-      {
-        "document_id": "surgical-pathology-report",
-        "sentence_numbers": [
-          23
-        ],
-        "char_start": 1887,
-        "char_end": 2002,
-        "text": "B. RIGHT AXILLARY SENTINEL LYMPH NODES (0 of 3 positive):\n   - Three lymph nodes negative for metastatic carcinoma."
-      },
-      {
-        "document_id": "surgical-pathology-report",
-        "sentence_numbers": [
-          31
-        ],
-        "char_start": 2322,
-        "char_end": 2376,
-        "text": "Lymph nodes:            0 of 3 sentinel nodes positive"
-      }
-    ],
-    "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Quantitative count of sentinel lymph nodes positive out of the total examined, kept intact as a fraction.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 0.3,
-        "weight": 0.5,
-        "contribution": 0.15,
-        "reason": "No terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_de93xhbm",
+    "id": "prop_89e05wcv",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "clinical primary tumor category: cT2",
+    "display_label": "clinical primary tumor stage: cT2",
     "flags": [
       "Stated assertively in source"
     ],
@@ -3496,8 +3447,7 @@
         {
           "coding": [
             {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category"
             }
           ]
         }
@@ -3510,16 +3460,10 @@
             "display": "Primary tumor.clinical [Class] Cancer"
           }
         ],
-        "text": "clinical primary tumor category"
+        "text": "clinical primary tumor stage"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category"
-        ]
       },
       "effectiveDateTime": "2025-12-05",
       "valueCodeableConcept": {
@@ -3527,6 +3471,11 @@
       },
       "encounter": {
         "reference": "Encounter/onc-consult"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category"
+        ]
       }
     },
     "citations": [
@@ -3541,7 +3490,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of clinical T category from TNM string.",
+    "extraction_reasoning": "Extraction of clinical primary tumor (cT) according to specialty mCODE rules.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -3579,14 +3528,14 @@
     "write_result": null
   },
   {
-    "id": "prop_pjehdptc",
+    "id": "prop_d14phq59",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "clinical regional lymph nodes category: cN1",
+    "display_label": "clinical regional lymph node stage: cN1",
     "flags": [
       "Stated assertively in source"
     ],
@@ -3598,8 +3547,7 @@
         {
           "coding": [
             {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category"
             }
           ]
         }
@@ -3612,16 +3560,10 @@
             "display": "Regional lymph nodes.clinical [Class] Cancer"
           }
         ],
-        "text": "clinical regional lymph nodes category"
+        "text": "clinical regional lymph node stage"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category"
-        ]
       },
       "effectiveDateTime": "2025-12-05",
       "valueCodeableConcept": {
@@ -3629,6 +3571,11 @@
       },
       "encounter": {
         "reference": "Encounter/onc-consult"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category"
+        ]
       }
     },
     "citations": [
@@ -3643,7 +3590,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of clinical N category from TNM string.",
+    "extraction_reasoning": "Extraction of clinical regional nodes (cN) according to specialty mCODE rules.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -3681,7 +3628,94 @@
     "write_result": null
   },
   {
-    "id": "prop_d84t3pbq",
+    "id": "prop_4yddwfkc",
+    "run_id": "e2e",
+    "resource_type": "Observation",
+    "classification": "NEW",
+    "confidence_tier": "REVIEW",
+    "confidence_score": 0.65,
+    "status": "pending",
+    "display_label": "sentinel lymph nodes positive count",
+    "flags": [
+      "Stated assertively in source",
+      "No terminology code found \u2014 verify manually"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Observation",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "laboratory"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "text": "sentinel lymph nodes positive count"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab"
+        ]
+      },
+      "effectiveDateTime": "2025-12-05",
+      "valueString": "0/3",
+      "encounter": {
+        "reference": "Encounter/onc-consult"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "surgical-pathology-report",
+        "sentence_numbers": [
+          31
+        ],
+        "char_start": 2322,
+        "char_end": 2376,
+        "text": "Lymph nodes:            0 of 3 sentinel nodes positive"
+      }
+    ],
+    "classification_reasoning": "no LOINC match in chart",
+    "extraction_reasoning": "The sentinel lymph node status is clinically significant in oncology. There are 0 of 3 positive sentinel nodes, which indicates positive nodes count is 0.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 0.3,
+        "weight": 0.5,
+        "contribution": 0.15,
+        "reason": "No terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_k3hsfq9g",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
@@ -3700,8 +3734,7 @@
         {
           "coding": [
             {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category"
             }
           ]
         }
@@ -3719,18 +3752,17 @@
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-stage-group"
-        ]
-      },
       "effectiveDateTime": "2025-12-05",
       "valueCodeableConcept": {
         "text": "IIB"
       },
       "encounter": {
         "reference": "Encounter/onc-consult"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-stage-group"
+        ]
       }
     },
     "citations": [
@@ -3745,7 +3777,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of clinical stage group according to specialty guidelines.",
+    "extraction_reasoning": "Extraction of clinical stage group according to specialty mCODE rules.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -3783,112 +3815,14 @@
     "write_result": null
   },
   {
-    "id": "prop_wzqxa8nb",
+    "id": "prop_e3rv4xbn",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "distance to closest surgical margin 4 mm",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Observation",
-      "status": "final",
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "laboratory"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "coding": [
-          {
-            "system": "http://loinc.org",
-            "code": "33735-2",
-            "display": "Surgical margin tumor involvement.distant by CAP cancer protocols"
-          }
-        ],
-        "text": "distance to closest surgical margin"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab"
-        ]
-      },
-      "effectiveDateTime": "2025-12-05",
-      "valueQuantity": {
-        "value": 4.0,
-        "unit": "mm",
-        "system": "http://unitsofmeasure.org",
-        "code": "mm"
-      },
-      "encounter": {
-        "reference": "Encounter/onc-consult"
-      }
-    },
-    "citations": [
-      {
-        "document_id": "surgical-pathology-report",
-        "sentence_numbers": [
-          30
-        ],
-        "char_start": 2282,
-        "char_end": 2321,
-        "text": "Margins:                Negative (4 mm)"
-      }
-    ],
-    "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "The patient's surgical margin distance is specified quantitatively as 4 mm, which is clinically significant for oncological surgical planning and staging.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_f6pct7m7",
-    "run_id": "e2e",
-    "resource_type": "Observation",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "tumor focality",
+    "display_label": "tumor focality status",
     "flags": [
       "Stated assertively in source"
     ],
@@ -3914,7 +3848,7 @@
             "display": "Tumor focality"
           }
         ],
-        "text": "tumor focality"
+        "text": "tumor focality status"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -3942,7 +3876,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Tumor focality is documented as multifocal.",
+    "extraction_reasoning": "Extraction of tumor focality characterized as multifocal.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -3974,14 +3908,14 @@
     "write_result": null
   },
   {
-    "id": "prop_n26j8s7d",
+    "id": "prop_hgwagj4p",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "tumor size 0.6 cm",
+    "display_label": "additional tumor size 0.6 cm",
     "flags": [
       "Stated assertively in source"
     ],
@@ -3994,7 +3928,7 @@
           "coding": [
             {
               "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "laboratory"
+              "code": "exam"
             }
           ]
         }
@@ -4007,14 +3941,14 @@
             "display": "Size.maximum dimension Tumor"
           }
         ],
-        "text": "tumor size"
+        "text": "additional tumor size"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab",
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
           "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tumor-size"
         ]
       },
@@ -4033,15 +3967,6 @@
       {
         "document_id": "surgical-pathology-report",
         "sentence_numbers": [
-          18
-        ],
-        "char_start": 1427,
-        "char_end": 1624,
-        "text": "MICROSCOPIC DESCRIPTION AND DIAGNOSIS\n\nA. RIGHT BREAST, PARTIAL MASTECTOMY:\n   - Residual invasive ductal carcinoma, multifocal (two foci,\n     1.1 cm and 0.6 cm), with associated treatment effect."
-      },
-      {
-        "document_id": "surgical-pathology-report",
-        "sentence_numbers": [
           29
         ],
         "char_start": 2227,
@@ -4050,7 +3975,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extracted the second tumor focus dimension as tumor size.",
+    "extraction_reasoning": "Extraction of the secondary tumor size dimension.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4088,14 +4013,14 @@
     "write_result": null
   },
   {
-    "id": "prop_3k7svn7b",
+    "id": "prop_vz408500",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "tumor size 1.1 cm",
+    "display_label": "pathologic tumor size 1.1 cm",
     "flags": [
       "Stated assertively in source"
     ],
@@ -4121,7 +4046,7 @@
             "display": "Size.maximum dimension Tumor"
           }
         ],
-        "text": "tumor size"
+        "text": "pathologic tumor size"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -4164,7 +4089,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extracted the greatest dimension of the primary tumor focus as tumor size per Oncology guidelines.",
+    "extraction_reasoning": "Extracted the greatest dimension of the primary tumor size from the pathology description as per mCODE guidelines.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4202,14 +4127,14 @@
     "write_result": null
   },
   {
-    "id": "prop_1nk0rdad",
+    "id": "prop_0h2v2ahb",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "pathologic regional lymph nodes category ypN0: ypN0",
+    "display_label": "pathologic regional lymph nodes stage after neoadjuvant therapy: ypN0",
     "flags": [
       "Stated assertively in source"
     ],
@@ -4222,7 +4147,7 @@
           "coding": [
             {
               "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "code": "laboratory"
             }
           ]
         }
@@ -4235,14 +4160,14 @@
             "display": "Regional lymph nodes.pathology [Class] Cancer"
           }
         ],
-        "text": "pathologic regional lymph nodes category ypN0"
+        "text": "pathologic regional lymph nodes stage after neoadjuvant therapy"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab",
           "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-regional-nodes-category"
         ]
       },
@@ -4275,7 +4200,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Pathologic staging component ypN0 (regional lymph nodes) after neoadjuvant therapy.",
+    "extraction_reasoning": "Under mCODE guidelines, TNM stages are extracted as individual observations. This represents the regional lymph nodes (ypN) stage.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4313,14 +4238,14 @@
     "write_result": null
   },
   {
-    "id": "prop_5zq825zr",
+    "id": "prop_1ms8ek7p",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "pathologic primary tumor category ypT1c: ypT1c",
+    "display_label": "pathologic primary tumor stage after neoadjuvant therapy: ypT1c",
     "flags": [
       "Stated assertively in source"
     ],
@@ -4333,7 +4258,7 @@
           "coding": [
             {
               "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-              "code": "exam"
+              "code": "laboratory"
             }
           ]
         }
@@ -4346,14 +4271,14 @@
             "display": "Primary tumor.pathology [Class] Cancer"
           }
         ],
-        "text": "pathologic primary tumor category ypT1c"
+        "text": "pathologic primary tumor stage after neoadjuvant therapy"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
       },
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-simple-observation",
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-lab",
           "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-tnm-primary-tumor-category"
         ]
       },
@@ -4386,7 +4311,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Pathologic staging component ypT1c (primary tumor size/extent) after neoadjuvant therapy.",
+    "extraction_reasoning": "Under mCODE guidelines, TNM stages are extracted as individual observations. This represents the primary tumor (ypT) stage.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4424,7 +4349,7 @@
     "write_result": null
   },
   {
-    "id": "prop_rf7xqqr3",
+    "id": "prop_2xt1v0av",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
@@ -4467,7 +4392,7 @@
       "performedDateTime": "2025-12-03",
       "bodySite": [
         {
-          "text": "Right breast"
+          "text": "right breast"
         }
       ],
       "reasonCode": [
@@ -4475,6 +4400,9 @@
           "text": "breast cancer"
         }
       ],
+      "outcome": {
+        "text": "Right breast, partial mastectomy, oriented with sutures"
+      },
       "encounter": {
         "reference": "Encounter/onc-consult"
       }
@@ -4491,7 +4419,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "A right breast partial mastectomy (lumpectomy) was performed on 12/03/2025. This is a surgical procedure to treat breast cancer.",
+    "extraction_reasoning": "Extracted the partial mastectomy (lumpectomy) performed on 12/03/2025. This is a cancer-directed surgery, likely for breast cancer.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4529,7 +4457,7 @@
     "write_result": null
   },
   {
-    "id": "prop_21rda60q",
+    "id": "prop_t4g10qv8",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
@@ -4546,8 +4474,7 @@
       "resourceType": "Procedure",
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-related-surgical-procedure"
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
         ]
       },
       "status": "completed",
@@ -4572,7 +4499,7 @@
       "performedDateTime": "2025-12-03",
       "bodySite": [
         {
-          "text": "Right axillary lymph nodes"
+          "text": "lymph node"
         }
       ],
       "reasonCode": [
@@ -4580,9 +4507,6 @@
           "text": "breast cancer"
         }
       ],
-      "outcome": {
-        "text": "three nodes submitted"
-      },
       "encounter": {
         "reference": "Encounter/onc-consult"
       }
@@ -4591,16 +4515,15 @@
       {
         "document_id": "surgical-pathology-report",
         "sentence_numbers": [
-          11,
-          12
+          11
         ],
         "char_start": 725,
-        "char_end": 971,
-        "text": "Right breast partial mastectomy (lumpectomy) and sentinel lymph\nnode biopsy, performed 12/03/2025 by Dr. Voss.\n\n\nSPECIMENS SUBMITTED\nA. Right breast, partial mastectomy, oriented with sutures.\nB. Right axillary sentinel lymph nodes (three nodes)."
+        "char_end": 917,
+        "text": "Right breast partial mastectomy (lumpectomy) and sentinel lymph\nnode biopsy, performed 12/03/2025 by Dr. Voss.\n\n\nSPECIMENS SUBMITTED\nA. Right breast, partial mastectomy, oriented with sutures."
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "A sentinel lymph node biopsy was performed on 12/03/2025.",
+    "extraction_reasoning": "Extracted the sentinel lymph node biopsy performed on the same date.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4622,13 +4545,7 @@
       "valid": true,
       "level": "r4",
       "profile": null,
-      "issues": [
-        {
-          "severity": "information",
-          "path": "meta.profile",
-          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-related-surgical-procedure"
-        }
-      ],
+      "issues": [],
       "supported": false
     },
     "reviewed_at": null,
@@ -4638,7 +4555,7 @@
     "write_result": null
   },
   {
-    "id": "prop_x2xnncm4",
+    "id": "prop_edzaccpg",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
@@ -4697,19 +4614,10 @@
         "char_start": 1846,
         "char_end": 1885,
         "text": "Her ECOG performance status today is 1."
-      },
-      {
-        "document_id": "onc-followup-note",
-        "sentence_numbers": [
-          29
-        ],
-        "char_start": 2418,
-        "char_end": 2445,
-        "text": "ECOG performance status: 1."
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extract the ECOG performance status as specified by the Oncology specialty IG additions.",
+    "extraction_reasoning": "Extract the ECOG performance status as specified by the Oncology specialty IG.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4747,7 +4655,107 @@
     "write_result": null
   },
   {
-    "id": "prop_9a6p6hr1",
+    "id": "prop_c4bqj5ba",
+    "run_id": "e2e",
+    "resource_type": "Observation",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "Eastern Cooperative Oncology Group performance status",
+    "flags": [
+      "Stated assertively in source"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Observation",
+      "status": "final",
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+              "code": "survey"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://loinc.org",
+            "code": "89247-1",
+            "display": "ECOG Performance Status score"
+          }
+        ],
+        "text": "Eastern Cooperative Oncology Group performance status"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-observation-screening-assessment",
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-ecog-performance-status"
+        ]
+      },
+      "effectiveDateTime": "2027-02-10",
+      "valueInteger": 1,
+      "encounter": {
+        "reference": "Encounter/onc-followup"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-followup-note",
+        "sentence_numbers": [
+          29
+        ],
+        "char_start": 2418,
+        "char_end": 2445,
+        "text": "ECOG performance status: 1."
+      }
+    ],
+    "classification_reasoning": "no LOINC match in chart",
+    "extraction_reasoning": "Performance status requested by specialty IG additions.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "1 terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [
+        {
+          "severity": "information",
+          "path": "meta.profile",
+          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-ecog-performance-status"
+        }
+      ],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_tqkrf1rq",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
@@ -4808,7 +4816,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Clinical significance: MRI lumbar spine demonstrates an infiltrative marrow-replacing lesion of L3 with a small posterior soft tissue component. This is a clinically significant positive imaging finding requiring follow-up. Cord compression is a pertinent negative and is excluded.",
+    "extraction_reasoning": "Clinical significant positive imaging finding: infiltrative marrow-replacing lesion of L3 with a small posterior soft tissue component.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4840,24 +4848,24 @@
     "write_result": null
   },
   {
-    "id": "prop_19qnwbyb",
+    "id": "prop_j8zkd0jd",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "Adjuvant breast radiation",
+    "display_label": "adjuvant breast radiation",
     "flags": [
-      "Stated assertively in source",
-      "Coded in 2 systems (ICD10, sct)"
+      "Stated assertively in source"
     ],
     "conflict_group_id": null,
     "resource": {
       "resourceType": "Procedure",
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure",
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-related-surgical-procedure"
         ]
       },
       "status": "completed",
@@ -4867,14 +4875,9 @@
             "system": "http://snomed.info/sct",
             "code": "428923005",
             "display": "Radiotherapy to breast"
-          },
-          {
-            "system": "http://www.cms.gov/Medicare/Coding/ICD10",
-            "code": "DM0",
-            "display": "Radiation Therapy @ Breast @ Beam Radiation"
           }
         ],
-        "text": "Adjuvant breast radiation"
+        "text": "adjuvant breast radiation"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -4915,7 +4918,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Adjuvant radiation therapy performed in early 2026.",
+    "extraction_reasoning": "Adjuvant breast radiation completed in early 2026.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -4928,7 +4931,7 @@
         "score": 1.0,
         "weight": 0.5,
         "contribution": 0.5,
-        "reason": "Coded in 2 systems (ICD10, sct)"
+        "reason": "1 terminology code"
       }
     },
     "chart_matches": [],
@@ -4937,7 +4940,13 @@
       "valid": true,
       "level": "r4",
       "profile": null,
-      "issues": [],
+      "issues": [
+        {
+          "severity": "information",
+          "path": "meta.profile",
+          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-related-surgical-procedure"
+        }
+      ],
       "supported": false
     },
     "reviewed_at": null,
@@ -4947,7 +4956,7 @@
     "write_result": null
   },
   {
-    "id": "prop_nd7s0tcn",
+    "id": "prop_svaeqt0d",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
@@ -4956,7 +4965,8 @@
     "status": "pending",
     "display_label": "bone scan",
     "flags": [
-      "Stated assertively in source"
+      "Stated assertively in source",
+      "Coded in 2 systems (ICD10, sct)"
     ],
     "conflict_group_id": null,
     "resource": {
@@ -4973,6 +4983,11 @@
             "system": "http://snomed.info/sct",
             "code": "41747008",
             "display": "Radioisotope scan of bone"
+          },
+          {
+            "system": "http://www.cms.gov/Medicare/Coding/ICD10",
+            "code": "CP1ZYZZ",
+            "display": "Planar Nuclear Medicine Imaging of Musculoskeletal System, All using Other Radionuclide"
           }
         ],
         "text": "bone scan"
@@ -5018,7 +5033,7 @@
         "score": 1.0,
         "weight": 0.5,
         "contribution": 0.5,
-        "reason": "1 terminology code"
+        "reason": "Coded in 2 systems (ICD10, sct)"
       }
     },
     "chart_matches": [],
@@ -5037,7 +5052,7 @@
     "write_result": null
   },
   {
-    "id": "prop_827ytzwn",
+    "id": "prop_tvnpep4f",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
@@ -5061,8 +5076,8 @@
         "coding": [
           {
             "system": "http://snomed.info/sct",
-            "code": "178787002",
-            "display": "Biopsy of lesion of spine"
+            "code": "13861005",
+            "display": "Biopsy of bone"
           }
         ],
         "text": "CT-guided biopsy of the L3 lesion"
@@ -5073,7 +5088,7 @@
       "performedDateTime": "2027-02-03",
       "bodySite": [
         {
-          "text": "L3"
+          "text": "L3 vertebra"
         }
       ],
       "reasonCode": [
@@ -5100,7 +5115,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "A CT-guided biopsy of the L3 lesion was performed on 02/03/2027 and confirmed metastatic adenocarcinoma consistent with a breast cancer primary.",
+    "extraction_reasoning": "A CT-guided biopsy of the L3 lesion was performed on 02/03/2027 and confirmed metastatic adenocarcinoma consistent with a breast primary. As this is a cancer-related diagnostic biopsy, the reason is noted as breast cancer.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -5132,7 +5147,103 @@
     "write_result": null
   },
   {
-    "id": "prop_rk55yyng",
+    "id": "prop_4ncn5xm5",
+    "run_id": "e2e",
+    "resource_type": "Procedure",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "genetic counseling",
+    "flags": [
+      "Stated assertively in source",
+      "Coded in 3 systems (HCPCSReleaseCodeSets, ICD10, sct)"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Procedure",
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
+        ]
+      },
+      "status": "completed",
+      "code": {
+        "coding": [
+          {
+            "system": "http://snomed.info/sct",
+            "code": "79841006",
+            "display": "Genetic counseling"
+          },
+          {
+            "system": "http://www.cms.gov/Medicare/Coding/ICD10",
+            "code": "GZ63ZZZ",
+            "display": "Other Counseling"
+          },
+          {
+            "system": "http://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets",
+            "code": "S0265",
+            "display": "Genetic counseling, under physician supervision, each 15 minutes"
+          }
+        ],
+        "text": "genetic counseling"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "performedDateTime": "2027-02-10",
+      "outcome": {
+        "text": "no actionable germline finding"
+      },
+      "encounter": {
+        "reference": "Encounter/onc-followup"
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-followup-note",
+        "sentence_numbers": [
+          48
+        ],
+        "char_start": 4190,
+        "char_end": 4276,
+        "text": "- Genetic results from prior counseling reviewed; no actionable\n     germline finding."
+      }
+    ],
+    "classification_reasoning": "no match in chart",
+    "extraction_reasoning": "Genetic counseling is a counselling procedure that occurred prior to the encounter. It has completed status since results were already reviewed.",
+    "merge_reasoning": null,
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Coded in 3 systems (HCPCSReleaseCodeSets, ICD10, sct)"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_q11mg0tj",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
@@ -5175,6 +5286,14 @@
       "bodySite": [
         {
           "text": "lumbar spine"
+        },
+        {
+          "text": "L3"
+        }
+      ],
+      "reasonCode": [
+        {
+          "text": "infiltrative marrow-replacing lesion of L3"
         }
       ],
       "outcome": {
@@ -5196,7 +5315,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "MRI of the lumbar spine was performed as demonstrated by the findings. No date is mentioned, so performed remains null.",
+    "extraction_reasoning": "An MRI of the lumbar spine was performed, demonstrating an infiltrative marrow-replacing lesion of L3 with a small posterior soft tissue component and no cord compression.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -5228,89 +5347,7 @@
     "write_result": null
   },
   {
-    "id": "prop_8vfa53ff",
-    "run_id": "e2e",
-    "resource_type": "Procedure",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "neoadjuvant dose-dense AC followed by paclitaxel",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Procedure",
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
-        ]
-      },
-      "status": "completed",
-      "code": {
-        "coding": [
-          {
-            "system": "http://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets",
-            "code": "J9267",
-            "display": "Injection, paclitaxel, 1 mg"
-          }
-        ],
-        "text": "neoadjuvant dose-dense AC followed by paclitaxel"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "performedDateTime": "2025",
-      "encounter": {
-        "reference": "Encounter/onc-followup"
-      }
-    },
-    "citations": [
-      {
-        "document_id": "onc-followup-note",
-        "sentence_numbers": [
-          21
-        ],
-        "char_start": 2034,
-        "char_end": 2092,
-        "text": "- Neoadjuvant dose-dense AC followed by paclitaxel (2025)."
-      }
-    ],
-    "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Extraction of a completed chemotherapy regimen (therapy session) performed in 2025.",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_5e93p1vr",
+    "id": "prop_jc00fd9g",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
@@ -5358,7 +5395,7 @@
       ],
       "reasonCode": [
         {
-          "text": "breast cancer"
+          "text": "right breast invasive ductal carcinoma"
         }
       ],
       "outcome": {
@@ -5389,7 +5426,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Extraction of the surgical resection (right partial mastectomy) performed in December 2025 as part of cancer treatment.",
+    "extraction_reasoning": "Patient underwent a right partial mastectomy and sentinel node biopsy in December 2025. The date is explicitly provided as 12/2025 (or December 2025). Mastectomy is a surgical procedure to treat breast cancer. Sentinel node biopsy is also a surgical/diagnostic procedure. The stage/resection outcome was ypT1c ypN0. These are related procedures performed together. Let's record them as separate or combined. The text describes 'right partial mastectomy and sentinel node biopsy' which we can extract as two procedures or combined. Since they are closely related in the sentence, we can extract them as two separate items to be precise. Let's extract the mastectomy first.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -5427,7 +5464,7 @@
     "write_result": null
   },
   {
-    "id": "prop_1wjz6zzp",
+    "id": "prop_zk6vt168",
     "run_id": "e2e",
     "resource_type": "Procedure",
     "classification": "NEW",
@@ -5444,7 +5481,8 @@
       "resourceType": "Procedure",
       "meta": {
         "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure"
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-procedure",
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-related-surgical-procedure"
         ]
       },
       "status": "completed",
@@ -5469,12 +5507,12 @@
       "performedDateTime": "2025-12",
       "bodySite": [
         {
-          "text": "sentinel lymph node"
+          "text": "sentinel node"
         }
       ],
       "reasonCode": [
         {
-          "text": "breast cancer"
+          "text": "right breast invasive ductal carcinoma"
         }
       ],
       "outcome": {
@@ -5505,7 +5543,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Extraction of sentinel node biopsy performed in December 2025, a diagnostic surgical procedure for cancer staging.",
+    "extraction_reasoning": "Sentinel node biopsy performed in December 2025 alongside the mastectomy.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -5527,7 +5565,13 @@
       "valid": true,
       "level": "r4",
       "profile": null,
-      "issues": [],
+      "issues": [
+        {
+          "severity": "information",
+          "path": "meta.profile",
+          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-cancer-related-surgical-procedure"
+        }
+      ],
       "supported": false
     },
     "reviewed_at": null,
@@ -5537,18 +5581,16 @@
     "write_result": null
   },
   {
-    "id": "prop_es0j5b64",
+    "id": "prop_datnn644",
     "run_id": "e2e",
     "resource_type": "Condition",
     "classification": "NEW",
-    "confidence_tier": "REVIEW",
-    "confidence_score": 0.65,
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
     "status": "pending",
     "display_label": "metastatic hormone-receptor-positive HER2-negative breast cancer",
     "flags": [
-      "Mentioned in 3 notes",
-      "Stated assertively in source",
-      "No terminology code found \u2014 verify manually"
+      "Stated assertively in source"
     ],
     "conflict_group_id": null,
     "resource": {
@@ -5578,6 +5620,13 @@
         }
       ],
       "code": {
+        "coding": [
+          {
+            "system": "http://snomed.info/sct",
+            "code": "254837009",
+            "display": "Malignant neoplasm of breast"
+          }
+        ],
         "text": "metastatic hormone-receptor-positive HER2-negative breast cancer"
       },
       "subject": {
@@ -5590,20 +5639,147 @@
             "code": "active"
           }
         ]
+      }
+    },
+    "citations": [
+      {
+        "document_id": "onc-followup-note",
+        "sentence_numbers": [
+          37
+        ],
+        "char_start": 2892,
+        "char_end": 3114,
+        "text": "Ms. Sullivan now has biopsy-confirmed metastatic breast carcinoma\ninvolving the L3 vertebra, ER positive / PR positive / HER2\nnegative, representing distant recurrence and disease progression\non adjuvant endocrine therapy."
       },
-      "severity": {
-        "text": "severe"
+      {
+        "document_id": "onc-followup-note",
+        "sentence_numbers": [
+          40
+        ],
+        "char_start": 3235,
+        "char_end": 3330,
+        "text": "PLAN\n\n1. Metastatic breast carcinoma to bone (L3), hormone-receptor\n   positive, HER2 negative."
       },
+      {
+        "document_id": "onc-followup-note",
+        "sentence_numbers": [
+          38
+        ],
+        "char_start": 3115,
+        "char_end": 3204,
+        "text": "This is now stage IV (metastatic)\nhormone-receptor-positive, HER2-negative breast cancer."
+      }
+    ],
+    "classification_reasoning": "no match in chart",
+    "extraction_reasoning": "diagnosed with stage IV (metastatic) hormone-receptor-positive, HER2-negative breast cancer",
+    "merge_reasoning": "Group 5 is a more specific description of the metastatic breast cancer than Group 4.",
+    "confidence_breakdown": {
+      "certainty": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "Stated assertively"
+      },
+      "coding": {
+        "score": 1.0,
+        "weight": 0.5,
+        "contribution": 0.5,
+        "reason": "1 terminology code"
+      }
+    },
+    "chart_matches": [],
+    "supersedes": [],
+    "conformance": {
+      "valid": true,
+      "level": "r4",
+      "profile": null,
+      "issues": [
+        {
+          "severity": "information",
+          "path": "meta.profile",
+          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-secondary-cancer-condition"
+        }
+      ],
+      "supported": false
+    },
+    "reviewed_at": null,
+    "reviewed_by": null,
+    "rejection_reason": null,
+    "provenance_resource": null,
+    "write_result": null
+  },
+  {
+    "id": "prop_4sqz24f9",
+    "run_id": "e2e",
+    "resource_type": "Condition",
+    "classification": "NEW",
+    "confidence_tier": "CONFIDENT",
+    "confidence_score": 1.0,
+    "status": "pending",
+    "display_label": "invasive ductal carcinoma",
+    "flags": [
+      "Mentioned in 3 notes",
+      "Stated assertively in source"
+    ],
+    "conflict_group_id": null,
+    "resource": {
+      "resourceType": "Condition",
+      "meta": {
+        "profile": [
+          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns",
+          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-primary-cancer-condition"
+        ]
+      },
+      "verificationStatus": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+            "code": "confirmed"
+          }
+        ]
+      },
+      "category": [
+        {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+              "code": "problem-list-item"
+            }
+          ]
+        }
+      ],
+      "code": {
+        "coding": [
+          {
+            "system": "http://snomed.info/sct",
+            "code": "82711006",
+            "display": "Infiltrating duct carcinoma"
+          }
+        ],
+        "text": "invasive ductal carcinoma"
+      },
+      "subject": {
+        "reference": "Patient/sullivan-margaret"
+      },
+      "clinicalStatus": {
+        "coding": [
+          {
+            "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+            "code": "active"
+          }
+        ]
+      },
+      "onsetDateTime": "2025-09-18",
       "bodySite": [
         {
           "coding": [
             {
               "system": "http://snomed.info/sct",
-              "code": "76752008",
-              "display": "Breast structure"
+              "code": "73056007",
+              "display": "Right breast structure"
             }
           ],
-          "text": "breast"
+          "text": "right breast"
         }
       ]
     },
@@ -5663,6 +5839,15 @@
         "text": "Right breast invasive ductal carcinoma, clinical stage IIB\n(cT2 cN1 cM0), status post neoadjuvant chemotherapy."
       },
       {
+        "document_id": "surgical-pathology-report",
+        "sentence_numbers": [
+          18
+        ],
+        "char_start": 1427,
+        "char_end": 1624,
+        "text": "MICROSCOPIC DESCRIPTION AND DIAGNOSIS\n\nA. RIGHT BREAST, PARTIAL MASTECTOMY:\n   - Residual invasive ductal carcinoma, multifocal (two foci,\n     1.1 cm and 0.6 cm), with associated treatment effect."
+      },
+      {
         "document_id": "onc-followup-note",
         "sentence_numbers": [
           9
@@ -5688,21 +5873,11 @@
         "char_start": 1888,
         "char_end": 2033,
         "text": "PAST ONCOLOGIC HISTORY\n- Right breast invasive ductal carcinoma, diagnosed 09/2025,\n  cT2 cN1 cM0 (stage IIB), Nottingham grade 2, ER+/PR+/HER2-."
-      },
-      {
-        "document_id": "onc-followup-note",
-        "sentence_numbers": [
-          37,
-          38
-        ],
-        "char_start": 2892,
-        "char_end": 3204,
-        "text": "Ms. Sullivan now has biopsy-confirmed metastatic breast carcinoma\ninvolving the L3 vertebra, ER positive / PR positive / HER2\nnegative, representing distant recurrence and disease progression\non adjuvant endocrine therapy. This is now stage IV (metastatic)\nhormone-receptor-positive, HER2-negative breast cancer."
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "diagnosed with stage IV (metastatic) hormone-receptor-positive, HER2-negative breast cancer",
-    "merge_reasoning": "Both describe the patient's breast cancer; item 4 provides the most specific and complete clinical details including receptor status and metastatic progression.",
+    "extraction_reasoning": "newly diagnosed clinical stage IIB invasive ductal carcinoma of the right breast",
+    "merge_reasoning": "exact match across 3 notes",
     "confidence_breakdown": {
       "certainty": {
         "score": 1.0,
@@ -5711,10 +5886,10 @@
         "reason": "Stated assertively"
       },
       "coding": {
-        "score": 0.3,
+        "score": 1.0,
         "weight": 0.5,
-        "contribution": 0.15,
-        "reason": "No terminology code"
+        "contribution": 0.5,
+        "reason": "1 terminology code"
       }
     },
     "chart_matches": [],
@@ -5727,7 +5902,7 @@
         {
           "severity": "information",
           "path": "meta.profile",
-          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-secondary-cancer-condition"
+          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-primary-cancer-condition"
         }
       ],
       "supported": false
@@ -5739,7 +5914,7 @@
     "write_result": null
   },
   {
-    "id": "prop_rcsn42wc",
+    "id": "prop_tetj0xfc",
     "run_id": "e2e",
     "resource_type": "Condition",
     "classification": "NEW",
@@ -5803,7 +5978,7 @@
           }
         ]
       },
-      "onsetString": "six weeks ago",
+      "onsetDateTime": "2026-12-30",
       "bodySite": [
         {
           "coding": [
@@ -5838,7 +6013,7 @@
       }
     ],
     "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "patient developed progressive low back pain",
+    "extraction_reasoning": "developed progressive low back pain",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -5870,473 +6045,14 @@
     "write_result": null
   },
   {
-    "id": "prop_nvbe60vp",
-    "run_id": "e2e",
-    "resource_type": "Condition",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "palpable lump of breast",
-    "flags": [
-      "Stated assertively in source",
-      "Coded in 2 systems (icd-10-cm, sct)"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Condition",
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
-        ]
-      },
-      "verificationStatus": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
-            "code": "confirmed"
-          }
-        ]
-      },
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/condition-category",
-              "code": "problem-list-item"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "coding": [
-          {
-            "system": "http://snomed.info/sct",
-            "code": "89164003",
-            "display": "Breast lump"
-          },
-          {
-            "system": "http://hl7.org/fhir/sid/icd-10-cm",
-            "code": "N63.0",
-            "display": "Unspecified lump in unspecified breast"
-          }
-        ],
-        "text": "palpable lump of breast"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "clinicalStatus": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
-            "code": "active"
-          }
-        ]
-      },
-      "onsetDateTime": "2025-07-18",
-      "bodySite": [
-        {
-          "coding": [
-            {
-              "system": "http://snomed.info/sct",
-              "code": "110496004",
-              "display": "Upper outer quadrant of right breast"
-            }
-          ],
-          "text": "upper outer quadrant of the right breast"
-        }
-      ]
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          12
-        ],
-        "char_start": 959,
-        "char_end": 1068,
-        "text": "She first noted a palpable lump in the upper outer quadrant of the\nright breast approximately two months ago."
-      }
-    ],
-    "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "patient noted a palpable lump in the right breast",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Coded in 2 systems (icd-10-cm, sct)"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_d7152k50",
-    "run_id": "e2e",
-    "resource_type": "Condition",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "secondary malignant neoplasm of L3 vertebra",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Condition",
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns",
-          "http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-secondary-cancer-condition"
-        ]
-      },
-      "verificationStatus": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
-            "code": "confirmed"
-          }
-        ]
-      },
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/condition-category",
-              "code": "problem-list-item"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "coding": [
-          {
-            "system": "http://hl7.org/fhir/sid/icd-10-cm",
-            "code": "C79.51",
-            "display": "Secondary malignant neoplasm of bone"
-          }
-        ],
-        "text": "secondary malignant neoplasm of L3 vertebra"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "clinicalStatus": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
-            "code": "active"
-          }
-        ]
-      },
-      "bodySite": [
-        {
-          "coding": [
-            {
-              "system": "http://snomed.info/sct",
-              "code": "731669001",
-              "display": "Entire bone of L3"
-            }
-          ],
-          "text": "L3 vertebra"
-        }
-      ]
-    },
-    "citations": [
-      {
-        "document_id": "onc-followup-note",
-        "sentence_numbers": [
-          37
-        ],
-        "char_start": 2892,
-        "char_end": 3114,
-        "text": "Ms. Sullivan now has biopsy-confirmed metastatic breast carcinoma\ninvolving the L3 vertebra, ER positive / PR positive / HER2\nnegative, representing distant recurrence and disease progression\non adjuvant endocrine therapy."
-      },
-      {
-        "document_id": "onc-followup-note",
-        "sentence_numbers": [
-          40
-        ],
-        "char_start": 3235,
-        "char_end": 3330,
-        "text": "PLAN\n\n1. Metastatic breast carcinoma to bone (L3), hormone-receptor\n   positive, HER2 negative."
-      }
-    ],
-    "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "metastatic breast carcinoma involving the L3 vertebra",
-    "merge_reasoning": null,
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [
-        {
-          "severity": "information",
-          "path": "meta.profile",
-          "message": "profile asserted but not validated locally: http://hl7.org/fhir/us/mcode/StructureDefinition/mcode-secondary-cancer-condition"
-        }
-      ],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_e26nd8d7",
-    "run_id": "e2e",
-    "resource_type": "Condition",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "axillary lymphadenopathy",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Condition",
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
-        ]
-      },
-      "verificationStatus": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
-            "code": "confirmed"
-          }
-        ]
-      },
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/condition-category",
-              "code": "problem-list-item"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "coding": [
-          {
-            "system": "http://snomed.info/sct",
-            "code": "127189005",
-            "display": "Axillary lymphadenopathy"
-          }
-        ],
-        "text": "axillary lymphadenopathy"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "clinicalStatus": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
-            "code": "active"
-          }
-        ]
-      }
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          47
-        ],
-        "char_start": 3508,
-        "char_end": 3774,
-        "text": "Vitals:    BP 134/82, HR 72, RR 14, Temp 36.7 C, Wt 71 kg, Ht 163 cm.\nBreast:    Right breast with a firm, fixed mass in the upper outer\n           quadrant, approximately 3.2 cm, at the 10 o'clock position.\n           A firm, mobile right axillary node is palpable."
-      }
-    ],
-    "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Palpable firm, mobile right axillary node is an abnormal physical exam finding.",
-    "merge_reasoning": "Axillary lymphadenopathy is a clinical finding/pathological state that is more appropriately classified as a Condition rather than an Observation.",
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_nhz43rns",
-    "run_id": "e2e",
-    "resource_type": "Condition",
-    "classification": "NEW",
-    "confidence_tier": "CONFIDENT",
-    "confidence_score": 1.0,
-    "status": "pending",
-    "display_label": "breast mass",
-    "flags": [
-      "Stated assertively in source"
-    ],
-    "conflict_group_id": null,
-    "resource": {
-      "resourceType": "Condition",
-      "meta": {
-        "profile": [
-          "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
-        ]
-      },
-      "verificationStatus": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
-            "code": "confirmed"
-          }
-        ]
-      },
-      "category": [
-        {
-          "coding": [
-            {
-              "system": "http://terminology.hl7.org/CodeSystem/condition-category",
-              "code": "problem-list-item"
-            }
-          ]
-        }
-      ],
-      "code": {
-        "coding": [
-          {
-            "system": "http://snomed.info/sct",
-            "code": "89164003",
-            "display": "Breast lump"
-          }
-        ],
-        "text": "breast mass"
-      },
-      "subject": {
-        "reference": "Patient/sullivan-margaret"
-      },
-      "clinicalStatus": {
-        "coding": [
-          {
-            "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
-            "code": "active"
-          }
-        ]
-      }
-    },
-    "citations": [
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          47
-        ],
-        "char_start": 3508,
-        "char_end": 3774,
-        "text": "Vitals:    BP 134/82, HR 72, RR 14, Temp 36.7 C, Wt 71 kg, Ht 163 cm.\nBreast:    Right breast with a firm, fixed mass in the upper outer\n           quadrant, approximately 3.2 cm, at the 10 o'clock position.\n           A firm, mobile right axillary node is palpable."
-      }
-    ],
-    "classification_reasoning": "no match in chart",
-    "extraction_reasoning": "Clinical finding of a firm, fixed right breast mass.",
-    "merge_reasoning": "Breast mass is a physical finding/condition that should be represented as a Condition resource.",
-    "confidence_breakdown": {
-      "certainty": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "Stated assertively"
-      },
-      "coding": {
-        "score": 1.0,
-        "weight": 0.5,
-        "contribution": 0.5,
-        "reason": "1 terminology code"
-      }
-    },
-    "chart_matches": [],
-    "supersedes": [],
-    "conformance": {
-      "valid": true,
-      "level": "r4",
-      "profile": null,
-      "issues": [],
-      "supported": false
-    },
-    "reviewed_at": null,
-    "reviewed_by": null,
-    "rejection_reason": null,
-    "provenance_resource": null,
-    "write_result": null
-  },
-  {
-    "id": "prop_8n259ep5",
+    "id": "prop_0rymbt4p",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "Human epidermal growth factor receptor 2 status: negative",
+    "display_label": "Human epidermal growth factor receptor 2: negative",
     "flags": [
       "Mentioned in 2 notes",
       "Stated assertively in source"
@@ -6363,7 +6079,7 @@
             "display": "HER2 Ag [Presence] in Tissue by Immune stain"
           }
         ],
-        "text": "Human epidermal growth factor receptor 2 status"
+        "text": "Human epidermal growth factor receptor 2"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -6390,13 +6106,13 @@
         "text": "- HER2 (IHC):          NEGATIVE (score 1+), not amplified."
       },
       {
-        "document_id": "onc-consult-note",
+        "document_id": "onc-followup-note",
         "sentence_numbers": [
-          58
+          11
         ],
-        "char_start": 4152,
-        "char_end": 4394,
-        "text": "Ms. Sullivan is a 58-year-old postmenopausal woman with newly\ndiagnosed clinical stage IIB (cT2 cN1 cM0) invasive ductal\ncarcinoma of the right breast, Nottingham grade 2, strongly\nhormone-receptor positive (ER 95%, PR 80%) and HER2 negative."
+        "char_start": 696,
+        "char_end": 1051,
+        "text": "Ms. Sullivan is a 60-year-old postmenopausal woman with a history\nof right breast invasive ductal carcinoma (originally clinical\nstage IIB, ER/PR positive, HER2 negative), treated with neoadjuvant\nchemotherapy followed by right partial mastectomy and sentinel node\nbiopsy in December 2025, adjuvant radiation, and adjuvant anastrozole\nsince February 2026."
       },
       {
         "document_id": "onc-followup-note",
@@ -6410,34 +6126,16 @@
       {
         "document_id": "onc-followup-note",
         "sentence_numbers": [
-          11
-        ],
-        "char_start": 696,
-        "char_end": 1051,
-        "text": "Ms. Sullivan is a 60-year-old postmenopausal woman with a history\nof right breast invasive ductal carcinoma (originally clinical\nstage IIB, ER/PR positive, HER2 negative), treated with neoadjuvant\nchemotherapy followed by right partial mastectomy and sentinel node\nbiopsy in December 2025, adjuvant radiation, and adjuvant anastrozole\nsince February 2026."
-      },
-      {
-        "document_id": "onc-followup-note",
-        "sentence_numbers": [
           18
         ],
         "char_start": 1644,
         "char_end": 1844,
         "text": "CT-guided biopsy\nof the L3 lesion on 02/03/2027 revealed metastatic adenocarcinoma\nconsistent with breast primary, ER positive, PR positive, HER2\nnegative \u2014 concordant with her original tumor profile."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          36
-        ],
-        "char_start": 2852,
-        "char_end": 2910,
-        "text": "- HER2 (IHC):          NEGATIVE (score 1+), not amplified."
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "HER2 status is negative (HER2-). Onco profile rules specify to emit negative results for key assays.",
-    "merge_reasoning": "tumor marker: merged 5 HER2 mentions into one observation",
+    "extraction_reasoning": "HER2 receptor status (HER2-) parsed from ER+/PR+/HER2-. Imitted under oncology exception where negative tumor markers are captured.",
+    "merge_reasoning": "tumor marker: merged 3 HER2 mentions into one observation",
     "confidence_breakdown": {
       "certainty": {
         "score": 1.0,
@@ -6474,14 +6172,14 @@
     "write_result": null
   },
   {
-    "id": "prop_9rwtqvrb",
+    "id": "prop_2nsftk47",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "Ki-67 proliferation index 18 %",
+    "display_label": "Ki-67 labeling index 18 %",
     "flags": [
       "Stated assertively in source"
     ],
@@ -6507,7 +6205,7 @@
             "display": "Cells.Ki-67 nuclear Ag/cells in Tissue by Immune stain"
           }
         ],
-        "text": "Ki-67 proliferation index"
+        "text": "Ki-67 labeling index"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -6541,7 +6239,7 @@
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extraction of Ki-67 tumor marker value. The oncology IG allows tumor markers to be extracted as observations, including intermediate/negative values. The exact percentage is split from its unit.",
+    "extraction_reasoning": "Extraction of Ki-67 tumor marker. The oncology exception applies to tumor markers, which are extracted regardless of value. It has a quantitative measurement (18%) and an associated qualitative description, captured as the quantitative measurement.",
     "merge_reasoning": null,
     "confidence_breakdown": {
       "certainty": {
@@ -6579,14 +6277,14 @@
     "write_result": null
   },
   {
-    "id": "prop_b37ktyvc",
+    "id": "prop_bbp6n1kx",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "Progesterone receptor status: positive",
+    "display_label": "Progesterone receptor: positive",
     "flags": [
       "Mentioned in 2 notes",
       "Stated assertively in source"
@@ -6613,7 +6311,7 @@
             "display": "Progesterone receptor [Interpretation] in Tissue"
           }
         ],
-        "text": "Progesterone receptor status"
+        "text": "Progesterone receptor"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -6642,15 +6340,6 @@
       {
         "document_id": "onc-followup-note",
         "sentence_numbers": [
-          20
-        ],
-        "char_start": 1888,
-        "char_end": 2033,
-        "text": "PAST ONCOLOGIC HISTORY\n- Right breast invasive ductal carcinoma, diagnosed 09/2025,\n  cT2 cN1 cM0 (stage IIB), Nottingham grade 2, ER+/PR+/HER2-."
-      },
-      {
-        "document_id": "onc-followup-note",
-        "sentence_numbers": [
           11
         ],
         "char_start": 696,
@@ -6660,34 +6349,25 @@
       {
         "document_id": "onc-followup-note",
         "sentence_numbers": [
+          20
+        ],
+        "char_start": 1888,
+        "char_end": 2033,
+        "text": "PAST ONCOLOGIC HISTORY\n- Right breast invasive ductal carcinoma, diagnosed 09/2025,\n  cT2 cN1 cM0 (stage IIB), Nottingham grade 2, ER+/PR+/HER2-."
+      },
+      {
+        "document_id": "onc-followup-note",
+        "sentence_numbers": [
           18
         ],
         "char_start": 1644,
         "char_end": 1844,
         "text": "CT-guided biopsy\nof the L3 lesion on 02/03/2027 revealed metastatic adenocarcinoma\nconsistent with breast primary, ER positive, PR positive, HER2\nnegative \u2014 concordant with her original tumor profile."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          35
-        ],
-        "char_start": 2741,
-        "char_end": 2851,
-        "text": "- Progesterone receptor: POSITIVE, nuclear staining in 80% of\n                       tumor cells (Allred 7/8)."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          58
-        ],
-        "char_start": 4152,
-        "char_end": 4394,
-        "text": "Ms. Sullivan is a 58-year-old postmenopausal woman with newly\ndiagnosed clinical stage IIB (cT2 cN1 cM0) invasive ductal\ncarcinoma of the right breast, Nottingham grade 2, strongly\nhormone-receptor positive (ER 95%, PR 80%) and HER2 negative."
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "PR status is positive (PR+).",
-    "merge_reasoning": "tumor marker: merged 6 PR mentions into one observation",
+    "extraction_reasoning": "Progesterone receptor status (PR+) parsed from ER+/PR+/HER2-. Positive status is clinically significant.",
+    "merge_reasoning": "tumor marker: merged 4 PR mentions into one observation",
     "confidence_breakdown": {
       "certainty": {
         "score": 1.0,
@@ -6724,14 +6404,14 @@
     "write_result": null
   },
   {
-    "id": "prop_j40e9mzh",
+    "id": "prop_heksws8w",
     "run_id": "e2e",
     "resource_type": "Observation",
     "classification": "NEW",
     "confidence_tier": "CONFIDENT",
     "confidence_score": 1.0,
     "status": "pending",
-    "display_label": "Estrogen receptor status: positive",
+    "display_label": "Estrogen receptor: POSITIVE",
     "flags": [
       "Mentioned in 2 notes",
       "Stated assertively in source"
@@ -6758,7 +6438,7 @@
             "display": "Estrogen receptor [Interpretation] in Tissue"
           }
         ],
-        "text": "Estrogen receptor status"
+        "text": "Estrogen receptor"
       },
       "subject": {
         "reference": "Patient/sullivan-margaret"
@@ -6771,10 +6451,19 @@
       },
       "effectiveDateTime": "2025-09-04",
       "valueCodeableConcept": {
-        "text": "positive"
+        "text": "POSITIVE"
       }
     },
     "citations": [
+      {
+        "document_id": "onc-followup-note",
+        "sentence_numbers": [
+          11
+        ],
+        "char_start": 696,
+        "char_end": 1051,
+        "text": "Ms. Sullivan is a 60-year-old postmenopausal woman with a history\nof right breast invasive ductal carcinoma (originally clinical\nstage IIB, ER/PR positive, HER2 negative), treated with neoadjuvant\nchemotherapy followed by right partial mastectomy and sentinel node\nbiopsy in December 2025, adjuvant radiation, and adjuvant anastrozole\nsince February 2026."
+      },
       {
         "document_id": "onc-followup-note",
         "sentence_numbers": [
@@ -6796,43 +6485,16 @@
       {
         "document_id": "onc-followup-note",
         "sentence_numbers": [
-          11
-        ],
-        "char_start": 696,
-        "char_end": 1051,
-        "text": "Ms. Sullivan is a 60-year-old postmenopausal woman with a history\nof right breast invasive ductal carcinoma (originally clinical\nstage IIB, ER/PR positive, HER2 negative), treated with neoadjuvant\nchemotherapy followed by right partial mastectomy and sentinel node\nbiopsy in December 2025, adjuvant radiation, and adjuvant anastrozole\nsince February 2026."
-      },
-      {
-        "document_id": "onc-followup-note",
-        "sentence_numbers": [
           18
         ],
         "char_start": 1644,
         "char_end": 1844,
         "text": "CT-guided biopsy\nof the L3 lesion on 02/03/2027 revealed metastatic adenocarcinoma\nconsistent with breast primary, ER positive, PR positive, HER2\nnegative \u2014 concordant with her original tumor profile."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          34
-        ],
-        "char_start": 2451,
-        "char_end": 2740,
-        "text": "BIOMARKER AND PATHOLOGY REVIEW  (right breast core biopsy, 09/04/2025)\n- Histology:           Invasive ductal carcinoma\n- Histologic grade:    Nottingham grade 2 (score 6/9)\n- Estrogen receptor:   POSITIVE, strong nuclear staining in 95% of\n                       tumor cells (Allred 8/8)."
-      },
-      {
-        "document_id": "onc-consult-note",
-        "sentence_numbers": [
-          58
-        ],
-        "char_start": 4152,
-        "char_end": 4394,
-        "text": "Ms. Sullivan is a 58-year-old postmenopausal woman with newly\ndiagnosed clinical stage IIB (cT2 cN1 cM0) invasive ductal\ncarcinoma of the right breast, Nottingham grade 2, strongly\nhormone-receptor positive (ER 95%, PR 80%) and HER2 negative."
       }
     ],
     "classification_reasoning": "no LOINC match in chart",
-    "extraction_reasoning": "Extracting estrogen receptor status. It is a key biomarker (positive) with quantitative details (95% staining, Allred 8/8).",
-    "merge_reasoning": "tumor marker: merged 5 ER mentions into one observation",
+    "extraction_reasoning": "Estrogen receptor status is a key oncology tumor biomarker that determines targeted therapy decisions.",
+    "merge_reasoning": "tumor marker: merged 2 ER mentions into one observation",
     "confidence_breakdown": {
       "certainty": {
         "score": 1.0,

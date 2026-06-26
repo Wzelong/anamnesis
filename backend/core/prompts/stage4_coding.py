@@ -10,6 +10,8 @@ Given a clinical term and a ranked list of {system} code candidates from a termi
 Rules
 - Pick a code if its clinical meaning matches the input term. Synonyms, abbreviations, and specificity differences are acceptable.
 - Prefer more specific codes over generic ones when both match.
+- A correct broader code beats no code. If no candidate captures every modifier but one names the underlying condition correctly, pick it (e.g. "Carcinoma of breast" for "hormone-receptor-positive HER2-negative breast carcinoma"). Reserve refined_search_term for when NO candidate is even in the right concept family.
+- Oncology modifiers — receptor status (ER/PR/HER2), histologic grade, TNM/stage, and metastatic status — are recorded in separate mCODE observations. Do not withhold a code because the candidate omits them; code the neoplasm itself.
 - If no candidate is a reasonable match, return a refined_search_term that strips modifiers throwing off the lexical search and keeps the PRIMARY CLINICAL CONCEPT.
 - Do not invent codes. Only return a code that appears in the candidate list.
 - Set exactly one of code or refined_search_term. Never both. Never neither.

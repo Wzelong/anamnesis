@@ -90,9 +90,22 @@ def body_site_tokens(resource: dict) -> set[str]:
     return toks
 
 
+def _drop_primary_organ_bodysite(resource: dict, primary_sites: set[str] | None) -> None:
+    """A metastasis is not located in the primary organ. If a secondary cancer's
+    bodySite is wholly the primary cancer's site (the LLM leaked the origin organ
+    onto a distant lesion), drop it — a missing bodySite beats a wrong one. Skipped
+    when the met names a distinct site (keeps "bone"), or no primary is known."""
+    if not primary_sites:
+        return
+    met = body_site_tokens(resource)
+    if met and met <= primary_sites:
+        resource.pop("bodySite", None)
+
+
 def apply_specialty_profiles(
     resource: dict, resource_type: str, candidate_profiles: list[str],
     item: dict | None = None, cancer_sites: set[str] | None = None,
+    primary_cancer_sites: set[str] | None = None,
 ) -> dict:
     """Select and attach the one specialty profile that fits this resource.
 
@@ -109,6 +122,8 @@ def apply_specialty_profiles(
         role = classify_cancer_condition(resource)
         if role is not None:
             selected = _select_for_role(role, candidate_profiles)
+            if role == "secondary":
+                _drop_primary_organ_bodysite(resource, primary_cancer_sites)
     elif resource_type == "Observation":
         spec = spec_for_codings((resource.get("code") or {}).get("coding") or [])
         if spec is not None:

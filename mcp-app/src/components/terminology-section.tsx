@@ -208,14 +208,14 @@ function CodeList({
   return (
     <div className="flex-1 min-h-0 overflow-y-auto divide-y">
       {fixedGroups.map((g) => (
-        <div key={g.title}>
+        <div key={g.title} className="divide-y">
           <GroupHeader>Required by {g.title}</GroupHeader>
           {g.codes.map((c) => <FixedRow key={c.system + c.code} item={c} />)}
         </div>
       ))}
 
       {hasBundles && (
-        <div>
+        <div className="divide-y">
           <GroupHeader>Bundles</GroupHeader>
           {openBundles.map((s) => (
             <BundleRow key={"sys:" + s} title={SYSTEMS[s]?.label ?? s} meta="all concepts" onTrash={() => onToggleSystem(s)} />
@@ -227,7 +227,7 @@ function CodeList({
       )}
 
       {loose.length > 0 && (
-        <div>
+        <div className="divide-y">
           <GroupHeader>Codes</GroupHeader>
           {loose.map(({ c, i }) =>
             editIndex === i ? (

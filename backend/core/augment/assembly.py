@@ -82,9 +82,15 @@ def assemble_proposals(
         built.append((result, build_fhir_resource(result.candidate, patient_id, enc_map, note_date=note_date)))
 
     cancer_sites: set[str] = set()
+    primary_cancer_sites: set[str] = set()
     for result, resource in built:
-        if result.candidate.resource_type == "Condition" and classify_cancer_condition(resource) is not None:
-            cancer_sites |= body_site_tokens(resource)
+        if result.candidate.resource_type == "Condition":
+            role = classify_cancer_condition(resource)
+            if role is not None:
+                toks = body_site_tokens(resource)
+                cancer_sites |= toks
+                if role == "primary":
+                    primary_cancer_sites |= toks
 
     proposals: list[Proposal] = []
     for result, resource in built:
@@ -96,7 +102,7 @@ def assemble_proposals(
             resource = apply_overlay(resource, rule)
             resource = apply_specialty_profiles(
                 resource, result.candidate.resource_type, rule.candidate_profiles,
-                result.candidate.item, cancer_sites,
+                result.candidate.item, cancer_sites, primary_cancer_sites,
             )
             if not code_allowed(resource, rule.coding_systems, rule.pinned, rule.fixed):
                 continue  # codeset: system not open and code not pinned/fixed -> drop

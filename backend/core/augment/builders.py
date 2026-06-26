@@ -214,7 +214,6 @@ def _build_medication_request(item: dict, patient_id: str, encounter_ref: str | 
         "reportedBoolean": True,
         "medicationCodeableConcept": _cc(item.get("coding", []), item.get("name", "")),
         "subject": {"reference": f"Patient/{patient_id}"},
-        "requester": {"reference": f"Patient/{patient_id}"},
     }
     if note_date:
         resource["authoredOn"] = note_date

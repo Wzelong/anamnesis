@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react"
 import type { App } from "@modelcontextprotocol/ext-apps"
-import { ArrowUp, Check, ChevronDown, FileText, ListChecks, Loader2, PenTool, Play, Plus, Trash2, Undo2, Upload } from "lucide-react"
+import { ArrowUp, Check, ChevronDown, FileText, History, ListChecks, Loader2, PenTool, Play, Plus, RotateCcw, Trash2, Upload } from "lucide-react"
 import type { ExtractionResult, Preset, PromptOverride } from "../types"
 import { IG_CATALOG, igById } from "../lib/ig-catalog"
 import { toast } from "sonner"
@@ -11,6 +11,7 @@ import { RT_LABEL } from "../lib/proposal-meta"
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "./ui/empty"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip"
 import { Button } from "./ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu"
 import dump from "../demo/proposals.json"
 
 const MAX_HEIGHT = 120
@@ -193,22 +194,33 @@ export function PromptsSection({
   const dkey = `${activeRt}::${lane}`
   // Capture is edit (seeded from the base routing block); extract is add-only (empty).
   const override = presetAddon(preset, activeRt, lane)
-  const saved = lane === "capture" ? (override || captureBase[activeRt] || "") : override
+  const base = lane === "capture" ? (captureBase[activeRt] || "") : ""
+  const saved = lane === "capture" ? (override || base) : override
   const addonText = drafts[dkey] ?? saved
   const dirty = drafts[dkey] !== undefined && drafts[dkey] !== saved
+  const hasOverride = !!laneMap(preset, lane)[activeRt]
+  // Differs from the IG base when a customization is saved or the current draft diverges from base.
+  const differsFromBase = hasOverride || addonText.trim() !== base.trim()
   const editAddon = (text: string) => setDrafts((d) => ({ ...d, [dkey]: text }))
 
-  const revert = () => setDrafts((d) => { const n = { ...d }; delete n[dkey]; return n })
+  const revertSaved = () => setDrafts((d) => { const n = { ...d }; delete n[dkey]; return n })
+
+  const revertBase = () => {
+    const next = { ...laneMap(preset, lane) }
+    delete next[activeRt]
+    onChange(lane === "capture" ? { capture_prompts: next } : { prompts: next })
+    revertSaved()
+  }
 
   const save = () => {
     const next = { ...laneMap(preset, lane), [activeRt]: { active_version: 1, versions: [{ version: 1, text: addonText.trim() }] } }
     onChange(lane === "capture" ? { capture_prompts: next } : { prompts: next })
-    revert()
+    revertSaved()
   }
 
   const [drafting, setDrafting] = useState(false)
   const [running, setRunning] = useState(false)
-  const [confirming, setConfirming] = useState<"save" | "revert" | null>(null)
+  const [confirming, setConfirming] = useState<"save" | "revert_saved" | "revert_base" | null>(null)
 
   const draftPrompt = async (ideas: string) => {
     setDrafting(true)
@@ -224,13 +236,13 @@ export function PromptsSection({
 
   const runTest = async () => {
     if (!active) return
-    setLeftView("testing")
     setRunning(true)
     try {
       const capture = drafts[`${activeRt}::capture`] ?? presetAddon(preset, activeRt, "capture")
       const extract = drafts[`${activeRt}::extract`] ?? presetAddon(preset, activeRt, "extract")
       const items = await testAddon(app, activeRt, active.text, capture, extract)
       setResults((r) => ({ ...r, [active.id]: { rt: activeRt, items } }))
+      setLeftView("testing")
     } catch (e) {
       toast.error(`Test failed: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
@@ -367,19 +379,32 @@ export function PromptsSection({
                 <Check className="size-4" />
               </button>
             </Tip>
-            <Tip label="Revert to saved">
-              <button
-                onClick={() => setConfirming("revert")}
-                disabled={!dirty || drafting || running}
-                aria-label="Revert to saved"
-                className={cn(
-                  "size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent",
-                  confirming === "revert" && "bg-accent text-foreground",
-                )}
-              >
-                <Undo2 className="size-3.5" />
-              </button>
-            </Tip>
+            <DropdownMenu>
+              <Tip label="Revert">
+                <DropdownMenuTrigger asChild>
+                  <button
+                    disabled={(!dirty && !differsFromBase) || drafting || running}
+                    aria-label="Revert"
+                    className={cn(
+                      "size-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                      (confirming === "revert_saved" || confirming === "revert_base") && "bg-accent text-foreground",
+                    )}
+                  >
+                    <RotateCcw className="size-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+              </Tip>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem disabled={!dirty} onSelect={() => setConfirming("revert_saved")}>
+                  <History className="size-3.5" />
+                  Revert to last saved
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={!differsFromBase} onSelect={() => setConfirming("revert_base")}>
+                  <RotateCcw className="size-3.5" />
+                  Revert to default
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
@@ -389,7 +414,12 @@ export function PromptsSection({
             rt={activeRt}
             lane={lane}
             onCancel={() => setConfirming(null)}
-            onConfirm={() => { confirming === "save" ? save() : revert(); setConfirming(null) }}
+            onConfirm={() => {
+              if (confirming === "save") save()
+              else if (confirming === "revert_saved") revertSaved()
+              else revertBase()
+              setConfirming(null)
+            }}
           />
         ) : (
           <>
@@ -581,7 +611,7 @@ function PromptConfirmView({
   onCancel,
   onConfirm,
 }: {
-  action: "save" | "revert"
+  action: "save" | "revert_saved" | "revert_base"
   rt: string
   lane: Lane
   onCancel: () => void
@@ -589,27 +619,50 @@ function PromptConfirmView({
 }) {
   const isSave = action === "save"
   const label = RT_LABEL[rt] ?? rt
+  const laneEl = <span className="font-medium text-foreground">{lane}</span>
+  const labelEl = <span className="font-medium text-foreground">{label}</span>
+
+  const copy = {
+    save: {
+      icon: <Check className="size-5" />,
+      title: "Save prompt",
+      desc: <>Saves your {laneEl} rules for {labelEl} as the active version used in extraction.</>,
+      button: "Save",
+      btnIcon: <Check className="size-3.5" />,
+    },
+    revert_saved: {
+      icon: <History className="size-5" />,
+      title: "Revert to last saved",
+      desc: <>Discards your unsaved edits to the {laneEl} rules for {labelEl} and restores the last saved version.</>,
+      button: "Revert",
+      btnIcon: <History className="size-3.5" />,
+    },
+    revert_base: {
+      icon: <RotateCcw className="size-5" />,
+      title: "Revert to default",
+      desc: lane === "capture"
+        ? <>Discards your customization and restores the IG default capture rules for {labelEl}.</>
+        : <>Removes your extract add-on for {labelEl} entirely, leaving the IG default with no customization.</>,
+      button: "Revert",
+      btnIcon: <RotateCcw className="size-3.5" />,
+    },
+  }[action]
+
   return (
     <Empty className="flex-1 min-h-0">
       <EmptyHeader>
-        <EmptyMedia variant="icon" className={cn(isSave ? "text-primary" : "text-destructive")}>
-          {isSave ? <Check className="size-5" /> : <Undo2 className="size-5" />}
+        <EmptyMedia variant="icon" className={cn(isSave ? "text-primary" : "text-muted-foreground")}>
+          {copy.icon}
         </EmptyMedia>
-        <EmptyTitle>{isSave ? "Save prompt" : "Revert changes"}</EmptyTitle>
-        <EmptyDescription>
-          {isSave ? (
-            <>Saves your <span className="font-medium text-foreground">{lane}</span> rules for <span className="font-medium text-foreground">{label}</span> as the active version used in extraction.</>
-          ) : (
-            <>Discards your unsaved edits to the <span className="font-medium text-foreground">{lane}</span> rules for <span className="font-medium text-foreground">{label}</span> and restores the last saved version.</>
-          )}
-        </EmptyDescription>
+        <EmptyTitle>{copy.title}</EmptyTitle>
+        <EmptyDescription>{copy.desc}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <div className="flex items-center justify-center gap-2">
           <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
-          <Button size="sm" variant={isSave ? "default" : "destructive"} onClick={onConfirm}>
-            {isSave ? <Check className="size-3.5" /> : <Undo2 className="size-3.5" />}
-            {isSave ? "Save" : "Revert"}
+          <Button size="sm" variant={isSave ? "default" : "secondary"} onClick={onConfirm}>
+            {copy.btnIcon}
+            {copy.button}
           </Button>
         </div>
       </EmptyContent>

@@ -14,9 +14,11 @@ from __future__ import annotations
 _CONDITION_EXTRACT = """\
 Oncology (mCODE) — when the snippet describes cancer:
 - Name the tumor by its histology and type as written ("infiltrating ductal carcinoma", "ductal carcinoma in situ") so it resolves to a SNOMED cancer disorder.
-- Set body_site to the cancer's anatomic site ("right breast", "lower outer quadrant"); the body location is coded separately.
+- For a PRIMARY tumor, set body_site to its site of origin ("right breast", "lower outer quadrant").
+- For a METASTASIS, set body_site to where the metastatic lesion sits ("L3 vertebra", "bone", "liver") — NOT the primary organ. A bone metastasis from breast cancer has body_site "L3 vertebra" / "bone", never "breast". If the lesion's site is not stated in THIS snippet, leave body_site null — do not fall back to the primary organ. The body location is coded separately.
 - Name a metastasis as "metastatic <type>" or "secondary malignant neoplasm of <site>" so spread is distinguishable from a new primary — the two map to different mCODE profiles. Leave a primary tumor named by its site of origin.
-- "secondary" here means metastatic. Do not treat "secondary malignant neoplasm" as an "X secondary to Y" split."""
+- "secondary" here means metastatic. Do not treat "secondary malignant neoplasm" as an "X secondary to Y" split.
+- "metastatic <tumor> to <site>" / "<tumor> metastasis to <site>" / "<tumor> involving <site>" — body_site is <site>, the metastatic location, even though the tumor is named by its primary organ. Example: "metastatic breast carcinoma to bone (L3)" -> name "metastatic breast carcinoma", body_site ["L3 vertebra", "bone"] (NOT "breast")."""
 
 _OBSERVATION_EXTRACT = """\
 Oncology (mCODE) — capture these as observation results:

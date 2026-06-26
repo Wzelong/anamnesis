@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from core.augment.builders import build_fhir_resource
+from core.augment.mcode import apply_specialty_profiles
 from core.code_candidates import _code_body_site, _extract_search_terms
 from core.effective_profile import resolve_effective_profile
 from core.schemas import MergedCandidate
@@ -68,3 +69,52 @@ def test_builder_partial_coding_alignment():
             "body_site": ["right breast", "axilla"], "body_site_coding": [bs, None]}
     res = build_fhir_resource(_candidate(item), "pt1", {})
     assert res["bodySite"] == [{"coding": [bs], "text": "right breast"}, {"text": "axilla"}]
+
+
+# -- Deterministic backstop: a metastasis is not located in the primary organ ----
+
+_CONDITION_PROFILES = _mcode_eff().rule("Condition").candidate_profiles
+
+
+def _secondary(body_site: list[str]) -> dict:
+    return {
+        "resourceType": "Condition",
+        "code": {"text": "metastatic breast carcinoma"},
+        "bodySite": [{"text": s} for s in body_site],
+    }
+
+
+def _apply(resource: dict, primary_sites: set[str]) -> dict:
+    return apply_specialty_profiles(
+        resource, "Condition", _CONDITION_PROFILES, {}, primary_sites, primary_sites
+    )
+
+
+def test_backstop_drops_primary_organ_on_metastasis():
+    res = _apply(_secondary(["breast"]), {"breast"})
+    assert "bodySite" not in res
+
+
+def test_backstop_keeps_distinct_metastatic_site():
+    res = _apply(_secondary(["L3 vertebra"]), {"breast"})
+    assert [b["text"] for b in res["bodySite"]] == ["L3 vertebra"]
+
+
+def test_backstop_keeps_when_any_site_is_distinct():
+    res = _apply(_secondary(["right breast", "bone"]), {"breast"})
+    assert {b["text"] for b in res["bodySite"]} == {"right breast", "bone"}
+
+
+def test_backstop_skips_when_no_primary_known():
+    res = _apply(_secondary(["breast"]), set())
+    assert [b["text"] for b in res["bodySite"]] == ["breast"]
+
+
+def test_backstop_leaves_primary_condition_untouched():
+    primary = {
+        "resourceType": "Condition",
+        "code": {"text": "invasive ductal carcinoma"},
+        "bodySite": [{"text": "right breast"}],
+    }
+    res = apply_specialty_profiles(primary, "Condition", _CONDITION_PROFILES, {}, {"breast"}, {"breast"})
+    assert [b["text"] for b in res["bodySite"]] == ["right breast"]
