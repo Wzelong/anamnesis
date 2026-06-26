@@ -5,7 +5,6 @@ import { callTool, parseStructured } from "../mcp"
 import { cn } from "../lib/cn"
 import { SYSTEMS, uriOf } from "../lib/systems"
 import { Input } from "./ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 interface CodeResult {
   system: string
@@ -55,13 +54,11 @@ export function CodeSearch({
   onApply?: (coding: { system: string; code: string; display: string }) => void
 }) {
   const [query, setQuery] = useState(initialQuery)
-  const [mode, setMode] = useState<string>("auto")
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(false)
   const reqId = useRef(0)
 
-  const autoSystems = systemsForResource(resourceType)
-  const activeSystems = mode === "auto" ? autoSystems : [mode]
+  const activeSystems = systemsForResource(resourceType)
 
   useEffect(() => {
     const q = query.trim()
@@ -89,7 +86,7 @@ export function CodeSearch({
       }
     }, 300)
     return () => clearTimeout(t)
-  }, [query, mode, app, resourceType])
+  }, [query, app, resourceType])
 
   const multi = activeSystems.length > 1
   const filled = groups.filter((g) => g.results.length > 0)
@@ -99,7 +96,7 @@ export function CodeSearch({
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      <div className="flex items-center justify-between gap-2 px-3 h-10 border-b shrink-0">
+      <div className="flex items-center gap-2 px-3 h-10 border-b shrink-0">
         <div className="relative flex-1 min-w-0 -ml-2">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <Input
@@ -110,17 +107,6 @@ export function CodeSearch({
             className="pl-7 h-7 text-xs border-0 shadow-none focus-visible:ring-0 bg-transparent"
           />
         </div>
-        {autoSystems.length > 1 && (
-          <Select value={mode} onValueChange={setMode}>
-            <SelectTrigger className="h-7 gap-1 text-xs shrink-0 border-0 shadow-none focus-visible:ring-0 bg-transparent text-muted-foreground hover:text-foreground px-1.5">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="auto">Auto</SelectItem>
-              {autoSystems.map((s) => <SelectItem key={s} value={s}>{SYSTEMS[s]?.label ?? s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        )}
       </div>
 
       {current && (

@@ -185,6 +185,7 @@ export function ReviewApp({
   const [userConfig, setUserConfig] = useState<UserConfig | null>(null)
   const [configLoaded, setConfigLoaded] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [bar, setBar] = useState({ w: 0, ms: 0 })
   const [startMs, setStartMs] = useState<number | null>(null)
   const [result, setResult] = useState<ExtractionResult | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -255,22 +256,27 @@ export function ReviewApp({
     setStartMs(Date.now())
     const start = Date.now()
     let done = false
-    let frame: ReturnType<typeof setTimeout> | undefined
+    // The bar is animated by a single long CSS width transition the compositor
+    // runs on the GPU — smooth regardless of JS load. JS only steps the verb.
+    setProgress(0)
+    setBar({ w: 0, ms: 0 })
+    const open = setTimeout(() => setBar({ w: 95, ms: LOADING_TOTAL_MS }), 30)
+    let verbFrame: ReturnType<typeof setTimeout> | undefined
     const tick = () => {
       if (done) return
-      const t = Math.min((Date.now() - start) / LOADING_TOTAL_MS, 1)
-      // ease-out so it slows as it approaches the 0.95 ceiling
-      setProgress(0.95 * (1 - Math.pow(1 - t, 2)))
-      frame = setTimeout(tick, 80)
+      setProgress(Math.min((Date.now() - start) / LOADING_TOTAL_MS, 0.95))
+      verbFrame = setTimeout(tick, 250)
     }
     tick()
     const settle = () => {
       done = true
-      clearTimeout(frame)
+      clearTimeout(open)
+      clearTimeout(verbFrame)
       setProgress(1)
+      setBar({ w: 100, ms: 300 })
       setTimeout(onDone, 450)
     }
-    const cancel = () => { done = true; clearTimeout(frame) }
+    const cancel = () => { done = true; clearTimeout(open); clearTimeout(verbFrame) }
     return { settle, cancel }
   }
 
@@ -568,8 +574,8 @@ export function ReviewApp({
             <img src={LOGO_URL} alt="Anamnesis" width={40} height={40} className="size-10 mx-auto animate-pulse" />
             <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full bg-[#3A4660] rounded-full transition-[width] duration-200 ease-out"
-                style={{ width: `${Math.round(progress * 100)}%` }}
+                className="h-full bg-[#3A4660] rounded-full"
+                style={{ width: `${bar.w}%`, transition: `width ${bar.ms}ms cubic-bezier(0,0,0.2,1)` }}
               />
             </div>
             <p className="text-xs text-muted-foreground text-center tabular-nums">
