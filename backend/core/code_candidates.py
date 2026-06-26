@@ -19,14 +19,15 @@ from dataclasses import dataclass, field
 from google import genai
 
 from core.extraction import parse_structured
-from core.prompts import PROMPT_CODE_SELECT
-from core.retrieval import ApiRetriever, Retriever, SearchResult, union_search
+from core.prompts import build_code_select_prompt
+from core.retrieval import ApiRetriever, Retriever, SearchResult, search_with_backoff, union_search
 from core.mcode_obs import (
     ROLE_TUMOR_MARKER,
     fixed_coding as _mcode_fixed_coding,
     is_tumor_marker,
     match_mcode_obs,
     match_tnm_category,
+    match_tumor_marker_fixed,
 )
 from core.schemas import CodeSelectorResult, MergedCandidate
 from core.systems import RETRIEVABLE, SYSTEM_URIS, URI_TO_KEY
@@ -158,9 +159,13 @@ def match_fixed(resource_type: str, item: dict, effective=None) -> list[dict] | 
         tnm = match_tnm_category(item.get("value") or "")  # value-specific; beats the broad "stage" term
         if tnm is not None:
             return tnm
-        spec = match_mcode_obs(item.get("full_name") or item.get("name") or "")
+        name = item.get("full_name") or item.get("name") or ""
+        spec = match_mcode_obs(name)
         if spec is not None:
             return _mcode_fixed_coding(spec)
+        marker = match_tumor_marker_fixed(name)  # ER/PR/HER2/Ki-67 -> fixed LOINC (role tag still shapes value)
+        if marker is not None:
+            return marker
     return match_us_core_fixed(resource_type, item)
 
 
@@ -272,6 +277,21 @@ def _format_candidates_for_llm(results: list[SearchResult]) -> str:
     return "\n".join(lines)
 
 
+async def _refine_query(prompt: str, term: str, system: str, client: genai.Client, model: str) -> str | None:
+    """Ask the selector to rewrite a term the lexical search missed into the shape
+    the system indexes. Reached when retrieval returned zero candidates."""
+    user_msg = (
+        f'Term: "{term}"\n\nCandidates:\n'
+        f'(none - the {system.upper()} search returned no results; '
+        f'return a refined_search_term in the form {system.upper()} indexes)'
+    )
+    result = await parse_structured(
+        client, model, prompt, user_msg, CodeSelectorResult,
+        stage="stage4", call_type=f"code_refine_{system}",
+    )
+    return result.refined_search_term if (result and result.refined_search_term) else None
+
+
 async def _select_code(
     term: str,
     system: str,
@@ -280,12 +300,22 @@ async def _select_code(
     model: str,
     retriever: "Retriever",
 ) -> dict | None:
+    prompt = build_code_select_prompt(system)
+
+    # Zero retrieval hits: a verbose term the lexical APIs missed. Let the LLM
+    # rewrite it into the system's indexed shape, then retrieve that (with token
+    # backoff). Previously this path was unreachable on empty results.
     if not search_results:
-        return None
+        refined = await _refine_query(prompt, term, system, client, model)
+        if not refined:
+            return None
+        search_results = await search_with_backoff(retriever, refined, system, 10)
+        if not search_results:
+            return None
+        term = refined
 
     formatted = _format_candidates_for_llm(search_results)
     user_msg = f'Term: "{term}"\n\nCandidates:\n{formatted}'
-    prompt = PROMPT_CODE_SELECT.format(system=system.upper())
 
     result = await parse_structured(
         client, model, prompt, user_msg, CodeSelectorResult,
@@ -301,7 +331,7 @@ async def _select_code(
         return {"system": SYSTEM_URIS[system], "code": result.code, "display": term}
 
     if result.refined_search_term:
-        refined_results = await retriever.search(result.refined_search_term, system, 10)
+        refined_results = await search_with_backoff(retriever, result.refined_search_term, system, 10)
         if not refined_results:
             return None
 

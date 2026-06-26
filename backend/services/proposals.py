@@ -284,7 +284,7 @@ async def _execute_stages(
     await emit("stage2_extract", {"candidates": total_candidates})
 
     await emit("stage3_merge")
-    stage3 = await merge_across_notes(stage2, client, model=model, cache=_cache("stage3"))
+    stage3 = await merge_across_notes(stage2, client, model=model, cache=_cache("stage3"), effective=effective)
     await emit("stage3_merge", {"candidates": len(stage3.candidates)})
 
     await emit("stage4_code")

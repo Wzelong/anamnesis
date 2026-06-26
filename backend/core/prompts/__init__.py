@@ -15,7 +15,7 @@ working unchanged.
 # prompt_version), and the doc guardrail (model, prompt_version, sha256(text)).
 # Bump on any prompt edit so cached results from the old prompt don't bleed
 # into a new run.
-PROMPT_VERSION = "2026-06-16.03"
+PROMPT_VERSION = "2026-06-25.01"
 
 from core.prompts.stage1_scan import PROMPT_SCAN
 from core.prompts.stage2_parse import (
@@ -29,7 +29,11 @@ from core.prompts.stage2_parse import (
     PROMPTS_BY_TYPE,
 )
 from core.prompts.stage3_merge import PROMPT_MERGE_ADJUDICATE
-from core.prompts.stage4_coding import PROMPT_CODE_SELECT
+from core.prompts.stage4_coding import (
+    PROMPT_CODE_SELECT,
+    SYSTEM_REFINE_HINTS,
+    build_code_select_prompt,
+)
 from core.prompts.stage5_reconcile import PROMPT_RECONCILE, RECONCILE_TYPE_RULES
 
 __all__ = [
@@ -45,6 +49,8 @@ __all__ = [
     "PROMPTS_BY_TYPE",
     "PROMPT_MERGE_ADJUDICATE",
     "PROMPT_CODE_SELECT",
+    "SYSTEM_REFINE_HINTS",
+    "build_code_select_prompt",
     "PROMPT_RECONCILE",
     "RECONCILE_TYPE_RULES",
 ]

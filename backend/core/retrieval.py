@@ -36,10 +36,41 @@ class Retriever(Protocol):
     async def search(self, term: str, system: str, top_k: int = 10) -> list[SearchResult]: ...
 
 
-async def union_search(
-    retriever: "Retriever", queries: list[str], system: str, top_k: int = 10
+def _backoff_queries(term: str) -> list[str]:
+    """Progressively shorter lexical variants of a verbose term, most-specific
+    first. The live APIs match lexically, so a long descriptive phrase often
+    returns nothing while its head concept hits (e.g. 'ultrasound-guided core
+    needle biopsy' misses, 'core needle biopsy' hits). Drops a comma tail and
+    leading modifiers, then keeps trailing head-noun windows."""
+    norm = " ".join((term or "").replace("-", " ").split())
+    if not norm:
+        return []
+    tokens = norm.split()
+    variants: list[str] = []
+    _lead_drop = {"of", "the", "a", "an", "with", "for", "in", "and"}
+
+    def add(v: str) -> None:
+        parts = v.strip().split()
+        while parts and parts[0].lower() in _lead_drop:
+            parts = parts[1:]
+        v = " ".join(parts)
+        if v and v.lower() not in {x.lower() for x in variants}:
+            variants.append(v)
+
+    if "," in term:
+        add(term.split(",")[0])
+    for k in (1, 2):
+        if len(tokens) > k + 1:
+            add(" ".join(tokens[k:]))
+    for n in (3, 2):
+        if len(tokens) > n:
+            add(" ".join(tokens[-n:]))
+    return variants
+
+
+async def _run_union(
+    retriever: "Retriever", queries: list[str], system: str, top_k: int
 ) -> list[SearchResult]:
-    """Run every query, union candidates by code (first/best rank wins), re-rank."""
     lists = await asyncio.gather(
         *(retriever.search(q, system, top_k) for q in queries), return_exceptions=True
     )
@@ -54,6 +85,35 @@ async def union_search(
     merged = sorted(best.values(), key=lambda r: -r.score)[:top_k]
     return [SearchResult(code=r.code, display=r.display, score=r.score, rank=i + 1)
             for i, r in enumerate(merged)]
+
+
+async def union_search(
+    retriever: "Retriever", queries: list[str], system: str, top_k: int = 10
+) -> list[SearchResult]:
+    """Run every query, union candidates by code (best score wins), re-rank.
+
+    On a total miss, retry once with shorter backoff variants of each query, so a
+    verbose term that no candidate matched still resolves to its head concept."""
+    merged = await _run_union(retriever, queries, system, top_k)
+    if merged:
+        return merged
+    tried = {q.lower() for q in queries}
+    backoff: list[str] = []
+    for q in queries:
+        for v in _backoff_queries(q):
+            if v.lower() not in tried:
+                tried.add(v.lower())
+                backoff.append(v)
+    if not backoff:
+        return merged
+    return await _run_union(retriever, backoff, system, top_k)
+
+
+async def search_with_backoff(
+    retriever: "Retriever", term: str, system: str, top_k: int = 10
+) -> list[SearchResult]:
+    """Single-term search with the same head-concept backoff as `union_search`."""
+    return await union_search(retriever, [term], system, top_k)
 
 
 class ApiRetriever:

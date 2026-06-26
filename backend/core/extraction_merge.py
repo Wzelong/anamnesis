@@ -22,6 +22,7 @@ from pydantic import BaseModel, ValidationError
 
 from core.cache import JsonCache
 from core.extraction import StageTwoOutput, parse_structured as _parse_structured
+from core.mcode_obs import canonical_tumor_marker
 from core.prompts import PROMPT_MERGE_ADJUDICATE, PROMPT_VERSION
 from core.schemas import MergeAdjudicationResult, MergedCandidate, SourceRef
 
@@ -449,12 +450,98 @@ def _collapse_multifocal_conditions(candidates: list[MergedCandidate]) -> list[M
     return out
 
 
+_POS_WORDS = ("positive", "reactive", "detected", "overexpress", "amplified")
+_NEG_WORDS = ("negative", "non-reactive", "nonreactive", "not detected", "not amplified")
+
+
+def _marker_polarity(value: str) -> str:
+    """'pos' | 'neg' | 'none' — the result interpretation a marker value carries.
+    'none' is a quantitative or unlabeled value (Ki-67 percentage, raw score)."""
+    v = (value or "").lower()
+    if any(w in v for w in _NEG_WORDS):
+        return "neg"
+    if any(w in v for w in _POS_WORDS):
+        return "pos"
+    return "none"
+
+
+def _merge_marker_cluster(family: str, members: list[MergedCandidate]) -> MergedCandidate:
+    """One observation from same-marker mentions. The survivor prefers an
+    interpretation value (the mCODE headline, e.g. 'positive'); absent one, the
+    most complete member wins (keeps quantitative-only markers like Ki-67 %).
+    Every mention's source ref is unioned, so no provenance is dropped."""
+    if len(members) == 1:
+        return members[0]
+    interp = [m for m in members if _marker_polarity(str(m.item.get("value", ""))) != "none"]
+    pool = interp or members
+    survivor = max(pool, key=lambda c: sum(1 for v in c.item.values() if v not in (None, "", [])))
+    refs: list[SourceRef] = []
+    seen: set = set()
+    for c in members:
+        for r in c.source_refs:
+            k = (r.document_id, tuple(r.source_sentences))
+            if k not in seen:
+                seen.add(k)
+                refs.append(r)
+    return MergedCandidate(
+        resource_type="Observation",
+        item=dict(survivor.item),
+        source_refs=refs,
+        encounter_key=survivor.encounter_key,
+        merge_reasoning=f"tumor marker: merged {len(members)} {family} mentions into one observation",
+    )
+
+
+def _merge_marker_family(family: str, members: list[MergedCandidate]) -> list[MergedCandidate]:
+    """Collapse one marker family to a single observation per distinct result.
+
+    Concordant mentions (all positive, or all negative, plus any quantitative)
+    merge into one. Conflicting interpretations (positive AND negative) stay
+    separate so reconciliation/review surfaces the contradiction rather than
+    silently picking a winner."""
+    pos = [m for m in members if _marker_polarity(str(m.item.get("value", ""))) == "pos"]
+    neg = [m for m in members if _marker_polarity(str(m.item.get("value", ""))) == "neg"]
+    none = [m for m in members if _marker_polarity(str(m.item.get("value", ""))) == "none"]
+    if pos and neg:
+        buckets = [b for b in (pos, neg, none) if b]
+    else:
+        buckets = [(pos or neg) + none] if (pos or neg) else [none]
+    return [_merge_marker_cluster(family, b) for b in buckets if b]
+
+
+def _collapse_tumor_markers(candidates: list[MergedCandidate], *, active: bool) -> list[MergedCandidate]:
+    """Collapse repeated mentions of one tumor marker into a single observation.
+
+    mCODE-gated. Receptor markers (ER/PR/HER2/Ki-67) are stable tumor
+    characteristics, so they dedupe at patient level rather than per encounter —
+    the encounter bucket is unreliable here (a marker's date is often unstated, so
+    siblings in one note land in different buckets). Polarity-aware: discordant
+    results are kept apart."""
+    if not active:
+        return candidates
+    out: list[MergedCandidate] = []
+    families: dict[str, list[MergedCandidate]] = {}
+    for c in candidates:
+        family = (
+            canonical_tumor_marker(c.item.get("name") or c.item.get("full_name") or "")
+            if c.resource_type == "Observation" else None
+        )
+        if family is None:
+            out.append(c)
+            continue
+        families.setdefault(family, []).append(c)
+    for family, members in families.items():
+        out.extend(_merge_marker_family(family, members))
+    return out
+
+
 async def merge_across_notes(
     stage2_outputs: list[StageTwoOutput],
     client: genai.Client,
     *,
     model: str,
     cache: JsonCache | None = None,
+    effective=None,
 ) -> StageThreeOutput:
     """Run Stage 3: cross-note dedupe with deterministic-first then LLM-adjudicated merge.
 
@@ -477,6 +564,14 @@ async def merge_across_notes(
     if not stage2_outputs:
         return StageThreeOutput()
 
+    obs_rule = effective.rule("Observation") if effective is not None else None
+    markers_active = bool(obs_rule and obs_rule.candidate_profiles)
+
+    def _finish(cands: list[MergedCandidate]) -> StageThreeOutput:
+        return StageThreeOutput(candidates=_collapse_tumor_markers(
+            _collapse_multifocal_conditions(cands), active=markers_active,
+        ))
+
     tagged = _build_tagged_items(stage2_outputs)
     groups = _deterministic_group(tagged)
     resolved, ambiguous = _resolve_exact_matches(groups)
@@ -487,7 +582,7 @@ async def merge_across_notes(
         resolved.extend(_groups_to_candidates(protected_groups))
 
     if not ambiguous:
-        return StageThreeOutput(candidates=_collapse_multifocal_conditions(resolved))
+        return _finish(resolved)
 
     patient_ambiguous = {
         k: v for k, v in ambiguous.items()
@@ -521,4 +616,4 @@ async def merge_across_notes(
     for result in await asyncio.gather(*tasks):
         resolved.extend(result)
 
-    return StageThreeOutput(candidates=_collapse_multifocal_conditions(resolved))
+    return _finish(resolved)

@@ -92,6 +92,58 @@ def is_tumor_marker(name: str) -> bool:
     return any(t in _norm(name) for t in _TM_NORM) or bool(_TM_SHORT_RE.search(name or ""))
 
 
+# Closed-set IHC receptor markers code to fixed LOINCs (the same family TNM/stage
+# use): the marker name alone determines the code, so it never varies run-to-run.
+# Other markers (PSA, CEA, CA-*) keep the retrieve-by-name path. Needles are
+# `_norm`-form (separators stripped), matched as substrings, most-specific first.
+_TUMOR_MARKER_LOINC: list[tuple[tuple[str, ...], str, str]] = [
+    (("her2neu", "her2", "epidermalgrowthfactorreceptor2"), "18474-7", "HER2 Ag [Presence] in Tissue by Immune stain"),
+    (("estrogenreceptor",), "16112-5", "Estrogen receptor [Interpretation] in Tissue"),
+    (("progesteronereceptor",), "16113-3", "Progesterone receptor [Interpretation] in Tissue"),
+    (("ki67", "mib1"), "29593-1", "Cells.Ki-67 nuclear Ag/cells in Tissue by Immune stain"),
+]
+
+
+def match_tumor_marker_fixed(name: str) -> list[dict] | None:
+    """Fixed LOINC coding for a recognized IHC receptor marker (ER/PR/HER2/Ki-67), or None."""
+    n = _norm(name)
+    for needles, code, display in _TUMOR_MARKER_LOINC:
+        if any(t in n for t in needles):
+            return [{"system": _LOINC, "code": code, "display": display}]
+    return None
+
+
+# Canonical marker family for cross-mention dedupe: many phrasings of one marker
+# ("PR status", "PR Allred 7/8", "PR percent 80%") collapse to one observation.
+_TM_FAMILY_LONG: list[tuple[tuple[str, ...], str]] = [
+    (("her2neu", "her2", "epidermalgrowthfactorreceptor2"), "HER2"),
+    (("estrogenreceptor",), "ER"),
+    (("progesteronereceptor",), "PR"),
+    (("ki67", "mib1"), "KI67"),
+]
+_TM_FAMILY_SHORT: list[tuple["re.Pattern[str]", str]] = [
+    (re.compile(r"\bher2\b", re.IGNORECASE), "HER2"),
+    (re.compile(r"\bki[\s-]?67\b", re.IGNORECASE), "KI67"),
+    (re.compile(r"\ber\b", re.IGNORECASE), "ER"),
+    (re.compile(r"\bpr\b", re.IGNORECASE), "PR"),
+]
+
+
+def canonical_tumor_marker(name: str) -> str | None:
+    """Stable marker family id (ER/PR/HER2/KI67) for a marker name, or None.
+
+    Long spelled-out forms win on normalized substrings; short abbreviations need
+    a word boundary so 'receptor' does not match 'er'."""
+    n = _norm(name)
+    for needles, fam in _TM_FAMILY_LONG:
+        if any(t in n for t in needles):
+            return fam
+    for rx, fam in _TM_FAMILY_SHORT:
+        if rx.search(name or ""):
+            return fam
+    return None
+
+
 def match_mcode_obs(name: str) -> dict | None:
     """The mCODE fixed-observation spec a concept name names, or None."""
     n = (name or "").lower()
