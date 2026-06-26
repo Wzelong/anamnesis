@@ -321,7 +321,7 @@ export function ReviewApp({
     }
     ;(async () => {
       try {
-        const res = await callTool(app, "RunExtraction", {})
+        const res = await callTool(app, "RunExtraction", {}, { timeout: 120_000, maxTotalTimeout: 300_000 })
         const data = parseStructured<ExtractionResult>(res)
         if (!data) throw new Error(resultText(res) || "no extraction result")
         setResult(data)

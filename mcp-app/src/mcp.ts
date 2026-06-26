@@ -23,15 +23,27 @@ export function resultText(res: CallToolResult): string {
   return c?.text ?? ""
 }
 
+export interface CallOptions {
+  onprogress?: (p: ProgressEvent) => void
+  timeout?: number
+  maxTotalTimeout?: number
+}
+
 export async function callTool(
   app: App,
   name: string,
   args: Record<string, unknown> = {},
-  onprogress?: (p: ProgressEvent) => void,
+  opts?: CallOptions | ((p: ProgressEvent) => void),
 ): Promise<CallToolResult> {
+  const o: CallOptions = typeof opts === "function" ? { onprogress: opts } : opts ?? {}
   return app.callServerTool(
     { name, arguments: args },
-    onprogress ? { onprogress: (p) => onprogress(p as unknown as ProgressEvent) } : undefined,
+    {
+      resetTimeoutOnProgress: true,
+      ...(o.timeout ? { timeout: o.timeout } : {}),
+      ...(o.maxTotalTimeout ? { maxTotalTimeout: o.maxTotalTimeout } : {}),
+      ...(o.onprogress ? { onprogress: (p) => o.onprogress!(p as unknown as ProgressEvent) } : {}),
+    },
   )
 }
 

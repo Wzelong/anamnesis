@@ -12,6 +12,8 @@ Entry points:
 """
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import hashlib
 import logging
 from datetime import datetime, timezone
@@ -227,6 +229,26 @@ def _filter_disabled_types(stage2: list, effective) -> list:
     return stage2
 
 
+async def _run_with_heartbeat(emit, stage: str, coro, *, interval: float = 15.0):
+    """Await `coro` while emitting a `stage` progress ping every `interval`s.
+
+    Stage 2 (extract) and Stage 4 (code) can run tens of seconds with no natural
+    progress event; the MCP client resets its request timeout on each progress
+    notification, so a heartbeat keeps a long stage from tripping the 60s cap."""
+    async def beat():
+        while True:
+            await asyncio.sleep(interval)
+            await emit(stage)
+
+    hb = asyncio.create_task(beat())
+    try:
+        return await coro
+    finally:
+        hb.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await hb
+
+
 async def _execute_stages(
     patient_context,
     documents: list[Document],
@@ -276,7 +298,8 @@ async def _execute_stages(
     await emit("stage1_preprocess", {"sentences": total_sentences})
 
     await emit("stage2_extract")
-    stage2 = await extract_candidates_batch(notes, client, model=model, cache=_cache("stage2_output"), effective=effective)
+    stage2 = await _run_with_heartbeat(emit, "stage2_extract", extract_candidates_batch(
+        notes, client, model=model, cache=_cache("stage2_output"), effective=effective))
     stage2 = _filter_disabled_types(stage2, effective)
     total_candidates = sum(
         sum(len(v) for v in s.candidates.values()) for s in stage2
@@ -288,7 +311,8 @@ async def _execute_stages(
     await emit("stage3_merge", {"candidates": len(stage3.candidates)})
 
     await emit("stage4_code")
-    stage4 = await code_candidates(stage3, client, model=model, effective=effective)
+    stage4 = await _run_with_heartbeat(emit, "stage4_code", code_candidates(
+        stage3, client, model=model, effective=effective))
     await emit("stage4_code", {"coded": len(stage4.candidates)})
 
     await emit("stage5_reconcile")
