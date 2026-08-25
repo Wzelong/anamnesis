@@ -10,6 +10,7 @@ The base prompts are generalized and validated; addons only append. Drafting and
 run on the clinician's BYOK Gemini key. The note is transient — used to draft and test,
 never persisted (only the saved addon is).
 """
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -80,8 +81,14 @@ def _draft_context(lane: str, resource_type: str) -> tuple[str, str]:
 
 
 async def draft_addon(
-    *, lane: str, resource_type: str, note: str, ideas: str, current_addon: str,
-    gemini_key: str, model: str,
+    *,
+    lane: str,
+    resource_type: str,
+    note: str,
+    ideas: str,
+    current_addon: str,
+    gemini_key: str,
+    model: str,
 ) -> str:
     """Draft or refine an add-only addon for one lane, grounded in the base prompt, an
     example note, and any current rules."""
@@ -98,8 +105,12 @@ async def draft_addon(
     parts.append("Write the additional rules as Markdown bullets.")
 
     parsed, _usage, error = await generate_structured(
-        build_client(gemini_key), model, system=system, user="\n\n".join(parts),
-        schema=AddonDraft, thinking="low",
+        build_client(gemini_key),
+        model,
+        system=system,
+        user="\n\n".join(parts),
+        schema=AddonDraft,
+        thinking="low",
     )
     if error or parsed is None:
         raise RuntimeError(error or "draft failed")
@@ -111,13 +122,21 @@ def _ov(text: str) -> dict:
 
 
 async def test_addon(
-    *, resource_type: str, note: str, capture: str, extract: str, gemini_key: str, model: str,
+    *,
+    resource_type: str,
+    note: str,
+    capture: str,
+    extract: str,
+    gemini_key: str,
+    model: str,
 ) -> dict:
     """Run prod Stage 1->2 (preprocess -> scan/parse/clean) on `note` with the draft capture
     and extract addons applied, scoped to one resource type. Same steps and model as
     production extraction; the note is never persisted. Returns {resource_type, items}."""
     client = build_client(gemini_key)
-    pnote = preprocess_document(Document(id="tune-note", type="note", date="", author="", text=note))
+    pnote = preprocess_document(
+        Document(id="tune-note", type="note", date="", author="", text=note)
+    )
     preset: dict = {}
     if extract.strip():
         preset["prompts"] = {resource_type: _ov(extract)}

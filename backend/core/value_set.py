@@ -6,6 +6,7 @@ maps each code to a supported terminology system; the terminology service is the
 source of truth, so no hallucinated or mistyped code enters a preset. Authoritative
 value sets (OID/URL) are NOT parsed here — they are resolved via fhir.terminology.
 """
+
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
@@ -69,12 +70,19 @@ async def parse_codes(text: str, *, gemini_key: str, umls_key: str, model: str, 
 
     client = build_client(gemini_key)
     parsed, _usage, error = await generate_structured(
-        client, model, system=_SYSTEM_PROMPT, user=text, schema=ParsedCodes, thinking="low",
+        client,
+        model,
+        system=_SYSTEM_PROMPT,
+        user=text,
+        schema=ParsedCodes,
+        thinking="low",
     )
     if error or parsed is None:
         return {"codes": [], "parsed": 0, "grounded": 0, "error": error or "no_output"}
 
-    raw = _supported([{"system": c.system, "code": c.code, "display": c.display} for c in parsed.codes])
+    raw = _supported(
+        [{"system": c.system, "code": c.code, "display": c.display} for c in parsed.codes]
+    )
     # Validate only systems we can $validate-code; trust asserted codes from systems
     # we can't (CPT, ICD-O-3, ...) — they enter the codeset ungrounded by design.
     checkable = [c for c in raw if c["system"] in VALIDATABLE_URIS]

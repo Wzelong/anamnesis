@@ -6,6 +6,7 @@ a JSON edit, picked up by both sides. The catalog stays declarative; selecting
 which profile actually applies to a given resource is the builder's job (see
 `candidate profiles` below).
 """
+
 from __future__ import annotations
 
 import json

@@ -1,5 +1,6 @@
 """Run the real pipeline against the local demo bundle and dump the full
 proposal set to mcp-app/src/demo/proposals.json for the UI fixture."""
+
 import asyncio
 import json
 import os

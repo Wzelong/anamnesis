@@ -10,6 +10,7 @@ Two tiers:
 Adding a free retrievable system: add its URI + UMLS source abbreviation and list
 it in RETRIEVABLE. Adding a codeset-only system: just its URI.
 """
+
 from __future__ import annotations
 
 SYSTEM_URIS: dict[str, str] = {

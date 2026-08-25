@@ -1,4 +1,5 @@
 """Application settings loaded from environment/.env via pydantic-settings."""
+
 import os
 
 from pydantic import model_validator

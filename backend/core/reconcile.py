@@ -11,6 +11,7 @@ The match rules and ChartIndex live in `core.reconcile_match_rules` and are
 re-exported below so existing call sites (`from core.reconcile import
 ChartIndex`, etc.) keep working unchanged.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -26,9 +27,9 @@ from core.prompts import PROMPT_RECONCILE, RECONCILE_TYPE_RULES
 from core.reconcile_match_rules import (
     _DISCONTINUED_STATUSES,
     _MATCHERS,
-    ChartIndex,
     NKDA_CODE,
     TOBACCO_LOINC,
+    ChartIndex,
     _normalize_ingredient,
     _resource_id,
     build_chart_index,
@@ -62,6 +63,7 @@ __all__ = [
 # LLM batch classify
 # ---------------------------------------------------------------------------
 
+
 def _format_pair(index: int, candidate: MergedCandidate, chart_resource: dict) -> str:
     cand_summary = {
         "name": candidate.item.get("name") or candidate.item.get("substance", ""),
@@ -94,8 +96,13 @@ async def _llm_batch_classify(
     user_msg = "\n\n".join(lines)
 
     result = await parse_structured(
-        client, model, prompt, user_msg, LLMReconcileBatchResult,
-        stage="stage5", call_type=f"reconcile_{resource_type.lower()}",
+        client,
+        model,
+        prompt,
+        user_msg,
+        LLMReconcileBatchResult,
+        stage="stage5",
+        call_type=f"reconcile_{resource_type.lower()}",
     )
 
     out: dict[int, tuple[str, str]] = {}
@@ -111,6 +118,7 @@ async def _llm_batch_classify(
 # ---------------------------------------------------------------------------
 # StageFiveOutput + entry point
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class StageFiveOutput:
@@ -167,9 +175,7 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
 
     certainty = item.get("certainty", "probable")
     corroborated = n_docs >= 2
-    certainty_score = (
-        _CERTAINTY_PROMOTED if corroborated else _CERTAINTY_BASE
-    ).get(certainty, 0.6)
+    certainty_score = (_CERTAINTY_PROMOTED if corroborated else _CERTAINTY_BASE).get(certainty, 0.6)
     certainty_reason = {
         "definite": "Stated assertively",
         "probable": "Probable in source" + (" (corroborated)" if corroborated else ""),
@@ -241,14 +247,20 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
     best_match_type = None
     if result.chart_matches:
         priority = {"exact_code": 3, "ingredient": 2, "display_text": 1}
-        best_match_type = max(result.chart_matches, key=lambda m: priority.get(m.match_type, 0)).match_type
+        best_match_type = max(
+            result.chart_matches, key=lambda m: priority.get(m.match_type, 0)
+        ).match_type
 
     if cls == "CONFLICTING":
         displays = [m.display for m in result.chart_matches if m.display]
         conflict_desc = displays[0] if displays else "existing chart record"
         flags.append(f"Conflicts with: {conflict_desc}")
     elif cls == "UPDATING":
-        change = result.reasoning.split(",", 1)[-1].strip() if "," in result.reasoning else result.reasoning
+        change = (
+            result.reasoning.split(",", 1)[-1].strip()
+            if "," in result.reasoning
+            else result.reasoning
+        )
         flags.append(f"Updates existing: {change}")
     elif cls == "DUPLICATE":
         flags.append("Already in chart")
@@ -256,12 +268,14 @@ def _compute_confidence(result: ReconciliationResult) -> ReconciliationResult:
     if best_match_type == "display_text":
         flags.append("Approximate match — verify")
 
-    return result.model_copy(update={
-        "confidence_score": round(composite, 3),
-        "confidence_tier": tier,
-        "flags": flags,
-        "confidence_breakdown": breakdown,
-    })
+    return result.model_copy(
+        update={
+            "confidence_score": round(composite, 3),
+            "confidence_tier": tier,
+            "flags": flags,
+            "confidence_breakdown": breakdown,
+        }
+    )
 
 
 async def reconcile(
@@ -294,7 +308,8 @@ async def reconcile(
         matcher = _MATCHERS.get(cand.resource_type)
         if matcher is None:
             resolved[ci] = ReconciliationResult(
-                candidate=cand, classification="NEW",
+                candidate=cand,
+                classification="NEW",
                 reasoning=f"unknown resource type {cand.resource_type}",
             )
             continue
@@ -304,8 +319,10 @@ async def reconcile(
             ambiguous.append((ci, cand, reasoning, chart_matches, raw_resources))
         else:
             resolved[ci] = ReconciliationResult(
-                candidate=cand, classification=verdict,
-                reasoning=reasoning, chart_matches=chart_matches,
+                candidate=cand,
+                classification=verdict,
+                reasoning=reasoning,
+                chart_matches=chart_matches,
             )
 
     if ambiguous:
@@ -314,8 +331,7 @@ async def reconcile(
             by_type.setdefault(cand.resource_type, []).append((ci, cand, raw_resources))
 
         tasks = [
-            _llm_batch_classify(rtype, pairs, client, model)
-            for rtype, pairs in by_type.items()
+            _llm_batch_classify(rtype, pairs, client, model) for rtype, pairs in by_type.items()
         ]
         llm_results = await asyncio.gather(*tasks)
 
@@ -327,13 +343,15 @@ async def reconcile(
             if ci in llm_map:
                 classification, llm_reasoning = llm_map[ci]
                 resolved[ci] = ReconciliationResult(
-                    candidate=cand, classification=classification,
+                    candidate=cand,
+                    classification=classification,
                     reasoning=f"{det_reasoning}; LLM: {llm_reasoning}",
                     chart_matches=chart_matches,
                 )
             else:
                 resolved[ci] = ReconciliationResult(
-                    candidate=cand, classification="NEW",
+                    candidate=cand,
+                    classification="NEW",
                     reasoning=f"{det_reasoning}; LLM failed, defaulting to NEW",
                     chart_matches=chart_matches,
                 )

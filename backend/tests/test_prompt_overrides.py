@@ -1,4 +1,5 @@
 """Stage 2b-3: per-type prompt overrides resolve and bust the stage-2 cache."""
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -7,8 +8,15 @@ from core.effective_profile import resolve_effective_profile
 from core.extraction import _note_cache_key, _override_digest, _resolve_prompts
 from core.prompts import PROMPTS_BY_TYPE
 
-_PRESET = {"id": "p", "prompts": {"Condition": {"active_version": 1, "versions": [
-    {"version": 1, "text": "MY CONDITION PROMPT"}]}}}
+_PRESET = {
+    "id": "p",
+    "prompts": {
+        "Condition": {
+            "active_version": 1,
+            "versions": [{"version": 1, "text": "MY CONDITION PROMPT"}],
+        }
+    },
+}
 
 
 def _note():

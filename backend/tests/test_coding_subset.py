@@ -1,4 +1,5 @@
 """Conformance Layer 3 (local): preset codeset allow-list enforcement."""
+
 from fhir.coding_subset import check_coding_subset, code_allowed, primary_codings
 
 SNOMED = "http://snomed.info/sct"
@@ -8,7 +9,10 @@ CPT = "http://www.ama-assn.org/go/cpt"
 
 
 def _cond(system, code="1"):
-    return {"resourceType": "Condition", "code": {"coding": [{"system": system, "code": code, "display": "x"}]}}
+    return {
+        "resourceType": "Condition",
+        "code": {"coding": [{"system": system, "code": code, "display": "x"}]},
+    }
 
 
 def test_primary_codings_condition():
@@ -16,12 +20,18 @@ def test_primary_codings_condition():
 
 
 def test_primary_codings_medication_uses_medication_concept():
-    r = {"resourceType": "MedicationRequest", "medicationCodeableConcept": {"coding": [{"system": RXNORM, "code": "1"}]}}
+    r = {
+        "resourceType": "MedicationRequest",
+        "medicationCodeableConcept": {"coding": [{"system": RXNORM, "code": "1"}]},
+    }
     assert primary_codings(r)[0]["system"] == RXNORM
 
 
 def test_primary_codings_fmh_walks_conditions():
-    r = {"resourceType": "FamilyMemberHistory", "condition": [{"code": {"coding": [{"system": SNOMED, "code": "1"}]}}]}
+    r = {
+        "resourceType": "FamilyMemberHistory",
+        "condition": [{"code": {"coding": [{"system": SNOMED, "code": "1"}]}}],
+    }
     assert primary_codings(r)[0]["system"] == SNOMED
 
 
@@ -54,7 +64,16 @@ def test_multi_open_allowlist():
 def test_structural_codings_not_gated():
     r = {
         "resourceType": "Condition",
-        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "c"}]}],
+        "category": [
+            {
+                "coding": [
+                    {
+                        "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                        "code": "c",
+                    }
+                ]
+            }
+        ],
         "code": {"coding": [{"system": SNOMED, "code": "1"}]},
     }
     assert check_coding_subset(r, ["snomed"]) == []
@@ -63,6 +82,7 @@ def test_structural_codings_not_gated():
 def test_system_uris_are_single_source():
     from core.code_candidates import SYSTEM_URIS as canonical
     from fhir.coding_subset import SYSTEM_URIS as local
+
     assert local is canonical
 
 
@@ -95,6 +115,6 @@ def test_code_allowed_pinned_system_must_match():
 
 def test_code_allowed_extend_open_plus_pin():
     pinned = [{"system": CPT, "code": "99213"}]
-    assert code_allowed(_cond(SNOMED, "1"), ["snomed"], pinned) is True   # open system
+    assert code_allowed(_cond(SNOMED, "1"), ["snomed"], pinned) is True  # open system
     assert code_allowed(_cond(CPT, "99213"), ["snomed"], pinned) is True  # pinned
-    assert code_allowed(_cond(ICD10, "1"), ["snomed"], pinned) is False   # neither
+    assert code_allowed(_cond(ICD10, "1"), ["snomed"], pinned) is False  # neither

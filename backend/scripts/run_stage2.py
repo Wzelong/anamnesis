@@ -3,6 +3,7 @@
 Run from backend/:
     python -m scripts.run_stage2 [--patient-id=...] [--doc-id=...] [--no-cache]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -92,9 +93,10 @@ def _print_note_context(ctx: NoteContext, note: PreprocessedNote) -> None:
         df = getattr(ctx, label)
         if df.value is None:
             continue
-        cite = ", ".join(
-            f"[{n}] {_sentence_text(note, n, width=70)}" for n in df.source_sentences
-        ) or "<no source>"
+        cite = (
+            ", ".join(f"[{n}] {_sentence_text(note, n, width=70)}" for n in df.source_sentences)
+            or "<no source>"
+        )
         print(f"    {label}: {df.value}  <- {cite}")
 
 
@@ -125,9 +127,11 @@ def _headline_for(rtype: str, data: dict) -> str:
         dose = data.get("dose")
         dose_str = f"{dose['value']}{dose['unit']}" if dose else ""
         freq = data.get("frequency") or ""
-        return f"{data.get('name', '')} {dose_str} {freq} [{data.get('status','')}]".strip()
+        return f"{data.get('name', '')} {dose_str} {freq} [{data.get('status', '')}]".strip()
     if rtype == "Procedure":
-        return f"{data.get('name', '')} performed={data.get('performed')} status={data.get('status')}"
+        return (
+            f"{data.get('name', '')} performed={data.get('performed')} status={data.get('status')}"
+        )
     if rtype == "AllergyIntolerance":
         return (
             f"{data.get('substance', '')} reaction={data.get('reaction')} "
@@ -198,9 +202,7 @@ def _run_demo_checks(results: list[StageTwoOutput], docs: list[Document]) -> boo
         print(f"\n  {spec['label']}")
         for rtype, needle in spec["expected"]:
             items = out.candidates.get(rtype, [])
-            hit = any(
-                needle.lower() in _flatten_item_text(i).lower() for i in items
-            )
+            hit = any(needle.lower() in _flatten_item_text(i).lower() for i in items)
             mark = "PASS" if hit else "FAIL"
             overall &= hit
             print(f"    {mark}  {rtype} contains '{needle}'  (candidates: {len(items)})")
@@ -242,13 +244,15 @@ async def main() -> int:
     if args.from_stage1_cache:
         for p in sorted(STAGE1_CACHE.glob("*.json")):
             data = json.loads(p.read_text(encoding="utf-8"))
-            docs.append(Document(
-                id=data["document_id"],
-                type="",
-                date=data.get("document_date") or "",
-                author="",
-                text=data["original_text"],
-            ))
+            docs.append(
+                Document(
+                    id=data["document_id"],
+                    type="",
+                    date=data.get("document_date") or "",
+                    author="",
+                    text=data["original_text"],
+                )
+            )
             note = _load_cached_note(data["document_id"])
             if note is not None:
                 notes.append(note)
@@ -260,7 +264,9 @@ async def main() -> int:
         fhir_url = os.environ.get("DEV_FHIR_BASE_URL")
         fhir_token = os.environ.get("DEV_FHIR_TOKEN")
         if not fhir_url or not fhir_token:
-            print("error: DEV_FHIR_BASE_URL and DEV_FHIR_TOKEN must be set in .env", file=sys.stderr)
+            print(
+                "error: DEV_FHIR_BASE_URL and DEV_FHIR_TOKEN must be set in .env", file=sys.stderr
+            )
             return 2
 
         fhir = FhirClient(fhir_url, fhir_token)

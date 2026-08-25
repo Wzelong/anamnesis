@@ -5,6 +5,7 @@ resource is validated against its declared US Core profile before write; the
 result rides on the accept response. A server without $validate (or any error)
 yields {supported: False} and never blocks the write. See CONFORMANCE.md.
 """
+
 from __future__ import annotations
 
 _UNSUPPORTED = {"level": "profile", "supported": False, "valid": None, "issues": []}
@@ -34,7 +35,11 @@ async def validate_profile(client, resource: dict, profiles: list[str]) -> dict:
         status, body = await client.validate(resource_type, resource, profile)
     except Exception:
         return dict(_UNSUPPORTED)
-    if status == 404 or not isinstance(body, dict) or body.get("resourceType") != "OperationOutcome":
+    if (
+        status == 404
+        or not isinstance(body, dict)
+        or body.get("resourceType") != "OperationOutcome"
+    ):
         return dict(_UNSUPPORTED)
 
     issues = [
@@ -42,4 +47,10 @@ async def validate_profile(client, resource: dict, profiles: list[str]) -> dict:
         for i in body.get("issue", [])
     ]
     has_error = any(i["severity"] in ("error", "fatal") for i in issues)
-    return {"level": "profile", "supported": True, "valid": not has_error, "issues": issues, "profile": profile}
+    return {
+        "level": "profile",
+        "supported": True,
+        "valid": not has_error,
+        "issues": issues,
+        "profile": profile,
+    }

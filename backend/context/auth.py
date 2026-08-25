@@ -4,6 +4,7 @@ PO authenticates the clinician and mints the token; we read identity claims at
 MCP-call time. `sub` is the clinician's stable OIDC subject (per-user key);
 `po_ws_id` is the workspace. We mint nothing and store no tokens.
 """
+
 from __future__ import annotations
 
 import re
@@ -11,7 +12,9 @@ from dataclasses import dataclass
 
 import jwt
 
-_UUID_LIKE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE)
+_UUID_LIKE = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
+)
 
 
 @dataclass

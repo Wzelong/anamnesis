@@ -1,4 +1,5 @@
 """BYOK secret sealing: encrypt at rest, redact to the iframe, decrypt in-process."""
+
 import asyncio
 import uuid
 
@@ -19,17 +20,17 @@ def test_seal_redact_unseal_roundtrip():
 
     sealed = byok.seal(patch)
     enc = sealed["byok"]["gemini_api_key"]
-    assert "sk-secret-1234" not in str(sealed)          # no plaintext at rest
+    assert "sk-secret-1234" not in str(sealed)  # no plaintext at rest
     assert byok._MARKER in enc and enc["last4"] == "1234"
 
     redacted = byok.redact(sealed)
     assert redacted["byok"]["gemini_api_key"] == {"set": True, "last4": "1234"}
-    assert "sk-secret-1234" not in str(redacted)         # no plaintext to iframe
+    assert "sk-secret-1234" not in str(redacted)  # no plaintext to iframe
     assert byok._MARKER not in str(redacted)
 
     plain = byok.unseal(sealed)
     assert plain["byok"]["gemini_api_key"] == "sk-secret-1234"
-    assert plain["fhir_ig"] == "us-core"                 # non-secret untouched
+    assert plain["fhir_ig"] == "us-core"  # non-secret untouched
 
 
 def test_placeholder_echo_does_not_wipe_secret():
@@ -59,11 +60,11 @@ def test_set_config_stores_ciphertext_get_unseals():
         await init_db()
         await users.register_session(sub)
         await users.set_config(sub, {"byok": {"gemini_api_key": "sk-live-9999"}})
-        await users.set_config(sub, {"fhir_ig": "mcode"})   # deep-merge keeps byok
+        await users.set_config(sub, {"fhir_ig": "mcode"})  # deep-merge keeps byok
         return await users.get_config(sub)
 
     stored = asyncio.run(run())
-    assert "sk-live-9999" not in str(stored)                 # ciphertext at rest
+    assert "sk-live-9999" not in str(stored)  # ciphertext at rest
     assert byok.redact(stored)["byok"]["gemini_api_key"] == {"set": True, "last4": "9999"}
     assert byok.unseal(stored)["byok"]["gemini_api_key"] == "sk-live-9999"
     assert stored["fhir_ig"] == "mcode"

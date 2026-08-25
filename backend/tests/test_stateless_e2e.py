@@ -2,6 +2,7 @@
 (always runs) plus an opt-in end-to-end run of `run_extraction_ephemeral`
 against the demo bundle (RUN_E2E=1; needs GEMINI_API_KEY + network).
 """
+
 from __future__ import annotations
 
 import os
@@ -18,12 +19,30 @@ from core.schemas import (
 from services import proposals as svc
 
 PROPOSAL_KEYS = {
-    "id", "run_id", "resource_type", "classification", "confidence_tier",
-    "confidence_score", "status", "display_label", "flags", "conflict_group_id",
-    "resource", "citations", "classification_reasoning", "extraction_reasoning",
-    "merge_reasoning", "confidence_breakdown", "chart_matches", "supersedes",
-    "conformance", "reviewed_at", "reviewed_by", "rejection_reason",
-    "provenance_resource", "write_result",
+    "id",
+    "run_id",
+    "resource_type",
+    "classification",
+    "confidence_tier",
+    "confidence_score",
+    "status",
+    "display_label",
+    "flags",
+    "conflict_group_id",
+    "resource",
+    "citations",
+    "classification_reasoning",
+    "extraction_reasoning",
+    "merge_reasoning",
+    "confidence_breakdown",
+    "chart_matches",
+    "supersedes",
+    "conformance",
+    "reviewed_at",
+    "reviewed_by",
+    "rejection_reason",
+    "provenance_resource",
+    "write_result",
 }
 
 
@@ -40,10 +59,18 @@ def _full_proposal() -> Proposal:
         classification_reasoning="not in chart",
         extraction_reasoning="stated in note",
         merge_reasoning="single mention",
-        citations=[ResolvedCitation(
-            document_id="doc-1", sentence_numbers=[3], char_start=10, char_end=22, text="hypertension",
-        )],
-        chart_matches=[ChartMatch(resource_id="Condition/1", display="HTN", match_type="display_text")],
+        citations=[
+            ResolvedCitation(
+                document_id="doc-1",
+                sentence_numbers=[3],
+                char_start=10,
+                char_end=22,
+                text="hypertension",
+            )
+        ],
+        chart_matches=[
+            ChartMatch(resource_id="Condition/1", display="HTN", match_type="display_text")
+        ],
         confidence_score=0.9128,
         confidence_tier="CONFIDENT",
         flags=["dose-missing"],
@@ -57,7 +84,10 @@ def _min_proposal() -> Proposal:
     return Proposal(
         id="prop_min",
         resource_type="MedicationRequest",
-        resource={"resourceType": "MedicationRequest", "medicationCodeableConcept": {"text": "Losartan"}},
+        resource={
+            "resourceType": "MedicationRequest",
+            "medicationCodeableConcept": {"text": "Losartan"},
+        },
         classification="UPDATING",
         classification_reasoning="r",
         extraction_reasoning="e",
@@ -82,18 +112,30 @@ def test_proposal_to_dict_shape_and_values():
     assert d["conflict_group_id"] == "grp-1"
 
     # nested models are JSON-dumped, not left as pydantic objects
-    assert d["citations"] == [{
-        "document_id": "doc-1", "sentence_numbers": [3],
-        "char_start": 10, "char_end": 22, "text": "hypertension",
-    }]
+    assert d["citations"] == [
+        {
+            "document_id": "doc-1",
+            "sentence_numbers": [3],
+            "char_start": 10,
+            "char_end": 22,
+            "text": "hypertension",
+        }
+    ]
     assert d["chart_matches"][0]["resource_id"] == "Condition/1"
     assert d["confidence_breakdown"]["certainty"]["score"] == 0.9
 
     # a fresh proposal has no review/write state
-    for k in ("reviewed_at", "reviewed_by", "rejection_reason", "provenance_resource", "write_result"):
+    for k in (
+        "reviewed_at",
+        "reviewed_by",
+        "rejection_reason",
+        "provenance_resource",
+        "write_result",
+    ):
         assert d[k] is None
 
     import json
+
     json.dumps(d)  # must be JSON-serializable for the MCP tool result
 
 
@@ -117,8 +159,14 @@ def test_display_label_variants():
         ],
     }
     assert svc._display_label(bp) == "BP 140/90 mmHg"
-    assert svc._display_label({"resourceType": "AllergyIntolerance", "code": {"text": "Penicillin"}}) == "Penicillin"
-    assert svc._display_label({"resourceType": "Condition", "code": {"text": "Diabetes"}}) == "Diabetes"
+    assert (
+        svc._display_label({"resourceType": "AllergyIntolerance", "code": {"text": "Penicillin"}})
+        == "Penicillin"
+    )
+    assert (
+        svc._display_label({"resourceType": "Condition", "code": {"text": "Diabetes"}})
+        == "Diabetes"
+    )
 
 
 def test_documents_from_notes_deterministic_ids():
@@ -149,7 +197,9 @@ def test_run_extraction_ephemeral_demo():
             stages.append(stage)
 
         return await svc.run_extraction_ephemeral(
-            patient_id=None, fhir_client=None, progress_cb=progress_cb,
+            patient_id=None,
+            fhir_client=None,
+            progress_cb=progress_cb,
         )
 
     result = asyncio.run(run())

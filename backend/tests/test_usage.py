@@ -1,4 +1,5 @@
 """Usage ledger: per-run rows aggregate into a per-clinician summary."""
+
 import asyncio
 import uuid
 from decimal import Decimal
@@ -17,14 +18,26 @@ def test_record_summary_and_list():
     async def run():
         await init_db()
         await usage.record_run(
-            user_key=sub, workspace_id="ws-1", model="gemini-3.5-flash",
-            input_tokens=1000, output_tokens=200, reasoning_tokens=50,
-            cost_usd=Decimal("0.0123"), duration_ms=5000, doc_count=4,
+            user_key=sub,
+            workspace_id="ws-1",
+            model="gemini-3.5-flash",
+            input_tokens=1000,
+            output_tokens=200,
+            reasoning_tokens=50,
+            cost_usd=Decimal("0.0123"),
+            duration_ms=5000,
+            doc_count=4,
         )
         await usage.record_run(
-            user_key=sub, workspace_id="ws-1", model="gemini-3.5-flash",
-            input_tokens=500, output_tokens=100, reasoning_tokens=0,
-            cost_usd=Decimal("0.0050"), duration_ms=3000, doc_count=2,
+            user_key=sub,
+            workspace_id="ws-1",
+            model="gemini-3.5-flash",
+            input_tokens=500,
+            output_tokens=100,
+            reasoning_tokens=0,
+            cost_usd=Decimal("0.0050"),
+            duration_ms=3000,
+            doc_count=2,
         )
         return await usage.summary(sub), await usage.list_runs(sub)
 
@@ -43,9 +56,15 @@ def test_summary_is_isolated_per_user():
     async def run():
         await init_db()
         await usage.record_run(
-            user_key=a, workspace_id=None, model="m",
-            input_tokens=10, output_tokens=1, reasoning_tokens=0,
-            cost_usd=Decimal("0.001"), duration_ms=1, doc_count=1,
+            user_key=a,
+            workspace_id=None,
+            model="m",
+            input_tokens=10,
+            output_tokens=1,
+            reasoning_tokens=0,
+            cost_usd=Decimal("0.001"),
+            duration_ms=1,
+            doc_count=1,
         )
         return await usage.summary(a), await usage.summary(b)
 

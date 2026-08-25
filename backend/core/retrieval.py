@@ -4,6 +4,7 @@ Routing is best-of-breed per system (measured): SNOMED / ICD-10-PCS / HCPCS ->
 UMLS UTS, RxNorm -> RxNav approximateTerm, ICD-10-CM / LOINC -> NLM Clinical
 Tables. Returns the `SearchResult` shape Stage 4's LLM selector consumes.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -69,7 +70,7 @@ def _backoff_queries(term: str) -> list[str]:
 
 
 async def _run_union(
-    retriever: "Retriever", queries: list[str], system: str, top_k: int
+    retriever: Retriever, queries: list[str], system: str, top_k: int
 ) -> list[SearchResult]:
     lists = await asyncio.gather(
         *(retriever.search(q, system, top_k) for q in queries), return_exceptions=True
@@ -83,12 +84,14 @@ async def _run_union(
             if prev is None or r.score > prev.score:
                 best[r.code] = r
     merged = sorted(best.values(), key=lambda r: -r.score)[:top_k]
-    return [SearchResult(code=r.code, display=r.display, score=r.score, rank=i + 1)
-            for i, r in enumerate(merged)]
+    return [
+        SearchResult(code=r.code, display=r.display, score=r.score, rank=i + 1)
+        for i, r in enumerate(merged)
+    ]
 
 
 async def union_search(
-    retriever: "Retriever", queries: list[str], system: str, top_k: int = 10
+    retriever: Retriever, queries: list[str], system: str, top_k: int = 10
 ) -> list[SearchResult]:
     """Run every query, union candidates by code (best score wins), re-rank.
 
@@ -110,7 +113,7 @@ async def union_search(
 
 
 async def search_with_backoff(
-    retriever: "Retriever", term: str, system: str, top_k: int = 10
+    retriever: Retriever, term: str, system: str, top_k: int = 10
 ) -> list[SearchResult]:
     """Single-term search with the same head-concept backoff as `union_search`."""
     return await union_search(retriever, [term], system, top_k)
@@ -144,8 +147,11 @@ class ApiRetriever:
         if not self._umls_key:
             raise RuntimeError(f"UMLS_API_KEY required for {system} retrieval")
         params = {
-            "string": term, "sabs": UMLS_SAB[system], "returnIdType": "code",
-            "pageSize": top_k, "apiKey": self._umls_key,
+            "string": term,
+            "sabs": UMLS_SAB[system],
+            "returnIdType": "code",
+            "pageSize": top_k,
+            "apiKey": self._umls_key,
         }
         r = await self._client.get(UMLS_SEARCH, params=params)
         r.raise_for_status()
@@ -154,7 +160,11 @@ class ApiRetriever:
         for i, row in enumerate(rows):
             if row.get("ui") in (None, "NONE"):
                 continue
-            out.append(SearchResult(code=row["ui"], display=row.get("name", ""), score=1.0 - i * 0.02, rank=i + 1))
+            out.append(
+                SearchResult(
+                    code=row["ui"], display=row.get("name", ""), score=1.0 - i * 0.02, rank=i + 1
+                )
+            )
         return out
 
     async def _rxnorm(self, term: str, top_k: int) -> list[SearchResult]:
@@ -171,7 +181,11 @@ class ApiRetriever:
             name = c.get("name") or await self._rxnorm_name(rxcui)
             if not name:
                 continue
-            out.append(SearchResult(code=rxcui, display=name, score=float(c.get("score", 0)), rank=len(out) + 1))
+            out.append(
+                SearchResult(
+                    code=rxcui, display=name, score=float(c.get("score", 0)), rank=len(out) + 1
+                )
+            )
             if len(out) >= top_k:
                 break
         return out
@@ -180,7 +194,9 @@ class ApiRetriever:
         if rxcui in self._name_cache:
             return self._name_cache[rxcui]
         try:
-            r = await self._client.get(RXNAV_PROP.format(rxcui=rxcui), params={"propName": "RxNorm Name"})
+            r = await self._client.get(
+                RXNAV_PROP.format(rxcui=rxcui), params={"propName": "RxNorm Name"}
+            )
             props = (r.json().get("propConceptGroup") or {}).get("propConcept") or []
             name = props[0]["propValue"] if props else ""
         except Exception:

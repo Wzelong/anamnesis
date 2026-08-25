@@ -1,4 +1,5 @@
 """Phase 2: deterministic primary/secondary cancer classification + profile selection."""
+
 from __future__ import annotations
 
 from core.augment.mcode import apply_specialty_profiles, classify_cancer_condition
@@ -25,7 +26,10 @@ def test_secondary_from_metastatic_text():
 
 
 def test_secondary_from_icd10_c78():
-    assert classify_cancer_condition(_cond("Secondary neoplasm", system=ICD10, code="C78.7")) == "secondary"
+    assert (
+        classify_cancer_condition(_cond("Secondary neoplasm", system=ICD10, code="C78.7"))
+        == "secondary"
+    )
 
 
 def test_non_cancer_is_none():
@@ -55,7 +59,11 @@ def test_apply_noop_without_candidates():
 
 def test_apply_preserves_existing_profiles():
     res = _cond("Carcinoma of breast")
-    res["meta"] = {"profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"]}
+    res["meta"] = {
+        "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-condition-problems-health-concerns"
+        ]
+    }
     out = apply_specialty_profiles(res, "Condition", CANDIDATES)
     assert out["meta"]["profile"][-1] == PRIMARY and len(out["meta"]["profile"]) == 2
 
@@ -89,16 +97,23 @@ def test_surgical_procedure_with_cancer_reason_tagged():
 
 def test_surgical_procedure_without_cancer_reason_not_tagged():
     res = {"resourceType": "Procedure", "reasonCode": [{"text": "diverticulitis"}]}
-    assert apply_specialty_profiles(res, "Procedure", _proc_cands(), {"category": "surgical"}) == res
+    assert (
+        apply_specialty_profiles(res, "Procedure", _proc_cands(), {"category": "surgical"}) == res
+    )
 
 
 def test_diagnostic_procedure_with_cancer_reason_not_tagged():
     res = {"resourceType": "Procedure", "reasonCode": [{"text": "breast cancer"}]}
-    assert apply_specialty_profiles(res, "Procedure", _proc_cands(), {"category": "diagnostic"}) == res
+    assert (
+        apply_specialty_profiles(res, "Procedure", _proc_cands(), {"category": "diagnostic"}) == res
+    )
 
 
 def test_medication_with_cancer_reason_tagged():
-    res = {"resourceType": "MedicationRequest", "reasonCode": [{"text": "metastatic breast cancer"}]}
+    res = {
+        "resourceType": "MedicationRequest",
+        "reasonCode": [{"text": "metastatic breast cancer"}],
+    }
     out = apply_specialty_profiles(res, "MedicationRequest", _med_cands(), {})
     assert out["meta"]["profile"][-1].endswith("mcode-cancer-related-medication-request")
 
@@ -121,16 +136,28 @@ def test_body_site_tokens_drop_laterality():
 def test_surgery_tagged_by_site_overlap_without_reason():
     # orchiectomy (testis), no reason, but the run has a testis cancer -> tag
     res = {"resourceType": "Procedure", "bodySite": [{"text": "right testis"}]}
-    out = apply_specialty_profiles(res, "Procedure", _proc_cands(), {"category": "surgical"}, {"testis"})
+    out = apply_specialty_profiles(
+        res, "Procedure", _proc_cands(), {"category": "surgical"}, {"testis"}
+    )
     assert out["meta"]["profile"][-1].endswith("mcode-cancer-related-surgical-procedure")
 
 
 def test_unrelated_surgery_not_tagged_by_site():
     # inguinal hernia repair in a prostate-cancer patient -> NOT tagged (no organ overlap)
     res = {"resourceType": "Procedure", "bodySite": [{"text": "right inguinal region"}]}
-    assert apply_specialty_profiles(res, "Procedure", _proc_cands(), {"category": "surgical"}, {"prostate"}) == res
+    assert (
+        apply_specialty_profiles(
+            res, "Procedure", _proc_cands(), {"category": "surgical"}, {"prostate"}
+        )
+        == res
+    )
 
 
 def test_site_overlap_requires_surgical():
     res = {"resourceType": "Procedure", "bodySite": [{"text": "right testis"}]}
-    assert apply_specialty_profiles(res, "Procedure", _proc_cands(), {"category": "diagnostic"}, {"testis"}) == res
+    assert (
+        apply_specialty_profiles(
+            res, "Procedure", _proc_cands(), {"category": "diagnostic"}, {"testis"}
+        )
+        == res
+    )

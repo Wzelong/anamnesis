@@ -10,13 +10,14 @@ Entry points:
   * `accept_augmentation` — write an accepted proposal to FHIR with Provenance.
   * `record_decision` — emit a non-PHI structured log line.
 """
+
 from __future__ import annotations
 
 import asyncio
 import contextlib
 import hashlib
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -33,7 +34,7 @@ INLINE_DOC_PREFIX = "inline_"
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _documents_from_notes(
@@ -53,14 +54,16 @@ def _documents_from_notes(
         if not text:
             continue
         digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
-        out.append(Document(
-            id=f"{INLINE_DOC_PREFIX}{digest}",
-            type=note_type,
-            date=date,
-            author="",
-            text=text,
-            encounter_id=None,
-        ))
+        out.append(
+            Document(
+                id=f"{INLINE_DOC_PREFIX}{digest}",
+                type=note_type,
+                date=date,
+                author="",
+                text=text,
+                encounter_id=None,
+            )
+        )
     if not out:
         raise ValueError("no usable notes provided")
     return out
@@ -69,18 +72,22 @@ def _documents_from_notes(
 async def _load_source(patient_id: str | None, *, fhir_client=None):
     if fhir_client and patient_id:
         import asyncio
+
         from fhir.read import read_documents, read_patient_context
+
         return await asyncio.gather(
             read_patient_context(fhir_client, patient_id),
             read_documents(fhir_client, patient_id),
         )
     from fhir.local_bundle import load_demo_data
+
     return load_demo_data()
 
 
 # ---------------------------------------------------------------------------
 # Display helpers — FHIR resource dict -> human-readable label for the UI.
 # ---------------------------------------------------------------------------
+
 
 def _cc_text(cc: dict | None) -> str | None:
     if not isinstance(cc, dict):
@@ -204,7 +211,8 @@ def _proposal_to_dict(proposal, run_id: str) -> dict:
         "merge_reasoning": proposal.merge_reasoning,
         "confidence_breakdown": (
             proposal.confidence_breakdown.model_dump(mode="json")
-            if proposal.confidence_breakdown else None
+            if proposal.confidence_breakdown
+            else None
         ),
         "chart_matches": [m.model_dump(mode="json") for m in proposal.chart_matches],
         "supersedes": proposal.supersedes,
@@ -235,6 +243,7 @@ async def _run_with_heartbeat(emit, stage: str, coro, *, interval: float = 15.0)
     Stage 2 (extract) and Stage 4 (code) can run tens of seconds with no natural
     progress event; the MCP client resets its request timeout on each progress
     notification, so a heartbeat keeps a long stage from tripping the 60s cap."""
+
     async def beat():
         while True:
             await asyncio.sleep(interval)
@@ -282,13 +291,16 @@ async def _execute_stages(
     model = settings.gemini_model_fast
     cache_dir = Path(__file__).resolve().parent.parent / ".cache"
 
-    def _cache(name: str) -> "JsonCache | None":
+    def _cache(name: str) -> JsonCache | None:
         return JsonCache(cache_dir / name) if use_cache else None
 
     await emit("guardrail")
     if settings.doc_guardrail_enabled and documents:
         documents, _rejected = await screen_documents(
-            documents, client, model=settings.gemini_model_nano, cache=_cache("doc_guardrail"),
+            documents,
+            client,
+            model=settings.gemini_model_nano,
+            cache=_cache("doc_guardrail"),
         )
     await emit("guardrail", {"documents_accepted": len(documents)})
 
@@ -298,21 +310,27 @@ async def _execute_stages(
     await emit("stage1_preprocess", {"sentences": total_sentences})
 
     await emit("stage2_extract")
-    stage2 = await _run_with_heartbeat(emit, "stage2_extract", extract_candidates_batch(
-        notes, client, model=model, cache=_cache("stage2_output"), effective=effective))
-    stage2 = _filter_disabled_types(stage2, effective)
-    total_candidates = sum(
-        sum(len(v) for v in s.candidates.values()) for s in stage2
+    stage2 = await _run_with_heartbeat(
+        emit,
+        "stage2_extract",
+        extract_candidates_batch(
+            notes, client, model=model, cache=_cache("stage2_output"), effective=effective
+        ),
     )
+    stage2 = _filter_disabled_types(stage2, effective)
+    total_candidates = sum(sum(len(v) for v in s.candidates.values()) for s in stage2)
     await emit("stage2_extract", {"candidates": total_candidates})
 
     await emit("stage3_merge")
-    stage3 = await merge_across_notes(stage2, client, model=model, cache=_cache("stage3"), effective=effective)
+    stage3 = await merge_across_notes(
+        stage2, client, model=model, cache=_cache("stage3"), effective=effective
+    )
     await emit("stage3_merge", {"candidates": len(stage3.candidates)})
 
     await emit("stage4_code")
-    stage4 = await _run_with_heartbeat(emit, "stage4_code", code_candidates(
-        stage3, client, model=model, effective=effective))
+    stage4 = await _run_with_heartbeat(
+        emit, "stage4_code", code_candidates(stage3, client, model=model, effective=effective)
+    )
     await emit("stage4_code", {"coded": len(stage4.candidates)})
 
     await emit("stage5_reconcile")
@@ -352,8 +370,7 @@ async def run_extraction_ephemeral(
 
     patient_context, chart_docs = await _load_source(patient_id, fhir_client=fhir_client)
     documents = (
-        _documents_from_notes(inline_notes, note_type, note_date)
-        if inline_notes else chart_docs
+        _documents_from_notes(inline_notes, note_type, note_date) if inline_notes else chart_docs
     )
     effective_patient_id = patient_context.patient["id"]
 
@@ -367,8 +384,12 @@ async def run_extraction_ephemeral(
     )
     try:
         stage6 = await _execute_stages(
-            patient_context, documents, progress_cb=progress_cb, use_cache=False,
-            gemini_api_key=gemini_api_key, effective=effective,
+            patient_context,
+            documents,
+            progress_cb=progress_cb,
+            use_cache=False,
+            gemini_api_key=gemini_api_key,
+            effective=effective,
         )
     except Exception as exc:
         await telemetry.finish_run("failed", error=str(exc))
@@ -380,13 +401,19 @@ async def run_extraction_ephemeral(
     if user_key:
         from config import settings
         from services import usage
+
         try:
             await usage.record_run(
-                user_key=user_key, workspace_id=workspace_id,
-                model=settings.gemini_model_fast, triggered_by=triggered_by,
-                input_tokens=agg["input_tokens"], output_tokens=agg["output_tokens"],
-                reasoning_tokens=agg["reasoning_tokens"], cost_usd=agg["cost_usd"],
-                duration_ms=agg["duration_ms"], doc_count=agg["doc_count"],
+                user_key=user_key,
+                workspace_id=workspace_id,
+                model=settings.gemini_model_fast,
+                triggered_by=triggered_by,
+                input_tokens=agg["input_tokens"],
+                output_tokens=agg["output_tokens"],
+                reasoning_tokens=agg["reasoning_tokens"],
+                cost_usd=agg["cost_usd"],
+                duration_ms=agg["duration_ms"],
+                doc_count=agg["doc_count"],
             )
         except Exception as exc:  # ledger is best-effort; never fail a run on it
             log.warning("usage ledger write failed: %s", exc)
@@ -400,11 +427,14 @@ async def run_extraction_ephemeral(
     }
 
     proposals = [_proposal_to_dict(p, run_id) for p in stage6.proposals]
-    session_cache.put(run_id, {
-        "patient_id": effective_patient_id,
-        "documents": {d.id: d for d in documents},
-        "proposals": {p["id"]: p for p in proposals},
-    })
+    session_cache.put(
+        run_id,
+        {
+            "patient_id": effective_patient_id,
+            "documents": {d.id: d for d in documents},
+            "proposals": {p["id"]: p for p in proposals},
+        },
+    )
 
     return {
         "run_id": run_id,
@@ -438,8 +468,12 @@ def _run_aggregate(run_ctx, doc_count: int) -> dict:
         if finished and run_ctx.started_at:
             duration_ms = int((finished - run_ctx.started_at).total_seconds() * 1000)
     return {
-        "input_tokens": inp, "output_tokens": out, "reasoning_tokens": rea,
-        "cost_usd": cost, "duration_ms": duration_ms, "doc_count": doc_count,
+        "input_tokens": inp,
+        "output_tokens": out,
+        "reasoning_tokens": rea,
+        "cost_usd": cost,
+        "duration_ms": duration_ms,
+        "doc_count": doc_count,
     }
 
 
@@ -463,6 +497,8 @@ async def accept_augmentation(
     """
     from fhir.write import (
         AugmentationProposal as WriteProposal,
+    )
+    from fhir.write import (
         Citation,
         apply_augmentation,
         build_provenance,
@@ -489,18 +525,21 @@ async def accept_augmentation(
     for c in citations:
         doc_id = c["document_id"]
         inline_doc = inline_docs.get(doc_id) if doc_id.startswith(INLINE_DOC_PREFIX) else None
-        built.append(Citation(
-            document_ref=f"DocumentReference/{doc_id}",
-            start=c["char_start"],
-            end=c["char_end"],
-            text=c["text"],
-            inline_document=inline_doc,
-        ))
+        built.append(
+            Citation(
+                document_ref=f"DocumentReference/{doc_id}",
+                start=c["char_start"],
+                end=c["char_end"],
+                text=c["text"],
+                inline_document=inline_doc,
+            )
+        )
 
     conformance = None
     if fhir_client:
         from config import settings
         from fhir.conformance import assess_conformance, validator_client
+
         rt = resource.get("resourceType")
         rule = effective.rule(rt) if effective is not None else None
         allowed_systems = rule.coding_systems if rule is not None else None
@@ -517,7 +556,9 @@ async def accept_augmentation(
             validator=validator_client(),
         )
         if settings.validate_before_write and conformance["valid"] is False:
-            raise ValueError(f"conformance gate failed ({conformance['level']}): {conformance['issues'][:3]}")
+            raise ValueError(
+                f"conformance gate failed ({conformance['level']}): {conformance['issues'][:3]}"
+            )
 
     write_result = None
     local_id = proposal_id or short_id("aug")
@@ -529,7 +570,10 @@ async def accept_augmentation(
             supersedes_ref=supersedes[0] if supersedes else None,
         )
         result = await apply_augmentation(
-            fhir_client, wp, attester=reviewer, patient_id=patient_id,
+            fhir_client,
+            wp,
+            attester=reviewer,
+            patient_id=patient_id,
         )
         write_result = {
             "resource_ref": result.resource_ref,
@@ -542,7 +586,10 @@ async def accept_augmentation(
 
     activity_code = "UPDATE" if classification == "UPDATING" else "CREATE"
     provenance_resource = build_provenance(
-        target_urn, built, activity_code=activity_code, attester=reviewer,
+        target_urn,
+        built,
+        activity_code=activity_code,
+        attester=reviewer,
     )
 
     await record_decision(
@@ -577,5 +624,9 @@ async def record_decision(
     _ = reason
     log.info(
         "decision action=%s run=%s resource_type=%s reviewer=%s ref=%s",
-        action, run_id, resource_type, reviewer, resource_ref,
+        action,
+        run_id,
+        resource_type,
+        reviewer,
+        resource_ref,
     )

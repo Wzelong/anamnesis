@@ -1,4 +1,5 @@
 """Phase 5: specialty IG prompt addons compose into stage-2 capture + extract."""
+
 from __future__ import annotations
 
 from core.effective_profile import resolve_effective_profile
@@ -8,8 +9,14 @@ from core.specialty_prompts import specialty_prompt_addons
 
 MCODE_PRESET = {"id": "p", "ig": {"base": "us-core@6.1.0", "specialty": "mcode@4.0.0"}}
 _USER_PRESET = {
-    "id": "p", "ig": {"base": "us-core@6.1.0", "specialty": "mcode@4.0.0"},
-    "prompts": {"Condition": {"active_version": 1, "versions": [{"version": 1, "text": "MY CONDITION RULE"}]}},
+    "id": "p",
+    "ig": {"base": "us-core@6.1.0", "specialty": "mcode@4.0.0"},
+    "prompts": {
+        "Condition": {
+            "active_version": 1,
+            "versions": [{"version": 1, "text": "MY CONDITION RULE"}],
+        }
+    },
 }
 
 
@@ -33,6 +40,7 @@ def test_no_specialty_leaves_rule_empty():
 
 # -- extract lane -----------------------------------------------------------
 
+
 def test_extract_unchanged_without_specialty():
     p = _resolve_prompts(resolve_effective_profile({"id": "p"}))
     assert p["Condition"] == PROMPTS_BY_TYPE["Condition"]
@@ -53,6 +61,7 @@ def test_user_override_layers_on_top_of_specialty():
 
 # -- capture lane -----------------------------------------------------------
 
+
 def test_capture_unchanged_without_specialty():
     assert compose_scan_prompt(PROMPT_SCAN, resolve_effective_profile({"id": "p"})) == PROMPT_SCAN
 
@@ -69,6 +78,7 @@ def test_capture_appends_inside_observation_block():
 
 
 # -- cache digest -----------------------------------------------------------
+
 
 def test_digest_distinguishes_specialty():
     base = _override_digest(resolve_effective_profile({"id": "p"}))

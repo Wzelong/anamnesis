@@ -1,4 +1,5 @@
 """Stage 3 (L2a): opportunistic profile $validate against the target FHIR server."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,11 +8,23 @@ from fhir.profile_validate import validate_profile
 
 COND = {"resourceType": "Condition", "meta": {"profile": ["http://p/cond"]}, "code": {"text": "x"}}
 
-OK = (200, {"resourceType": "OperationOutcome", "issue": [{"severity": "information", "diagnostics": "All OK"}]})
-ERR = (200, {"resourceType": "OperationOutcome", "issue": [
-    {"severity": "error", "diagnostics": "Unknown code", "expression": ["Condition.code"]},
-    {"severity": "warning", "diagnostics": "minor"},
-]})
+OK = (
+    200,
+    {
+        "resourceType": "OperationOutcome",
+        "issue": [{"severity": "information", "diagnostics": "All OK"}],
+    },
+)
+ERR = (
+    200,
+    {
+        "resourceType": "OperationOutcome",
+        "issue": [
+            {"severity": "error", "diagnostics": "Unknown code", "expression": ["Condition.code"]},
+            {"severity": "warning", "diagnostics": "minor"},
+        ],
+    },
+)
 NOT_FOUND = (404, {"resourceType": "OperationOutcome", "issue": []})
 NOT_OO = (200, {"resourceType": "Bundle"})
 

@@ -1,4 +1,5 @@
 """Post-parse validators for Stage 2 output."""
+
 from __future__ import annotations
 
 import re

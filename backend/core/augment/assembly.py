@@ -1,4 +1,5 @@
 """Stage 6 entry point: turn reconciled candidates into clinician-reviewable proposals."""
+
 from __future__ import annotations
 
 import logging
@@ -6,17 +7,17 @@ from dataclasses import dataclass, field
 
 from core.augment.builders import build_fhir_resource
 from core.augment.citations import _build_encounter_map, resolve_citations
-from core.augment.overlay import apply_overlay
-from core.augment.mcode import apply_specialty_profiles, body_site_tokens, classify_cancer_condition
 from core.augment.helpers import _is_negated_assertion
+from core.augment.mcode import apply_specialty_profiles, body_site_tokens, classify_cancer_condition
+from core.augment.overlay import apply_overlay
 from core.ids import short_id
 from core.preprocess import PreprocessedNote
-from core.reconcile import StageFiveOutput, _DISCONTINUED_STATUSES
+from core.reconcile import _DISCONTINUED_STATUSES, StageFiveOutput
 from core.reconcile_match_rules import _normalize_ingredient
 from core.schemas import Proposal
-from fhir.models import PatientContext
 from fhir.coding_subset import code_allowed
 from fhir.conformance import assess_local
+from fhir.models import PatientContext
 
 log = logging.getLogger(__name__)
 
@@ -79,7 +80,12 @@ def assemble_proposals(
             note_date = doc_dates.get(sr.document_id)
             if note_date:
                 break
-        built.append((result, build_fhir_resource(result.candidate, patient_id, enc_map, note_date=note_date)))
+        built.append(
+            (
+                result,
+                build_fhir_resource(result.candidate, patient_id, enc_map, note_date=note_date),
+            )
+        )
 
     cancer_sites: set[str] = set()
     primary_cancer_sites: set[str] = set()
@@ -101,8 +107,12 @@ def assemble_proposals(
             rule = effective.rule(result.candidate.resource_type)
             resource = apply_overlay(resource, rule)
             resource = apply_specialty_profiles(
-                resource, result.candidate.resource_type, rule.candidate_profiles,
-                result.candidate.item, cancer_sites, primary_cancer_sites,
+                resource,
+                result.candidate.resource_type,
+                rule.candidate_profiles,
+                result.candidate.item,
+                cancer_sites,
+                primary_cancer_sites,
             )
             if not code_allowed(resource, rule.coding_systems, rule.pinned, rule.fixed):
                 continue  # codeset: system not open and code not pinned/fixed -> drop
@@ -111,29 +121,36 @@ def assemble_proposals(
             fixed = rule.fixed
         conformance = assess_local(resource, allowed_systems, pinned, fixed)
         if not conformance["valid"]:
-            log.warning("stage6 resource failed R4 validation: %s %s", resource.get("resourceType"), conformance["issues"])
+            log.warning(
+                "stage6 resource failed R4 validation: %s %s",
+                resource.get("resourceType"),
+                conformance["issues"],
+            )
         citations = resolve_citations(result.candidate.source_refs, notes_by_doc)
         supersedes = (
             [m.resource_id for m in result.chart_matches]
-            if result.classification == "UPDATING" else []
+            if result.classification == "UPDATING"
+            else []
         )
-        proposals.append(Proposal(
-            id=short_id("prop"),
-            resource_type=result.candidate.resource_type,
-            resource=resource,
-            classification=result.classification,
-            classification_reasoning=result.reasoning,
-            extraction_reasoning=result.candidate.item.get("reasoning", ""),
-            merge_reasoning=result.candidate.merge_reasoning,
-            citations=citations,
-            chart_matches=result.chart_matches,
-            confidence_score=result.confidence_score,
-            confidence_tier=result.confidence_tier,
-            flags=result.flags,
-            confidence_breakdown=result.confidence_breakdown,
-            supersedes=supersedes,
-            conformance=conformance,
-        ))
+        proposals.append(
+            Proposal(
+                id=short_id("prop"),
+                resource_type=result.candidate.resource_type,
+                resource=resource,
+                classification=result.classification,
+                classification_reasoning=result.reasoning,
+                extraction_reasoning=result.candidate.item.get("reasoning", ""),
+                merge_reasoning=result.candidate.merge_reasoning,
+                citations=citations,
+                chart_matches=result.chart_matches,
+                confidence_score=result.confidence_score,
+                confidence_tier=result.confidence_tier,
+                flags=result.flags,
+                confidence_breakdown=result.confidence_breakdown,
+                supersedes=supersedes,
+                conformance=conformance,
+            )
+        )
 
     proposals = _detect_inter_proposal_conflicts(proposals)
 
@@ -172,8 +189,12 @@ def _detect_inter_proposal_conflicts(proposals: list[Proposal]) -> list[Proposal
     for ingredient, indices in med_by_ingredient.items():
         if len(indices) < 2:
             continue
-        stopped = [i for i in indices if proposals[i].resource.get("status") in _DISCONTINUED_STATUSES]
-        active = [i for i in indices if proposals[i].resource.get("status") not in _DISCONTINUED_STATUSES]
+        stopped = [
+            i for i in indices if proposals[i].resource.get("status") in _DISCONTINUED_STATUSES
+        ]
+        active = [
+            i for i in indices if proposals[i].resource.get("status") not in _DISCONTINUED_STATUSES
+        ]
         if not stopped or not active:
             continue
         group_id = short_id("cg")
@@ -184,10 +205,12 @@ def _detect_inter_proposal_conflicts(proposals: list[Proposal]) -> list[Proposal
             new_flags = list(proposals[i].flags)
             for lbl in other_labels:
                 new_flags.append(f"Inter-note conflict: contradicts {lbl}")
-            proposals[i] = proposals[i].model_copy(update={
-                "conflict_group_id": group_id,
-                "confidence_tier": "ATTENTION",
-                "flags": new_flags,
-            })
+            proposals[i] = proposals[i].model_copy(
+                update={
+                    "conflict_group_id": group_id,
+                    "confidence_tier": "ATTENTION",
+                    "flags": new_flags,
+                }
+            )
 
     return proposals

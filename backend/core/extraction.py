@@ -5,6 +5,7 @@ Turns a `PreprocessedNote` into candidates per resource type, all with
 lives in `core/extraction_merge.py` and is re-exported from this module so
 existing call sites keep working.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -13,7 +14,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -30,11 +31,11 @@ from core.prompts import (
     PROMPTS_BY_TYPE,
 )
 from core.schemas import (
+    ITEM_LIST_MODELS,
+    RESOURCE_TYPES,
     CleanerResult,
     DatedField,
-    ITEM_LIST_MODELS,
     NoteContext,
-    RESOURCE_TYPES,
     ScanResult,
 )
 from core.validation import validate_fhir_date
@@ -66,7 +67,7 @@ class StageTwoOutput:
         }
 
     @classmethod
-    def from_json(cls, data: dict) -> "StageTwoOutput":
+    def from_json(cls, data: dict) -> StageTwoOutput:
         out = cls(
             document_id=data["document_id"],
             note_context=NoteContext.model_validate(data["note_context"]),
@@ -130,9 +131,10 @@ async def parse_structured(
     """
     from core.llm import generate_structured
 
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
     parsed, usage, error = await generate_structured(
-        client, model,
+        client,
+        model,
         system=developer_prompt,
         user=user_content,
         schema=response_model,
@@ -142,7 +144,7 @@ async def parse_structured(
     if error:
         log.warning("gemini parse failed (%s): %s", response_model.__name__, error)
 
-    finished_at = datetime.now(timezone.utc)
+    finished_at = datetime.now(UTC)
     await telemetry.record_call(
         stage=stage,
         call_type=call_type,
@@ -156,6 +158,7 @@ async def parse_structured(
         document_id=document_id,
     )
     return parsed
+
 
 _parse_structured = parse_structured
 
@@ -190,12 +193,15 @@ def _sanitize_note_context_dates(scan: ScanResult, note: PreprocessedNote) -> Sc
     def _fix(df: DatedField, ref: str | None) -> DatedField:
         kept, reason = validate_fhir_date(df.value, snippet, ref)
         if kept is None and df.value is not None:
-            telemetry.log_event_sync("date_reject", {
-                "document_id": note.document_id,
-                "field": "note_context",
-                "value": df.value,
-                "reason": reason,
-            })
+            telemetry.log_event_sync(
+                "date_reject",
+                {
+                    "document_id": note.document_id,
+                    "field": "note_context",
+                    "value": df.value,
+                    "reason": reason,
+                },
+            )
             return DatedField(value=None, source_sentences=df.source_sentences)
         return df
 
@@ -220,8 +226,7 @@ async def parse_group(
     prompt = prompt or PROMPTS_BY_TYPE[resource_type]
     list_model = ITEM_LIST_MODELS[resource_type]
     user_content = (
-        f"Temporal context: {_render_temporal_context(note_context)}\n\n"
-        f"Snippet:\n{snippet}"
+        f"Temporal context: {_render_temporal_context(note_context)}\n\nSnippet:\n{snippet}"
     )
     parsed = await _parse_structured(
         client,
@@ -271,12 +276,15 @@ def _apply_date_validators(
         return item
     kept, reason = validate_fhir_date(current, snippet, note_date)
     if kept is None:
-        telemetry.log_event_sync("date_reject", {
-            "document_id": document_id,
-            "field": f"{resource_type}.{field_name}",
-            "value": current,
-            "reason": reason,
-        })
+        telemetry.log_event_sync(
+            "date_reject",
+            {
+                "document_id": document_id,
+                "field": f"{resource_type}.{field_name}",
+                "value": current,
+                "reason": reason,
+            },
+        )
         return item.model_copy(update={field_name: None})
     if kept != current:
         return item.model_copy(update={field_name: kept})
@@ -314,9 +322,7 @@ async def clean_candidates(
     return _apply_cleaner(candidates, result)
 
 
-def _apply_cleaner(
-    candidates: list[BaseModel], result: CleanerResult
-) -> list[BaseModel]:
+def _apply_cleaner(candidates: list[BaseModel], result: CleanerResult) -> list[BaseModel]:
     n = len(candidates)
     keep_flags = [True] * n
     merged_sources: dict[int, list[int]] = {}
@@ -386,14 +392,20 @@ def _override_digest(effective) -> str:
 
 
 ADDON_HEADER = "## Site-specific additions"
-ADDON_INTRO = ("Additional rules from the reviewing clinician for their own notes. Apply them "
-               "on top of the instructions above; never relax safety or output-format rules.")
+ADDON_INTRO = (
+    "Additional rules from the reviewing clinician for their own notes. Apply them "
+    "on top of the instructions above; never relax safety or output-format rules."
+)
 SPECIALTY_HEADER = "## Specialty IG additions"
-SPECIALTY_INTRO = ("Extraction rules contributed by the active specialty implementation guide. Apply "
-                   "them on top of the instructions above; never relax safety or output-format rules.")
+SPECIALTY_INTRO = (
+    "Extraction rules contributed by the active specialty implementation guide. Apply "
+    "them on top of the instructions above; never relax safety or output-format rules."
+)
 
 
-def compose_prompt(base: str, addon: str | None, *, header: str = ADDON_HEADER, intro: str = ADDON_INTRO) -> str:
+def compose_prompt(
+    base: str, addon: str | None, *, header: str = ADDON_HEADER, intro: str = ADDON_INTRO
+) -> str:
     """Add-only: append addon rules to the validated base prompt.
 
     The base stays authoritative; the addon layers extra extraction rules on top.
@@ -410,27 +422,31 @@ def _resolve_prompts(effective) -> dict[str, str]:
     for rt in RESOURCE_TYPES:
         rule = effective.rule(rt) if effective else None
         prompt = compose_prompt(
-            PROMPTS_BY_TYPE[rt], rule.specialty_prompt_addon if rule else None,
-            header=SPECIALTY_HEADER, intro=SPECIALTY_INTRO,
+            PROMPTS_BY_TYPE[rt],
+            rule.specialty_prompt_addon if rule else None,
+            header=SPECIALTY_HEADER,
+            intro=SPECIALTY_INTRO,
         )
         out[rt] = compose_prompt(prompt, rule.prompt_override if rule else None)
     return out
 
 
-def _scan_block_re(rt: str) -> "re.Pattern[str]":
+def _scan_block_re(rt: str) -> re.Pattern[str]:
     return re.compile(rf'(<resource name="{re.escape(rt)}">\n).*?(\n</resource>)', re.DOTALL)
 
 
 def scan_block(rt: str) -> str:
     """The base scan routing rules for one type — the editable Capture lane content."""
     m = _scan_block_re(rt).search(PROMPT_SCAN)
-    return m.group(0)[len(m.group(1)):-len(m.group(2))].strip() if m else ""
+    return m.group(0)[len(m.group(1)) : -len(m.group(2))].strip() if m else ""
 
 
 def _append_scan_block(text: str, rt: str, addon: str) -> str:
     """Append addon text inside a type's scan block (additive, before the close tag)."""
     pat = re.compile(rf'(<resource name="{re.escape(rt)}">\n)(.*?)(\n</resource>)', re.DOTALL)
-    return pat.sub(lambda m: m.group(1) + m.group(2) + "\n" + addon.strip() + m.group(3), text, count=1)
+    return pat.sub(
+        lambda m: m.group(1) + m.group(2) + "\n" + addon.strip() + m.group(3), text, count=1
+    )
 
 
 def compose_scan_prompt(base: str, effective) -> str:
@@ -444,7 +460,9 @@ def compose_scan_prompt(base: str, effective) -> str:
         rule = effective.rule(rt)
         ov = rule.capture_override
         if ov and ov.strip():
-            out = _scan_block_re(rt).sub(lambda m, ov=ov: m.group(1) + ov.strip() + m.group(2), out, count=1)
+            out = _scan_block_re(rt).sub(
+                lambda m, ov=ov: m.group(1) + ov.strip() + m.group(2), out, count=1
+            )
         addon = rule.specialty_capture_addon
         if addon and addon.strip():
             out = _append_scan_block(out, rt, addon)
@@ -517,13 +535,23 @@ async def extract_candidates(
                 continue
             snippet = _build_snippet(valid_group, sentences_by_number)
             allowed = set(valid_group)
-            parse_tasks.append((
-                rtype,
-                asyncio.create_task(parse_group(
-                    rtype, snippet, scan.note_context, client, model, allowed,
-                    document_id=note.document_id, prompt=prompts[rtype],
-                )),
-            ))
+            parse_tasks.append(
+                (
+                    rtype,
+                    asyncio.create_task(
+                        parse_group(
+                            rtype,
+                            snippet,
+                            scan.note_context,
+                            client,
+                            model,
+                            allowed,
+                            document_id=note.document_id,
+                            prompt=prompts[rtype],
+                        )
+                    ),
+                )
+            )
 
     parsed_by_type: dict[str, list[BaseModel]] = {t: [] for t in RESOURCE_TYPES}
     for rtype, task in parse_tasks:
@@ -531,9 +559,15 @@ async def extract_candidates(
         parsed_by_type[rtype].extend(items)
 
     clean_tasks = {
-        rtype: asyncio.create_task(clean_candidates(
-            rtype, items, client, model, document_id=note.document_id,
-        ))
+        rtype: asyncio.create_task(
+            clean_candidates(
+                rtype,
+                items,
+                client,
+                model,
+                document_id=note.document_id,
+            )
+        )
         for rtype, items in parsed_by_type.items()
         if items
     }
@@ -571,8 +605,7 @@ async def extract_candidates_batch(
     `StageTwoOutput` matches the input note order.
     """
     tasks = [
-        extract_candidates(n, client, model=model, cache=cache, effective=effective)
-        for n in notes
+        extract_candidates(n, client, model=model, cache=cache, effective=effective) for n in notes
     ]
     return await asyncio.gather(*tasks)
 
@@ -582,4 +615,3 @@ async def extract_candidates_batch(
 # Imported at the bottom to avoid circular-import issues — extraction_merge
 # depends on `StageTwoOutput` and `parse_structured` defined above.
 from core.extraction_merge import StageThreeOutput, merge_across_notes  # noqa: E402, F401
-

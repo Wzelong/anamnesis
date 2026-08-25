@@ -5,6 +5,7 @@ Run from backend/:
 
 If --patient-id is omitted, looks up the demo patient by MRN.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -66,7 +67,7 @@ def _print_note(note, index: int, total: int) -> bool:
             preview = preview[:117] + "..."
         print(f"    [{s.number}] ({s.start}-{s.end}) {preview}")
 
-    ok = sum(1 for s in note.sentences if s.text == note.original_text[s.start:s.end])
+    ok = sum(1 for s in note.sentences if s.text == note.original_text[s.start : s.end])
     total_spans = len(note.sentences)
     label = "PASS" if ok == total_spans else "FAIL"
     print(f"\n  roundtrip: {label} {ok}/{total_spans}")

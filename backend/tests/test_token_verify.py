@@ -4,6 +4,7 @@ The accept path needs PO's live JWKS, so it is exercised against a real token in
 the opt-in e2e suite. Here we only assert that malformed / missing tokens are
 rejected before any network call.
 """
+
 import pytest
 
 from context.token_verify import TokenVerificationError, verify_po_token

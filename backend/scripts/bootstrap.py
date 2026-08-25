@@ -3,6 +3,7 @@
 Run from backend/:
     python -m scripts.bootstrap
 """
+
 import asyncio
 import os
 import sys
@@ -19,7 +20,9 @@ async def main() -> int:
     token = os.environ.get("DEV_FHIR_TOKEN")
     if not url or not token:
         print("error: DEV_FHIR_BASE_URL and DEV_FHIR_TOKEN must be set in .env", file=sys.stderr)
-        print("       capture them from the ngrok inspector at http://127.0.0.1:4040", file=sys.stderr)
+        print(
+            "       capture them from the ngrok inspector at http://127.0.0.1:4040", file=sys.stderr
+        )
         return 2
 
     client = FhirClient(url, token)

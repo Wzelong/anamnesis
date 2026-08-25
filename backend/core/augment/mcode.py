@@ -5,6 +5,7 @@ specialty IG *could* apply to a type; this module makes the per-resource call an
 mCODE profile is a semantic claim, not a type tag. Classification is deterministic
 (code text + ICD-10 ranges) so it runs without an LLM and stays testable.
 """
+
 from __future__ import annotations
 
 import re
@@ -15,9 +16,21 @@ from core.mcode_obs import ROLE_TUMOR_MARKER, spec_for_codings
 # Inherently-malignant terms; bare "tumor"/"neoplasm"/"-oma" omitted (can be
 # benign: lipoma, adenoma). Specific malignant histologies are listed explicitly.
 _CANCER_TERMS = (
-    "cancer", "carcinoma", "melanoma", "lymphoma", "leukemia", "leukaemia",
-    "sarcoma", "myeloma", "blastoma", "glioma", "mesothelioma", "malignant",
-    "malignancy", "seminoma", "germinoma",
+    "cancer",
+    "carcinoma",
+    "melanoma",
+    "lymphoma",
+    "leukemia",
+    "leukaemia",
+    "sarcoma",
+    "myeloma",
+    "blastoma",
+    "glioma",
+    "mesothelioma",
+    "malignant",
+    "malignancy",
+    "seminoma",
+    "germinoma",
 )
 _SECONDARY_TERMS = ("secondary", "metastatic", "metastasis", "metastases", "metastat")
 
@@ -52,7 +65,9 @@ def classify_cancer_condition(resource: dict) -> str | None:
     malignant_icd = [c for c in icd if c.startswith("C")]
     if not has_cancer_signal(text) and not malignant_icd:
         return None
-    if any(t in text for t in _SECONDARY_TERMS) or any(c[:3] in ("C77", "C78", "C79") for c in malignant_icd):
+    if any(t in text for t in _SECONDARY_TERMS) or any(
+        c[:3] in ("C77", "C78", "C79") for c in malignant_icd
+    ):
         return "secondary"
     return "primary"
 
@@ -74,10 +89,29 @@ def _reason_is_cancer(resource: dict) -> bool:
 
 # Laterality + generic anatomy words dropped so organ identity is what matches
 # (so "right testis" == "testis", but "right inguinal region" != "prostate").
-_SITE_STOPWORDS = frozenset({
-    "left", "right", "bilateral", "region", "structure", "area", "site", "the", "of",
-    "lobe", "upper", "lower", "outer", "inner", "quadrant", "proximal", "distal", "anterior", "posterior",
-})
+_SITE_STOPWORDS = frozenset(
+    {
+        "left",
+        "right",
+        "bilateral",
+        "region",
+        "structure",
+        "area",
+        "site",
+        "the",
+        "of",
+        "lobe",
+        "upper",
+        "lower",
+        "outer",
+        "inner",
+        "quadrant",
+        "proximal",
+        "distal",
+        "anterior",
+        "posterior",
+    }
+)
 
 
 def body_site_tokens(resource: dict) -> set[str]:
@@ -103,8 +137,11 @@ def _drop_primary_organ_bodysite(resource: dict, primary_sites: set[str] | None)
 
 
 def apply_specialty_profiles(
-    resource: dict, resource_type: str, candidate_profiles: list[str],
-    item: dict | None = None, cancer_sites: set[str] | None = None,
+    resource: dict,
+    resource_type: str,
+    candidate_profiles: list[str],
+    item: dict | None = None,
+    cancer_sites: set[str] | None = None,
     primary_cancer_sites: set[str] | None = None,
 ) -> dict:
     """Select and attach the one specialty profile that fits this resource.
@@ -132,11 +169,17 @@ def apply_specialty_profiles(
             selected = _select_by_needle("mcode-tumor-marker-test", candidate_profiles)
     elif resource_type == "Procedure":
         site_match = bool(cancer_sites and body_site_tokens(resource) & cancer_sites)
-        if (item or {}).get("category") == "surgical" and (_reason_is_cancer(resource) or site_match):
-            selected = _select_by_needle("mcode-cancer-related-surgical-procedure", candidate_profiles)
+        if (item or {}).get("category") == "surgical" and (
+            _reason_is_cancer(resource) or site_match
+        ):
+            selected = _select_by_needle(
+                "mcode-cancer-related-surgical-procedure", candidate_profiles
+            )
     elif resource_type == "MedicationRequest":
         if _reason_is_cancer(resource):
-            selected = _select_by_needle("mcode-cancer-related-medication-request", candidate_profiles)
+            selected = _select_by_needle(
+                "mcode-cancer-related-medication-request", candidate_profiles
+            )
     if selected:
         merge_profiles(resource, [selected])
     return resource

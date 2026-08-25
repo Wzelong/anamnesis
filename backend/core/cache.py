@@ -1,4 +1,5 @@
 """Content-addressed JSON cache shared across pipeline stages."""
+
 from __future__ import annotations
 
 import hashlib

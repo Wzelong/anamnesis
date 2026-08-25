@@ -1,4 +1,5 @@
 """Per-resource-type FHIR builders + dispatch (`build_fhir_resource`)."""
+
 from __future__ import annotations
 
 from core.augment.citations import _resolve_encounter
@@ -23,7 +24,6 @@ from core.augment.config import (
     VITAL_PROFILE_BY_LOINC,
 )
 from core.augment.helpers import (
-    _allergy_verification,
     _cc,
     _cond_verification,
     _is_numeric,
@@ -76,7 +76,9 @@ def _build_condition(item: dict, patient_id: str, encounter_ref: str | None) -> 
 
     verify_code = verify["coding"][0]["code"]
     if verify_code != "entered-in-error":
-        resource["clinicalStatus"] = {"coding": [{"system": _COND_CLINICAL_SYSTEM, "code": "active"}]}
+        resource["clinicalStatus"] = {
+            "coding": [{"system": _COND_CLINICAL_SYSTEM, "code": "active"}]
+        }
 
     onset = item.get("onset")
     if onset:
@@ -98,7 +100,9 @@ def _build_condition(item: dict, patient_id: str, encounter_ref: str | None) -> 
     return _strip_none(resource)
 
 
-def _build_observation(item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None) -> dict:
+def _build_observation(
+    item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None
+) -> dict:
     cat = item.get("category", "exam")
 
     codings = item.get("coding", [])
@@ -170,12 +174,38 @@ def _build_observation(item: dict, patient_id: str, encounter_ref: str | None, *
         if bp:
             resource["component"] = [
                 {
-                    "code": {"coding": [{"system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure"}]},
-                    "valueQuantity": {"value": bp[0], "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"},
+                    "code": {
+                        "coding": [
+                            {
+                                "system": "http://loinc.org",
+                                "code": "8480-6",
+                                "display": "Systolic blood pressure",
+                            }
+                        ]
+                    },
+                    "valueQuantity": {
+                        "value": bp[0],
+                        "unit": "mmHg",
+                        "system": "http://unitsofmeasure.org",
+                        "code": "mm[Hg]",
+                    },
                 },
                 {
-                    "code": {"coding": [{"system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure"}]},
-                    "valueQuantity": {"value": bp[1], "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]"},
+                    "code": {
+                        "coding": [
+                            {
+                                "system": "http://loinc.org",
+                                "code": "8462-4",
+                                "display": "Diastolic blood pressure",
+                            }
+                        ]
+                    },
+                    "valueQuantity": {
+                        "value": bp[1],
+                        "unit": "mmHg",
+                        "system": "http://unitsofmeasure.org",
+                        "code": "mm[Hg]",
+                    },
                 },
             ]
         else:
@@ -185,7 +215,9 @@ def _build_observation(item: dict, patient_id: str, encounter_ref: str | None, *
         v_lower = value_str.lower().strip()
         for key, (code, display) in _TOBACCO_SNOMED.items():
             if key in v_lower:
-                vcc["coding"] = [{"system": "http://snomed.info/sct", "code": code, "display": display}]
+                vcc["coding"] = [
+                    {"system": "http://snomed.info/sct", "code": code, "display": display}
+                ]
                 break
         resource["valueCodeableConcept"] = vcc
     elif cat == "social-history":
@@ -204,13 +236,24 @@ def _build_observation(item: dict, patient_id: str, encounter_ref: str | None, *
     return _strip_none(resource)
 
 
-def _build_medication_request(item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None) -> dict:
+def _build_medication_request(
+    item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None
+) -> dict:
     resource: dict = {
         "resourceType": "MedicationRequest",
         "meta": {"profile": [US_CORE_PROFILES["MedicationRequest"]]},
         "status": item.get("status", "active"),
         "intent": item.get("intent", "order"),
-        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category", "code": "outpatient"}]}],
+        "category": [
+            {
+                "coding": [
+                    {
+                        "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                        "code": "outpatient",
+                    }
+                ]
+            }
+        ],
         "reportedBoolean": True,
         "medicationCodeableConcept": _cc(item.get("coding", []), item.get("name", "")),
         "subject": {"reference": f"Patient/{patient_id}"},
@@ -227,7 +270,9 @@ def _build_medication_request(item: dict, patient_id: str, encounter_ref: str | 
         if dose and isinstance(dose, dict):
             parts.append(f"{dose.get('value', '')} {dose.get('unit', '')}".strip())
             try:
-                dosage["doseAndRate"] = [{"doseQuantity": {"value": float(dose["value"]), "unit": dose.get("unit", "")}}]
+                dosage["doseAndRate"] = [
+                    {"doseQuantity": {"value": float(dose["value"]), "unit": dose.get("unit", "")}}
+                ]
             except (ValueError, KeyError):
                 pass
         if route:
@@ -244,7 +289,9 @@ def _build_medication_request(item: dict, patient_id: str, encounter_ref: str | 
     return _strip_none(resource)
 
 
-def _build_procedure(item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None) -> dict:
+def _build_procedure(
+    item: dict, patient_id: str, encounter_ref: str | None, *, note_date: str | None = None
+) -> dict:
     resource: dict = {
         "resourceType": "Procedure",
         "meta": {"profile": [US_CORE_PROFILES["Procedure"]]},
@@ -281,7 +328,9 @@ def _build_allergy_intolerance(item: dict, patient_id: str) -> dict:
         "patient": {"reference": f"Patient/{patient_id}"},
     }
     if verify_code != "entered-in-error":
-        resource["clinicalStatus"] = {"coding": [{"system": _ALLERGY_CLINICAL_SYSTEM, "code": "active"}]}
+        resource["clinicalStatus"] = {
+            "coding": [{"system": _ALLERGY_CLINICAL_SYSTEM, "code": "active"}]
+        }
     if item.get("category"):
         resource["category"] = [item["category"]]
     if item.get("criticality"):
@@ -289,7 +338,12 @@ def _build_allergy_intolerance(item: dict, patient_id: str) -> dict:
     if item.get("onset_age"):
         age_val = _parse_onset_age(item["onset_age"])
         if age_val is not None:
-            resource["onsetAge"] = {"value": age_val, "unit": "a", "system": "http://unitsofmeasure.org", "code": "a"}
+            resource["onsetAge"] = {
+                "value": age_val,
+                "unit": "a",
+                "system": "http://unitsofmeasure.org",
+                "code": "a",
+            }
     reaction_block: dict = {}
     if item.get("reaction"):
         reaction_block["manifestation"] = [{"text": item["reaction"]}]
@@ -311,7 +365,12 @@ def _build_family_member_history(item: dict, patient_id: str) -> dict:
         if cond.get("onset_age"):
             age_val = _parse_onset_age(cond["onset_age"])
             if age_val is not None:
-                c["onsetAge"] = {"value": age_val, "unit": "a", "system": "http://unitsofmeasure.org", "code": "a"}
+                c["onsetAge"] = {
+                    "value": age_val,
+                    "unit": "a",
+                    "system": "http://unitsofmeasure.org",
+                    "code": "a",
+                }
         if cond.get("outcome"):
             c["outcome"] = {"text": cond["outcome"]}
         conditions.append(c)

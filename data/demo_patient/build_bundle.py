@@ -1151,7 +1151,12 @@ bundle = Bundle(
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
-out_path = "/home/claude/anamnesis-demo-bundle.json"
+import sys
+from pathlib import Path
+
+out_path = sys.argv[1] if len(sys.argv) > 1 else str(
+    Path(__file__).resolve().parent / "anamnesis-demo-bundle.json"
+)
 with open(out_path, "w") as f:
     f.write(bundle.model_dump_json(indent=2, exclude_none=True))
 

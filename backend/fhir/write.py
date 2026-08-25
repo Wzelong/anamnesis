@@ -8,12 +8,13 @@ Supports all three classifications:
 Multi-citation Provenance: each source document gets its own entity entry
 and source-span extension, so the UI can highlight every corroborating note.
 """
+
 from __future__ import annotations
 
 import base64
 import re
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Literal
 from uuid import uuid4
 
@@ -27,7 +28,9 @@ SOURCE_SPAN_EXT_URL = "http://anamnesis.example.org/StructureDefinition/source-t
 PROVENANCE_AGENT_TYPE_SYSTEM = "http://terminology.hl7.org/CodeSystem/provenance-participant-type"
 PROVENANCE_ACTIVITY_SYSTEM = "http://terminology.hl7.org/CodeSystem/v3-DataOperation"
 US_CORE_DOCREF_PROFILE = "http://hl7.org/fhir/us/core/StructureDefinition/us-core-documentreference"
-US_CORE_DOCREF_CATEGORY_SYSTEM = "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category"
+US_CORE_DOCREF_CATEGORY_SYSTEM = (
+    "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category"
+)
 LOINC_SYSTEM = "http://loinc.org"
 DEFAULT_NOTE_LOINC = ("34109-9", "Note")
 
@@ -74,34 +77,40 @@ def build_provenance(
         if c.document_ref not in seen_docs:
             entities.append({"role": "source", "what": {"reference": c.document_ref}})
             seen_docs.add(c.document_ref)
-        extensions.append({
-            "url": SOURCE_SPAN_EXT_URL,
-            "extension": [
-                {"url": "documentRef", "valueString": c.document_ref},
-                {"url": "start", "valueInteger": c.start},
-                {"url": "end", "valueInteger": c.end},
-                {"url": "text", "valueString": c.text},
-            ],
-        })
+        extensions.append(
+            {
+                "url": SOURCE_SPAN_EXT_URL,
+                "extension": [
+                    {"url": "documentRef", "valueString": c.document_ref},
+                    {"url": "start", "valueInteger": c.start},
+                    {"url": "end", "valueInteger": c.end},
+                    {"url": "text", "valueString": c.text},
+                ],
+            }
+        )
 
-    agents = [{
-        "type": {"coding": [{"system": PROVENANCE_AGENT_TYPE_SYSTEM, "code": "author"}]},
-        "who": {"display": actor_name},
-    }]
+    agents = [
+        {
+            "type": {"coding": [{"system": PROVENANCE_AGENT_TYPE_SYSTEM, "code": "author"}]},
+            "who": {"display": actor_name},
+        }
+    ]
     if attester:
         who: dict = {"display": attester.display}
         if attester.fhir_reference:
             who["reference"] = attester.fhir_reference
-        agents.append({
-            "type": {"coding": [{"system": PROVENANCE_AGENT_TYPE_SYSTEM, "code": "attester"}]},
-            "who": who,
-        })
+        agents.append(
+            {
+                "type": {"coding": [{"system": PROVENANCE_AGENT_TYPE_SYSTEM, "code": "attester"}]},
+                "who": who,
+            }
+        )
 
     return {
         "resourceType": "Provenance",
         "meta": {"profile": ["http://hl7.org/fhir/us/core/StructureDefinition/us-core-provenance"]},
         "target": [{"reference": target_urn}],
-        "recorded": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "recorded": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "activity": {
             "coding": [{"system": PROVENANCE_ACTIVITY_SYSTEM, "code": activity_code}],
         },
@@ -120,11 +129,13 @@ def _build_inline_documentreference(
     encoded = base64.b64encode(doc.text.encode("utf-8")).decode("ascii")
     type_text = doc.type or "Note"
     type_cc: dict = {
-        "coding": [{
-            "system": LOINC_SYSTEM,
-            "code": DEFAULT_NOTE_LOINC[0],
-            "display": DEFAULT_NOTE_LOINC[1],
-        }],
+        "coding": [
+            {
+                "system": LOINC_SYSTEM,
+                "code": DEFAULT_NOTE_LOINC[0],
+                "display": DEFAULT_NOTE_LOINC[1],
+            }
+        ],
         "text": type_text,
     }
     resource: dict = {
@@ -132,19 +143,25 @@ def _build_inline_documentreference(
         "meta": {"profile": [US_CORE_DOCREF_PROFILE]},
         "status": "current",
         "type": type_cc,
-        "category": [{
-            "coding": [{
-                "system": US_CORE_DOCREF_CATEGORY_SYSTEM,
-                "code": "clinical-note",
-            }],
-        }],
+        "category": [
+            {
+                "coding": [
+                    {
+                        "system": US_CORE_DOCREF_CATEGORY_SYSTEM,
+                        "code": "clinical-note",
+                    }
+                ],
+            }
+        ],
         "subject": {"reference": f"Patient/{patient_id}"},
-        "content": [{
-            "attachment": {
-                "contentType": "text/plain; charset=UTF-8",
-                "data": encoded,
-            },
-        }],
+        "content": [
+            {
+                "attachment": {
+                    "contentType": "text/plain; charset=UTF-8",
+                    "data": encoded,
+                },
+            }
+        ],
     }
     if doc.date:
         resource["date"] = doc.date
@@ -181,11 +198,13 @@ def _resolve_inline_citations(
         if urn is None:
             urn = f"urn:uuid:{uuid4()}"
             by_doc_id[doc.id] = urn
-            inline_entries.append({
-                "fullUrl": urn,
-                "resource": _build_inline_documentreference(doc, patient_id, attester=attester),
-                "request": {"method": "POST", "url": "DocumentReference"},
-            })
+            inline_entries.append(
+                {
+                    "fullUrl": urn,
+                    "resource": _build_inline_documentreference(doc, patient_id, attester=attester),
+                    "request": {"method": "POST", "url": "DocumentReference"},
+                }
+            )
         rewritten.append(replace(c, document_ref=urn))
     return inline_entries, rewritten
 
@@ -226,13 +245,17 @@ async def _apply_new(
         raise ValueError("proposal.resource missing resourceType")
 
     inline_entries, citations = _resolve_inline_citations(
-        proposal.citations, patient_id, attester=attester,
+        proposal.citations,
+        patient_id,
+        attester=attester,
     )
 
     urn_resource = f"urn:uuid:{uuid4()}"
     urn_prov = f"urn:uuid:{uuid4()}"
 
-    provenance = build_provenance(urn_resource, citations, activity_code="CREATE", attester=attester)
+    provenance = build_provenance(
+        urn_resource, citations, activity_code="CREATE", attester=attester
+    )
 
     bundle = {
         "resourceType": "Bundle",
@@ -283,12 +306,17 @@ async def _apply_updating(
         updated.setdefault("meta", {})["versionId"] = existing["meta"].get("versionId")
 
     inline_entries, citations = _resolve_inline_citations(
-        proposal.citations, patient_id, attester=attester,
+        proposal.citations,
+        patient_id,
+        attester=attester,
     )
 
     urn_prov = f"urn:uuid:{uuid4()}"
     provenance = build_provenance(
-        proposal.supersedes_ref, citations, activity_code="UPDATE", attester=attester,
+        proposal.supersedes_ref,
+        citations,
+        activity_code="UPDATE",
+        attester=attester,
     )
 
     bundle = {
@@ -331,13 +359,17 @@ async def _apply_conflicting(
         raise ValueError("proposal.resource missing resourceType")
 
     inline_entries, citations = _resolve_inline_citations(
-        proposal.citations, patient_id, attester=attester,
+        proposal.citations,
+        patient_id,
+        attester=attester,
     )
 
     urn_resource = f"urn:uuid:{uuid4()}"
     urn_prov = f"urn:uuid:{uuid4()}"
 
-    provenance = build_provenance(urn_resource, citations, activity_code="CREATE", attester=attester)
+    provenance = build_provenance(
+        urn_resource, citations, activity_code="CREATE", attester=attester
+    )
 
     bundle = {
         "resourceType": "Bundle",

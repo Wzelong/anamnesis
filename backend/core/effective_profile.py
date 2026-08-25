@@ -6,6 +6,7 @@ unconfigured clinician resolves to pure defaults — identical to no preset. The
 IG catalog stays frontend-side; the backend applies only the explicit overrides
 over its US Core baseline (see CONFORMANCE.md).
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -21,17 +22,33 @@ DEFAULT_BASE_IG = f"us-core@{US_CORE_VERSION}"
 @dataclass
 class ResourceRule:
     enabled: bool = True
-    profiles: list[str] = field(default_factory=list)     # overlay profiles to ADD unconditionally (base computed by builder)
-    candidate_profiles: list[str] = field(default_factory=list)  # specialty IG profiles a builder may select among (one fits)
-    coding_systems: list[str] | None = None               # OPEN systems: None=default all open, []=none, [..]=those
-    pinned: list[dict] = field(default_factory=list)       # pinned codes (system,code,display), any system; additive
-    fixed: list[dict] = field(default_factory=list)        # profile-fixed codings (catalog); read-only, always allowed
-    code_overrides: list[dict] = field(default_factory=list)  # deterministic term->code maps ({match,system,code,display}); bypass retrieval
+    profiles: list[str] = field(
+        default_factory=list
+    )  # overlay profiles to ADD unconditionally (base computed by builder)
+    candidate_profiles: list[str] = field(
+        default_factory=list
+    )  # specialty IG profiles a builder may select among (one fits)
+    coding_systems: list[str] | None = (
+        None  # OPEN systems: None=default all open, []=none, [..]=those
+    )
+    pinned: list[dict] = field(
+        default_factory=list
+    )  # pinned codes (system,code,display), any system; additive
+    fixed: list[dict] = field(
+        default_factory=list
+    )  # profile-fixed codings (catalog); read-only, always allowed
+    code_overrides: list[dict] = field(
+        default_factory=list
+    )  # deterministic term->code maps ({match,system,code,display}); bypass retrieval
     extensions: list[dict] = field(default_factory=list)  # UserExtension declarations to apply
-    prompt_override: str | None = None                    # add-only EXTRACT rules → stage-2 parse prompt
-    capture_override: str | None = None                   # add-only CAPTURE rules → stage-2 scan routing
-    specialty_prompt_addon: str | None = None             # specialty IG EXTRACT guidance (add-only, under user override)
-    specialty_capture_addon: str | None = None            # specialty IG CAPTURE guidance (additive to scan block)
+    prompt_override: str | None = None  # add-only EXTRACT rules → stage-2 parse prompt
+    capture_override: str | None = None  # add-only CAPTURE rules → stage-2 scan routing
+    specialty_prompt_addon: str | None = (
+        None  # specialty IG EXTRACT guidance (add-only, under user override)
+    )
+    specialty_capture_addon: str | None = (
+        None  # specialty IG CAPTURE guidance (additive to scan block)
+    )
 
 
 @dataclass
@@ -52,6 +69,7 @@ def _resolve_coding(cod: dict) -> tuple[list[str] | None, list[dict]]:
     Migrates the pre-redesign `subset` key (restrict-only) to pinned + no open
     systems, preserving its original "only these codes" behavior.
     """
+
     def _codes(v) -> list[dict]:
         return [c for c in (v or []) if isinstance(c, dict)]
 
@@ -81,7 +99,12 @@ def resolve_effective_profile(preset: dict | None) -> EffectiveProfile:
     `preset` is None / empty for an unconfigured clinician → pure defaults.
     """
     if not isinstance(preset, dict):
-        return EffectiveProfile(rules={rt: ResourceRule(fixed=fixed_codings(DEFAULT_BASE_IG, None, rt)) for rt in RESOURCE_TYPES})
+        return EffectiveProfile(
+            rules={
+                rt: ResourceRule(fixed=fixed_codings(DEFAULT_BASE_IG, None, rt))
+                for rt in RESOURCE_TYPES
+            }
+        )
 
     ig = preset.get("ig") or {}
     resources = preset.get("resources") or {}
@@ -106,7 +129,11 @@ def resolve_effective_profile(preset: dict | None) -> EffectiveProfile:
             coding_systems=coding_systems,
             pinned=pinned,
             fixed=fixed_codings(ig_base, ig_specialty, rt),
-            code_overrides=[o for o in (cod.get("code_overrides") or []) if isinstance(o, dict) and o.get("code")],
+            code_overrides=[
+                o
+                for o in (cod.get("code_overrides") or [])
+                if isinstance(o, dict) and o.get("code")
+            ],
             extensions=[e for e in extensions if isinstance(e, dict) and e.get("attach_to") == rt],
             prompt_override=_active_prompt_text(prompts.get(rt)),
             capture_override=_active_prompt_text(capture_prompts.get(rt)),

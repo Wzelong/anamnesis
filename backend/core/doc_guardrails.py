@@ -5,11 +5,12 @@ Filters obvious garbage / non-clinical / prompt-injection inputs before Stage 2
 spends real money. Per-document rejections; never raises, never blocks the run.
 Failures fail open — a transient API error must not drop a real note.
 """
+
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Literal
 
 from google import genai
@@ -82,10 +83,17 @@ def deterministic_check(doc: Document) -> RejectedDocument | None:
         return RejectedDocument(doc.id, "empty", "document has no non-whitespace content", "empty")
     size = len(text.encode("utf-8"))
     if size > MAX_BYTES:
-        return RejectedDocument(doc.id, "too_large", f"{size} bytes exceeds {MAX_BYTES}", "binary_or_garbage")
+        return RejectedDocument(
+            doc.id, "too_large", f"{size} bytes exceeds {MAX_BYTES}", "binary_or_garbage"
+        )
     ratio = _printable_ratio(text)
     if ratio < MIN_PRINTABLE_RATIO:
-        return RejectedDocument(doc.id, "non_text", f"printable ratio {ratio:.2f} below {MIN_PRINTABLE_RATIO}", "binary_or_garbage")
+        return RejectedDocument(
+            doc.id,
+            "non_text",
+            f"printable ratio {ratio:.2f} below {MIN_PRINTABLE_RATIO}",
+            "binary_or_garbage",
+        )
     return None
 
 
@@ -106,9 +114,10 @@ async def _llm_check(
 
     from core.llm import generate_structured
 
-    started_at = datetime.now(timezone.utc)
+    started_at = datetime.now(UTC)
     verdict, usage, error = await generate_structured(
-        client, model,
+        client,
+        model,
         system=DEVELOPER_PROMPT,
         user=doc.text or "<empty>",
         schema=GuardrailVerdict,
@@ -116,7 +125,7 @@ async def _llm_check(
     )
     status = "ok" if error is None else "error"
 
-    finished_at = datetime.now(timezone.utc)
+    finished_at = datetime.now(UTC)
     await telemetry.record_call(
         stage=STAGE,
         call_type=CALL_TYPE,
@@ -164,15 +173,17 @@ async def screen_documents(
         return accepted, rejected
 
     verdicts = await asyncio.gather(*(_llm_check(d, client, model, cache) for d in needs_llm))
-    for d, v in zip(needs_llm, verdicts):
+    for d, v in zip(needs_llm, verdicts, strict=False):
         if v is None or v.accept:
             accepted.append(d)
         else:
-            rejected.append(RejectedDocument(
-                document_id=d.id,
-                reason=v.category,
-                detail=v.reason,
-                category=v.category,
-            ))
+            rejected.append(
+                RejectedDocument(
+                    document_id=d.id,
+                    reason=v.category,
+                    detail=v.reason,
+                    category=v.category,
+                )
+            )
 
     return accepted, rejected

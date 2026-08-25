@@ -3,9 +3,10 @@
 Powers the BYOK "account & usage" view — this-run detail plus cumulative spend.
 No patient id, no clinical content ever lands here (see db.models.UsageRun).
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from core.ids import short_id
@@ -30,21 +31,23 @@ async def record_run(
 
     run_id = short_id("use")
     async with AsyncSessionLocal() as session:
-        session.add(UsageRun(
-            id=run_id,
-            user_key=user_key,
-            workspace_id=workspace_id,
-            created_at=datetime.now(timezone.utc),
-            model=model,
-            input_tokens=int(input_tokens),
-            output_tokens=int(output_tokens),
-            reasoning_tokens=int(reasoning_tokens),
-            cost_usd=Decimal(str(cost_usd or 0)),
-            duration_ms=duration_ms,
-            doc_count=int(doc_count),
-            status=status,
-            triggered_by=triggered_by,
-        ))
+        session.add(
+            UsageRun(
+                id=run_id,
+                user_key=user_key,
+                workspace_id=workspace_id,
+                created_at=datetime.now(UTC),
+                model=model,
+                input_tokens=int(input_tokens),
+                output_tokens=int(output_tokens),
+                reasoning_tokens=int(reasoning_tokens),
+                cost_usd=Decimal(str(cost_usd or 0)),
+                duration_ms=duration_ms,
+                doc_count=int(doc_count),
+                status=status,
+                triggered_by=triggered_by,
+            )
+        )
         await session.commit()
     return run_id
 

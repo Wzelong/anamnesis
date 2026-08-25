@@ -2,6 +2,7 @@
 
 Each test uses a fresh random `sub` so it is independent of existing DB rows.
 """
+
 import asyncio
 import uuid
 
@@ -18,8 +19,12 @@ def test_same_sub_recognized_across_sessions():
 
     async def run():
         await init_db()
-        first = await users.register_session(sub, display_name="Dr. A", workspace_id="ws-1", role="User")
-        second = await users.register_session(sub, display_name="Dr. A", workspace_id="ws-1", role="User")
+        first = await users.register_session(
+            sub, display_name="Dr. A", workspace_id="ws-1", role="User"
+        )
+        second = await users.register_session(
+            sub, display_name="Dr. A", workspace_id="ws-1", role="User"
+        )
         return first, second
 
     first, second = asyncio.run(run())

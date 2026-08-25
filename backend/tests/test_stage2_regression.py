@@ -3,6 +3,7 @@
 These tests load the contents of backend/.cache/stage2_output/ (the
 latest live run) and assert the bug-fix invariants. Skip if the cache
 is missing (CI without live credentials)."""
+
 from __future__ import annotations
 
 import json
@@ -19,9 +20,7 @@ ACTION_VERBS = re.compile(
     r"\b(start|initiate|continue|restart|hold|prescrib|order|increase|decrease|stop|discontinue|titrate)",
     re.IGNORECASE,
 )
-RECONCILIATION_HEADERS = re.compile(
-    r"(?i)(HOME MEDICATIONS|Medication reconciliation)"
-)
+RECONCILIATION_HEADERS = re.compile(r"(?i)(HOME MEDICATIONS|Medication reconciliation)")
 
 
 def _load_outputs() -> list[dict]:

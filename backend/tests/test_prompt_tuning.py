@@ -1,4 +1,5 @@
 """Add-only prompt composition: addon appends to the validated base, never replaces."""
+
 from core.effective_profile import resolve_effective_profile
 from core.extraction import ADDON_HEADER, _resolve_prompts, compose_prompt
 from core.prompts import PROMPTS_BY_TYPE
@@ -19,7 +20,11 @@ def test_compose_appends_addon():
 
 def test_resolve_appends_only_for_active_type():
     eff = resolve_effective_profile(
-        {"prompts": {"Condition": {"active_version": 1, "versions": [{"version": 1, "text": "my rule"}]}}}
+        {
+            "prompts": {
+                "Condition": {"active_version": 1, "versions": [{"version": 1, "text": "my rule"}]}
+            }
+        }
     )
     prompts = _resolve_prompts(eff)
     assert prompts["Condition"].startswith(PROMPTS_BY_TYPE["Condition"])

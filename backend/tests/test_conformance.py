@@ -1,4 +1,5 @@
 """Layered conformance orchestrator (CONFORMANCE.md): L1 + L3 local, L2a/L2b remote."""
+
 import asyncio
 
 from fhir.conformance import assess_conformance, assess_local
@@ -6,18 +7,33 @@ from fhir.conformance import assess_conformance, assess_local
 SNOMED = "http://snomed.info/sct"
 ICD10 = "http://hl7.org/fhir/sid/icd-10-cm"
 
-VALID = {"resourceType": "Condition", "subject": {"reference": "Patient/1"},
-         "code": {"coding": [{"system": SNOMED, "code": "1", "display": "x"}]}}
-ICD_ONLY = {"resourceType": "Condition", "subject": {"reference": "Patient/1"},
-            "code": {"coding": [{"system": ICD10, "code": "E11", "display": "x"}]}}
-BAD_R4 = {"resourceType": "Condition", "subject": {"reference": "Patient/1"}, "code": "notacodeableconcept"}
+VALID = {
+    "resourceType": "Condition",
+    "subject": {"reference": "Patient/1"},
+    "code": {"coding": [{"system": SNOMED, "code": "1", "display": "x"}]},
+}
+ICD_ONLY = {
+    "resourceType": "Condition",
+    "subject": {"reference": "Patient/1"},
+    "code": {"coding": [{"system": ICD10, "code": "E11", "display": "x"}]},
+}
+BAD_R4 = {
+    "resourceType": "Condition",
+    "subject": {"reference": "Patient/1"},
+    "code": "notacodeableconcept",
+}
 MCODE_NS = "http://hl7.org/fhir/us/mcode/StructureDefinition"
 US_CORE_NS = "http://hl7.org/fhir/us/core/StructureDefinition"
 MCODE_COND = dict(VALID, meta={"profile": [f"{MCODE_NS}/mcode-primary-cancer-condition"]})
 
 OK_OO = (200, {"resourceType": "OperationOutcome", "issue": [{"severity": "information"}]})
-ERR_OO = (200, {"resourceType": "OperationOutcome",
-                "issue": [{"severity": "error", "diagnostics": "bad", "expression": ["Condition.code"]}]})
+ERR_OO = (
+    200,
+    {
+        "resourceType": "OperationOutcome",
+        "issue": [{"severity": "error", "diagnostics": "bad", "expression": ["Condition.code"]}],
+    },
+)
 NO_OP = (404, {})
 
 
@@ -56,12 +72,16 @@ def test_local_no_constraint_passes():
 def test_asserted_specialty_profile_informational_not_supported():
     r = assess_local(MCODE_COND)
     assert r["valid"] is True and r["supported"] is False
-    notes = [i for i in r["issues"] if i["severity"] == "information" and i["path"] == "meta.profile"]
+    notes = [
+        i for i in r["issues"] if i["severity"] == "information" and i["path"] == "meta.profile"
+    ]
     assert notes and "mcode-primary-cancer-condition" in notes[0]["message"]
 
 
 def test_us_core_profile_not_flagged():
-    res = dict(VALID, meta={"profile": [f"{US_CORE_NS}/us-core-condition-problems-health-concerns"]})
+    res = dict(
+        VALID, meta={"profile": [f"{US_CORE_NS}/us-core-condition-problems-health-concerns"]}
+    )
     assert not any(i["path"] == "meta.profile" for i in assess_local(res)["issues"])
 
 
@@ -83,7 +103,9 @@ def test_target_client_marks_profile_level():
 
 def test_validator_supersedes_target():
     target, validator = _Stub(OK_OO), _Stub(OK_OO)
-    r = _run(assess_conformance(VALID, profiles=["http://p"], target_client=target, validator=validator))
+    r = _run(
+        assess_conformance(VALID, profiles=["http://p"], target_client=target, validator=validator)
+    )
     assert r["level"] == "validator"
     assert validator.calls and not target.calls
 
@@ -99,5 +121,9 @@ def test_unsupported_remote_keeps_local_verdict():
 
 
 def test_local_failure_persists_through_permissive_server():
-    r = _run(assess_conformance(ICD_ONLY, allowed_systems=["snomed"], profiles=["http://p"], target_client=_Stub(OK_OO)))
+    r = _run(
+        assess_conformance(
+            ICD_ONLY, allowed_systems=["snomed"], profiles=["http://p"], target_client=_Stub(OK_OO)
+        )
+    )
     assert r["valid"] is False and r["supported"] is True

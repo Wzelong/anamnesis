@@ -12,6 +12,7 @@ One verdict from up to four layers, best-available wins:
 strongest available remote `$validate`. Shape stays wire-compatible with the
 frontend `Conformance` type: {valid, level, issues, profile, supported}.
 """
+
 from __future__ import annotations
 
 from config import settings
@@ -19,7 +20,6 @@ from fhir.client import FhirClient
 from fhir.coding_subset import check_coding_subset
 from fhir.profile_validate import validate_profile
 from fhir.validate import validate_r4
-
 
 _US_CORE_NS = "http://hl7.org/fhir/us/core/"
 _UNVERIFIED_PREFIX = "profile asserted but not validated locally:"
@@ -38,8 +38,10 @@ def _asserted_specialty_profiles(resource: dict) -> list[str]:
 
 
 def assess_local(
-    resource: dict, allowed_systems: list[str] | None = None,
-    pinned: list[dict] | None = None, fixed: list[dict] | None = None,
+    resource: dict,
+    allowed_systems: list[str] | None = None,
+    pinned: list[dict] | None = None,
+    fixed: list[dict] | None = None,
 ) -> dict:
     """L1 base R4 + L3 coding allow-list. Local, sync, no network.
 
@@ -51,8 +53,13 @@ def assess_local(
     issues = list(base["issues"]) + check_coding_subset(resource, allowed_systems, pinned, fixed)
     asserted = _asserted_specialty_profiles(resource)
     if asserted:
-        issues.append({"severity": "information", "path": "meta.profile",
-                       "message": f"{_UNVERIFIED_PREFIX} {', '.join(asserted)}"})
+        issues.append(
+            {
+                "severity": "information",
+                "path": "meta.profile",
+                "message": f"{_UNVERIFIED_PREFIX} {', '.join(asserted)}",
+            }
+        )
     valid = not any(i["severity"] in ("error", "fatal") for i in issues)
     return {"valid": valid, "level": "r4", "profile": None, "issues": issues, "supported": False}
 
@@ -77,8 +84,11 @@ async def assess_conformance(
             verdict["level"] = "validator" if validator is not None else "profile"
             verdict["profile"] = remote.get("profile")
             verdict["supported"] = True
-            kept = [i for i in verdict["issues"]
-                    if not str(i.get("message", "")).startswith(_UNVERIFIED_PREFIX)]
+            kept = [
+                i
+                for i in verdict["issues"]
+                if not str(i.get("message", "")).startswith(_UNVERIFIED_PREFIX)
+            ]
             verdict["issues"] = kept + remote.get("issues", [])
             if remote.get("valid") is False:
                 verdict["valid"] = False

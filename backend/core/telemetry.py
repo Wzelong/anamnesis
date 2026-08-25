@@ -1,13 +1,13 @@
 """Telemetry: per-call LLM usage + cost, dual-written to DB and JSONL."""
+
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import uuid
 from contextvars import ContextVar
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -42,7 +42,7 @@ def current_run() -> RunContext | None:
 
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _uuid() -> str:
@@ -80,14 +80,17 @@ async def start_run(
         regional=regional,
     )
 
-    _append_jsonl(run.jsonl_path, {
-        "event": "run_started",
-        "ts": run.started_at.isoformat(),
-        "run_id": run.run_id,
-        "patient_id": run.patient_id,
-        "triggered_by": run.triggered_by,
-        "meta": meta,
-    })
+    _append_jsonl(
+        run.jsonl_path,
+        {
+            "event": "run_started",
+            "ts": run.started_at.isoformat(),
+            "run_id": run.run_id,
+            "patient_id": run.patient_id,
+            "triggered_by": run.triggered_by,
+            "meta": meta,
+        },
+    )
 
     _current_run.set(run)
     return run
@@ -99,13 +102,16 @@ async def finish_run(status: str = "success", *, error: str | None = None) -> No
         return
 
     now = _now()
-    _append_jsonl(run.jsonl_path, {
-        "event": "run_finished",
-        "ts": now.isoformat(),
-        "run_id": run.run_id,
-        "status": status,
-        "error": error,
-    })
+    _append_jsonl(
+        run.jsonl_path,
+        {
+            "event": "run_finished",
+            "ts": now.isoformat(),
+            "run_id": run.run_id,
+            "status": status,
+            "error": error,
+        },
+    )
     _current_run.set(None)
 
 
@@ -129,9 +135,7 @@ async def record_call(
 
     input_tokens = int((usage or {}).get("input_tokens") or 0)
     output_tokens = int((usage or {}).get("output_tokens") or 0)
-    cached_tokens = int(
-        ((usage or {}).get("input_tokens_details") or {}).get("cached_tokens") or 0
-    )
+    cached_tokens = int(((usage or {}).get("input_tokens_details") or {}).get("cached_tokens") or 0)
     reasoning_tokens = int(
         ((usage or {}).get("output_tokens_details") or {}).get("reasoning_tokens") or 0
     )
@@ -147,45 +151,50 @@ async def record_call(
     latency_ms = int((finished_at - started_at).total_seconds() * 1000)
     call_id = _uuid()
 
-    run.call_buffer.append({
-        "id": call_id,
-        "run_id": run.run_id,
-        "document_id": document_id,
-        "stage": stage,
-        "call_type": call_type,
-        "model": model,
-        "prompt_version": prompt_version,
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-        "reasoning_tokens": reasoning_tokens,
-        "cached_tokens": cached_tokens,
-        "latency_ms": latency_ms,
-        "usd_cost": usd,
-        "status": status,
-        "error": error,
-        "started_at": started_at,
-        "finished_at": finished_at,
-    })
+    run.call_buffer.append(
+        {
+            "id": call_id,
+            "run_id": run.run_id,
+            "document_id": document_id,
+            "stage": stage,
+            "call_type": call_type,
+            "model": model,
+            "prompt_version": prompt_version,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "reasoning_tokens": reasoning_tokens,
+            "cached_tokens": cached_tokens,
+            "latency_ms": latency_ms,
+            "usd_cost": usd,
+            "status": status,
+            "error": error,
+            "started_at": started_at,
+            "finished_at": finished_at,
+        }
+    )
 
-    _append_jsonl(run.jsonl_path, {
-        "event": "llm_call",
-        "ts": finished_at.isoformat(),
-        "run_id": run.run_id,
-        "call_id": call_id,
-        "stage": stage,
-        "call_type": call_type,
-        "model": model,
-        "prompt_version": prompt_version,
-        "document_id": document_id,
-        "input_tokens": input_tokens,
-        "cached_tokens": cached_tokens,
-        "output_tokens": output_tokens,
-        "reasoning_tokens": reasoning_tokens,
-        "latency_ms": latency_ms,
-        "usd_cost": str(usd),
-        "status": status,
-        "error": error,
-    })
+    _append_jsonl(
+        run.jsonl_path,
+        {
+            "event": "llm_call",
+            "ts": finished_at.isoformat(),
+            "run_id": run.run_id,
+            "call_id": call_id,
+            "stage": stage,
+            "call_type": call_type,
+            "model": model,
+            "prompt_version": prompt_version,
+            "document_id": document_id,
+            "input_tokens": input_tokens,
+            "cached_tokens": cached_tokens,
+            "output_tokens": output_tokens,
+            "reasoning_tokens": reasoning_tokens,
+            "latency_ms": latency_ms,
+            "usd_cost": str(usd),
+            "status": status,
+            "error": error,
+        },
+    )
 
 
 def log_event_sync(event: str, payload: dict[str, Any]) -> None:
@@ -193,15 +202,16 @@ def log_event_sync(event: str, payload: dict[str, Any]) -> None:
     run = _current_run.get()
     if run is None:
         return
-    _append_jsonl(run.jsonl_path, {
-        "event": event,
-        "ts": _now().isoformat(),
-        "run_id": run.run_id,
-        **payload,
-    })
+    _append_jsonl(
+        run.jsonl_path,
+        {
+            "event": event,
+            "ts": _now().isoformat(),
+            "run_id": run.run_id,
+            **payload,
+        },
+    )
 
 
 async def log_event(event: str, payload: dict[str, Any]) -> None:
     log_event_sync(event, payload)
-
-

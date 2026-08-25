@@ -9,16 +9,31 @@ The note reader highlights citations by slicing the note text server-side into
 plain + highlighted segments (offsets are exact here, so this is simpler and
 more robust than client-side offset mapping).
 """
+
 from __future__ import annotations
 
 from fastmcp import FastMCPApp
-from prefab_ui.actions import SetState, ShowToast, ToggleState
+from prefab_ui.actions import SetState, ShowToast
 from prefab_ui.actions.mcp import CallTool
 from prefab_ui.app import PrefabApp
 from prefab_ui.components import (
-    Alert, AlertDescription, AlertTitle, Badge, Button, Card, CardContent,
-    CardHeader, CardTitle, Column, Div, Elif, Else, ForEach, Heading, If,
-    Loader, Markdown, Metric, Row, Separator, Span, Text,
+    Alert,
+    AlertDescription,
+    AlertTitle,
+    Badge,
+    Button,
+    Column,
+    Div,
+    Elif,
+    Else,
+    ForEach,
+    Heading,
+    If,
+    Loader,
+    Row,
+    Separator,
+    Span,
+    Text,
 )
 from prefab_ui.rx import RESULT
 
@@ -32,6 +47,7 @@ _TIER_BADGE = {"ATTENTION": "destructive", "REVIEW": "warning", "CONFIDENT": "su
 
 
 # --- backend tools (app-only: hidden from the model, called via CallTool) -----
+
 
 @review_app.tool
 async def run_extraction() -> dict:
@@ -59,15 +75,16 @@ async def accept_augmentation(run_id: str, proposal_id: str) -> dict:
         proposal_id=proposal_id,
     )
     wr = result.get("write_result")
-    return {"id": result["id"], "written": bool(wr),
-            "resource_ref": (wr or {}).get("resource_ref")}
+    return {"id": result["id"], "written": bool(wr), "resource_ref": (wr or {}).get("resource_ref")}
 
 
 @review_app.tool
 async def reject_augmentation(run_id: str, proposal_id: str, resource_type: str = "") -> dict:
     """Record a non-PHI reject decision."""
     await svc.record_decision(
-        action="reject", run_id=run_id, resource_type=resource_type or None,
+        action="reject",
+        run_id=run_id,
+        resource_type=resource_type or None,
         reviewer=(prefab_reviewer().display if prefab_reviewer() else None),
     )
     return {"id": proposal_id}
@@ -75,27 +92,30 @@ async def reject_augmentation(run_id: str, proposal_id: str, resource_type: str 
 
 # --- view-state shaping (server-side; includes pre-sliced note segments) ------
 
+
 def _view_state(result: dict) -> dict:
     docs = {d["id"]: d for d in result["documents"]}
     proposals = []
     for p in result["proposals"]:
         cites = p.get("citations", [])
         primary = cites[0] if cites else None
-        proposals.append({
-            "id": p["id"],
-            "run_id": p["run_id"],
-            "resource_type": p["resource_type"],
-            "label": p["display_label"],
-            "tier": p["confidence_tier"],
-            "tier_variant": _TIER_BADGE.get(p["confidence_tier"], "secondary"),
-            "classification": p["classification"],
-            "confidence_label": f"{round(p['confidence_score'] * 100)}%",
-            "conflicting": "CONFLICTING" in (p.get("flags") or []),
-            "reasoning": p.get("extraction_reasoning") or "",
-            "citation_text": (primary or {}).get("text", ""),
-            "segments": _note_segments(docs, cites),
-            "decided": "",
-        })
+        proposals.append(
+            {
+                "id": p["id"],
+                "run_id": p["run_id"],
+                "resource_type": p["resource_type"],
+                "label": p["display_label"],
+                "tier": p["confidence_tier"],
+                "tier_variant": _TIER_BADGE.get(p["confidence_tier"], "secondary"),
+                "classification": p["classification"],
+                "confidence_label": f"{round(p['confidence_score'] * 100)}%",
+                "conflicting": "CONFLICTING" in (p.get("flags") or []),
+                "reasoning": p.get("extraction_reasoning") or "",
+                "citation_text": (primary or {}).get("text", ""),
+                "segments": _note_segments(docs, cites),
+                "decided": "",
+            }
+        )
     return {
         "ran": True,
         "patient_id": result["patient_id"],
@@ -137,6 +157,7 @@ def _note_segments(docs: dict, citations: list[dict]) -> list[dict]:
 
 # --- UI ----------------------------------------------------------------------
 
+
 @review_app.ui("ReviewChart")
 def review_chart() -> PrefabApp:
     run = CallTool(
@@ -156,14 +177,19 @@ def review_chart() -> PrefabApp:
         # header
         with Row(gap=2, align="center", css_class="anamnesis-header px-4 py-2.5 border-b shrink-0"):
             Heading("Chart review", css_class="text-sm font-semibold m-0")
-            Span("{{ total }} proposals", css_class="ml-auto text-xs text-muted-foreground whitespace-nowrap")
+            Span(
+                "{{ total }} proposals",
+                css_class="ml-auto text-xs text-muted-foreground whitespace-nowrap",
+            )
 
         # loading state — streamed stages
         with If("loading"):
             with Column(gap=3, align="center", css_class="flex-1 justify-center p-10"):
                 Loader()
-                Text("Extracting facts and reconciling against the chart…",
-                     css_class="text-sm text-muted-foreground")
+                Text(
+                    "Extracting facts and reconciling against the chart…",
+                    css_class="text-sm text-muted-foreground",
+                )
 
         with Elif("total == 0"):
             with Column(gap=2, align="center", css_class="flex-1 justify-center p-10"):
@@ -177,8 +203,14 @@ def review_chart() -> PrefabApp:
     return PrefabApp(
         view=view,
         theme=anamnesis_theme(),
-        state={"loading": False, "ran": False, "patient_id": "",
-               "proposals": [], "total": 0, "current": None},
+        state={
+            "loading": False,
+            "ran": False,
+            "patient_id": "",
+            "proposals": [],
+            "total": 0,
+            "current": None,
+        },
     )
 
 
@@ -210,7 +242,10 @@ def _detail_panel() -> None:
                     Badge("{{ current.confidence_label }}", variant="outline")
                     with If("current.conflicting"):
                         Badge("conflict", variant="destructive")
-                Span("{{ current.resource_type }}", css_class="text-[11px] uppercase tracking-wide text-muted-foreground")
+                Span(
+                    "{{ current.resource_type }}",
+                    css_class="text-[11px] uppercase tracking-wide text-muted-foreground",
+                )
                 Heading("{{ current.label }}", css_class="text-base font-semibold")
 
             # body
@@ -220,9 +255,15 @@ def _detail_panel() -> None:
                         AlertTitle("Conflicts with the existing chart")
                         AlertDescription("Accepting this will supersede the conflicting record.")
                 with If("current.reasoning"):
-                    Text("{{ current.reasoning }}", css_class="text-sm text-muted-foreground leading-relaxed")
+                    Text(
+                        "{{ current.reasoning }}",
+                        css_class="text-sm text-muted-foreground leading-relaxed",
+                    )
                 Separator()
-                Span("Source note", css_class="text-[11px] uppercase tracking-wide text-muted-foreground")
+                Span(
+                    "Source note",
+                    css_class="text-[11px] uppercase tracking-wide text-muted-foreground",
+                )
                 with Div(css_class="text-sm leading-relaxed whitespace-pre-wrap"):
                     with ForEach("current.segments") as (_si, seg):
                         with If("$item.hl"):
@@ -233,20 +274,30 @@ def _detail_panel() -> None:
             # actions
             with Row(gap=2, css_class="border-t px-4 py-3"):
                 Button(
-                    "Reject", variant="outline", css_class="flex-1",
+                    "Reject",
+                    variant="outline",
+                    css_class="flex-1",
                     on_click=CallTool(
                         reject_augmentation,
-                        arguments={"run_id": "{{ current.run_id }}", "proposal_id": "{{ current.id }}",
-                                   "resource_type": "{{ current.resource_type }}"},
+                        arguments={
+                            "run_id": "{{ current.run_id }}",
+                            "proposal_id": "{{ current.id }}",
+                            "resource_type": "{{ current.resource_type }}",
+                        },
                         on_success=ShowToast("Rejected", variant="info"),
                         on_error=ShowToast("{{ $error }}", variant="error"),
                     ),
                 )
                 Button(
-                    "Accept & write", variant="default", css_class="flex-1",
+                    "Accept & write",
+                    variant="default",
+                    css_class="flex-1",
                     on_click=CallTool(
                         accept_augmentation,
-                        arguments={"run_id": "{{ current.run_id }}", "proposal_id": "{{ current.id }}"},
+                        arguments={
+                            "run_id": "{{ current.run_id }}",
+                            "proposal_id": "{{ current.id }}",
+                        },
                         on_success=ShowToast("Written to chart with Provenance", variant="success"),
                         on_error=ShowToast("{{ $error }}", variant="error"),
                     ),

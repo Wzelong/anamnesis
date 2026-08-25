@@ -1,4 +1,5 @@
 """Citation resolution and encounter mapping for Stage 6 assembly."""
+
 from __future__ import annotations
 
 import logging
@@ -19,7 +20,10 @@ def _build_encounter_map(
     for note in notes:
         if note.encounter_id and note.document_id:
             for eid in enc_ids:
-                if eid in note.document_id or note.document_id.replace("-note", "").replace("-summary", "") == eid:
+                if (
+                    eid in note.document_id
+                    or note.document_id.replace("-note", "").replace("-summary", "") == eid
+                ):
                     enc_map[note.encounter_id] = f"Encounter/{eid}"
                     break
             if note.encounter_id not in enc_map:
@@ -73,11 +77,13 @@ def resolve_citations(
         for run in runs:
             start = span_map[run[0]].start
             end = span_map[run[-1]].end
-            citations.append(ResolvedCitation(
-                document_id=ref.document_id,
-                sentence_numbers=run,
-                char_start=start,
-                char_end=end,
-                text=note.original_text[start:end],
-            ))
+            citations.append(
+                ResolvedCitation(
+                    document_id=ref.document_id,
+                    sentence_numbers=run,
+                    char_start=start,
+                    char_end=end,
+                    text=note.original_text[start:end],
+                )
+            )
     return citations

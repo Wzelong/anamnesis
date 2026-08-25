@@ -10,6 +10,7 @@ Two phases:
   2. LLM adjudication for fuzzy near-duplicates within the same scope, batched
      per scope (typically 0–2 calls per run).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -21,7 +22,8 @@ from google import genai
 from pydantic import BaseModel, ValidationError
 
 from core.cache import JsonCache
-from core.extraction import StageTwoOutput, parse_structured as _parse_structured
+from core.extraction import StageTwoOutput
+from core.extraction import parse_structured as _parse_structured
 from core.mcode_obs import canonical_tumor_marker
 from core.prompts import PROMPT_MERGE_ADJUDICATE, PROMPT_VERSION
 from core.schemas import MergeAdjudicationResult, MergedCandidate, SourceRef
@@ -35,19 +37,24 @@ class StageThreeOutput:
         return {"candidates": [c.model_dump(mode="json") for c in self.candidates]}
 
     @classmethod
-    def from_json(cls, data: dict) -> "StageThreeOutput":
+    def from_json(cls, data: dict) -> StageThreeOutput:
         return cls(
             candidates=[MergedCandidate.model_validate(c) for c in data["candidates"]],
         )
 
 
-PATIENT_LEVEL_TYPES = {"Condition", "MedicationRequest", "AllergyIntolerance", "FamilyMemberHistory"}
+PATIENT_LEVEL_TYPES = {
+    "Condition",
+    "MedicationRequest",
+    "AllergyIntolerance",
+    "FamilyMemberHistory",
+}
 ENCOUNTER_LEVEL_TYPES = {"Observation", "Procedure"}
 
 _DISCONTINUED_MED_STATUSES = frozenset({"stopped", "cancelled", "completed", "entered-in-error"})
 
 
-def _is_conflict_signal(t: "_TaggedItem") -> bool:
+def _is_conflict_signal(t: _TaggedItem) -> bool:
     if t.resource_type == "MedicationRequest":
         status = getattr(t.item, "status", None)
         if status in _DISCONTINUED_MED_STATUSES:
@@ -125,16 +132,19 @@ def _build_tagged_items(stage2_outputs: list[StageTwoOutput]) -> list[_TaggedIte
                 name = _get_item_name(rtype, item)
                 enc_key = (
                     _observation_encounter_key(item, note_enc_key)
-                    if rtype == "Observation" else note_enc_key
+                    if rtype == "Observation"
+                    else note_enc_key
                 )
-                tagged.append(_TaggedItem(
-                    resource_type=rtype,
-                    item=item,
-                    document_id=s2.document_id,
-                    source_sentences=list(item.source_sentences),
-                    normalized_name=_normalize_name(name),
-                    encounter_key=enc_key,
-                ))
+                tagged.append(
+                    _TaggedItem(
+                        resource_type=rtype,
+                        item=item,
+                        document_id=s2.document_id,
+                        source_sentences=list(item.source_sentences),
+                        normalized_name=_normalize_name(name),
+                        encounter_key=enc_key,
+                    )
+                )
     return tagged
 
 
@@ -183,31 +193,39 @@ def _resolve_exact_matches(
             ambiguous[key] = items
             continue
 
-        enc_key = items[0].encounter_key if items[0].resource_type in ENCOUNTER_LEVEL_TYPES else None
+        enc_key = (
+            items[0].encounter_key if items[0].resource_type in ENCOUNTER_LEVEL_TYPES else None
+        )
         doc_ids = set(t.document_id for t in items)
         if len(doc_ids) <= 1:
             for t in items:
-                resolved.append(MergedCandidate(
-                    resource_type=t.resource_type,
-                    item=t.item.model_dump(mode="json"),
-                    source_refs=[SourceRef(
-                        document_id=t.document_id,
-                        source_sentences=t.source_sentences,
-                    )],
-                    encounter_key=enc_key,
-                ))
+                resolved.append(
+                    MergedCandidate(
+                        resource_type=t.resource_type,
+                        item=t.item.model_dump(mode="json"),
+                        source_refs=[
+                            SourceRef(
+                                document_id=t.document_id,
+                                source_sentences=t.source_sentences,
+                            )
+                        ],
+                        encounter_key=enc_key,
+                    )
+                )
         else:
             survivor = max(items, key=lambda t: _item_completeness(t.item))
-            resolved.append(MergedCandidate(
-                resource_type=survivor.resource_type,
-                item=survivor.item.model_dump(mode="json"),
-                source_refs=[
-                    SourceRef(document_id=t.document_id, source_sentences=t.source_sentences)
-                    for t in items
-                ],
-                encounter_key=enc_key,
-                merge_reasoning=f"exact match across {len(doc_ids)} notes",
-            ))
+            resolved.append(
+                MergedCandidate(
+                    resource_type=survivor.resource_type,
+                    item=survivor.item.model_dump(mode="json"),
+                    source_refs=[
+                        SourceRef(document_id=t.document_id, source_sentences=t.source_sentences)
+                        for t in items
+                    ],
+                    encounter_key=enc_key,
+                    merge_reasoning=f"exact match across {len(doc_ids)} notes",
+                )
+            )
 
     return resolved, ambiguous
 
@@ -228,11 +246,13 @@ def _format_groups_for_llm(groups: dict[str, list[_TaggedItem]]) -> str:
                     parts.append(f"{fld}={d[fld]}")
             details.append("(" + ", ".join(parts) + ")")
 
-        lines.append(f"[{i}] {rtype}: \"{name_str}\" {'; '.join(details)}")
+        lines.append(f'[{i}] {rtype}: "{name_str}" {"; ".join(details)}')
     return "\n".join(lines)
 
 
-def _items_to_candidate(items: list[_TaggedItem], merge_reasoning: str | None = None) -> MergedCandidate:
+def _items_to_candidate(
+    items: list[_TaggedItem], merge_reasoning: str | None = None
+) -> MergedCandidate:
     enc_key = items[0].encounter_key if items[0].resource_type in ENCOUNTER_LEVEL_TYPES else None
     doc_ids = set(t.document_id for t in items)
     if len(doc_ids) <= 1 and merge_reasoning is None:
@@ -245,8 +265,7 @@ def _items_to_candidate(items: list[_TaggedItem], merge_reasoning: str | None = 
         resource_type=survivor.resource_type,
         item=survivor.item.model_dump(mode="json"),
         source_refs=[
-            SourceRef(document_id=t.document_id, source_sentences=t.source_sentences)
-            for t in items
+            SourceRef(document_id=t.document_id, source_sentences=t.source_sentences) for t in items
         ],
         encounter_key=enc_key,
         merge_reasoning=merge_reasoning,
@@ -304,16 +323,18 @@ def _apply_adjudication(
         target_rtype = decision.target_resource_type or survivor.resource_type
         enc_key = survivor.encounter_key if target_rtype in ENCOUNTER_LEVEL_TYPES else None
 
-        candidates.append(MergedCandidate(
-            resource_type=target_rtype,
-            item=survivor.item.model_dump(mode="json"),
-            source_refs=[
-                SourceRef(document_id=t.document_id, source_sentences=t.source_sentences)
-                for t in all_items
-            ],
-            encounter_key=enc_key,
-            merge_reasoning=decision.reasoning,
-        ))
+        candidates.append(
+            MergedCandidate(
+                resource_type=target_rtype,
+                item=survivor.item.model_dump(mode="json"),
+                source_refs=[
+                    SourceRef(document_id=t.document_id, source_sentences=t.source_sentences)
+                    for t in all_items
+                ],
+                encounter_key=enc_key,
+                merge_reasoning=decision.reasoning,
+            )
+        )
 
     for i, key in enumerate(sorted(groups.keys()), 1):
         if i in consumed:
@@ -397,7 +418,9 @@ def _laterality_conflict(a: set[str], b: set[str]) -> bool:
 def _merge_condition_cluster(members: list[MergedCandidate]) -> MergedCandidate:
     if len(members) == 1:
         return members[0]
-    survivor = max(members, key=lambda c: sum(1 for v in c.item.values() if v not in (None, "", [])))
+    survivor = max(
+        members, key=lambda c: sum(1 for v in c.item.values() if v not in (None, "", []))
+    )
     item = dict(survivor.item)
     sites: list[str] = []
     for c in members:
@@ -415,7 +438,9 @@ def _merge_condition_cluster(members: list[MergedCandidate]) -> MergedCandidate:
                 seen.add(k)
                 refs.append(r)
     return MergedCandidate(
-        resource_type="Condition", item=item, source_refs=refs,
+        resource_type="Condition",
+        item=item,
+        source_refs=refs,
         encounter_key=survivor.encounter_key,
         merge_reasoning=f"multifocal: merged {len(members)} foci of the same cancer",
     )
@@ -509,7 +534,9 @@ def _merge_marker_family(family: str, members: list[MergedCandidate]) -> list[Me
     return [_merge_marker_cluster(family, b) for b in buckets if b]
 
 
-def _collapse_tumor_markers(candidates: list[MergedCandidate], *, active: bool) -> list[MergedCandidate]:
+def _collapse_tumor_markers(
+    candidates: list[MergedCandidate], *, active: bool
+) -> list[MergedCandidate]:
     """Collapse repeated mentions of one tumor marker into a single observation.
 
     mCODE-gated. Receptor markers (ER/PR/HER2/Ki-67) are stable tumor
@@ -524,7 +551,8 @@ def _collapse_tumor_markers(candidates: list[MergedCandidate], *, active: bool) 
     for c in candidates:
         family = (
             canonical_tumor_marker(c.item.get("name") or c.item.get("full_name") or "")
-            if c.resource_type == "Observation" else None
+            if c.resource_type == "Observation"
+            else None
         )
         if family is None:
             out.append(c)
@@ -568,15 +596,20 @@ async def merge_across_notes(
     markers_active = bool(obs_rule and obs_rule.candidate_profiles)
 
     def _finish(cands: list[MergedCandidate]) -> StageThreeOutput:
-        return StageThreeOutput(candidates=_collapse_tumor_markers(
-            _collapse_multifocal_conditions(cands), active=markers_active,
-        ))
+        return StageThreeOutput(
+            candidates=_collapse_tumor_markers(
+                _collapse_multifocal_conditions(cands),
+                active=markers_active,
+            )
+        )
 
     tagged = _build_tagged_items(stage2_outputs)
     groups = _deterministic_group(tagged)
     resolved, ambiguous = _resolve_exact_matches(groups)
 
-    protected_keys = [k for k, items in ambiguous.items() if any(_is_conflict_signal(t) for t in items)]
+    protected_keys = [
+        k for k, items in ambiguous.items() if any(_is_conflict_signal(t) for t in items)
+    ]
     if protected_keys:
         protected_groups = {k: ambiguous.pop(k) for k in protected_keys}
         resolved.extend(_groups_to_candidates(protected_groups))
@@ -585,20 +618,20 @@ async def merge_across_notes(
         return _finish(resolved)
 
     patient_ambiguous = {
-        k: v for k, v in ambiguous.items()
-        if v[0].resource_type in PATIENT_LEVEL_TYPES
+        k: v for k, v in ambiguous.items() if v[0].resource_type in PATIENT_LEVEL_TYPES
     }
     encounter_ambiguous = {
-        k: v for k, v in ambiguous.items()
-        if v[0].resource_type in ENCOUNTER_LEVEL_TYPES
+        k: v for k, v in ambiguous.items() if v[0].resource_type in ENCOUNTER_LEVEL_TYPES
     }
 
     tasks: list[asyncio.Task] = []
 
     if patient_ambiguous:
-        tasks.append(asyncio.create_task(
-            _adjudicate_groups(patient_ambiguous, client, model, cache, "merge_patient")
-        ))
+        tasks.append(
+            asyncio.create_task(
+                _adjudicate_groups(patient_ambiguous, client, model, cache, "merge_patient")
+            )
+        )
 
     enc_groups_by_key: dict[str, dict[str, list[_TaggedItem]]] = {}
     for k, items in encounter_ambiguous.items():
@@ -607,9 +640,11 @@ async def merge_across_notes(
 
     for enc_key, enc_groups in enc_groups_by_key.items():
         if any(len(v) > 1 or len(enc_groups) > 1 for v in enc_groups.values()):
-            tasks.append(asyncio.create_task(
-                _adjudicate_groups(enc_groups, client, model, cache, f"merge_enc_{enc_key[:8]}")
-            ))
+            tasks.append(
+                asyncio.create_task(
+                    _adjudicate_groups(enc_groups, client, model, cache, f"merge_enc_{enc_key[:8]}")
+                )
+            )
         else:
             resolved.extend(_groups_to_candidates(enc_groups))
 

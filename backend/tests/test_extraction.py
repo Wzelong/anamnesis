@@ -1,10 +1,9 @@
 from core.extraction import _apply_cleaner, _build_snippet
-from core.preprocess import SentenceSpan, split_sentences
+from core.preprocess import SentenceSpan
 from core.schemas import (
     CleanerResult,
     ConditionItem,
     DedupGroup,
-    NoteContext,
     ScanResult,
 )
 
@@ -17,15 +16,17 @@ def test_scan_result_defaults():
 
 
 def test_scan_result_from_dict():
-    sr = ScanResult.model_validate({
-        "note_context": {
-            "note_date": {"value": "2025-10-20", "source_sentences": [3]},
-            "admission_date": {},
-            "discharge_date": {},
-        },
-        "condition": [12, 15],
-        "procedure": [[7, 8, 9]],
-    })
+    sr = ScanResult.model_validate(
+        {
+            "note_context": {
+                "note_date": {"value": "2025-10-20", "source_sentences": [3]},
+                "admission_date": {},
+                "discharge_date": {},
+            },
+            "condition": [12, 15],
+            "procedure": [[7, 8, 9]],
+        }
+    )
     assert sr.note_context.note_date.value == "2025-10-20"
     assert sr.condition == [12, 15]
     assert sr.procedure == [[7, 8, 9]]

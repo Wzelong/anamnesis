@@ -4,6 +4,9 @@ then round-trip read back to confirm both landed with the source-span extension.
 Run from backend/:
     python -m scripts.verify_write
 """
+
+from __future__ import annotations
+
 import asyncio
 import base64
 import os
@@ -25,7 +28,9 @@ MRN_SYSTEM = "http://bayside.health/mrn"
 MRN_VALUE = "BAY-0042-LEE"
 CARDIO_LOINC = "11488-4"
 CARDIO_AUTHOR = "Dr. David Park"
-TARGET_QUOTE = "INITIATE metoprolol succinate 25 mg PO once daily as anti-anginal therapy and rate control"
+TARGET_QUOTE = (
+    "INITIATE metoprolol succinate 25 mg PO once daily as anti-anginal therapy and rate control"
+)
 
 RXNORM_SYSTEM = "http://www.nlm.nih.gov/research/umls/rxnorm"
 SCT_SYSTEM = "http://snomed.info/sct"
@@ -64,7 +69,9 @@ def _compute_citation(note_text: str, doc_id: str) -> Citation:
         raise RuntimeError("Target quote not found in cardiology note")
     return Citation(
         document_ref=f"DocumentReference/{doc_id}",
-        start=match.start(), end=match.end(), text=match.group(0),
+        start=match.start(),
+        end=match.end(),
+        text=match.group(0),
     )
 
 
@@ -75,24 +82,32 @@ def _build_metoprolol_request(patient_id: str) -> dict:
         intent="order",
         reportedBoolean=False,
         medicationCodeableConcept={
-            "coding": [{
-                "system": RXNORM_SYSTEM,
-                "code": "866427",
-                "display": "Metoprolol Succinate 25 MG Extended Release Oral Tablet",
-            }],
+            "coding": [
+                {
+                    "system": RXNORM_SYSTEM,
+                    "code": "866427",
+                    "display": "Metoprolol Succinate 25 MG Extended Release Oral Tablet",
+                }
+            ],
             "text": "Metoprolol Succinate 25 mg",
         },
         subject={"reference": f"Patient/{patient_id}"},
         authoredOn="2025-10-20",
         requester={"display": CARDIO_AUTHOR},
-        dosageInstruction=[{
-            "text": "25 mg PO once daily",
-            "route": {"coding": [{
-                "system": SCT_SYSTEM,
-                "code": "26643006",
-                "display": "Oral route",
-            }]},
-        }],
+        dosageInstruction=[
+            {
+                "text": "25 mg PO once daily",
+                "route": {
+                    "coding": [
+                        {
+                            "system": SCT_SYSTEM,
+                            "code": "26643006",
+                            "display": "Oral route",
+                        }
+                    ]
+                },
+            }
+        ],
     )
     return medreq.model_dump(mode="json", exclude_none=True)
 
@@ -102,7 +117,7 @@ async def _assert_roundtrip(
     resource_ref: str,
     provenance_ref: str,
     source_document_ref: str,
-    span: SourceSpan,
+    span: Citation,
 ) -> None:
     resource = await client.read(resource_ref)
     assert resource, f"{resource_ref} not readable"
@@ -119,7 +134,9 @@ async def _assert_roundtrip(
         f"Provenance.entity.what mismatch: {entity_what} != {source_document_ref}"
     )
 
-    ext_blocks = [e for e in (provenance.get("extension") or []) if e.get("url") == SOURCE_SPAN_EXT_URL]
+    ext_blocks = [
+        e for e in (provenance.get("extension") or []) if e.get("url") == SOURCE_SPAN_EXT_URL
+    ]
     assert ext_blocks, "source-span extension missing from Provenance"
     sub = {x["url"]: x for x in (ext_blocks[0].get("extension") or [])}
     assert sub.get("start", {}).get("valueInteger") == span.start

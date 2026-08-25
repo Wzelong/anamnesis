@@ -1,8 +1,9 @@
 """The catalog `fixed` roster must cover every code the pipeline pins, so the
 read-only display + the codeset allow-list never miss a profile-fixed code."""
+
 from core.code_candidates import US_CORE_FIXED
 from core.ig_catalog import fixed_codings
-from core.mcode_obs import MCODE_OBS, _TNM, _LOINC
+from core.mcode_obs import _LOINC, _TNM, MCODE_OBS
 from core.systems import SYSTEM_URIS, URI_TO_KEY
 
 

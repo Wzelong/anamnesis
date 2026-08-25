@@ -1,4 +1,5 @@
 """Validation, parsing, and CodeableConcept helpers shared by the builders."""
+
 from __future__ import annotations
 
 from core.augment.config import (
@@ -50,7 +51,11 @@ def _cc(coding: list[dict], text: str) -> dict:
     if valid:
         return {"coding": valid, "text": text}
     fallback_text = text or next(
-        (c.get("text") or c.get("display") or "" for c in coding if c.get("text") or c.get("display")),
+        (
+            c.get("text") or c.get("display") or ""
+            for c in coding
+            if c.get("text") or c.get("display")
+        ),
         "",
     )
     return {"text": fallback_text} if fallback_text else {}

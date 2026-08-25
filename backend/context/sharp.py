@@ -1,4 +1,5 @@
 """SHARP-on-MCP context extraction from per-request headers."""
+
 import hashlib
 from dataclasses import dataclass
 
@@ -37,7 +38,8 @@ def get_patient_id(ctx: Context) -> str | None:
 
 
 def get_clinician_identity(ctx: Context):
-    from context.auth import ReviewerIdentity, extract_clinician_identity
+    from context.auth import extract_clinician_identity
+
     req = ctx.request_context.request
     token = req.headers.get(FHIR_ACCESS_TOKEN_HEADER)
     if not token:

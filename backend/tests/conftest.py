@@ -5,7 +5,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest
 
-from fhir.local_bundle import load_demo_data, load_bundle, BUNDLE_PATH
+from fhir.local_bundle import load_bundle, load_demo_data
 from fhir.models import Document, PatientContext
 
 

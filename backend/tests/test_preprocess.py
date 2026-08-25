@@ -16,7 +16,9 @@ def _load_demo_notes() -> list[tuple[str, str]]:
 def _load_eval_corpus_notes() -> list[tuple[str, str]]:
     if not EVAL_CORPUS_NOTES.is_dir():
         return []
-    return [(p.stem, p.read_text(encoding="utf-8")) for p in sorted(EVAL_CORPUS_NOTES.glob("*.txt"))]
+    return [
+        (p.stem, p.read_text(encoding="utf-8")) for p in sorted(EVAL_CORPUS_NOTES.glob("*.txt"))
+    ]
 
 
 def test_decimal_not_split():
@@ -63,7 +65,7 @@ def test_positions_exact_roundtrip(doc_id: str, text: str):
     spans = split_sentences(text)
     assert spans, f"no sentences produced for {doc_id}"
     for s in spans:
-        assert s.text == text[s.start:s.end], f"position mismatch in {doc_id} span {s.number}"
+        assert s.text == text[s.start : s.end], f"position mismatch in {doc_id} span {s.number}"
 
 
 @pytest.mark.parametrize(
@@ -75,7 +77,7 @@ def test_positions_exact_roundtrip_eval_corpus(doc_id: str, text: str):
     spans = split_sentences(text)
     assert spans, f"no sentences produced for {doc_id}"
     for s in spans:
-        assert s.text == text[s.start:s.end], f"position mismatch in {doc_id} span {s.number}"
+        assert s.text == text[s.start : s.end], f"position mismatch in {doc_id} span {s.number}"
 
 
 def test_numbered_note_format():

@@ -5,12 +5,13 @@ a per-run usage ledger (`usage_run`), both keyed on the Prompt Opinion token `su
 No patient data: clinician identity is not PHI, config is configuration, and the
 ledger holds billing metadata (tokens / cost / duration) — never clinical content.
 """
+
 from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, JSON, Numeric, String
+from sqlalchemy import JSON, DateTime, Numeric, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -36,6 +37,7 @@ class UsageRun(Base):
     """One row per pipeline run. Non-PHI: tokens / cost / duration / doc count,
     keyed on the clinician `sub`. No patient id, no clinical content. Powers the
     BYOK "account & usage" view (per-run detail + cumulative spend)."""
+
     __tablename__ = "usage_run"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)

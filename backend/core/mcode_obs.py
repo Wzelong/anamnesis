@@ -5,6 +5,7 @@ stage 4 (assign the fixed code, skip retrieval) and stage 6 (shape value[x],
 select the profile) can use it. These mCODE observations pin `.code`, so the
 concept name alone determines the code — terminology search is bypassed.
 """
+
 from __future__ import annotations
 
 import re
@@ -15,22 +16,87 @@ _NCIT = "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl"
 # Ordered: more specific terms first. `profile` is the mCODE slug (sans canonical
 # prefix); `value` is how the builder shapes value[x] (integer | codeable).
 MCODE_OBS: list[dict] = [
-    {"terms": ("ecog",), "system": _LOINC, "code": "89247-1",
-     "display": "ECOG performance status", "profile": "ecog-performance-status", "value": "integer"},
-    {"terms": ("karnofsky",), "system": _LOINC, "code": "89243-0",
-     "display": "Karnofsky Performance Status score", "profile": "karnofsky-performance-status", "value": "integer"},
-    {"terms": ("cancer disease status", "disease status"), "system": _LOINC, "code": "97509-4",
-     "display": "Cancer disease status", "profile": "cancer-disease-status", "value": "codeable"},
-    {"terms": ("histologic grade", "histological grade", "tumor grade", "tumour grade", "nuclear grade"),
-     "system": _NCIT, "code": "C18000", "display": "Grade", "profile": "histologic-grade", "value": "codeable"},
-    {"terms": ("histologic behavior", "histologic type", "histology and behavior"), "system": _LOINC,
-     "code": "31206-6", "display": "Histology and behavior ICD-O-3", "profile": "histologic-behavior-and-type", "value": "codeable"},
-    {"terms": ("tnm stage", "ajcc stage", "stage group", "overall stage", "cancer stage",
-               "tumor stage", "pathologic stage", "clinical stage", "stage"), "system": _LOINC,
-     "code": "21908-9", "display": "Stage group.clinical Cancer", "profile": "tnm-stage-group", "value": "codeable"},
-    {"terms": ("tumor size", "tumor greatest dimension", "greatest dimension", "tumor dimension",
-               "tumor maximum dimension", "size of tumor", "mass size", "size of mass"), "system": _LOINC,
-     "code": "21889-1", "display": "Size.maximum dimension Tumor", "profile": "tumor-size", "value": "quantity"},
+    {
+        "terms": ("ecog",),
+        "system": _LOINC,
+        "code": "89247-1",
+        "display": "ECOG performance status",
+        "profile": "ecog-performance-status",
+        "value": "integer",
+    },
+    {
+        "terms": ("karnofsky",),
+        "system": _LOINC,
+        "code": "89243-0",
+        "display": "Karnofsky Performance Status score",
+        "profile": "karnofsky-performance-status",
+        "value": "integer",
+    },
+    {
+        "terms": ("cancer disease status", "disease status"),
+        "system": _LOINC,
+        "code": "97509-4",
+        "display": "Cancer disease status",
+        "profile": "cancer-disease-status",
+        "value": "codeable",
+    },
+    {
+        "terms": (
+            "histologic grade",
+            "histological grade",
+            "tumor grade",
+            "tumour grade",
+            "nuclear grade",
+        ),
+        "system": _NCIT,
+        "code": "C18000",
+        "display": "Grade",
+        "profile": "histologic-grade",
+        "value": "codeable",
+    },
+    {
+        "terms": ("histologic behavior", "histologic type", "histology and behavior"),
+        "system": _LOINC,
+        "code": "31206-6",
+        "display": "Histology and behavior ICD-O-3",
+        "profile": "histologic-behavior-and-type",
+        "value": "codeable",
+    },
+    {
+        "terms": (
+            "tnm stage",
+            "ajcc stage",
+            "stage group",
+            "overall stage",
+            "cancer stage",
+            "tumor stage",
+            "pathologic stage",
+            "clinical stage",
+            "stage",
+        ),
+        "system": _LOINC,
+        "code": "21908-9",
+        "display": "Stage group.clinical Cancer",
+        "profile": "tnm-stage-group",
+        "value": "codeable",
+    },
+    {
+        "terms": (
+            "tumor size",
+            "tumor greatest dimension",
+            "greatest dimension",
+            "tumor dimension",
+            "tumor maximum dimension",
+            "size of tumor",
+            "mass size",
+            "size of mass",
+        ),
+        "system": _LOINC,
+        "code": "21889-1",
+        "display": "Size.maximum dimension Tumor",
+        "profile": "tumor-size",
+        "value": "quantity",
+    },
 ]
 
 _BY_CODE = {(e["system"], e["code"]): e for e in MCODE_OBS}
@@ -41,13 +107,31 @@ _INT_RE = re.compile(r"-?\d+")
 # Both codes per category feed the reverse map so the builder/selector pick up
 # either. The LLM is prompted to split a combined "pT2N1M0" into three of these.
 _TNM = {
-    "T": ("tnm-primary-tumor-category", ("21905-5", "Primary tumor.clinical [Class] Cancer"), ("21899-0", "Primary tumor.pathology [Class] Cancer")),
-    "N": ("tnm-regional-nodes-category", ("21906-3", "Regional lymph nodes.clinical [Class] Cancer"), ("21900-6", "Regional lymph nodes.pathology [Class] Cancer")),
-    "M": ("tnm-distant-metastases-category", ("21907-1", "Distant metastases.clinical [Class] Cancer"), ("21901-4", "Distant metastases.pathology [Class] Cancer")),
+    "T": (
+        "tnm-primary-tumor-category",
+        ("21905-5", "Primary tumor.clinical [Class] Cancer"),
+        ("21899-0", "Primary tumor.pathology [Class] Cancer"),
+    ),
+    "N": (
+        "tnm-regional-nodes-category",
+        ("21906-3", "Regional lymph nodes.clinical [Class] Cancer"),
+        ("21900-6", "Regional lymph nodes.pathology [Class] Cancer"),
+    ),
+    "M": (
+        "tnm-distant-metastases-category",
+        ("21907-1", "Distant metastases.clinical [Class] Cancer"),
+        ("21901-4", "Distant metastases.pathology [Class] Cancer"),
+    ),
 }
 for _letter, (_prof, _clin, _path) in _TNM.items():
     for _code, _disp in (_clin, _path):
-        _BY_CODE[(_LOINC, _code)] = {"system": _LOINC, "code": _code, "display": _disp, "profile": _prof, "value": "codeable"}
+        _BY_CODE[(_LOINC, _code)] = {
+            "system": _LOINC,
+            "code": _code,
+            "display": _disp,
+            "profile": _prof,
+            "value": "codeable",
+        }
 
 _TNM_VALUE_RE = re.compile(r"(?i)^\s*([cpyr]*)([tnm])(is|x|\d[a-d]?)\s*$")
 
@@ -65,6 +149,7 @@ def match_tnm_category(value: str) -> list[dict] | None:
     code, disp = path if "p" in m.group(1).lower() else clin
     return [{"system": _LOINC, "code": code, "display": disp}]
 
+
 # Tumor markers: code is RETRIEVED (LOINC), not fixed — so these are recognized by
 # name and carry a role tag rather than a fixed code. ROLE is set in stage 4 (only
 # when the specialty is active), so it doubles as the mCODE-active signal downstream.
@@ -72,11 +157,23 @@ ROLE_TUMOR_MARKER = "tumor-marker"
 
 # Matched separator-insensitively, so "alpha-fetoprotein" == "alpha fetoprotein".
 _TM_LONG = (
-    "estrogen receptor", "progesterone receptor", "her2", "her2/neu",
+    "estrogen receptor",
+    "progesterone receptor",
+    "her2",
+    "her2/neu",
     "epidermal growth factor receptor",  # HER2/EGFR spelled out
-    "prostate specific antigen", "carcinoembryonic antigen", "alpha fetoprotein",
-    "human chorionic gonadotropin", "choriogonadotropin", "hcg",
-    "ca 15-3", "ca 27-29", "ca 125", "ca 19-9", "ki-67", "tumor marker",
+    "prostate specific antigen",
+    "carcinoembryonic antigen",
+    "alpha fetoprotein",
+    "human chorionic gonadotropin",
+    "choriogonadotropin",
+    "hcg",
+    "ca 15-3",
+    "ca 27-29",
+    "ca 125",
+    "ca 19-9",
+    "ki-67",
+    "tumor marker",
 )
 
 
@@ -97,7 +194,11 @@ def is_tumor_marker(name: str) -> bool:
 # Other markers (PSA, CEA, CA-*) keep the retrieve-by-name path. Needles are
 # `_norm`-form (separators stripped), matched as substrings, most-specific first.
 _TUMOR_MARKER_LOINC: list[tuple[tuple[str, ...], str, str]] = [
-    (("her2neu", "her2", "epidermalgrowthfactorreceptor2"), "18474-7", "HER2 Ag [Presence] in Tissue by Immune stain"),
+    (
+        ("her2neu", "her2", "epidermalgrowthfactorreceptor2"),
+        "18474-7",
+        "HER2 Ag [Presence] in Tissue by Immune stain",
+    ),
     (("estrogenreceptor",), "16112-5", "Estrogen receptor [Interpretation] in Tissue"),
     (("progesteronereceptor",), "16113-3", "Progesterone receptor [Interpretation] in Tissue"),
     (("ki67", "mib1"), "29593-1", "Cells.Ki-67 nuclear Ag/cells in Tissue by Immune stain"),
@@ -121,7 +222,7 @@ _TM_FAMILY_LONG: list[tuple[tuple[str, ...], str]] = [
     (("progesteronereceptor",), "PR"),
     (("ki67", "mib1"), "KI67"),
 ]
-_TM_FAMILY_SHORT: list[tuple["re.Pattern[str]", str]] = [
+_TM_FAMILY_SHORT: list[tuple[re.Pattern[str], str]] = [
     (re.compile(r"\bher2\b", re.IGNORECASE), "HER2"),
     (re.compile(r"\bki[\s-]?67\b", re.IGNORECASE), "KI67"),
     (re.compile(r"\ber\b", re.IGNORECASE), "ER"),

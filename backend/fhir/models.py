@@ -1,4 +1,5 @@
 """Plain dataclasses for reading FHIR data into Python."""
+
 from dataclasses import dataclass, field
 
 

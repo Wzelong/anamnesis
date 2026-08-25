@@ -1,5 +1,6 @@
 """E2E: run the mCODE-enabled pipeline against the Margaret Sullivan oncology
 bundle and report terminology coding coverage per proposal."""
+
 import asyncio
 import json
 import os
@@ -7,13 +8,12 @@ from pathlib import Path
 
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
-from fhir.local_bundle import load_demo_data
 from core.effective_profile import resolve_effective_profile
+from fhir.local_bundle import load_demo_data
 from services.proposals import _execute_stages, _proposal_to_dict
 
 ONCOLOGY_BUNDLE = (
-    Path(__file__).resolve().parents[2]
-    / "data" / "demo_oncology" / "oncology-demo-bundle.json"
+    Path(__file__).resolve().parents[2] / "data" / "demo_oncology" / "oncology-demo-bundle.json"
 )
 
 
@@ -25,7 +25,9 @@ def _codings(resource: dict) -> list[dict]:
         if isinstance(node, dict):
             if "coding" in node and isinstance(node["coding"], list):
                 for c in node["coding"]:
-                    out.append({"path": path, **{k: c.get(k) for k in ("system", "code", "display")}})
+                    out.append(
+                        {"path": path, **{k: c.get(k) for k in ("system", "code", "display")}}
+                    )
             for k, v in node.items():
                 walk(v, f"{path}.{k}")
         elif isinstance(node, list):
@@ -47,7 +49,11 @@ async def main() -> None:
         print(f"  [{stage}] {detail or ''}")
 
     stage6 = await _execute_stages(
-        patient_context, documents, progress_cb=progress, use_cache=False, effective=effective,
+        patient_context,
+        documents,
+        progress_cb=progress,
+        use_cache=False,
+        effective=effective,
     )
 
     proposals = [_proposal_to_dict(p, "e2e") for p in stage6.proposals]
@@ -72,7 +78,9 @@ async def main() -> None:
         flag = "OK " if has_real else "MISSING"
         print(f"[{flag}] {rtype:14} {cls:12} {label[:50]:50} profiles={prof_short}")
         for c in cods:
-            print(f"         {c['path']:48} {str(c['system']):10} {str(c['code']):12} {c['display']}")
+            print(
+                f"         {c['path']:48} {str(c['system']):10} {str(c['code']):12} {c['display']}"
+            )
         print()
 
     out = Path(__file__).resolve().parent / "e2e_oncology_out.json"

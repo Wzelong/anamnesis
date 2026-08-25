@@ -9,6 +9,7 @@ This module is the boring-but-important half of Stage 5: pure code-driven
 rules that account for the great majority of classifications. The interesting
 LLM call only fires for the residual AMBIGUOUS cases.
 """
+
 from __future__ import annotations
 
 import re
@@ -69,11 +70,18 @@ _DOSE_VALUE_TAIL_RE = re.compile(
 def _normalize_dose_value(v) -> str:
     return _DOSE_VALUE_TAIL_RE.sub("", str(v)).strip()
 
-_TOBACCO_CURRENT = {"current every day smoker", "current some day smoker",
-                     "ongoing", "active", "smoker", "current smoker",
-                     "light tobacco smoker", "heavy tobacco smoker"}
-_TOBACCO_FORMER = {"former smoker", "quit", "former", "tobacco-free",
-                    "ex-smoker", "quit smoking"}
+
+_TOBACCO_CURRENT = {
+    "current every day smoker",
+    "current some day smoker",
+    "ongoing",
+    "active",
+    "smoker",
+    "current smoker",
+    "light tobacco smoker",
+    "heavy tobacco smoker",
+}
+_TOBACCO_FORMER = {"former smoker", "quit", "former", "tobacco-free", "ex-smoker", "quit smoking"}
 _TOBACCO_NEVER = {"never smoker", "never", "non-smoker"}
 
 
@@ -118,7 +126,11 @@ def _normalize_code(system: str, code: str) -> tuple[str, str]:
 
 
 def _extract_codes(coding_list: list[dict]) -> set[tuple[str, str]]:
-    return {_normalize_code(c["system"], c["code"]) for c in coding_list if "system" in c and "code" in c}
+    return {
+        _normalize_code(c["system"], c["code"])
+        for c in coding_list
+        if "system" in c and "code" in c
+    }
 
 
 def _extract_fhir_codes(resource: dict, path: str = "code") -> set[tuple[str, str]]:
@@ -128,7 +140,9 @@ def _extract_fhir_codes(resource: dict, path: str = "code") -> set[tuple[str, st
         if not node:
             return set()
     codings = node.get("coding", []) if isinstance(node, dict) else []
-    return {_normalize_code(c["system"], c["code"]) for c in codings if "system" in c and "code" in c}
+    return {
+        _normalize_code(c["system"], c["code"]) for c in codings if "system" in c and "code" in c
+    }
 
 
 def _fhir_display(resource: dict, path: str = "code") -> str:
@@ -151,6 +165,7 @@ def _resource_id(resource: dict) -> str:
 # ---------------------------------------------------------------------------
 # ChartIndex
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class ChartIndex:
@@ -213,8 +228,10 @@ def build_chart_index(ctx: PatientContext) -> ChartIndex:
                 val = (
                     o.get("valueCodeableConcept", {}).get("text", "")
                     or next(
-                        (cd.get("display", "")
-                         for cd in o.get("valueCodeableConcept", {}).get("coding", [])),
+                        (
+                            cd.get("display", "")
+                            for cd in o.get("valueCodeableConcept", {}).get("coding", [])
+                        ),
                         "",
                     )
                     or o.get("valueString", "")
@@ -236,9 +253,9 @@ def build_chart_index(ctx: PatientContext) -> ChartIndex:
         for c in rel.get("coding", []):
             if "system" in c and "code" in c:
                 fmh_cm.setdefault(_normalize_code(c["system"], c["code"]), []).append(f)
-        disp = _normalize_display(rel.get("text", "") or next(
-            (c.get("display", "") for c in rel.get("coding", [])), ""
-        ))
+        disp = _normalize_display(
+            rel.get("text", "") or next((c.get("display", "") for c in rel.get("coding", [])), "")
+        )
         if disp:
             fmh_dm.setdefault(disp, []).append(f)
     code_map["FamilyMemberHistory"] = fmh_cm
@@ -285,7 +302,15 @@ def _match_condition(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
             return (
                 "DUPLICATE",
                 f"exact code match {pair[1]}",
-                [ChartMatch(resource_id=_resource_id(m), display=_fhir_display(m), match_type="exact_code", resource=m) for m in matched],
+                [
+                    ChartMatch(
+                        resource_id=_resource_id(m),
+                        display=_fhir_display(m),
+                        match_type="exact_code",
+                        resource=m,
+                    )
+                    for m in matched
+                ],
                 matched,
             )
 
@@ -296,7 +321,15 @@ def _match_condition(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
             return (
                 "AMBIGUOUS",
                 f"display overlap: '{name}' ~ '{disp}'",
-                [ChartMatch(resource_id=_resource_id(r), display=disp, match_type="display_text", resource=r) for r in resources],
+                [
+                    ChartMatch(
+                        resource_id=_resource_id(r),
+                        display=disp,
+                        match_type="display_text",
+                        resource=r,
+                    )
+                    for r in resources
+                ],
                 resources,
             )
 
@@ -317,14 +350,28 @@ def _match_condition_negated(c: MergedCandidate, idx: ChartIndex) -> _MatchResul
         if pair in chart_codes:
             for m in chart_codes[pair]:
                 matched.append(m)
-                matches.append(ChartMatch(resource_id=_resource_id(m), display=_fhir_display(m), match_type="exact_code", resource=m))
+                matches.append(
+                    ChartMatch(
+                        resource_id=_resource_id(m),
+                        display=_fhir_display(m),
+                        match_type="exact_code",
+                        resource=m,
+                    )
+                )
 
     if not matched:
         for disp, resources in chart_displays.items():
             if name and (name in disp or disp in name):
                 for r in resources:
                     matched.append(r)
-                    matches.append(ChartMatch(resource_id=_resource_id(r), display=disp, match_type="display_text", resource=r))
+                    matches.append(
+                        ChartMatch(
+                            resource_id=_resource_id(r),
+                            display=disp,
+                            match_type="display_text",
+                            resource=r,
+                        )
+                    )
                 break
 
     if not matched:
@@ -347,7 +394,9 @@ def _match_condition_negated(c: MergedCandidate, idx: ChartIndex) -> _MatchResul
     )
 
 
-_DOSE_IN_TEXT_RE = re.compile(r"(\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)?)\s*(mg|mcg|g|ml)\b", re.IGNORECASE)
+_DOSE_IN_TEXT_RE = re.compile(
+    r"(\d+(?:\.\d+)?(?:/\d+(?:\.\d+)?)?)\s*(mg|mcg|g|ml)\b", re.IGNORECASE
+)
 
 
 def _extract_chart_dose(resource: dict) -> str:
@@ -387,7 +436,15 @@ def _match_medication(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
             return (
                 "DUPLICATE",
                 f"exact RxNorm match {pair[1]}",
-                [ChartMatch(resource_id=_resource_id(m), display=_fhir_display(m, "medicationCodeableConcept"), match_type="exact_code", resource=m) for m in matched],
+                [
+                    ChartMatch(
+                        resource_id=_resource_id(m),
+                        display=_fhir_display(m, "medicationCodeableConcept"),
+                        match_type="exact_code",
+                        resource=m,
+                    )
+                    for m in matched
+                ],
                 matched,
             )
 
@@ -405,11 +462,24 @@ def _match_medication(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
         cand_dose_val = cand_dose.get("value", "") if isinstance(cand_dose, dict) else ""
         chart_dose = _extract_chart_dose(matched[0])
 
-        matches = [ChartMatch(resource_id=_resource_id(m), display=_fhir_display(m, "medicationCodeableConcept"), match_type="ingredient", resource=m) for m in matched]
+        matches = [
+            ChartMatch(
+                resource_id=_resource_id(m),
+                display=_fhir_display(m, "medicationCodeableConcept"),
+                match_type="ingredient",
+                resource=m,
+            )
+            for m in matched
+        ]
         cand_norm = _normalize_dose_value(cand_dose_val)
         chart_norm = _normalize_dose_value(chart_dose)
         if cand_norm and chart_norm and cand_norm != chart_norm:
-            return ("UPDATING", f"same ingredient '{ing}', dose {chart_dose}->{cand_dose_val}", matches, matched)
+            return (
+                "UPDATING",
+                f"same ingredient '{ing}', dose {chart_dose}->{cand_dose_val}",
+                matches,
+                matched,
+            )
         return ("DUPLICATE", f"same ingredient '{ing}'", matches, matched)
 
     return ("NEW", "no match in chart", [], [])
@@ -427,12 +497,14 @@ def _match_medication_discontinued(c: MergedCandidate, idx: ChartIndex) -> _Matc
         if pair in chart_codes:
             for m in chart_codes[pair]:
                 matched.append(m)
-                matches.append(ChartMatch(
-                    resource_id=_resource_id(m),
-                    display=_fhir_display(m, "medicationCodeableConcept"),
-                    match_type="exact_code",
-                    resource=m,
-                ))
+                matches.append(
+                    ChartMatch(
+                        resource_id=_resource_id(m),
+                        display=_fhir_display(m, "medicationCodeableConcept"),
+                        match_type="exact_code",
+                        resource=m,
+                    )
+                )
 
     if not matched:
         for coding in c.item.get("coding", []):
@@ -446,12 +518,14 @@ def _match_medication_discontinued(c: MergedCandidate, idx: ChartIndex) -> _Matc
                 continue
             for m in ing_matched:
                 matched.append(m)
-                matches.append(ChartMatch(
-                    resource_id=_resource_id(m),
-                    display=_fhir_display(m, "medicationCodeableConcept"),
-                    match_type="ingredient",
-                    resource=m,
-                ))
+                matches.append(
+                    ChartMatch(
+                        resource_id=_resource_id(m),
+                        display=_fhir_display(m, "medicationCodeableConcept"),
+                        match_type="ingredient",
+                        resource=m,
+                    )
+                )
             break
 
     if not matched:
@@ -484,7 +558,15 @@ def _match_allergy(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
         return (
             "CONFLICTING",
             f"chart records NKDA but candidate asserts allergy to {substance}",
-            [ChartMatch(resource_id=_resource_id(r), display="No known drug allergy", match_type="exact_code", resource=r) for r in idx.nkda_resources],
+            [
+                ChartMatch(
+                    resource_id=_resource_id(r),
+                    display="No known drug allergy",
+                    match_type="exact_code",
+                    resource=r,
+                )
+                for r in idx.nkda_resources
+            ],
             list(idx.nkda_resources),
         )
 
@@ -495,7 +577,15 @@ def _match_allergy(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
             return (
                 "DUPLICATE",
                 f"exact allergy code match {pair[1]}",
-                [ChartMatch(resource_id=_resource_id(m), display=_fhir_display(m), match_type="exact_code", resource=m) for m in matched],
+                [
+                    ChartMatch(
+                        resource_id=_resource_id(m),
+                        display=_fhir_display(m),
+                        match_type="exact_code",
+                        resource=m,
+                    )
+                    for m in matched
+                ],
                 matched,
             )
 
@@ -520,13 +610,27 @@ def _match_observation(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
                     return (
                         "DUPLICATE",
                         f"same tobacco status: {c_canon}",
-                        [ChartMatch(resource_id=_resource_id(chart_resource), display=chart_val, match_type="exact_code", resource=chart_resource)],
+                        [
+                            ChartMatch(
+                                resource_id=_resource_id(chart_resource),
+                                display=chart_val,
+                                match_type="exact_code",
+                                resource=chart_resource,
+                            )
+                        ],
                         [chart_resource],
                     )
                 return (
                     "UPDATING",
                     f"tobacco status changed: {ch_canon} -> {c_canon}",
-                    [ChartMatch(resource_id=_resource_id(chart_resource), display=chart_val, match_type="exact_code", resource=chart_resource)],
+                    [
+                        ChartMatch(
+                            resource_id=_resource_id(chart_resource),
+                            display=chart_val,
+                            match_type="exact_code",
+                            resource=chart_resource,
+                        )
+                    ],
                     [chart_resource],
                 )
 
@@ -534,13 +638,27 @@ def _match_observation(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
                 return (
                     "DUPLICATE",
                     f"same LOINC {loinc}, same value",
-                    [ChartMatch(resource_id=_resource_id(chart_resource), display=chart_val, match_type="exact_code", resource=chart_resource)],
+                    [
+                        ChartMatch(
+                            resource_id=_resource_id(chart_resource),
+                            display=chart_val,
+                            match_type="exact_code",
+                            resource=chart_resource,
+                        )
+                    ],
                     [chart_resource],
                 )
             return (
                 "UPDATING",
                 f"same LOINC {loinc}, value changed: '{chart_val}' -> '{cand_val}'",
-                [ChartMatch(resource_id=_resource_id(chart_resource), display=chart_val, match_type="exact_code", resource=chart_resource)],
+                [
+                    ChartMatch(
+                        resource_id=_resource_id(chart_resource),
+                        display=chart_val,
+                        match_type="exact_code",
+                        resource=chart_resource,
+                    )
+                ],
                 [chart_resource],
             )
 
@@ -557,12 +675,21 @@ def _match_procedure(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
             matched = chart_codes[pair]
             cand_date = c.item.get("performed", "")
             for m in matched:
-                chart_date = m.get("performedDateTime", "") or m.get("performedPeriod", {}).get("start", "")
+                chart_date = m.get("performedDateTime", "") or m.get("performedPeriod", {}).get(
+                    "start", ""
+                )
                 if cand_date and chart_date and cand_date == chart_date:
                     return (
                         "DUPLICATE",
                         f"same procedure code + date {cand_date}",
-                        [ChartMatch(resource_id=_resource_id(m), display=_fhir_display(m), match_type="exact_code", resource=m)],
+                        [
+                            ChartMatch(
+                                resource_id=_resource_id(m),
+                                display=_fhir_display(m),
+                                match_type="exact_code",
+                                resource=m,
+                            )
+                        ],
                         matched,
                     )
             return ("NEW", "same procedure code but different date", [], [])
@@ -581,7 +708,12 @@ def _match_family_history(c: MergedCandidate, idx: ChartIndex) -> _MatchResult:
             return (
                 "DUPLICATE",
                 f"same relationship code {pair[1]}",
-                [ChartMatch(resource_id=_resource_id(m), display="", match_type="exact_code", resource=m) for m in chart_codes[pair]],
+                [
+                    ChartMatch(
+                        resource_id=_resource_id(m), display="", match_type="exact_code", resource=m
+                    )
+                    for m in chart_codes[pair]
+                ],
                 chart_codes[pair],
             )
 

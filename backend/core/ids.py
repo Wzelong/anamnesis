@@ -3,6 +3,7 @@
 Crockford base32 alphabet (no i, l, o, u) avoids visual ambiguity, and a type
 prefix keeps run vs. proposal IDs from being mixed up.
 """
+
 from __future__ import annotations
 
 import secrets

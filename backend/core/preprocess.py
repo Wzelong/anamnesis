@@ -4,6 +4,7 @@ Pure/deterministic, no I/O. Splitter rules adapted from text2fhir's
 `_preprocessing.py` but rewritten to emit exact character offsets in the
 original text so downstream stages can cite byte-accurate source spans.
 """
+
 from __future__ import annotations
 
 import re
@@ -12,21 +13,77 @@ from datetime import datetime
 
 from fhir.models import Document
 
-
 PROTECTED_ABBR: tuple[str, ...] = (
-    "Dr", "Mr", "Mrs", "Ms", "Prof", "Rev",
-    "MD", "PhD", "DO", "DDS", "RN", "NP", "PA", "MA", "MS", "BSN", "MPH",
-    "No", "Pt", "St", "Ave", "Blvd", "Dept", "Fig", "Inc", "Ltd", "Corp",
-    "vs", "etc", "ie", "eg", "et al",
-    "qd", "q.d", "qhs", "q.h.s", "bid", "b.i.d", "tid", "t.i.d", "qid", "q.i.d",
-    "prn", "p.r.n", "qam", "qpm", "qod", "q.o.d",
+    "Dr",
+    "Mr",
+    "Mrs",
+    "Ms",
+    "Prof",
+    "Rev",
+    "MD",
+    "PhD",
+    "DO",
+    "DDS",
+    "RN",
+    "NP",
+    "PA",
+    "MA",
+    "MS",
+    "BSN",
+    "MPH",
+    "No",
+    "Pt",
+    "St",
+    "Ave",
+    "Blvd",
+    "Dept",
+    "Fig",
+    "Inc",
+    "Ltd",
+    "Corp",
+    "vs",
+    "etc",
+    "ie",
+    "eg",
+    "et al",
+    "qd",
+    "q.d",
+    "qhs",
+    "q.h.s",
+    "bid",
+    "b.i.d",
+    "tid",
+    "t.i.d",
+    "qid",
+    "q.i.d",
+    "prn",
+    "p.r.n",
+    "qam",
+    "qpm",
+    "qod",
+    "q.o.d",
 )
 
 ROMAN_PREV: dict[str, str] = {
-    "ii": "i", "iii": "ii", "iv": "iii", "v": "iv", "vi": "v",
-    "vii": "vi", "viii": "vii", "ix": "viii", "x": "ix",
-    "xi": "x", "xii": "xi", "xiii": "xii", "xiv": "xiii", "xv": "xiv",
-    "xvi": "xv", "xvii": "xvi", "xviii": "xvii", "xix": "xviii", "xx": "xix",
+    "ii": "i",
+    "iii": "ii",
+    "iv": "iii",
+    "v": "iv",
+    "vi": "v",
+    "vii": "vi",
+    "viii": "vii",
+    "ix": "viii",
+    "x": "ix",
+    "xi": "x",
+    "xii": "xi",
+    "xiii": "xii",
+    "xiv": "xiii",
+    "xv": "xiv",
+    "xvi": "xv",
+    "xvii": "xvi",
+    "xviii": "xvii",
+    "xix": "xviii",
+    "xx": "xix",
 }
 
 MARKER_PATTERNS: tuple[str, ...] = (
@@ -101,7 +158,12 @@ def _is_protected_split(text: str, start: int, protected: set[int]) -> bool:
     ch = text[start]
 
     if ch == ".":
-        if start > 0 and start + 1 < len(text) and text[start - 1].isdigit() and text[start + 1].isdigit():
+        if (
+            start > 0
+            and start + 1 < len(text)
+            and text[start - 1].isdigit()
+            and text[start + 1].isdigit()
+        ):
             return True
         if start + 1 < len(text) and text[start + 1] == ".":
             return True
@@ -115,7 +177,7 @@ def _is_protected_split(text: str, start: int, protected: set[int]) -> bool:
             marker_start = marker_end
             while marker_start > 0 and text[marker_start - 1] != "\n":
                 marker_start -= 1
-            marker = text[marker_start:marker_end + 1]
+            marker = text[marker_start : marker_end + 1]
             if _is_list_marker(marker) and (marker_start == 0 or text[marker_start - 1] == "\n"):
                 return True
 
@@ -123,7 +185,7 @@ def _is_protected_split(text: str, start: int, protected: set[int]) -> bool:
         n = len(abbr)
         if start < n:
             continue
-        if text[start - n:start].lower() != abbr.lower():
+        if text[start - n : start].lower() != abbr.lower():
             continue
         if start == n or text[start - n - 1] in " \n\t":
             return True
@@ -160,7 +222,7 @@ def split_sentences(text: str) -> list[SentenceSpan]:
     for sentence_end, next_start in valid_ends:
         span = _emit_span(text, cursor, sentence_end, number)
         if span is not None:
-            if span.text != text[span.start:span.end]:
+            if span.text != text[span.start : span.end]:
                 raise RuntimeError("splitter position invariant violated")
             spans.append(span)
             number += 1
@@ -168,7 +230,7 @@ def split_sentences(text: str) -> list[SentenceSpan]:
 
     tail = _emit_span(text, cursor, len(text), number)
     if tail is not None:
-        if tail.text != text[tail.start:tail.end]:
+        if tail.text != text[tail.start : tail.end]:
             raise RuntimeError("splitter position invariant violated")
         spans.append(tail)
 

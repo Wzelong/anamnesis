@@ -2,10 +2,6 @@ from core import telemetry
 from core.augment import StageSixOutput, assemble_proposals
 from core.cache import JsonCache
 from core.code_candidates import StageFourOutput, code_candidates
-from core.retrieval import SearchResult
-from core.pricing import estimate_cost
-from core.reconcile import StageFiveOutput, reconcile
-from core.validation import FHIR_DATE_RE, validate_fhir_date
 from core.extraction import (
     StageThreeOutput,
     StageTwoOutput,
@@ -25,8 +21,13 @@ from core.preprocess import (
     preprocess_documents,
     split_sentences,
 )
+from core.pricing import estimate_cost
 from core.prompts import PROMPT_VERSION
+from core.reconcile import StageFiveOutput, reconcile
+from core.retrieval import SearchResult
 from core.schemas import (
+    ITEM_LIST_MODELS,
+    RESOURCE_TYPES,
     AllergyItem,
     ChartMatch,
     CleanerResult,
@@ -34,7 +35,6 @@ from core.schemas import (
     DatedField,
     FamilyMemberCondition,
     FamilyMemberHistoryItem,
-    ITEM_LIST_MODELS,
     MedicationDose,
     MedicationItem,
     MergeAdjudicationResult,
@@ -44,11 +44,11 @@ from core.schemas import (
     ProcedureItem,
     Proposal,
     ReconciliationResult,
-    RESOURCE_TYPES,
     ResolvedCitation,
     ScanResult,
     SourceRef,
 )
+from core.validation import FHIR_DATE_RE, validate_fhir_date
 
 __all__ = [
     "AllergyItem",

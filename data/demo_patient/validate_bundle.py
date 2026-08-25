@@ -16,8 +16,11 @@ import re
 import sys
 from base64 import b64decode
 from collections import defaultdict
+from pathlib import Path
 
-PATH = "/home/claude/anamnesis-demo-bundle.json"
+PATH = sys.argv[1] if len(sys.argv) > 1 else str(
+    Path(__file__).resolve().parent / "anamnesis-demo-bundle.json"
+)
 with open(PATH) as f:
     bundle = json.load(f)
 

@@ -5,6 +5,7 @@ The Prefab renderer uses the same token vocabulary as our frontend
 --border-radius), so dropping our values in matches the web workspace 1:1.
 `css` overrides .pf-* component classes for the denser, designed look.
 """
+
 from prefab_ui.themes.base import Theme
 
 _LIGHT = """

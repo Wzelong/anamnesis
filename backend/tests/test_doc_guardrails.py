@@ -8,7 +8,9 @@ from fhir.models import Document
 
 
 def _doc(text: str, doc_id: str = "doc-1") -> Document:
-    return Document(id=doc_id, type="Progress note", date="2026-04-01", author="t", text=text, encounter_id=None)
+    return Document(
+        id=doc_id, type="Progress note", date="2026-04-01", author="t", text=text, encounter_id=None
+    )
 
 
 def test_accepts_normal_clinical_text():

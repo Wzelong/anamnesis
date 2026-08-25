@@ -5,6 +5,7 @@ with a Pydantic response schema and returns the parsed model plus a usage dict
 shaped like the telemetry layer expects (input / output / cached / reasoning
 tokens), so `core.telemetry.record_call` and `core.pricing` stay unchanged.
 """
+
 from __future__ import annotations
 
 import copy
@@ -86,7 +87,9 @@ def _normalize_usage(um: Any) -> dict | None:
         # (mirrors OpenAI, where output_tokens already includes reasoning_tokens).
         "input_tokens": int(getattr(um, "prompt_token_count", None) or 0),
         "output_tokens": candidates + thoughts,
-        "input_tokens_details": {"cached_tokens": int(getattr(um, "cached_content_token_count", None) or 0)},
+        "input_tokens_details": {
+            "cached_tokens": int(getattr(um, "cached_content_token_count", None) or 0)
+        },
         "output_tokens_details": {"reasoning_tokens": thoughts},
     }
 

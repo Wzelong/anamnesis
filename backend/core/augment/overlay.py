@@ -7,6 +7,7 @@ extensions. Extension VALUES are not yet extracted from notes, so an extension
 is applied only once its declaration carries a resolved `value` (the
 LLM-fragment follow-on). A defaulted rule is a no-op.
 """
+
 from __future__ import annotations
 
 _EXT_VALUE_KEY = {
@@ -25,7 +26,10 @@ def build_extension(declaration: dict, value) -> dict | None:
         return None
     datatype = declaration.get("datatype", "string")
     if datatype == "CodeableConcept":
-        return {"url": url, "valueCodeableConcept": value if isinstance(value, dict) else {"text": str(value)}}
+        return {
+            "url": url,
+            "valueCodeableConcept": value if isinstance(value, dict) else {"text": str(value)},
+        }
     if datatype == "Quantity":
         return {"url": url, "valueQuantity": value if isinstance(value, dict) else {"value": value}}
     key = _EXT_VALUE_KEY.get(datatype)

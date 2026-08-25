@@ -1,4 +1,5 @@
 """Conformance Layer 1: base FHIR R4 structural validation (CONFORMANCE.md)."""
+
 from __future__ import annotations
 
 import json
@@ -13,8 +14,24 @@ DEMO_PROPOSALS = REPO_ROOT / "mcp-app" / "src" / "demo" / "proposals.json"
 def _condition() -> dict:
     return {
         "resourceType": "Condition",
-        "clinicalStatus": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]},
-        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "problem-list-item"}]}],
+        "clinicalStatus": {
+            "coding": [
+                {
+                    "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                    "code": "active",
+                }
+            ]
+        },
+        "category": [
+            {
+                "coding": [
+                    {
+                        "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                        "code": "problem-list-item",
+                    }
+                ]
+            }
+        ],
         "code": {"text": "Hypertension"},
         "subject": {"reference": "Patient/x"},
     }

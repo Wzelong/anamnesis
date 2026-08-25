@@ -3,9 +3,10 @@
 Keyed on the PO token `sub`. The only persisted state in the app. No PHI:
 clinician identity is not patient data; config is configuration.
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 async def register_session(
@@ -22,7 +23,7 @@ async def register_session(
     """
     from db import AppUser, AsyncSessionLocal
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     async with AsyncSessionLocal() as session:
         row = await session.get(AppUser, user_key)
         is_returning = row is not None
@@ -78,7 +79,7 @@ async def set_config(user_key: str, patch: dict) -> dict:
     from core import byok
     from db import AppUser, AsyncSessionLocal
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     async with AsyncSessionLocal() as session:
         row = await session.get(AppUser, user_key)
         if row is None:

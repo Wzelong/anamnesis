@@ -1,4 +1,5 @@
 """US Core profile URLs, terminology system URIs, and small lookup maps used by the FHIR builders."""
+
 from __future__ import annotations
 
 import re
@@ -94,10 +95,20 @@ _TOBACCO_SNOMED: dict[str, tuple[str, str]] = {
 }
 
 _UCUM_CODES: dict[str, str] = {
-    "%": "%", "mg": "mg", "mg/dL": "mg/dL", "g/dL": "g/dL",
-    "mEq/L": "meq/L", "mmol/L": "mmol/L", "ng/mL": "ng/mL",
-    "mmHg": "mm[Hg]", "kg": "kg", "cm": "cm", "mm": "mm", "bpm": "/min",
-    "breaths/min": "/min", "kg/m2": "kg/m2",
+    "%": "%",
+    "mg": "mg",
+    "mg/dL": "mg/dL",
+    "g/dL": "g/dL",
+    "mEq/L": "meq/L",
+    "mmol/L": "mmol/L",
+    "ng/mL": "ng/mL",
+    "mmHg": "mm[Hg]",
+    "kg": "kg",
+    "cm": "cm",
+    "mm": "mm",
+    "bpm": "/min",
+    "breaths/min": "/min",
+    "kg/m2": "kg/m2",
 }
 
 _COND_CLINICAL_SYSTEM = "http://terminology.hl7.org/CodeSystem/condition-clinical"

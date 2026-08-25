@@ -1,4 +1,5 @@
 """VSAC FHIR terminology client: value-set expansion + code grounding."""
+
 import asyncio
 import base64
 
@@ -50,7 +51,9 @@ def test_expand_requires_key():
 def test_expand_by_oid_single_page():
     stub = _Stub([(200, _vs([("http://snomed.info/sct", "44054006", "Diabetes")], total=1))])
     codes = _run(expand_valueset("2.16.840.1.1", "KEY", get=stub))
-    assert codes == [{"system": "http://snomed.info/sct", "code": "44054006", "display": "Diabetes"}]
+    assert codes == [
+        {"system": "http://snomed.info/sct", "code": "44054006", "display": "Diabetes"}
+    ]
     assert "/ValueSet/2.16.840.1.1/$expand" in stub.calls[0]["url"]
     assert "url" not in stub.calls[0]["params"]
 
@@ -72,7 +75,11 @@ def test_expand_pages_until_total():
 
 
 def test_expand_dedupes():
-    dup = [("http://loinc.org", "1", "a"), ("http://loinc.org", "1", "a"), ("http://loinc.org", "2", "b")]
+    dup = [
+        ("http://loinc.org", "1", "a"),
+        ("http://loinc.org", "1", "a"),
+        ("http://loinc.org", "2", "b"),
+    ]
     stub = _Stub([(200, _vs(dup, total=3))])
     codes = _run(expand_valueset("2.16.1", "KEY", get=stub))
     assert len(codes) == 2
@@ -85,12 +92,21 @@ def test_expand_raises_on_error():
 
 
 def _vc(result: bool):
-    return (200, {"resourceType": "Parameters", "parameter": [{"name": "result", "valueBoolean": result}]})
+    return (
+        200,
+        {"resourceType": "Parameters", "parameter": [{"name": "result", "valueBoolean": result}]},
+    )
 
 
 def test_validate_code_true_false():
-    assert _run(validate_code("http://snomed.info/sct", "44054006", "KEY", get=_Stub([_vc(True)]))) is True
-    assert _run(validate_code("http://snomed.info/sct", "000", "KEY", get=_Stub([_vc(False)]))) is False
+    assert (
+        _run(validate_code("http://snomed.info/sct", "44054006", "KEY", get=_Stub([_vc(True)])))
+        is True
+    )
+    assert (
+        _run(validate_code("http://snomed.info/sct", "000", "KEY", get=_Stub([_vc(False)])))
+        is False
+    )
 
 
 def test_validate_code_non_200_is_false():

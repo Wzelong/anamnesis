@@ -4,6 +4,7 @@ Every candidate carries `source_sentences` (the universal provenance
 primitive) and `reasoning` (a short audit string from the model). No
 nested StringWithSource unions — source tracking is at the item level.
 """
+
 from __future__ import annotations
 
 from typing import Annotated, Literal
@@ -71,9 +72,9 @@ class ObservationItem(_Strict):
     unit: str | None = None
     codeset_hint: Literal["LOINC", "SNOMED"] | None = None
     effective_date: FhirDate | None = None
-    category: Literal[
-        "vital-signs", "laboratory", "social-history", "exam", "imaging", "survey"
-    ] | None = None
+    category: (
+        Literal["vital-signs", "laboratory", "social-history", "exam", "imaging", "survey"] | None
+    ) = None
 
 
 class ObservationItemList(_Strict):
@@ -91,12 +92,8 @@ class MedicationItem(_Strict):
     certainty: Certainty = "probable"
     name: str
     code_queries: list[str] = Field(default_factory=list)
-    status: Literal[
-        "active", "on-hold", "cancelled", "completed", "stopped", "draft", "unknown"
-    ]
-    intent: Literal[
-        "proposal", "plan", "order", "original-order", "instance-order"
-    ]
+    status: Literal["active", "on-hold", "cancelled", "completed", "stopped", "draft", "unknown"]
+    intent: Literal["proposal", "plan", "order", "original-order", "instance-order"]
     route: str | None = None
     frequency: str | None = None
     dose: MedicationDose | None = None
@@ -114,8 +111,14 @@ class ProcedureItem(_Strict):
     name: str
     code_queries: list[str] = Field(default_factory=list)
     status: Literal[
-        "preparation", "in-progress", "not-done", "on-hold",
-        "stopped", "completed", "entered-in-error", "unknown",
+        "preparation",
+        "in-progress",
+        "not-done",
+        "on-hold",
+        "stopped",
+        "completed",
+        "entered-in-error",
+        "unknown",
     ]
     category: Literal["surgical", "diagnostic", "counselling", "education"] | None = None
     performed: FhirDate | None = None
@@ -141,9 +144,7 @@ class AllergyItem(_Strict):
     severity: Literal["mild", "moderate", "severe"] | None = None
     onset_age: str | None = None
     exposure_route: str | None = None
-    verification: Literal[
-        "unconfirmed", "confirmed", "refuted", "entered-in-error"
-    ] | None = None
+    verification: Literal["unconfirmed", "confirmed", "refuted", "entered-in-error"] | None = None
 
 
 class AllergyItemList(_Strict):

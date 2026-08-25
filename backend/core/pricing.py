@@ -2,6 +2,7 @@
 
 Source: https://ai.google.dev/gemini-api/docs/pricing (standard paid tier).
 """
+
 from __future__ import annotations
 
 import logging
@@ -13,7 +14,7 @@ _D = Decimal
 
 
 SHORT_CONTEXT: dict[str, dict[str, Decimal]] = {
-    "gemini-3.5-flash":      {"input": _D("1.50"), "cached": _D("0.15"),  "output": _D("9.00")},
+    "gemini-3.5-flash": {"input": _D("1.50"), "cached": _D("0.15"), "output": _D("9.00")},
     "gemini-3.1-flash-lite": {"input": _D("0.25"), "cached": _D("0.025"), "output": _D("1.50")},
 }
 

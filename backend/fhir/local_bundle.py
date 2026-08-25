@@ -3,6 +3,7 @@
 Produces identical types to fhir/read.py so downstream stages are unaware
 of the data source. Used for offline development and e2e testing.
 """
+
 from __future__ import annotations
 
 import base64
@@ -84,14 +85,16 @@ def documents_from_bundle(bundle: dict) -> list[Document]:
         enc_ref = enc_refs[0].get("reference", "") if enc_refs else ""
         enc_id = enc_ref if enc_ref else None
 
-        docs.append(Document(
-            id=res.get("id", ""),
-            type=type_label,
-            date=res.get("date", ""),
-            author=author,
-            text=text,
-            encounter_id=enc_id or None,
-        ))
+        docs.append(
+            Document(
+                id=res.get("id", ""),
+                type=type_label,
+                date=res.get("date", ""),
+                author=author,
+                text=text,
+                encounter_id=enc_id or None,
+            )
+        )
     return docs
 
 

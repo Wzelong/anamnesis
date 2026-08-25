@@ -1,4 +1,5 @@
 """Async read helpers returning typed Python representations of FHIR data."""
+
 import asyncio
 import base64
 
@@ -14,7 +15,17 @@ def _entries(bundle: dict | None) -> list[dict]:
 
 async def read_patient_context(client: FhirClient, patient_id: str) -> PatientContext:
     params = {"patient": patient_id}
-    patient, conditions, medications, allergies, observations, family_history, procedures, encounters, documents = await asyncio.gather(
+    (
+        patient,
+        conditions,
+        medications,
+        allergies,
+        observations,
+        family_history,
+        procedures,
+        encounters,
+        documents,
+    ) = await asyncio.gather(
         client.read(f"Patient/{patient_id}"),
         client.search("Condition", params),
         client.search("MedicationRequest", params),
@@ -39,9 +50,14 @@ async def read_patient_context(client: FhirClient, patient_id: str) -> PatientCo
 
     targets = [f"Patient/{patient_id}"]
     for resources, type_name in [
-        (cond, "Condition"), (meds, "MedicationRequest"), (allergy, "AllergyIntolerance"),
-        (obs, "Observation"), (fhx, "FamilyMemberHistory"), (proc, "Procedure"),
-        (enc, "Encounter"), (docs, "DocumentReference"),
+        (cond, "Condition"),
+        (meds, "MedicationRequest"),
+        (allergy, "AllergyIntolerance"),
+        (obs, "Observation"),
+        (fhx, "FamilyMemberHistory"),
+        (proc, "Procedure"),
+        (enc, "Encounter"),
+        (docs, "DocumentReference"),
     ]:
         for r in resources:
             rid = r.get("id")

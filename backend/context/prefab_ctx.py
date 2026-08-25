@@ -4,6 +4,7 @@ Prefab tools have no `ctx` param; FHIR launch context comes from the per-request
 HTTP headers via FastMCP's `get_http_headers()`. Mirrors `context.sharp` but
 sourced from the v3 dependency instead of a passed Context.
 """
+
 from __future__ import annotations
 
 import hashlib

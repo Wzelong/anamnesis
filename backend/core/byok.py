@@ -10,6 +10,7 @@ Three operations:
   * `redact` — replace encrypted fields with presence flags for the iframe.
   * `unseal` — decrypt in-process (pipeline use only; never returned to caller).
 """
+
 from __future__ import annotations
 
 import base64
@@ -64,9 +65,7 @@ def _seal_walk(obj: object, f: Fernet | None) -> object:
         if k in SECRET_FIELDS:
             if isinstance(v, str) and v.strip():
                 if f is None:
-                    raise SecretsDisabledError(
-                        "CONFIG_SECRET_KEY is required to store a secret"
-                    )
+                    raise SecretsDisabledError("CONFIG_SECRET_KEY is required to store a secret")
                 out[k] = {_MARKER: f.encrypt(v.encode()).decode(), "last4": v.strip()[-4:]}
             elif _is_marker(v):
                 out[k] = v

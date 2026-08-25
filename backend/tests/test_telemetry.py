@@ -1,8 +1,6 @@
 import asyncio
 from decimal import Decimal
 
-import pytest
-
 from core.pricing import (
     REGIONAL_UPLIFT,
     SHORT_CONTEXT,
@@ -13,16 +11,19 @@ from core.validation import FHIR_DATE_RE, validate_fhir_date
 
 def test_pricing_short_tier_flash():
     cost = estimate_cost("gemini-3.5-flash", 100_000, 0, 10_000)
-    expected = (Decimal(100_000) * SHORT_CONTEXT["gemini-3.5-flash"]["input"]
-                + Decimal(10_000) * SHORT_CONTEXT["gemini-3.5-flash"]["output"]) / Decimal(1_000_000)
+    expected = (
+        Decimal(100_000) * SHORT_CONTEXT["gemini-3.5-flash"]["input"]
+        + Decimal(10_000) * SHORT_CONTEXT["gemini-3.5-flash"]["output"]
+    ) / Decimal(1_000_000)
     assert cost == expected.quantize(Decimal("0.000001"))
 
 
 def test_pricing_cached_input_subtracted():
     cost = estimate_cost("gemini-3.5-flash", 100_000, 80_000, 0)
     rates = SHORT_CONTEXT["gemini-3.5-flash"]
-    expected = (Decimal(20_000) * rates["input"]
-                + Decimal(80_000) * rates["cached"]) / Decimal(1_000_000)
+    expected = (Decimal(20_000) * rates["input"] + Decimal(80_000) * rates["cached"]) / Decimal(
+        1_000_000
+    )
     assert cost == expected.quantize(Decimal("0.000001"))
 
 

@@ -11,6 +11,7 @@ Tools: ReviewChart (model-visible, seeds the patient header) plus app-only
 RunExtraction / AcceptAugmentation / RejectAugmentation. All stateless; no PHI
 persisted (see services.proposals).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -32,7 +33,6 @@ from context.prefab_ctx import (
     prefab_user_context,
     prefab_verified_user_context,
 )
-from fhir.client import FhirClient
 from services import proposals as svc
 
 RESOURCE_URI = "ui://anamnesis/review.html"
@@ -80,21 +80,31 @@ async def review_chart() -> dict:
             sex = patient.get("gender")
             for ident in patient.get("identifier") or []:
                 text = (ident.get("type") or {}).get("text", "")
-                code = next((c.get("code") for c in (ident.get("type") or {}).get("coding") or []), "")
+                code = next(
+                    (c.get("code") for c in (ident.get("type") or {}).get("coding") or []), ""
+                )
                 if code == "MR" or "medical record" in text.lower():
                     mrn = ident.get("value")
                     break
             if not mrn and patient.get("identifier"):
                 mrn = patient["identifier"][0].get("value")
     result = {
-        "patient_id": patient_id, "patient_name": name, "birth_date": birth_date,
-        "sex": sex, "mrn": mrn, "byok_enabled": bool(settings.config_secret_key),
+        "patient_id": patient_id,
+        "patient_name": name,
+        "birth_date": birth_date,
+        "sex": sex,
+        "mrn": mrn,
+        "byok_enabled": bool(settings.config_secret_key),
     }
     uc = prefab_user_context()
     if uc:
         from services import users
+
         result["user"] = await users.register_session(
-            uc.user_key, display_name=uc.display_name, workspace_id=uc.workspace_id, role=uc.role,
+            uc.user_key,
+            display_name=uc.display_name,
+            workspace_id=uc.workspace_id,
+            role=uc.role,
         )
     return result
 
@@ -108,6 +118,7 @@ async def get_user_config() -> dict:
     """
     from core import byok
     from services import users
+
     uc = prefab_verified_user_context()
     return {"config": byok.redact(await users.get_config(uc.user_key))}
 
@@ -121,13 +132,19 @@ async def set_user_config(patch: dict) -> dict:
     """
     from core import byok
     from services import users
+
     uc = prefab_verified_user_context()
     return {"config": byok.redact(await users.set_config(uc.user_key, patch))}
 
 
 _STAGES = [
-    "guardrail", "stage1_preprocess", "stage2_extract", "stage3_merge",
-    "stage4_code", "stage5_reconcile", "stage6_assemble",
+    "guardrail",
+    "stage1_preprocess",
+    "stage2_extract",
+    "stage3_merge",
+    "stage4_code",
+    "stage5_reconcile",
+    "stage6_assemble",
 ]
 
 
@@ -199,6 +216,7 @@ async def _run_identity():
     uc = prefab_verified_user_context()
     from core import byok
     from services import users
+
     cfg = byok.unseal(await users.get_config(uc.user_key))
     key = (cfg.get("byok") or {}).get("gemini_api_key")
     if not key:
@@ -209,6 +227,7 @@ async def _run_identity():
 async def get_usage() -> dict:
     """App-only: the current clinician's run history + cumulative spend (non-PHI)."""
     from services import usage
+
     uc = prefab_verified_user_context()
     return {"summary": await usage.summary(uc.user_key), "runs": await usage.list_runs(uc.user_key)}
 
@@ -246,22 +265,30 @@ async def _accept_effective():
     """Verified clinician's active preset (for the conformance coding-subset gate).
     Defaults when unconfigured/unverified -- enforcement is opt-in, regression-safe."""
     from core.effective_profile import resolve_from_config
+
     try:
         uc = prefab_verified_user_context()
         from services import users
+
         return resolve_from_config(await users.get_config(uc.user_key))
     except Exception:
         return resolve_from_config(None)
 
 
 async def reject_augmentation(
-    run_id: str, proposal_id: str, resource_type: str = "", reason: str = "",
+    run_id: str,
+    proposal_id: str,
+    resource_type: str = "",
+    reason: str = "",
 ) -> dict:
     """App-only: record a non-PHI reject decision."""
     reviewer = prefab_reviewer()
     await svc.record_decision(
-        action="reject", run_id=run_id, resource_type=resource_type or None,
-        reviewer=reviewer.display if reviewer else None, reason=reason or None,
+        action="reject",
+        run_id=run_id,
+        resource_type=resource_type or None,
+        reviewer=reviewer.display if reviewer else None,
+        reason=reason or None,
     )
     return {"id": proposal_id, "status": "rejected"}
 
@@ -284,7 +311,9 @@ async def _resolve_keys(*, require_umls: bool = False) -> tuple[str | None, str 
     gemini = bk.get("gemini_api_key")
     umls = bk.get("umls_api_key") or settings.umls_api_key or None
     if require_umls and not umls:
-        raise ValueError("A UMLS API key is required to resolve value sets. Add it in Configuration.")
+        raise ValueError(
+            "A UMLS API key is required to resolve value sets. Add it in Configuration."
+        )
     return gemini, umls
 
 
@@ -313,11 +342,17 @@ async def parse_codes_freeform(text: str) -> dict:
     gemini, umls = await _resolve_keys(require_umls=True)
     if not gemini:
         raise ValueError("Connect a Gemini API key in Configuration before parsing codes.")
-    return await parse_codes(text or "", gemini_key=gemini, umls_key=umls, model=settings.gemini_model_smart)
+    return await parse_codes(
+        text or "", gemini_key=gemini, umls_key=umls, model=settings.gemini_model_smart
+    )
 
 
 async def draft_prompt_addon(
-    resource_type: str, note: str, ideas: str, current_addon: str = "", lane: str = "extract",
+    resource_type: str,
+    note: str,
+    ideas: str,
+    current_addon: str = "",
+    lane: str = "extract",
 ) -> dict:
     """App-only: AI-draft an add-only addon from an example note + intent, for one lane.
 
@@ -337,13 +372,20 @@ async def draft_prompt_addon(
     if not gemini:
         raise ValueError("Connect a Gemini API key in Configuration before drafting prompts.")
     addon = await draft_addon(
-        lane=lane, resource_type=resource_type, note=note or "", ideas=ideas or "",
-        current_addon=current_addon or "", gemini_key=gemini, model=settings.gemini_model_smart,
+        lane=lane,
+        resource_type=resource_type,
+        note=note or "",
+        ideas=ideas or "",
+        current_addon=current_addon or "",
+        gemini_key=gemini,
+        model=settings.gemini_model_smart,
     )
     return {"resource_type": resource_type, "lane": lane, "addon": addon}
 
 
-async def test_prompt_addon(resource_type: str, note: str, capture: str = "", extract: str = "") -> dict:
+async def test_prompt_addon(
+    resource_type: str, note: str, capture: str = "", extract: str = ""
+) -> dict:
     """App-only: run the production extraction (Stage 1->2: scan/parse/clean) on the note
     with the draft capture + extract addons applied, scoped to one resource type.
 
@@ -360,8 +402,12 @@ async def test_prompt_addon(resource_type: str, note: str, capture: str = "", ex
     if not gemini:
         raise ValueError("Connect a Gemini API key in Configuration before testing prompts.")
     return await test_addon(
-        resource_type=resource_type, note=note or "", capture=capture or "", extract=extract or "",
-        gemini_key=gemini, model=settings.gemini_model_fast,
+        resource_type=resource_type,
+        note=note or "",
+        capture=capture or "",
+        extract=extract or "",
+        gemini_key=gemini,
+        model=settings.gemini_model_fast,
     )
 
 
@@ -400,7 +446,13 @@ async def search_terminology(query: str, system: str, top_k: int = 10) -> dict:
     return {
         "system": norm,
         "results": [
-            {"system": norm, "code": r.code, "display": r.display, "score": round(r.score, 4), "rank": r.rank}
+            {
+                "system": norm,
+                "code": r.code,
+                "display": r.display,
+                "score": round(r.score, 4),
+                "rank": r.rank,
+            }
             for r in results
         ],
     }
@@ -416,17 +468,27 @@ def register(mcp: FastMCP) -> None:
         if not path.is_file() or path.parent != _ASSETS_DIR:
             return Response("not found", status_code=404)
         media = _MIME.get(path.suffix, "application/octet-stream")
-        return Response(path.read_bytes(), media_type=media, headers={
-            "Cache-Control": "no-cache",
-            "Access-Control-Allow-Origin": "*",
-        })
+        return Response(
+            path.read_bytes(),
+            media_type=media,
+            headers={
+                "Cache-Control": "no-cache",
+                "Access-Control-Allow-Origin": "*",
+            },
+        )
 
-    mcp.add_tool(Tool.from_function(
-        review_chart, name="ReviewChart",
-        description="Open the interactive chart-review workspace for the current patient.",
-        meta={"ui": app_config_to_meta_dict(
-            AppConfig(resource_uri=RESOURCE_URI, visibility=["model"]))},
-    ))
+    mcp.add_tool(
+        Tool.from_function(
+            review_chart,
+            name="ReviewChart",
+            description="Open the interactive chart-review workspace for the current patient.",
+            meta={
+                "ui": app_config_to_meta_dict(
+                    AppConfig(resource_uri=RESOURCE_URI, visibility=["model"])
+                )
+            },
+        )
+    )
     for fn, fname in [
         (run_extraction, "RunExtraction"),
         (accept_augmentation, "AcceptAugmentation"),
@@ -441,17 +503,29 @@ def register(mcp: FastMCP) -> None:
         (set_user_config, "SetUserConfig"),
         (get_usage, "GetUsage"),
     ]:
-        mcp.add_tool(Tool.from_function(
-            fn, name=fname, description=(fn.__doc__ or "").strip(),
-            meta={"ui": app_config_to_meta_dict(
-                AppConfig(resource_uri=RESOURCE_URI, visibility=["app"]))},
-        ))
+        mcp.add_tool(
+            Tool.from_function(
+                fn,
+                name=fname,
+                description=(fn.__doc__ or "").strip(),
+                meta={
+                    "ui": app_config_to_meta_dict(
+                        AppConfig(resource_uri=RESOURCE_URI, visibility=["app"])
+                    )
+                },
+            )
+        )
 
     csp = ResourceCSP(
         resource_domains=[_BASE],
         connect_domains=[_BASE],
     )
-    mcp.add_resource(TextResource(
-        uri=RESOURCE_URI, name="Anamnesis Review", mime_type=UI_MIME_TYPE, text=_SHELL,
-        meta={"ui": app_config_to_meta_dict(AppConfig(csp=csp))},
-    ))
+    mcp.add_resource(
+        TextResource(
+            uri=RESOURCE_URI,
+            name="Anamnesis Review",
+            mime_type=UI_MIME_TYPE,
+            text=_SHELL,
+            meta={"ui": app_config_to_meta_dict(AppConfig(csp=csp))},
+        )
+    )

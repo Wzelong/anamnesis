@@ -1,4 +1,5 @@
 """Phase 2 Part B: Condition.bodySite coded to SNOMED, gated on an active specialty IG."""
+
 from __future__ import annotations
 
 from core.augment.builders import build_fhir_resource
@@ -50,23 +51,34 @@ def _candidate(item: dict) -> MergedCandidate:
 
 def test_builder_emits_coded_body_site():
     bs = {"system": SNOMED, "code": "76752008", "display": "Breast structure"}
-    item = {"name": "carcinoma", "coding": [{"system": SNOMED, "code": "1", "display": "carcinoma"}],
-            "body_site": ["right breast"], "body_site_coding": [bs]}
+    item = {
+        "name": "carcinoma",
+        "coding": [{"system": SNOMED, "code": "1", "display": "carcinoma"}],
+        "body_site": ["right breast"],
+        "body_site_coding": [bs],
+    }
     res = build_fhir_resource(_candidate(item), "pt1", {})
     assert res["bodySite"] == [{"coding": [bs], "text": "right breast"}]
 
 
 def test_builder_text_fallback_when_uncoded():
-    item = {"name": "carcinoma", "coding": [{"system": SNOMED, "code": "1", "display": "x"}],
-            "body_site": ["right breast"]}
+    item = {
+        "name": "carcinoma",
+        "coding": [{"system": SNOMED, "code": "1", "display": "x"}],
+        "body_site": ["right breast"],
+    }
     res = build_fhir_resource(_candidate(item), "pt1", {})
     assert res["bodySite"] == [{"text": "right breast"}]
 
 
 def test_builder_partial_coding_alignment():
     bs = {"system": SNOMED, "code": "91723000", "display": "Anatomical structure"}
-    item = {"name": "carcinoma", "coding": [{"system": SNOMED, "code": "1", "display": "x"}],
-            "body_site": ["right breast", "axilla"], "body_site_coding": [bs, None]}
+    item = {
+        "name": "carcinoma",
+        "coding": [{"system": SNOMED, "code": "1", "display": "x"}],
+        "body_site": ["right breast", "axilla"],
+        "body_site_coding": [bs, None],
+    }
     res = build_fhir_resource(_candidate(item), "pt1", {})
     assert res["bodySite"] == [{"coding": [bs], "text": "right breast"}, {"text": "axilla"}]
 
@@ -116,5 +128,7 @@ def test_backstop_leaves_primary_condition_untouched():
         "code": {"text": "invasive ductal carcinoma"},
         "bodySite": [{"text": "right breast"}],
     }
-    res = apply_specialty_profiles(primary, "Condition", _CONDITION_PROFILES, {}, {"breast"}, {"breast"})
+    res = apply_specialty_profiles(
+        primary, "Condition", _CONDITION_PROFILES, {}, {"breast"}, {"breast"}
+    )
     assert [b["text"] for b in res["bodySite"]] == ["right breast"]

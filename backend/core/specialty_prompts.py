@@ -6,6 +6,7 @@ concepts the structural builders need (e.g. names a metastasis recognizably,
 keeps a negative receptor result). Generic seam (`specialty_prompt_addons`),
 per-specialty content. Empty for an unknown/None specialty -> base unchanged.
 """
+
 from __future__ import annotations
 
 # extract: add-only, appended to the per-type parse prompt.

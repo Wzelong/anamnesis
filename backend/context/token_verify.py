@@ -8,6 +8,7 @@ Required before keying any per-user write (config today, BYOK secrets next) to a
 token's `sub`: an unverified `sub` is forgeable. Read paths stay host-delegated
 (a forged token self-fails at the FHIR server). See AUTH.md.
 """
+
 from __future__ import annotations
 
 from functools import lru_cache
