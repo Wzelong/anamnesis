@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+
+- Gemini accuracy benchmark (`benchmarks/eval-corpus-v1/results/20260825T050000Z/`):
+  89.4% overall [87.0%, 92.2%], 88.3% of facts correct in >=4 of 5 runs — statistically
+  unchanged from the 90% measured on the retired OpenAI stack.
+- The augmentation benchmark now runs inside a telemetry run, so per-call tokens, cost,
+  and latency are recorded instead of silently discarded.
+
 ### Changed
 
 - Ruff configuration moved to a repo-root `ruff.toml` so lint and format cover

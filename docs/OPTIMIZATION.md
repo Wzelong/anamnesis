@@ -2,7 +2,9 @@
 
 A working document for the Prompt Opinion (PO) hand-off discussion. It maps where the augmentation pipeline spends time, money, and accuracy; compares each stage to the 2024-2026 state of the art; and ranks concrete next steps. Every SOTA claim is cited in the [sources](#sources).
 
-> **Measurement caveat.** The absolute cost/latency numbers below come from the checked-in benchmark run (`benchmarks/eval-corpus-v1/results/20260504T015004Z/`), captured on the **earlier OpenAI stack** (`gpt-5.4-mini`/`nano`, 5 runs, 18 notes x 13 charts x 77 facts). The live stack is Gemini flash-class + BYOK. **Relative stage proportions and the error-attribution split still hold; absolute dollars/seconds do not — a Gemini re-run is the first task below.**
+> **Measurement status.** Accuracy has been re-measured on the current Gemini stack (`benchmarks/eval-corpus-v1/results/20260825T050000Z/`, `gemini-3.5-flash` + `gemini-3.1-flash-lite`, 5 runs, 18 notes x 13 charts x 77 facts): **89.4% overall [87.0%, 92.2%], 88.3% of facts correct in >=4 of 5 runs** — statistically unchanged from the 90% measured on the earlier OpenAI stack, despite both the model and the Stage-4 retrieval backend changing since.
+>
+> **The cost and latency figures below are still from the OpenAI run** (`results/20260504T015004Z/`, `gpt-5.4-mini`/`nano`). Relative stage proportions are expected to hold; absolute dollars and seconds do not. The report generator for those figures (`run_demo_benchmark.py`) is still OpenAI-coupled and does not run against the current config — see the quick-wins table.
 
 ---
 
@@ -33,6 +35,17 @@ From the benchmark error attribution:
 | Reconciler miss (right fact/code, wrong class) | 5% | 5 |
 
 The reconciliation stage — the capability that differentiates Anamnesis — is the *least* error-prone. **94% of errors live in the extract and code stages.** Optimization effort should follow.
+
+**Update (2026-08-25 Gemini run).** The front-loaded picture holds overall, but the two error kinds separate cleanly by determinism. Of 77 facts across 5 runs, 61 were stable-right, 12 flaky, and 4 stable-wrong. Sixteen of the flaky misses are `MISSING` — the fact was never extracted — consistent with extraction being the dominant error source. But **all 4 deterministic failures are classification errors, not extraction or coding**:
+
+| Fact | Expected | Always classified |
+|---|---|---|
+| `C2-F1` | DUPLICATE | NEW |
+| `C2-F2` | UPDATING | NEW |
+| `N4-F2` | UPDATING | NEW |
+| `N6-F1` | DUPLICATE | UPDATING |
+
+Three of the four are the same failure mode: content already present in the chart classified as `NEW`. Two of the three `UPDATING` facts fail this way in every run, which is the entire reason that column reads 33.3% with zero variance. So while the reconciler contributes the fewest errors by volume, it contributes the ones that are reproducible and therefore actually fixable — the extraction misses are variance, these are logic.
 
 ---
 
@@ -106,7 +119,7 @@ Two buckets. **Quick wins** are low-risk, mostly code-level, and should land fir
 
 | Move | Attacks | Effort | Notes |
 |---|---|---|---|
-| **Re-run the benchmark on the Gemini stack** | measurement | S | Everything else is judged against stale OpenAI numbers until this exists |
+| **Re-instrument the cost/latency benchmark for Gemini** | measurement | S-M | Accuracy is done (2026-08-25, unchanged at 89.4%). Cost/latency are not: `run_demo_benchmark.py` still builds an `AsyncOpenAI` client and reads `settings.openai_*` fields that no longer exist. `core/telemetry.py` + `core/pricing.py` already cover Gemini, so wiring `start_run()` into the benchmark is the cheaper path than porting `usage_tracker.py` |
 | **Meter terminology-API latency/errors in telemetry** (finding B) | latency visibility | S | Make the hidden Stage-4 wall-clock measurable before optimizing it |
 | **Wire the dead concurrency cap + a global in-flight limit** (finding A) | latency (429 tail) | S | Removes rate-limit-induced retries on dense charts |
 | **Parallelize allergy + FMH coding sub-loops** (finding C) | latency | S | Free; `asyncio.gather` the sub-jobs |

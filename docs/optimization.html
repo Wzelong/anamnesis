@@ -238,7 +238,7 @@
     </div>
     <div class="caveat">
       <span class="k">Caveat</span>
-      <span>Absolute cost/latency figures come from the checked-in benchmark on the <b>earlier OpenAI stack</b> (<span class="mono">gpt-5.4-mini/nano</span>). Relative stage proportions and the error split still hold; absolute dollars/seconds do not. <b>A Gemini re-run is next-step #1.</b></span>
+      <span><b>Accuracy re-measured on Gemini (2026-08-25):</b> 89.4% overall [87.0%–92.2%], 88.3% of facts correct in &ge;4 of 5 runs &mdash; statistically unchanged from the 90% on the old stack, despite both the model and the Stage-4 retrieval backend changing. <b>Cost/latency figures below are still from the OpenAI run</b> (<span class="mono">gpt-5.4-mini/nano</span>); the generator for those is still OpenAI-coupled. Relative stage proportions are expected to hold; absolute dollars/seconds do not.</span>
     </div>
 
     <div class="hero-grid">
@@ -259,7 +259,7 @@
 
       <div class="panel">
         <h3>Where accuracy is lost</h3>
-        <p class="sub">The reconciliation "brain" is the least error-prone stage. The front half owns the failures.</p>
+        <p class="sub">The reconciliation "brain" is the least error-prone stage by volume. The front half owns the failures &mdash; but see the determinism split below.</p>
         <div class="split" role="img" aria-label="Error attribution: 62% extraction miss, 32% coding miss, 5% reconcile">
           <div class="seg e" style="flex:62">62%</div>
           <div class="seg c" style="flex:32">32%</div>
@@ -270,6 +270,7 @@
           <div class="leg-row"><span class="dot c"></span><span><b>32%</b> <span class="lx">— coding miss · right fact, wrong code · Stage 4</span></span></div>
           <div class="leg-row"><span class="dot r"></span><span><b>5%</b> <span class="lx">— reconciler miss · right fact & code, wrong class · Stage 5</span></span></div>
         </div>
+        <p class="sub" style="margin-top:14px"><b>2026-08-25 Gemini run.</b> Of 77 facts &times; 5 runs: 61 stable-right, 12 flaky, 4 stable-wrong. The flaky misses are mostly <span class="mono">MISSING</span> (never extracted) &mdash; variance. But <b>all 4 deterministic failures are classification errors</b>, three of them chart content called <span class="mono">NEW</span>. Fewest errors by volume, but the only reproducible ones.</p>
       </div>
     </div>
     <div class="wrap" style="padding:0"></div>
@@ -398,7 +399,7 @@
         <table>
           <thead><tr><th>Move</th><th>Attacks</th><th>Effort</th></tr></thead>
           <tbody>
-            <tr><td>Re-run the benchmark on the Gemini stack</td><td><span class="chips"><span class="chip eff">measurement</span></span></td><td><span class="chip eff">S</span></td></tr>
+            <tr><td>Re-instrument the cost/latency benchmark for Gemini <span class="mono" style="color:var(--ink-3)">(accuracy done)</span></td><td><span class="chips"><span class="chip eff">measurement</span></span></td><td><span class="chip eff">S–M</span></td></tr>
             <tr><td>Meter terminology-API latency/errors in telemetry <span class="mono" style="color:var(--ink-3)">(B)</span></td><td><span class="chips"><span class="chip lat">latency visibility</span></span></td><td><span class="chip eff">S</span></td></tr>
             <tr><td>Wire the dead concurrency cap + global in-flight limit <span class="mono" style="color:var(--ink-3)">(A)</span></td><td><span class="chips"><span class="chip lat">latency</span></span></td><td><span class="chip eff">S</span></td></tr>
             <tr><td>Parallelize allergy + family-history coding sub-loops <span class="mono" style="color:var(--ink-3)">(C)</span></td><td><span class="chips"><span class="chip lat">latency</span></span></td><td><span class="chip eff">S</span></td></tr>

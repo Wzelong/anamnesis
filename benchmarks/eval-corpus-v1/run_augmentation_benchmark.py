@@ -30,6 +30,7 @@ REPO = ROOT.parent.parent
 sys.path.insert(0, str(REPO / "backend"))
 
 from config import settings
+from core import telemetry
 from core.cache import JsonCache
 from core.code_candidates import code_candidates
 from core.doc_guardrails import screen_documents
@@ -47,6 +48,7 @@ NOTES_DIR = ROOT / "notes"
 LABELS_DIR = ROOT / "labels"
 AUG_DIR = ROOT / "augmentation_labels"
 FIXTURES_DIR = ROOT / "fixtures"
+TELEMETRY_DIR = REPO / "backend" / ".cache" / "telemetry"
 CACHE_ROOT = REPO / "backend" / ".cache"
 
 SYSTEM_TO_SHORT = {
@@ -322,12 +324,23 @@ async def run_full_pass(
     rows = []
     spurious = {}
     traps = []
-    for stem, aug, ext, note_path, bundle_path in load_pairs(only):
-        print(f"  {stem} (bundle={aug['paired_bundle']}) ...", flush=True)
-        r, sp, tr = await run_one(stem, aug, ext, note_path, bundle_path, client, tracker=tracker)
-        rows.extend(r)
-        spurious[stem] = sp
-        traps.extend(tr)
+    run = await telemetry.start_run(
+        patient_id=None,
+        triggered_by="benchmark",
+        jsonl_dir=TELEMETRY_DIR,
+    )
+    print(f"  telemetry run {run.run_id} -> {run.jsonl_path}", flush=True)
+    try:
+        for stem, aug, ext, note_path, bundle_path in load_pairs(only):
+            print(f"  {stem} (bundle={aug['paired_bundle']}) ...", flush=True)
+            r, sp, tr = await run_one(
+                stem, aug, ext, note_path, bundle_path, client, tracker=tracker
+            )
+            rows.extend(r)
+            spurious[stem] = sp
+            traps.extend(tr)
+    finally:
+        await telemetry.finish_run()
     return rows, spurious, traps
 
 
