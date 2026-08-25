@@ -7,6 +7,7 @@ matches the expected concept (so legacy->current swaps count as correct).
 
 Usage:  python benchmarks/eval-corpus-v1/bench_codeselect.py [--limit N]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,13 +22,16 @@ REPO = ROOT.parent.parent
 sys.path.insert(0, str(REPO / "backend"))
 sys.path.insert(0, str(ROOT))
 
+from bench_retrieval_variants import (  # noqa: E402
+    load_facts,
+    norm_code,
+    norm_display,
+    union_search,
+)
+from core.code_search_terms import generate_search_queries  # noqa: E402
 from openai import AsyncOpenAI  # noqa: E402
 
-from bench_retrieval_variants import (  # noqa: E402
-    load_facts, norm_code, norm_display, union_search,
-)
 from config import settings  # noqa: E402
-from core.code_search_terms import generate_search_queries  # noqa: E402
 from core.extraction import parse_structured  # noqa: E402
 from core.prompts import PROMPT_CODE_SELECT  # noqa: E402
 from core.retrieval import ApiRetriever, FaissRetriever  # noqa: E402
@@ -44,8 +48,13 @@ async def select(term, system, retriever, cands, client, model):
     disp = {r.code: r.display for r in cands}
     prompt = PROMPT_CODE_SELECT.format(system=system.upper())
     res = await parse_structured(
-        client, model, prompt, f'Term: "{term}"\n\nCandidates:\n{_fmt(cands)}',
-        CodeSelectorResult, stage="stage4", call_type=f"sel_{system}",
+        client,
+        model,
+        prompt,
+        f'Term: "{term}"\n\nCandidates:\n{_fmt(cands)}',
+        CodeSelectorResult,
+        stage="stage4",
+        call_type=f"sel_{system}",
     )
     if res is None:
         return None, disp
@@ -56,9 +65,13 @@ async def select(term, system, retriever, cands, client, model):
         if rc:
             disp.update({r.code: r.display for r in rc})
             res2 = await parse_structured(
-                client, model, prompt,
+                client,
+                model,
+                prompt,
                 f'Term: "{res.refined_search_term}"\n\nCandidates:\n{_fmt(rc)}',
-                CodeSelectorResult, stage="stage4", call_type=f"sel_{system}_retry",
+                CodeSelectorResult,
+                stage="stage4",
+                call_type=f"sel_{system}_retry",
             )
             if res2 and res2.code:
                 return res2.code, disp
@@ -83,7 +96,9 @@ async def run_arm(name, retriever, facts, variants, client, model, sem):
         qs = variants.get(fact["id"], [fact["text"]])
         async with sem:
             cands = await union_search(retriever, qs, fact["system"])
-            code, disp_map = await select(fact["text"], fact["system"], retriever, cands, client, model)
+            code, disp_map = await select(
+                fact["text"], fact["system"], retriever, cands, client, model
+            )
         ok = correct(fact, code, disp_map)
         by_sys[fact["system"]][1] += 1
         if ok:
@@ -93,12 +108,12 @@ async def run_arm(name, retriever, facts, variants, client, model, sem):
     t0 = time.perf_counter()
     await asyncio.gather(*(one(f) for f in facts))
     n = len(facts)
-    print(f"\n===== {name}  ({time.perf_counter()-t0:.1f}s, n={n}) =====")
-    print(f"  code accuracy   {hits}/{n}  {hits/n*100:5.1f}%")
+    print(f"\n===== {name}  ({time.perf_counter() - t0:.1f}s, n={n}) =====")
+    print(f"  code accuracy   {hits}/{n}  {hits / n * 100:5.1f}%")
     for sysk in ("snomed", "icd10", "rxnorm", "loinc"):
         if by_sys[sysk][1]:
             h, t = by_sys[sysk]
-            print(f"    {sysk:<7} {h:>2}/{t:<2} {h/t*100:5.1f}%")
+            print(f"    {sysk:<7} {h:>2}/{t:<2} {h / t * 100:5.1f}%")
 
 
 async def main():
@@ -110,13 +125,23 @@ async def main():
     client = AsyncOpenAI(api_key=settings.openai_api_key)
     model = settings.openai_model_fast
     print(f"{len(facts)} targets; generating variants...")
-    jobs = [{"id": f["id"], "text": f["text"], "resource_type": f["resource_type"], "system": f["system"]} for f in facts]
+    jobs = [
+        {
+            "id": f["id"],
+            "text": f["text"],
+            "resource_type": f["resource_type"],
+            "system": f["system"],
+        }
+        for f in facts
+    ]
     variants = await generate_search_queries(jobs, client, model=model)
 
     api = ApiRetriever()
     await run_arm("LIVE API + variants", api, facts, variants, client, model, asyncio.Semaphore(6))
     await api.aclose()
-    await run_arm("FAISS + variants", FaissRetriever(), facts, variants, client, model, asyncio.Semaphore(8))
+    await run_arm(
+        "FAISS + variants", FaissRetriever(), facts, variants, client, model, asyncio.Semaphore(8)
+    )
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ so they're untouched.
 Run from repo root:
   python benchmarks/eval-corpus-v1/apply_code_swaps.py
 """
+
 from __future__ import annotations
 
 import json
@@ -47,7 +48,12 @@ SWAPS = [
     ("ICD-10", "G35", "G35D", "Multiple sclerosis, unspecified"),
     ("LOINC", "10230-1", "18043-0", "Left ventricular Ejection fraction by US"),
     ("LOINC", "8310-5", "8331-1", "Oral temperature"),
-    ("LOINC", "59408-5", "59410-1", "Oxygen saturation in Arterial blood by Pulse oximetry --on room air"),
+    (
+        "LOINC",
+        "59408-5",
+        "59410-1",
+        "Oxygen saturation in Arterial blood by Pulse oximetry --on room air",
+    ),
 ]
 
 SOURCE_URLS = {
@@ -144,7 +150,9 @@ def main():
         if n:
             print(f"  labels/{path.name}: {n} codes swapped")
             label_total += n
-    print(f"labels/: {label_total} codes swapped across {len(list(LABELS_DIR.glob('*.json')))} files")
+    print(
+        f"labels/: {label_total} codes swapped across {len(list(LABELS_DIR.glob('*.json')))} files"
+    )
 
     fixture_total = 0
     for path in sorted(FIXTURES_DIR.glob("*.json")):
@@ -154,7 +162,9 @@ def main():
         if n:
             print(f"  fixtures/{path.name}: {n} codings swapped")
             fixture_total += n
-    print(f"fixtures/: {fixture_total} codings swapped across {len(list(FIXTURES_DIR.glob('*.json')))} files")
+    print(
+        f"fixtures/: {fixture_total} codings swapped across {len(list(FIXTURES_DIR.glob('*.json')))} files"
+    )
 
 
 if __name__ == "__main__":

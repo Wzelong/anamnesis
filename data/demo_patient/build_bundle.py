@@ -14,87 +14,92 @@ they are what the engine PRODUCES against this baseline.
 Compliant with FHIR R4 + US Core 6.1.0 profiles.
 """
 
-import json
 import uuid
-from datetime import date
 from base64 import b64encode
+from datetime import date
+
+from fhir.resources.R4B.address import Address
+from fhir.resources.R4B.attachment import Attachment
 
 # fhir.resources R4B has the validators we need (R4B is R4 + errata)
 from fhir.resources.R4B.bundle import Bundle, BundleEntry, BundleEntryRequest
-from fhir.resources.R4B.patient import Patient
-from fhir.resources.R4B.practitioner import Practitioner
-from fhir.resources.R4B.organization import Organization
-from fhir.resources.R4B.condition import Condition
-from fhir.resources.R4B.medicationrequest import MedicationRequest
-from fhir.resources.R4B.encounter import Encounter
-from fhir.resources.R4B.documentreference import DocumentReference
-from fhir.resources.R4B.identifier import Identifier
-from fhir.resources.R4B.humanname import HumanName
-from fhir.resources.R4B.contactpoint import ContactPoint
-from fhir.resources.R4B.address import Address
 from fhir.resources.R4B.codeableconcept import CodeableConcept
 from fhir.resources.R4B.coding import Coding
-from fhir.resources.R4B.reference import Reference
-from fhir.resources.R4B.extension import Extension
-from fhir.resources.R4B.narrative import Narrative
+from fhir.resources.R4B.condition import Condition
+from fhir.resources.R4B.contactpoint import ContactPoint
+from fhir.resources.R4B.documentreference import DocumentReference
 from fhir.resources.R4B.dosage import Dosage
-from fhir.resources.R4B.timing import Timing, TimingRepeat
-from fhir.resources.R4B.quantity import Quantity
+from fhir.resources.R4B.encounter import Encounter
+from fhir.resources.R4B.extension import Extension
+from fhir.resources.R4B.humanname import HumanName
+from fhir.resources.R4B.identifier import Identifier
+from fhir.resources.R4B.medicationrequest import MedicationRequest
+from fhir.resources.R4B.narrative import Narrative
+from fhir.resources.R4B.organization import Organization
+from fhir.resources.R4B.patient import Patient
 from fhir.resources.R4B.period import Period
-from fhir.resources.R4B.attachment import Attachment
+from fhir.resources.R4B.practitioner import Practitioner
+from fhir.resources.R4B.reference import Reference
+from fhir.resources.R4B.timing import Timing, TimingRepeat
 
 # ---------------------------------------------------------------------------
 # Stable UUIDs (deterministic via uuid5 from a fixed namespace)
 # ---------------------------------------------------------------------------
 NS = uuid.UUID("00000000-0000-0000-0000-000000000001")
+
+
 def U(name):
     return f"urn:uuid:{uuid.uuid5(NS, name)}"
 
-# Resources
-ORG_BAYSIDE   = U("org.bayside")
-ORG_RIVERSIDE = U("org.riverside")
-PRAC_KIM      = U("prac.kim")        # PCP
-PRAC_PARK     = U("prac.park")       # Cardiologist
-PRAC_BROWN    = U("prac.brown")      # ED physician
-PRAC_CHEN     = U("prac.chen")       # Neurologist
-PATIENT       = U("patient.lee")
 
-COND_HTN     = U("cond.htn")
-COND_T2DM    = U("cond.t2dm")
-COND_HLD     = U("cond.hld")
+# Resources
+ORG_BAYSIDE = U("org.bayside")
+ORG_RIVERSIDE = U("org.riverside")
+PRAC_KIM = U("prac.kim")  # PCP
+PRAC_PARK = U("prac.park")  # Cardiologist
+PRAC_BROWN = U("prac.brown")  # ED physician
+PRAC_CHEN = U("prac.chen")  # Neurologist
+PATIENT = U("patient.lee")
+
+COND_HTN = U("cond.htn")
+COND_T2DM = U("cond.t2dm")
+COND_HLD = U("cond.hld")
 COND_FATIGUE = U("cond.fatigue")
 
-MED_LISINOPRIL  = U("med.lisinopril")
-MED_ATORVA      = U("med.atorvastatin")
-MED_METFORMIN   = U("med.metformin")
-MED_ASPIRIN     = U("med.aspirin")
+MED_LISINOPRIL = U("med.lisinopril")
+MED_ATORVA = U("med.atorvastatin")
+MED_METFORMIN = U("med.metformin")
+MED_ASPIRIN = U("med.aspirin")
 
-ENC_CARDIO  = U("enc.cardio")
-ENC_ED      = U("enc.ed")
-ENC_NEURO   = U("enc.neuro")
+ENC_CARDIO = U("enc.cardio")
+ENC_ED = U("enc.ed")
+ENC_NEURO = U("enc.neuro")
 
-DOC_CARDIO  = U("doc.cardio")
-DOC_ED      = U("doc.ed")
-DOC_NEURO   = U("doc.neuro")
+DOC_CARDIO = U("doc.cardio")
+DOC_ED = U("doc.ed")
+DOC_NEURO = U("doc.neuro")
 
 # ---------------------------------------------------------------------------
 # Common code systems (constants for clarity)
 # ---------------------------------------------------------------------------
-SCT      = "http://snomed.info/sct"
-LOINC    = "http://loinc.org"
-ICD10    = "http://hl7.org/fhir/sid/icd-10-cm"
-RXNORM   = "http://www.nlm.nih.gov/research/umls/rxnorm"
-HL7_CC   = "http://terminology.hl7.org/CodeSystem/condition-clinical"
-HL7_CV   = "http://terminology.hl7.org/CodeSystem/condition-ver-status"
+SCT = "http://snomed.info/sct"
+LOINC = "http://loinc.org"
+ICD10 = "http://hl7.org/fhir/sid/icd-10-cm"
+RXNORM = "http://www.nlm.nih.gov/research/umls/rxnorm"
+HL7_CC = "http://terminology.hl7.org/CodeSystem/condition-clinical"
+HL7_CV = "http://terminology.hl7.org/CodeSystem/condition-ver-status"
 HL7_CCAT = "http://terminology.hl7.org/CodeSystem/condition-category"
 HL7_V3_ROLE = "http://terminology.hl7.org/CodeSystem/v2-0203"
-HL7_V3_ACT  = "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+HL7_V3_ACT = "http://terminology.hl7.org/CodeSystem/v3-ActCode"
 US_CORE_DOC_CAT = "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category"
-CDCREC   = "urn:oid:2.16.840.1.113883.6.238"  # Race & Ethnicity - CDC
+CDCREC = "urn:oid:2.16.840.1.113883.6.238"  # Race & Ethnicity - CDC
 
 US_CORE = "http://hl7.org/fhir/us/core/StructureDefinition"
+
+
 def profile(name):
     return [f"{US_CORE}/{name}"]
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -106,15 +111,21 @@ def cc(system, code, display, text=None):
         text=text or display,
     )
 
+
 def cc_multi(codings, text):
     """CodeableConcept with multiple codings (e.g., SNOMED + ICD-10)."""
     return CodeableConcept(coding=codings, text=text)
 
+
 def ref(urn, display=None):
     return Reference(reference=urn, display=display)
 
+
 def narrative(html):
-    return Narrative(status="generated", div=f'<div xmlns="http://www.w3.org/1999/xhtml">{html}</div>')
+    return Narrative(
+        status="generated", div=f'<div xmlns="http://www.w3.org/1999/xhtml">{html}</div>'
+    )
+
 
 # ---------------------------------------------------------------------------
 # Organizations
@@ -123,37 +134,56 @@ bayside = Organization(
     id="bayside",
     meta={"profile": profile("us-core-organization")},
     text=narrative("<p>Bayside Health (home health system)</p>"),
-    identifier=[Identifier(
-        system="http://bayside.health/org-id",
-        value="BAYSIDE-HQ",
-    )],
+    identifier=[
+        Identifier(
+            system="http://bayside.health/org-id",
+            value="BAYSIDE-HQ",
+        )
+    ],
     active=True,
     name="Bayside Health",
-    type=[cc("http://terminology.hl7.org/CodeSystem/organization-type", "prov", "Healthcare Provider")],
+    type=[
+        cc("http://terminology.hl7.org/CodeSystem/organization-type", "prov", "Healthcare Provider")
+    ],
     telecom=[ContactPoint(system="phone", value="+1-617-555-0100", use="work")],
-    address=[Address(
-        line=["100 Bayside Drive"],
-        city="Boston", state="MA", postalCode="02110", country="US",
-    )],
+    address=[
+        Address(
+            line=["100 Bayside Drive"],
+            city="Boston",
+            state="MA",
+            postalCode="02110",
+            country="US",
+        )
+    ],
 )
 
 riverside = Organization(
     id="riverside",
     meta={"profile": profile("us-core-organization")},
     text=narrative("<p>Riverside Hospital (outside facility)</p>"),
-    identifier=[Identifier(
-        system="http://riverside.example.org/org-id",
-        value="RIVERSIDE-1",
-    )],
+    identifier=[
+        Identifier(
+            system="http://riverside.example.org/org-id",
+            value="RIVERSIDE-1",
+        )
+    ],
     active=True,
     name="Riverside Hospital",
-    type=[cc("http://terminology.hl7.org/CodeSystem/organization-type", "prov", "Healthcare Provider")],
+    type=[
+        cc("http://terminology.hl7.org/CodeSystem/organization-type", "prov", "Healthcare Provider")
+    ],
     telecom=[ContactPoint(system="phone", value="+1-555-555-0200", use="work")],
-    address=[Address(
-        line=["500 Riverside Way"],
-        city="Cambridge", state="MA", postalCode="02139", country="US",
-    )],
+    address=[
+        Address(
+            line=["500 Riverside Way"],
+            city="Cambridge",
+            state="MA",
+            postalCode="02139",
+            country="US",
+        )
+    ],
 )
+
 
 # ---------------------------------------------------------------------------
 # Practitioners (US Core requires identifier, name)
@@ -163,18 +193,21 @@ def make_practitioner(_id, npi, family, given, prefix="Dr."):
         id=_id,
         meta={"profile": profile("us-core-practitioner")},
         text=narrative(f"<p>{prefix} {given} {family}</p>"),
-        identifier=[Identifier(
-            system="http://hl7.org/fhir/sid/us-npi",
-            value=npi,
-        )],
+        identifier=[
+            Identifier(
+                system="http://hl7.org/fhir/sid/us-npi",
+                value=npi,
+            )
+        ],
         active=True,
         name=[HumanName(use="official", family=family, given=[given], prefix=[prefix])],
     )
 
-prac_kim   = make_practitioner("kim",   "1234567890", "Kim",   "Anna")
-prac_park  = make_practitioner("park",  "2345678901", "Park",  "David")
+
+prac_kim = make_practitioner("kim", "1234567890", "Kim", "Anna")
+prac_park = make_practitioner("park", "2345678901", "Park", "David")
 prac_brown = make_practitioner("brown", "3456789012", "Brown", "Tom")
-prac_chen  = make_practitioner("chen",  "4567890123", "Chen",  "Lisa")
+prac_chen = make_practitioner("chen", "4567890123", "Chen", "Lisa")
 
 # ---------------------------------------------------------------------------
 # Patient (US Core Patient: identifier, name, gender mandatory;
@@ -183,18 +216,19 @@ prac_chen  = make_practitioner("chen",  "4567890123", "Chen",  "Lisa")
 race_ext = Extension(
     url=f"{US_CORE}/us-core-race",
     extension=[
-        Extension(url="ombCategory", valueCoding=Coding(
-            system=CDCREC, code="2028-9", display="Asian"
-        )),
+        Extension(
+            url="ombCategory", valueCoding=Coding(system=CDCREC, code="2028-9", display="Asian")
+        ),
         Extension(url="text", valueString="Asian"),
     ],
 )
 ethnicity_ext = Extension(
     url=f"{US_CORE}/us-core-ethnicity",
     extension=[
-        Extension(url="ombCategory", valueCoding=Coding(
-            system=CDCREC, code="2186-5", display="Not Hispanic or Latino"
-        )),
+        Extension(
+            url="ombCategory",
+            valueCoding=Coding(system=CDCREC, code="2186-5", display="Not Hispanic or Latino"),
+        ),
         Extension(url="text", valueString="Not Hispanic or Latino"),
     ],
 )
@@ -223,13 +257,19 @@ patient = Patient(
     ],
     gender="male",
     birthDate=date(1958, 11, 15),
-    address=[Address(
-        use="home",
-        line=["12 Harborview Lane"],
-        city="Boston", state="MA", postalCode="02129", country="US",
-    )],
+    address=[
+        Address(
+            use="home",
+            line=["12 Harborview Lane"],
+            city="Boston",
+            state="MA",
+            postalCode="02129",
+            country="US",
+        )
+    ],
     managingOrganization=ref(ORG_BAYSIDE, "Bayside Health"),
 )
+
 
 # ---------------------------------------------------------------------------
 # Conditions (US Core Condition Problems and Health Concerns)
@@ -250,6 +290,7 @@ def make_problem(_id, code_codings, text, onset, recorded):
         asserter=ref(PRAC_KIM, "Dr. Anna Kim"),
     )
 
+
 cond_htn = make_problem(
     "htn",
     [
@@ -265,7 +306,9 @@ cond_t2dm = make_problem(
     "t2dm",
     [
         Coding(system=SCT, code="44054006", display="Type 2 diabetes mellitus"),
-        Coding(system=ICD10, code="E11.9", display="Type 2 diabetes mellitus without complications"),
+        Coding(
+            system=ICD10, code="E11.9", display="Type 2 diabetes mellitus without complications"
+        ),
     ],
     "Type 2 diabetes mellitus",
     onset="2018-05-20",
@@ -295,6 +338,7 @@ cond_fatigue = make_problem(
     recorded="2024-05-10",
 )
 
+
 # ---------------------------------------------------------------------------
 # MedicationRequests (US Core MedicationRequest)
 # ---------------------------------------------------------------------------
@@ -311,12 +355,17 @@ def make_med(_id, rxnorm_code, rxnorm_display, dose_text, freq, period_unit="d")
         subject=ref(PATIENT, "James Lee"),
         authoredOn="2024-08-01",
         requester=ref(PRAC_KIM, "Dr. Anna Kim"),
-        dosageInstruction=[Dosage(
-            text=dose_text,
-            timing=Timing(repeat=TimingRepeat(frequency=freq, period=1, periodUnit=period_unit)),
-            route=cc(SCT, "26643006", "Oral route"),
-        )],
+        dosageInstruction=[
+            Dosage(
+                text=dose_text,
+                timing=Timing(
+                    repeat=TimingRepeat(frequency=freq, period=1, periodUnit=period_unit)
+                ),
+                route=cc(SCT, "26643006", "Oral route"),
+            )
+        ],
     )
+
 
 med_lisinopril = make_med(
     "lisinopril-10",
@@ -355,35 +404,54 @@ med_aspirin = make_med(
 # ---------------------------------------------------------------------------
 from fhir.resources.R4B.encounter import EncounterParticipant
 
-def make_encounter(_id, profile_name, class_code, class_display, type_codings, type_text,
-                   period_start, period_end, participant_practitioner_ref, participant_name,
-                   service_provider_ref, reason_codings=None):
+
+def make_encounter(
+    _id,
+    profile_name,
+    class_code,
+    class_display,
+    type_codings,
+    type_text,
+    period_start,
+    period_end,
+    participant_practitioner_ref,
+    participant_name,
+    service_provider_ref,
+    reason_codings=None,
+):
     return Encounter(
         id=_id,
         meta={"profile": profile(profile_name)},
         text=narrative(f"<p>{type_text}, {period_start[:10]}</p>"),
-        identifier=[Identifier(
-            system="http://bayside.health/encounter-id",
-            value=f"ENC-{_id.upper()}",
-        )],
+        identifier=[
+            Identifier(
+                system="http://bayside.health/encounter-id",
+                value=f"ENC-{_id.upper()}",
+            )
+        ],
         status="finished",
         **{"class": Coding(system=HL7_V3_ACT, code=class_code, display=class_display)},
         type=[CodeableConcept(coding=type_codings, text=type_text)],
         subject=ref(PATIENT, "James Lee"),
-        participant=[EncounterParticipant(
-            individual=ref(participant_practitioner_ref, participant_name),
-            period=Period(start=period_start, end=period_end),
-        )],
+        participant=[
+            EncounterParticipant(
+                individual=ref(participant_practitioner_ref, participant_name),
+                period=Period(start=period_start, end=period_end),
+            )
+        ],
         period=Period(start=period_start, end=period_end),
         reasonCode=[CodeableConcept(coding=reason_codings, text=reason_codings[0].display)]
-                   if reason_codings else None,
+        if reason_codings
+        else None,
         serviceProvider=ref(service_provider_ref),
     )
+
 
 enc_cardio = make_encounter(
     "cardio-consult",
     "us-core-encounter",
-    "AMB", "ambulatory",
+    "AMB",
+    "ambulatory",
     [
         Coding(system=SCT, code="11429006", display="Consultation"),
         Coding(system=LOINC, code="11488-4", display="Consult note"),
@@ -391,7 +459,8 @@ enc_cardio = make_encounter(
     "Cardiology Consultation",
     "2025-10-20T10:30:00-04:00",
     "2025-10-20T11:42:00-04:00",
-    PRAC_PARK, "Dr. David Park",
+    PRAC_PARK,
+    "Dr. David Park",
     ORG_BAYSIDE,
     reason_codings=[Coding(system=SCT, code="29857009", display="Chest pain")],
 )
@@ -399,14 +468,16 @@ enc_cardio = make_encounter(
 enc_ed = make_encounter(
     "ed-visit",
     "us-core-encounter",
-    "EMER", "emergency",
+    "EMER",
+    "emergency",
     [
         Coding(system=SCT, code="50849002", display="Emergency room admission"),
     ],
     "Emergency Department Visit",
     "2025-12-15T14:20:00-05:00",
     "2025-12-15T18:52:00-05:00",
-    PRAC_BROWN, "Dr. Tom Brown",
+    PRAC_BROWN,
+    "Dr. Tom Brown",
     ORG_RIVERSIDE,
     reason_codings=[Coding(system=SCT, code="21522001", display="Abdominal pain")],
 )
@@ -414,7 +485,8 @@ enc_ed = make_encounter(
 enc_neuro = make_encounter(
     "neuro-followup",
     "us-core-encounter",
-    "AMB", "ambulatory",
+    "AMB",
+    "ambulatory",
     [
         Coding(system=SCT, code="185349003", display="Encounter for check up"),
         Coding(system=LOINC, code="11488-4", display="Consult note"),
@@ -422,7 +494,8 @@ enc_neuro = make_encounter(
     "Neurology Follow-up",
     "2026-02-23T10:00:00-05:00",
     "2026-02-23T10:51:00-05:00",
-    PRAC_CHEN, "Dr. Lisa Chen",
+    PRAC_CHEN,
+    "Dr. Lisa Chen",
     ORG_BAYSIDE,
     reason_codings=[Coding(system=SCT, code="84229001", display="Fatigue")],
 )
@@ -1032,19 +1105,33 @@ NPI: 4567890123
 Electronically signed: 02/23/2026  10:51 EST
 """
 
+
 def b64(text):
     return b64encode(text.encode("utf-8")).decode("ascii")
 
-def make_doc(_id, doc_type_code, doc_type_display, note_text, date_str,
-             author_ref, author_name, encounter_ref, custodian_ref, custodian_name):
+
+def make_doc(
+    _id,
+    doc_type_code,
+    doc_type_display,
+    note_text,
+    date_str,
+    author_ref,
+    author_name,
+    encounter_ref,
+    custodian_ref,
+    custodian_name,
+):
     return DocumentReference(
         id=_id,
         meta={"profile": profile("us-core-documentreference")},
         text=narrative(f"<p>{doc_type_display}, {date_str[:10]}</p>"),
-        identifier=[Identifier(
-            system="http://bayside.health/document-id",
-            value=f"DOC-{_id.upper()}",
-        )],
+        identifier=[
+            Identifier(
+                system="http://bayside.health/document-id",
+                value=f"DOC-{_id.upper()}",
+            )
+        ],
         status="current",
         docStatus="final",
         type=cc(LOINC, doc_type_code, doc_type_display),
@@ -1053,54 +1140,67 @@ def make_doc(_id, doc_type_code, doc_type_display, note_text, date_str,
         date=date_str,
         author=[ref(author_ref, author_name)],
         custodian=ref(custodian_ref, custodian_name),
-        content=[DocumentReferenceContent(
-            attachment=Attachment(
-                contentType="text/plain; charset=utf-8",
-                language="en-US",
-                data=b64(note_text),
-                title=doc_type_display,
-            ),
-            format=Coding(
-                system="http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
-                code="urn:ihe:iti:xds:2017:mimeTypeSufficient",
-                display="mimeType Sufficient",
-            ),
-        )],
+        content=[
+            DocumentReferenceContent(
+                attachment=Attachment(
+                    contentType="text/plain; charset=utf-8",
+                    language="en-US",
+                    data=b64(note_text),
+                    title=doc_type_display,
+                ),
+                format=Coding(
+                    system="http://ihe.net/fhir/ValueSet/IHE.FormatCode.codesystem",
+                    code="urn:ihe:iti:xds:2017:mimeTypeSufficient",
+                    display="mimeType Sufficient",
+                ),
+            )
+        ],
         context=DocumentReferenceContext(
             encounter=[ref(encounter_ref)],
             period=Period(start=date_str, end=date_str),
         ),
     )
 
+
 doc_cardio = make_doc(
     "cardio-consult-note",
-    "11488-4", "Consult note",
+    "11488-4",
+    "Consult note",
     CARDIO_NOTE,
     "2025-10-20T11:00:00-04:00",
-    PRAC_PARK, "Dr. David Park",
+    PRAC_PARK,
+    "Dr. David Park",
     ENC_CARDIO,
-    ORG_BAYSIDE, "Bayside Health",
+    ORG_BAYSIDE,
+    "Bayside Health",
 )
 
 doc_ed = make_doc(
     "ed-discharge-summary",
-    "18842-5", "Discharge summary",
+    "18842-5",
+    "Discharge summary",
     ED_NOTE,
     "2025-12-15T18:45:00-05:00",
-    PRAC_BROWN, "Dr. Tom Brown",
+    PRAC_BROWN,
+    "Dr. Tom Brown",
     ENC_ED,
-    ORG_RIVERSIDE, "Riverside Hospital",
+    ORG_RIVERSIDE,
+    "Riverside Hospital",
 )
 
 doc_neuro = make_doc(
     "neuro-followup-note",
-    "11488-4", "Consult note",
+    "11488-4",
+    "Consult note",
     NEURO_NOTE,
     "2026-02-23T10:45:00-05:00",
-    PRAC_CHEN, "Dr. Lisa Chen",
+    PRAC_CHEN,
+    "Dr. Lisa Chen",
     ENC_NEURO,
-    ORG_BAYSIDE, "Bayside Health",
+    ORG_BAYSIDE,
+    "Bayside Health",
 )
+
 
 # ---------------------------------------------------------------------------
 # Bundle assembly (transaction)
@@ -1112,39 +1212,40 @@ def entry(full_url, resource, resource_type):
         request=BundleEntryRequest(method="POST", url=resource_type),
     )
 
+
 bundle = Bundle(
     id="anamnesis-demo-james-lee",
     type="transaction",
     timestamp="2026-04-27T08:30:00-04:00",
     entry=[
         # Organizations first (referenced by everyone)
-        entry(ORG_BAYSIDE,   bayside,         "Organization"),
-        entry(ORG_RIVERSIDE, riverside,       "Organization"),
+        entry(ORG_BAYSIDE, bayside, "Organization"),
+        entry(ORG_RIVERSIDE, riverside, "Organization"),
         # Practitioners
-        entry(PRAC_KIM,      prac_kim,        "Practitioner"),
-        entry(PRAC_PARK,     prac_park,       "Practitioner"),
-        entry(PRAC_BROWN,    prac_brown,      "Practitioner"),
-        entry(PRAC_CHEN,     prac_chen,       "Practitioner"),
+        entry(PRAC_KIM, prac_kim, "Practitioner"),
+        entry(PRAC_PARK, prac_park, "Practitioner"),
+        entry(PRAC_BROWN, prac_brown, "Practitioner"),
+        entry(PRAC_CHEN, prac_chen, "Practitioner"),
         # Patient
-        entry(PATIENT,       patient,         "Patient"),
+        entry(PATIENT, patient, "Patient"),
         # Conditions
-        entry(COND_HTN,      cond_htn,        "Condition"),
-        entry(COND_T2DM,     cond_t2dm,       "Condition"),
-        entry(COND_HLD,      cond_hld,        "Condition"),
-        entry(COND_FATIGUE,  cond_fatigue,    "Condition"),
+        entry(COND_HTN, cond_htn, "Condition"),
+        entry(COND_T2DM, cond_t2dm, "Condition"),
+        entry(COND_HLD, cond_hld, "Condition"),
+        entry(COND_FATIGUE, cond_fatigue, "Condition"),
         # Medications
         entry(MED_LISINOPRIL, med_lisinopril, "MedicationRequest"),
-        entry(MED_ATORVA,     med_atorvastatin, "MedicationRequest"),
-        entry(MED_METFORMIN,  med_metformin,  "MedicationRequest"),
-        entry(MED_ASPIRIN,    med_aspirin,    "MedicationRequest"),
+        entry(MED_ATORVA, med_atorvastatin, "MedicationRequest"),
+        entry(MED_METFORMIN, med_metformin, "MedicationRequest"),
+        entry(MED_ASPIRIN, med_aspirin, "MedicationRequest"),
         # Encounters (3 specialty)
-        entry(ENC_CARDIO,    enc_cardio,      "Encounter"),
-        entry(ENC_ED,        enc_ed,          "Encounter"),
-        entry(ENC_NEURO,     enc_neuro,       "Encounter"),
+        entry(ENC_CARDIO, enc_cardio, "Encounter"),
+        entry(ENC_ED, enc_ed, "Encounter"),
+        entry(ENC_NEURO, enc_neuro, "Encounter"),
         # DocumentReferences (with note text inline)
-        entry(DOC_CARDIO,    doc_cardio,      "DocumentReference"),
-        entry(DOC_ED,        doc_ed,          "DocumentReference"),
-        entry(DOC_NEURO,     doc_neuro,       "DocumentReference"),
+        entry(DOC_CARDIO, doc_cardio, "DocumentReference"),
+        entry(DOC_ED, doc_ed, "DocumentReference"),
+        entry(DOC_NEURO, doc_neuro, "DocumentReference"),
     ],
 )
 
@@ -1154,16 +1255,19 @@ bundle = Bundle(
 import sys
 from pathlib import Path
 
-out_path = sys.argv[1] if len(sys.argv) > 1 else str(
-    Path(__file__).resolve().parent / "anamnesis-demo-bundle.json"
+out_path = (
+    sys.argv[1]
+    if len(sys.argv) > 1
+    else str(Path(__file__).resolve().parent / "anamnesis-demo-bundle.json")
 )
 with open(out_path, "w") as f:
     f.write(bundle.model_dump_json(indent=2, exclude_none=True))
 
 print(f"Bundle written to: {out_path}")
 print(f"Entry count: {len(bundle.entry)}")
-print(f"Resource counts:")
+print("Resource counts:")
 from collections import Counter
+
 counts = Counter(e.resource.__class__.__name__ for e in bundle.entry)
 for k, v in sorted(counts.items()):
     print(f"  {k}: {v}")

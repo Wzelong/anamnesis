@@ -7,6 +7,7 @@ with one command and zero configuration.
   python benchmarks/eval-corpus-v1/run_demo_benchmark.py
   python benchmarks/eval-corpus-v1/run_demo_benchmark.py --runs 5 --only C2,N4
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,7 +17,7 @@ import math
 import sys
 import time
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -25,14 +26,14 @@ sys.path.insert(0, str(REPO / "backend"))
 sys.path.insert(0, str(ROOT))
 
 from openai import AsyncOpenAI
-
-from config import settings
 from run_augmentation_benchmark import (
     clear_pipeline_caches,
     load_pairs,
     run_full_pass,
 )
 from usage_tracker import UsageTracker
+
+from config import settings
 
 ACTIONS = ["NEW", "DUPLICATE", "UPDATING", "CONFLICTING"]
 ACTUAL_AXIS = ACTIONS + ["MISSING"]
@@ -46,13 +47,16 @@ def parse_args():
     p.add_argument("--runs", type=int, default=5)
     p.add_argument("--only", help="Comma-separated note IDs (e.g. C1,E1)")
     p.add_argument("--no-charts", action="store_true", help="Skip matplotlib charts")
-    p.add_argument("--keep-cache", action="store_true",
-                   help="Don't clear LLM cache between runs (debugging)")
+    p.add_argument(
+        "--keep-cache", action="store_true", help="Don't clear LLM cache between runs (debugging)"
+    )
     p.add_argument("--output", help="Output dir (default results/<UTC timestamp>)")
-    p.add_argument("--yes", action="store_true",
-                   help="Skip cost confirmation (non-interactive)")
-    p.add_argument("--rerender", help="Re-render REPORT.md and charts from existing "
-                                      "summary.json in this directory; no API calls.")
+    p.add_argument("--yes", action="store_true", help="Skip cost confirmation (non-interactive)")
+    p.add_argument(
+        "--rerender",
+        help="Re-render REPORT.md and charts from existing "
+        "summary.json in this directory; no API calls.",
+    )
     return p.parse_args()
 
 
@@ -84,25 +88,51 @@ def aggregate_usage(per_run_usage):
     if not per_run_usage:
         return None
 
-    by_stage_totals = defaultdict(lambda: {
-        "calls": 0, "input_tokens": 0, "output_tokens": 0,
-        "cached_tokens": 0, "reasoning_tokens": 0, "wall_ms": 0, "usd": 0.0,
-        "by_model": defaultdict(int),
-    })
+    by_stage_totals = defaultdict(
+        lambda: {
+            "calls": 0,
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "cached_tokens": 0,
+            "reasoning_tokens": 0,
+            "wall_ms": 0,
+            "usd": 0.0,
+            "by_model": defaultdict(int),
+        }
+    )
     grand = {
-        "calls": 0, "input_tokens": 0, "output_tokens": 0,
-        "cached_tokens": 0, "reasoning_tokens": 0, "wall_ms": 0, "usd": 0.0,
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cached_tokens": 0,
+        "reasoning_tokens": 0,
+        "wall_ms": 0,
+        "usd": 0.0,
     }
     for usage in per_run_usage:
         for stage, s in usage.get("by_stage", {}).items():
             t = by_stage_totals[stage]
-            for k in ("calls", "input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens", "wall_ms"):
+            for k in (
+                "calls",
+                "input_tokens",
+                "output_tokens",
+                "cached_tokens",
+                "reasoning_tokens",
+                "wall_ms",
+            ):
                 t[k] += s.get(k, 0)
             t["usd"] += s.get("usd", 0.0)
             for m, c in (s.get("by_model") or {}).items():
                 t["by_model"][m] += c
         tot = usage.get("totals", {})
-        for k in ("calls", "input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens", "wall_ms"):
+        for k in (
+            "calls",
+            "input_tokens",
+            "output_tokens",
+            "cached_tokens",
+            "reasoning_tokens",
+            "wall_ms",
+        ):
             grand[k] += tot.get(k, 0)
         grand["usd"] += tot.get("usd", 0.0)
 
@@ -110,7 +140,17 @@ def aggregate_usage(per_run_usage):
     by_stage_out = {}
     for stage, t in by_stage_totals.items():
         by_stage_out[stage] = {
-            **{k: t[k] for k in ("calls", "input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens", "wall_ms")},
+            **{
+                k: t[k]
+                for k in (
+                    "calls",
+                    "input_tokens",
+                    "output_tokens",
+                    "cached_tokens",
+                    "reasoning_tokens",
+                    "wall_ms",
+                )
+            },
             "usd": round(t["usd"], 6),
             "by_model": dict(t["by_model"]),
         }
@@ -164,8 +204,7 @@ def aggregate(per_run_rows, per_run_traps, n_runs):
     }
 
     overall_runs = [
-        sum(1 for r in rows if r["hit"]) / len(rows) if rows else 0.0
-        for rows in per_run_rows
+        sum(1 for r in rows if r["hit"]) / len(rows) if rows else 0.0 for rows in per_run_rows
     ]
     overall = {
         "mean": _avg(overall_runs),
@@ -205,13 +244,15 @@ def aggregate(per_run_rows, per_run_traps, n_runs):
         if fact_hits.get(key, 0) == 0:
             dist = classifications_by_fact[key]
             most_common = dist.most_common(1)[0][0]
-            stable_wrong_cases.append({
-                "note": key[0],
-                "fact_id": key[1],
-                "expected": fact_expected[key],
-                "always_actual": most_common,
-                "distribution": dict(dist),
-            })
+            stable_wrong_cases.append(
+                {
+                    "note": key[0],
+                    "fact_id": key[1],
+                    "expected": fact_expected[key],
+                    "always_actual": most_common,
+                    "distribution": dict(dist),
+                }
+            )
 
     code_total = 0
     code_hit = 0
@@ -230,9 +271,7 @@ def aggregate(per_run_rows, per_run_traps, n_runs):
                     per_system_hit[system] += 1
     code_accuracy = code_hit / code_total if code_total else None
     per_system = {
-        s: per_system_hit[s] / per_system_total[s]
-        for s in SYSTEMS
-        if per_system_total[s] > 0
+        s: per_system_hit[s] / per_system_total[s] for s in SYSTEMS if per_system_total[s] > 0
     }
 
     decomp: Counter = Counter()
@@ -295,6 +334,7 @@ def aggregate(per_run_rows, per_run_traps, n_runs):
 
 def render_charts(summary, out_dir):
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
@@ -313,12 +353,20 @@ def render_charts(summary, out_dir):
             row_total = cm[i].sum()
             pct_val = (cm[i, j] / row_total * 100) if row_total else 0.0
             color = "white" if cm[i, j] / cmax > 0.55 else "#0f172a"
-            ax.text(j, i, f"{cm[i, j]}\n{pct_val:.0f}%", ha="center", va="center",
-                    color=color, fontsize=10)
+            ax.text(
+                j,
+                i,
+                f"{cm[i, j]}\n{pct_val:.0f}%",
+                ha="center",
+                va="center",
+                color=color,
+                fontsize=10,
+            )
     for i in range(len(ACTIONS)):
         if cm[i, i] > 0:
-            ax.add_patch(plt.Rectangle((i - 0.5, i - 0.5), 1, 1, fill=False,
-                                       edgecolor="#16a34a", lw=2))
+            ax.add_patch(
+                plt.Rectangle((i - 0.5, i - 0.5), 1, 1, fill=False, edgecolor="#16a34a", lw=2)
+            )
     ax.set_xticks(range(len(ACTUAL_AXIS)))
     ax.set_xticklabels(ACTUAL_AXIS)
     ax.set_yticks(range(len(ACTIONS)))
@@ -334,21 +382,32 @@ def render_charts(summary, out_dir):
     mins = [(summary["per_class_accuracy"][a]["min"] or 0) * 100 for a in ACTIONS]
     maxs = [(summary["per_class_accuracy"][a]["max"] or 0) * 100 for a in ACTIONS]
     ns = [summary["per_class_accuracy"][a]["n"] for a in ACTIONS]
-    err_lo = [m - lo for m, lo in zip(means, mins)]
-    err_hi = [hi - m for m, hi in zip(means, maxs)]
-    labels = [f"{a}\n(n={n})" for a, n in zip(ACTIONS, ns)]
-    bars = ax.bar(labels, means, color="#475569", yerr=[err_lo, err_hi],
-                  capsize=6, error_kw={"elinewidth": 1.2, "ecolor": "#0f172a"})
+    err_lo = [m - lo for m, lo in zip(means, mins, strict=True)]
+    err_hi = [hi - m for m, hi in zip(means, maxs, strict=True)]
+    labels = [f"{a}\n(n={n})" for a, n in zip(ACTIONS, ns, strict=True)]
+    bars = ax.bar(
+        labels,
+        means,
+        color="#475569",
+        yerr=[err_lo, err_hi],
+        capsize=6,
+        error_kw={"elinewidth": 1.2, "ecolor": "#0f172a"},
+    )
     overall_mean = summary["overall_accuracy"]["mean"] * 100
     ax.axhline(overall_mean, ls="--", color="#94a3b8", lw=1)
-    ax.text(len(ACTIONS) - 0.5, overall_mean + 1.5, f"overall {overall_mean:.0f}%",
-            ha="right", color="#475569", fontsize=9)
+    ax.text(
+        len(ACTIONS) - 0.5,
+        overall_mean + 1.5,
+        f"overall {overall_mean:.0f}%",
+        ha="right",
+        color="#475569",
+        fontsize=9,
+    )
     ax.set_ylim(0, 110)
     ax.set_ylabel("Accuracy (%)")
     ax.set_xlabel("Expected classification")
-    for bar, val in zip(bars, means):
-        ax.text(bar.get_x() + bar.get_width() / 2, val + 3, f"{val:.0f}%",
-                ha="center", fontsize=10)
+    for bar, val in zip(bars, means, strict=True):
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 3, f"{val:.0f}%", ha="center", fontsize=10)
     fig.tight_layout()
     fig.savefig(out_dir / "per_class_accuracy.png")
     plt.close(fig)
@@ -392,7 +451,7 @@ def _render_cost_time_chart(usage, out_dir, plt):
     cost_share = [v / cost_total for v in cost_vals]
     time_share = [v / time_total for v in time_vals]
 
-    palette = ["#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899"][:len(stages)]
+    palette = ["#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899"][: len(stages)]
 
     fig, ax = plt.subplots(figsize=(10, 3.2), dpi=100)
     bar_h = 0.4
@@ -402,23 +461,53 @@ def _render_cost_time_chart(usage, out_dir, plt):
     cost_left = 0.0
     time_left = 0.0
     for i, stage in enumerate(stages):
-        ax.barh(y_cost, cost_share[i], left=cost_left, height=bar_h, color=palette[i],
-                edgecolor="white", linewidth=0.8)
-        ax.barh(y_time, time_share[i], left=time_left, height=bar_h, color=palette[i],
-                edgecolor="white", linewidth=0.8)
+        ax.barh(
+            y_cost,
+            cost_share[i],
+            left=cost_left,
+            height=bar_h,
+            color=palette[i],
+            edgecolor="white",
+            linewidth=0.8,
+        )
+        ax.barh(
+            y_time,
+            time_share[i],
+            left=time_left,
+            height=bar_h,
+            color=palette[i],
+            edgecolor="white",
+            linewidth=0.8,
+        )
         if cost_share[i] >= 0.04:
-            ax.text(cost_left + cost_share[i] / 2, y_cost,
-                    f"{labels[i]}\n${cost_vals[i]:.2f} ({cost_share[i] * 100:.0f}%)",
-                    ha="center", va="center", color="white", fontsize=9, fontweight="bold")
+            ax.text(
+                cost_left + cost_share[i] / 2,
+                y_cost,
+                f"{labels[i]}\n${cost_vals[i]:.2f} ({cost_share[i] * 100:.0f}%)",
+                ha="center",
+                va="center",
+                color="white",
+                fontsize=9,
+                fontweight="bold",
+            )
         if time_share[i] >= 0.04:
-            ax.text(time_left + time_share[i] / 2, y_time,
-                    f"{labels[i]}\n{time_vals[i]:.0f}s ({time_share[i] * 100:.0f}%)",
-                    ha="center", va="center", color="white", fontsize=9, fontweight="bold")
+            ax.text(
+                time_left + time_share[i] / 2,
+                y_time,
+                f"{labels[i]}\n{time_vals[i]:.0f}s ({time_share[i] * 100:.0f}%)",
+                ha="center",
+                va="center",
+                color="white",
+                fontsize=9,
+                fontweight="bold",
+            )
         cost_left += cost_share[i]
         time_left += time_share[i]
 
     ax.set_yticks([y_time, y_cost])
-    ax.set_yticklabels([f"LLM wall time\n({time_total:.0f}s)", f"API cost\n(${cost_total:.2f})"], fontsize=10)
+    ax.set_yticklabels(
+        [f"LLM wall time\n({time_total:.0f}s)", f"API cost\n(${cost_total:.2f})"], fontsize=10
+    )
     ax.set_xticks([])
     ax.set_xlim(0, 1)
     ax.set_ylim(-0.4, 1.1)
@@ -426,8 +515,12 @@ def _render_cost_time_chart(usage, out_dir, plt):
     ax.spines["right"].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.spines["left"].set_visible(False)
-    ax.set_title(f"Cost and time share by pipeline stage (totals across {usage['n_runs']} runs)",
-                 fontsize=11, pad=10, loc="left")
+    ax.set_title(
+        f"Cost and time share by pipeline stage (totals across {usage['n_runs']} runs)",
+        fontsize=11,
+        pad=10,
+        loc="left",
+    )
     fig.tight_layout()
     fig.savefig(out_dir / "cost_time_breakdown.png")
     plt.close(fig)
@@ -469,7 +562,6 @@ def render_economics_section(summary, meta) -> str:
     n_facts = meta["n_facts_per_run"]
     avg = usage["per_run_avg"]
     cost_per_run = avg["usd"]
-    wall_per_run_s = avg["wall_ms"] / 1000
 
     cost_per_note = cost_per_run / n_notes if n_notes else 0.0
     cost_per_fact = cost_per_run / n_facts if n_facts else 0.0
@@ -480,7 +572,11 @@ def render_economics_section(summary, meta) -> str:
     per_note_wall_s = actual_wall_per_run_s / n_notes_per_run if n_notes_per_run else 0
     minutes_saved_min = 10
     clinician_dollar_per_min = 3.0
-    roi = (minutes_saved_min * clinician_dollar_per_min) / cost_per_chart_3 if cost_per_chart_3 else float("inf")
+    roi = (
+        (minutes_saved_min * clinician_dollar_per_min) / cost_per_chart_3
+        if cost_per_chart_3
+        else float("inf")
+    )
 
     by_stage = usage["by_stage"]
     per_call_lines = []
@@ -495,8 +591,7 @@ def render_economics_section(summary, meta) -> str:
         )
     per_call_table = (
         "| Stage | Calls / run | Avg latency / call | Model |\n"
-        "|---|---|---|---|\n"
-        + "\n".join(per_call_lines)
+        "|---|---|---|---|\n" + "\n".join(per_call_lines)
     )
 
     return (
@@ -577,9 +672,7 @@ def render_cost_section(summary) -> str:
         f"Per-run averages across {n} runs. LLM-call wall time aggregates concurrent calls — "
         f"actual end-to-end wall time per run is lower thanks to `asyncio.gather` parallelism.\n\n"
         "| Stage | Model | Calls / run | Tokens (in / out) / run | Cost / run | LLM wall / run |\n"
-        "|---|---|---|---|---|---|\n"
-        + "\n".join(rows)
-        + "\n\n"
+        "|---|---|---|---|---|---|\n" + "\n".join(rows) + "\n\n"
         f"**Per-run averages:** {_fmt_tokens(avg['tokens_in'])} in / "
         f"{_fmt_tokens(avg['tokens_out'])} out · "
         f"{_fmt_usd(avg['usd'])} · {avg['wall_ms'] / 1000:.0f}s of LLM time.\n\n"
@@ -628,9 +721,7 @@ def render_report(summary, meta, out_dir, charts):
     for a in ACTIONS:
         d = summary["per_class_accuracy"][a]
         per_class_rows.append(f"| {a} | {d['n']} | {_pct_range(d)} |")
-    per_class_table = (
-        "| Class | Facts | Accuracy |\n|---|---|---|\n" + "\n".join(per_class_rows)
-    )
+    per_class_table = "| Class | Facts | Accuracy |\n|---|---|---|\n" + "\n".join(per_class_rows)
 
     per_tier_rows = []
     for tier in TIERS:
@@ -640,7 +731,8 @@ def render_report(summary, meta, out_dir, charts):
         per_tier_rows.append(f"| {tier} | {_pct_range(d)} |")
     per_tier_table = (
         "| Tier | Accuracy |\n|---|---|\n" + "\n".join(per_tier_rows)
-        if per_tier_rows else "_(no tier breakdown available)_"
+        if per_tier_rows
+        else "_(no tier breakdown available)_"
     )
 
     decomp = summary["misclassification_decomposition"]
@@ -656,7 +748,8 @@ def render_report(summary, meta, out_dir, charts):
         decomp_rows.append(f"| {decomp_labels.get(k, k)} | {v} | {share * 100:.0f}% |")
     decomp_table = (
         "| Source | Errors | Share |\n|---|---|---|\n" + "\n".join(decomp_rows)
-        if decomp_rows else "_No errors observed._"
+        if decomp_rows
+        else "_No errors observed._"
     )
 
     stab = summary["stability"]
@@ -677,7 +770,8 @@ def render_report(summary, meta, out_dir, charts):
     sw_table = (
         "| Fact | Expected | Always classified as | Distribution |\n"
         "|---|---|---|---|\n" + "\n".join(sw_rows)
-        if sw_rows else "_None — every fact was correctly classified in at least one run._"
+        if sw_rows
+        else "_None — every fact was correctly classified in at least one run._"
     )
 
     confusion_md = "\n![Confusion matrix](confusion_matrix.png)\n" if charts else ""
@@ -685,9 +779,13 @@ def render_report(summary, meta, out_dir, charts):
     consistency_md = "\n![Consistency histogram](consistency_histogram.png)\n" if charts else ""
     cost_section = render_cost_section(summary)
     economics_section = render_economics_section(summary, meta)
-    cost_chart_md = "\n![Cost and time breakdown](cost_time_breakdown.png)\n" if charts and summary.get("usage") else ""
+    cost_chart_md = (
+        "\n![Cost and time breakdown](cost_time_breakdown.png)\n"
+        if charts and summary.get("usage")
+        else ""
+    )
 
-    body = f"""# Anamnesis augmentation benchmark — {meta['date']}
+    body = f"""# Anamnesis augmentation benchmark — {meta["date"]}
 
 {headline}
 
@@ -697,7 +795,7 @@ def render_report(summary, meta, out_dir, charts):
 
 ## What was tested
 
-{meta['n_notes']} clinical notes (cardiology, ED, neurology) × {meta['n_fixtures']} FHIR chart fixtures × {meta['n_facts_per_run']} labeled facts × {n} runs. Notes span clean / messy / trap difficulty tiers. All evaluation labels are checked into the repo at `benchmarks/eval-corpus-v1/`.
+{meta["n_notes"]} clinical notes (cardiology, ED, neurology) × {meta["n_fixtures"]} FHIR chart fixtures × {meta["n_facts_per_run"]} labeled facts × {n} runs. Notes span clean / messy / trap difficulty tiers. All evaluation labels are checked into the repo at `benchmarks/eval-corpus-v1/`.
 
 ## Headline
 
@@ -712,7 +810,7 @@ _Sample sizes reflect the corpus distribution. UPDATING (n=3) and CONFLICTING (n
 
 ## Confusion matrix
 
-Cells aggregate counts across all {n} runs ({n} × {meta['n_facts_per_run']} = {n * meta['n_facts_per_run']} classifications). Rows = expected, columns = actual. The `MISSING` column captures facts the pipeline failed to extract or surface as a candidate.
+Cells aggregate counts across all {n} runs ({n} × {meta["n_facts_per_run"]} = {n * meta["n_facts_per_run"]} classifications). Rows = expected, columns = actual. The `MISSING` column captures facts the pipeline failed to extract or surface as a candidate.
 {confusion_md}
 
 ## Consistency
@@ -748,28 +846,35 @@ python benchmarks/eval-corpus-v1/run_demo_benchmark.py --runs {n}
 
 ## Run metadata
 
-- Models: `{meta['model']}` (pipeline) · `{meta.get('nano_model', 'gpt-5.4-nano')}` (guardrail)
+- Models: `{meta["model"]}` (pipeline) · `{meta.get("nano_model", "gpt-5.4-nano")}` (guardrail)
 - Runs: {n}
-- Wall time: {meta['wall_seconds']:.0f}s ({meta['wall_seconds'] / n:.0f}s/run)
-- Total LLM calls: {meta.get('total_llm_calls', '—')}
-- Total API cost: {_fmt_usd(meta['total_cost_usd']) if meta.get('total_cost_usd') is not None else '—'}
-- Pipeline sha: `{meta['git_sha']}`
-- Prompt version: `{meta['prompt_version']}`
-- Generated: {meta['date']}
+- Wall time: {meta["wall_seconds"]:.0f}s ({meta["wall_seconds"] / n:.0f}s/run)
+- Total LLM calls: {meta.get("total_llm_calls", "—")}
+- Total API cost: {_fmt_usd(meta["total_cost_usd"]) if meta.get("total_cost_usd") is not None else "—"}
+- Pipeline sha: `{meta["git_sha"]}`
+- Prompt version: `{meta["prompt_version"]}`
+- Generated: {meta["date"]}
 """
     (out_dir / "REPORT.md").write_text(body, encoding="utf-8")
 
 
 def get_meta(model, only):
     import subprocess
+
     try:
-        sha = subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"], cwd=str(REPO),
-        ).decode().strip()
+        sha = (
+            subprocess.check_output(
+                ["git", "rev-parse", "--short", "HEAD"],
+                cwd=str(REPO),
+            )
+            .decode()
+            .strip()
+        )
     except Exception:
         sha = "unknown"
     try:
         from core.prompts import PROMPT_VERSION
+
         prompt_version = PROMPT_VERSION
     except Exception:
         prompt_version = "unknown"
@@ -824,8 +929,10 @@ async def main():
         print("Aborted.")
         return 1
 
-    out_dir = Path(args.output) if args.output else (
-        ROOT / "results" / datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    out_dir = (
+        Path(args.output)
+        if args.output
+        else (ROOT / "results" / datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ"))
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     print(f"Writing artifacts to: {out_dir}")
@@ -849,14 +956,18 @@ async def main():
     summary = aggregate(per_run_rows, per_run_traps, args.runs)
     summary["usage"] = aggregate_usage(per_run_usage)
     meta["wall_seconds"] = wall_seconds
-    meta["date"] = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    meta["date"] = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     if summary.get("usage"):
         meta["total_cost_usd"] = round(summary["usage"]["totals"]["usd"], 4)
         meta["total_llm_calls"] = summary["usage"]["totals"]["calls"]
 
     (out_dir / "raw_runs.json").write_text(
-        json.dumps({"runs": per_run_rows, "traps": per_run_traps, "usage": per_run_usage, "meta": meta},
-                   indent=2, default=_to_jsonable) + "\n",
+        json.dumps(
+            {"runs": per_run_rows, "traps": per_run_traps, "usage": per_run_usage, "meta": meta},
+            indent=2,
+            default=_to_jsonable,
+        )
+        + "\n",
         encoding="utf-8",
     )
     (out_dir / "summary.json").write_text(
@@ -874,11 +985,15 @@ async def main():
     render_report(summary, meta, out_dir, charts=not args.no_charts)
 
     print()
-    print(f"Augmentation accuracy:  {summary['overall_accuracy']['mean'] * 100:.1f}%  "
-          f"[{summary['overall_accuracy']['min'] * 100:.1f}, "
-          f"{summary['overall_accuracy']['max'] * 100:.1f}]")
-    print(f"Consistency (≥{summary['consistency_threshold']}/{args.runs}): "
-          f"{summary['consistency_at_80pct'] * 100:.1f}%")
+    print(
+        f"Augmentation accuracy:  {summary['overall_accuracy']['mean'] * 100:.1f}%  "
+        f"[{summary['overall_accuracy']['min'] * 100:.1f}, "
+        f"{summary['overall_accuracy']['max'] * 100:.1f}]"
+    )
+    print(
+        f"Consistency (≥{summary['consistency_threshold']}/{args.runs}): "
+        f"{summary['consistency_at_80pct'] * 100:.1f}%"
+    )
     if summary["code_accuracy"] is not None:
         print(f"Code accuracy:          {summary['code_accuracy'] * 100:.1f}%")
     if summary["trap_rejection"]["mean"] is not None:

@@ -1,0 +1,14 @@
+line-length = 100
+target-version = "py311"
+src = ["backend"]
+extend-exclude = ["backend/mcp_server/ui/assets"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B", "W"]
+# E501 (line length) is deferred to `ruff format`; E402/F402 cover intentional
+# late imports that break circular dependencies in the pipeline modules.
+ignore = ["B008", "E741", "E501", "E402", "F402", "B007"]
+
+[lint.per-file-ignores]
+"backend/tests/*" = ["B011"]
+"__init__.py" = ["F401"]

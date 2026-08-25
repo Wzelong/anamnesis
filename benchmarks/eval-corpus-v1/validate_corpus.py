@@ -46,14 +46,23 @@ LENGTH_BUDGETS = {
 }
 
 TRAP_TYPE_ENUM = {
-    "negation", "family_attributed", "ruled_out", "hypothetical",
-    "historical_resolved", "wrong_subject", "multi_section_consolidation",
+    "negation",
+    "family_attributed",
+    "ruled_out",
+    "hypothetical",
+    "historical_resolved",
+    "wrong_subject",
+    "multi_section_consolidation",
     "severity_inference",
 }
 
 CATEGORY_ENUM = {
-    "condition", "medication_request", "observation", "procedure",
-    "allergy_intolerance", "family_member_history",
+    "condition",
+    "medication_request",
+    "observation",
+    "procedure",
+    "allergy_intolerance",
+    "family_member_history",
 }
 
 REQUIRED_TRAP_TYPES = {
@@ -77,10 +86,16 @@ EXPECTED_SPECIALTY = {"C": "cardiology", "E": "emergency_department", "N": "neur
 
 ACTION_ENUM = {"NEW", "DUPLICATE", "UPDATING", "CONFLICTING"}
 MATCH_BASIS_ENUM = {
-    "exact_code", "ingredient_match", "ingredient_dose_diff",
-    "loinc_value_match", "loinc_value_diff", "procedure_code_date",
-    "family_relationship_code", "specific_vs_nkda",
-    "display_overlap_llm", "no_match",
+    "exact_code",
+    "ingredient_match",
+    "ingredient_dose_diff",
+    "loinc_value_match",
+    "loinc_value_diff",
+    "procedure_code_date",
+    "family_relationship_code",
+    "specific_vs_nkda",
+    "display_overlap_llm",
+    "no_match",
 }
 SYSTEM_TO_SHORT = {
     "http://snomed.info/sct": "SNOMED",
@@ -145,7 +160,9 @@ def check_note_label(stem, note_path, label_path, code_ref_codes, errors, warnin
             sysname = ec.get("system")
             key = (sysname, code)
             if key not in code_ref_codes:
-                errors.append(f"{stem}: fact {f.get('id')} code {sysname}:{code} missing from code-reference.json")
+                errors.append(
+                    f"{stem}: fact {f.get('id')} code {sysname}:{code} missing from code-reference.json"
+                )
     for nf in label.get("expected_non_facts", []):
         tt = nf.get("trap_type")
         if tt not in TRAP_TYPE_ENUM:
@@ -173,7 +190,9 @@ def check_note_label(stem, note_path, label_path, code_ref_codes, errors, warnin
     prefix = note_id[0] if note_id else ""
     if prefix in EXPECTED_SPECIALTY:
         if label.get("specialty") != EXPECTED_SPECIALTY[prefix]:
-            errors.append(f"{stem}: specialty {label.get('specialty')!r} != expected {EXPECTED_SPECIALTY[prefix]!r}")
+            errors.append(
+                f"{stem}: specialty {label.get('specialty')!r} != expected {EXPECTED_SPECIALTY[prefix]!r}"
+            )
 
     # metadata char_count consistency
     meta = label.get("metadata", {})
@@ -205,7 +224,9 @@ def load_code_reference():
     return codes, entries
 
 
-PATIENT_LINE_RE = re.compile(r"(?im)^\s*patient[:\s]+([A-Z][A-Za-z'\-.]+(?:\s+[A-Z][A-Za-z'\-.]+)+)")
+PATIENT_LINE_RE = re.compile(
+    r"(?im)^\s*patient[:\s]+([A-Z][A-Za-z'\-.]+(?:\s+[A-Z][A-Za-z'\-.]+)+)"
+)
 MRN_LINE_RE = re.compile(r"(?im)\bMRN[:\s]+([A-Z]{2,5}-\d+-[A-Z0-9]+)")
 PROVIDER_RE = re.compile(r"Electronically signed:\s*([A-Z][A-Za-z'\-]+(?:\s+[A-Z][A-Za-z'\-]+)+)")
 ORG_HINTS = ["Cedar Mesa", "Greenvale", "Port Halston", "Ashford"]
@@ -232,7 +253,9 @@ def extract_identities(pairs_data):
     return patients, mrns, providers, orgs
 
 
-def check_corpus_level(pairs_data, code_ref_codes, code_ref_entries, fixture_codes, errors, warnings):
+def check_corpus_level(
+    pairs_data, code_ref_codes, code_ref_entries, fixture_codes, errors, warnings
+):
     if not pairs_data:
         return
 
@@ -241,16 +264,24 @@ def check_corpus_level(pairs_data, code_ref_codes, code_ref_entries, fixture_cod
     if dupes:
         errors.append(f"corpus: patient names not unique across 18 notes; duplicates: {dupes}")
     if len(mrns) < len(pairs_data):
-        warnings.append(f"corpus: extracted {len(mrns)} MRNs from {len(pairs_data)} notes (pattern may have missed some)")
+        warnings.append(
+            f"corpus: extracted {len(mrns)} MRNs from {len(pairs_data)} notes (pattern may have missed some)"
+        )
     if len(providers) < 12:
-        errors.append(f"corpus: only {len(providers)} unique providers detected (need >=12): {sorted(providers)}")
+        errors.append(
+            f"corpus: only {len(providers)} unique providers detected (need >=12): {sorted(providers)}"
+        )
     if len(orgs) < 3:
-        errors.append(f"corpus: only {len(orgs)} unique organizations detected (need >=3): {sorted(orgs)}")
+        errors.append(
+            f"corpus: only {len(orgs)} unique organizations detected (need >=3): {sorted(orgs)}"
+        )
 
     sexes = Counter(p["demographics"].get("sex") for p in pairs_data)
     if len(sexes) < 2:
         errors.append(f"corpus: sex diversity inadequate: {sexes}")
-    ages = [p["demographics"].get("age") for p in pairs_data if p["demographics"].get("age") is not None]
+    ages = [
+        p["demographics"].get("age") for p in pairs_data if p["demographics"].get("age") is not None
+    ]
     if ages:
         if max(ages) - min(ages) < 40:
             warnings.append(f"corpus: age range only {max(ages) - min(ages)} years")
@@ -269,7 +300,9 @@ def check_corpus_level(pairs_data, code_ref_codes, code_ref_entries, fixture_cod
     dangling = ref_keys - used_keys - fixture_codes
     if dangling and len(pairs_data) == 18:
         # Only enforce when corpus is complete
-        errors.append(f"corpus: {len(dangling)} code-reference entries unused (by labels or fixtures): {sorted(dangling)}")
+        errors.append(
+            f"corpus: {len(dangling)} code-reference entries unused (by labels or fixtures): {sorted(dangling)}"
+        )
 
     # Duplicate code-reference entries
     key_counts = Counter((e.get("system_short"), e.get("code")) for e in code_ref_entries)
@@ -280,7 +313,9 @@ def check_corpus_level(pairs_data, code_ref_codes, code_ref_entries, fixture_cod
     # Every code-reference entry has non-empty source_url
     for e in code_ref_entries:
         if not e.get("source_url"):
-            errors.append(f"corpus: code {e.get('system_short')}:{e.get('code')} has empty source_url")
+            errors.append(
+                f"corpus: code {e.get('system_short')}:{e.get('code')} has empty source_url"
+            )
 
 
 def _iter_resource_codings(resource):
@@ -301,8 +336,7 @@ def _iter_resource_codings(resource):
     for cc in candidates:
         if not cc:
             continue
-        for coding in cc.get("coding", []) or []:
-            yield coding
+        yield from cc.get("coding", []) or []
 
 
 def _resource_active(resource):
@@ -363,21 +397,31 @@ def load_fixtures(errors, warnings):
                 short = SYSTEM_TO_SHORT.get(sysname)
                 if short:
                     fixture_codes.add((short, code))
-            summary.append({
-                "id": rid,
-                "resourceType": rtype,
-                "codes": [
-                    {"system": SYSTEM_TO_SHORT.get(c.get("system"), c.get("system")), "code": c.get("code")}
-                    for c in codings if c.get("code")
-                ],
-                "active": _resource_active(res),
-            })
+            summary.append(
+                {
+                    "id": rid,
+                    "resourceType": rtype,
+                    "codes": [
+                        {
+                            "system": SYSTEM_TO_SHORT.get(c.get("system"), c.get("system")),
+                            "code": c.get("code"),
+                        }
+                        for c in codings
+                        if c.get("code")
+                    ],
+                    "active": _resource_active(res),
+                }
+            )
 
             if rtype in ACTIVE_STATUS_TYPES and not _resource_active(res):
-                warnings.append(f"fixture {fixture_id}: {rtype}/{rid} is not active; reconciler will ignore it")
+                warnings.append(
+                    f"fixture {fixture_id}: {rtype}/{rid} is not active; reconciler will ignore it"
+                )
 
         if len(patients) != 1:
-            errors.append(f"fixture {fixture_id}: expected exactly 1 Patient, found {len(patients)}")
+            errors.append(
+                f"fixture {fixture_id}: expected exactly 1 Patient, found {len(patients)}"
+            )
 
         fixtures[fixture_id] = bundle
         fixture_index[fixture_id] = index
@@ -430,7 +474,9 @@ def check_augmentation_layer(pairs_data, fixtures, fixture_index, code_ref_codes
             has_action = "action" in a
             has_accepted = "accepted_actions" in a
             if has_action == has_accepted:
-                errors.append(f"aug {stem}/{fid}: must set exactly one of 'action' or 'accepted_actions'")
+                errors.append(
+                    f"aug {stem}/{fid}: must set exactly one of 'action' or 'accepted_actions'"
+                )
                 continue
 
             if has_action:
@@ -441,8 +487,14 @@ def check_augmentation_layer(pairs_data, fixtures, fixture_index, code_ref_codes
                 effective_actions = {act}
             else:
                 accepted = a["accepted_actions"]
-                if not isinstance(accepted, list) or not all(x in ACTION_ENUM for x in accepted) or len(accepted) < 2:
-                    errors.append(f"aug {stem}/{fid}: accepted_actions must be a list of >=2 valid actions")
+                if (
+                    not isinstance(accepted, list)
+                    or not all(x in ACTION_ENUM for x in accepted)
+                    or len(accepted) < 2
+                ):
+                    errors.append(
+                        f"aug {stem}/{fid}: accepted_actions must be a list of >=2 valid actions"
+                    )
                     continue
                 for x in accepted:
                     action_counts[x] += 1
@@ -460,7 +512,9 @@ def check_augmentation_layer(pairs_data, fixtures, fixture_index, code_ref_codes
                     errors.append(f"aug {stem}/{fid}: NEW action must have target_resource_id=null")
             else:
                 if target is None or target not in index:
-                    errors.append(f"aug {stem}/{fid}: target_resource_id {target!r} not found in fixture {bundle_id!r}")
+                    errors.append(
+                        f"aug {stem}/{fid}: target_resource_id {target!r} not found in fixture {bundle_id!r}"
+                    )
 
             if "UPDATING" in effective_actions:
                 changes = a.get("field_changes")
@@ -469,13 +523,17 @@ def check_augmentation_layer(pairs_data, fixtures, fixture_index, code_ref_codes
                 else:
                     for ch in changes:
                         if not all(k in ch for k in ("path", "from", "to")):
-                            errors.append(f"aug {stem}/{fid}: field_changes entry missing path/from/to")
+                            errors.append(
+                                f"aug {stem}/{fid}: field_changes entry missing path/from/to"
+                            )
 
             prov = a.get("expected_provenance")
             if not isinstance(prov, bool):
                 errors.append(f"aug {stem}/{fid}: expected_provenance must be a bool")
             elif "DUPLICATE" in effective_actions and prov is True:
-                warnings.append(f"aug {stem}/{fid}: DUPLICATE with expected_provenance=true (Stage 6 filters DUPLICATEs)")
+                warnings.append(
+                    f"aug {stem}/{fid}: DUPLICATE with expected_provenance=true (Stage 6 filters DUPLICATEs)"
+                )
 
         missing = facts_by_stem[stem] - seen_fact_ids
         if missing:
@@ -484,16 +542,22 @@ def check_augmentation_layer(pairs_data, fixtures, fixture_index, code_ref_codes
         for nfa in aug.get("expected_non_fact_actions", []):
             nf_id = nfa.get("non_fact_id")
             if nf_id not in non_facts_by_stem[stem]:
-                errors.append(f"aug {stem}: non_fact action references unknown non_fact_id {nf_id!r}")
+                errors.append(
+                    f"aug {stem}: non_fact action references unknown non_fact_id {nf_id!r}"
+                )
             ea = nfa.get("expected_action")
             if ea is not None and ea not in ACTION_ENUM:
-                errors.append(f"aug {stem}/{nf_id}: expected_action {ea!r} not null and not in enum")
+                errors.append(
+                    f"aug {stem}/{nf_id}: expected_action {ea!r} not null and not in enum"
+                )
 
         aug_data_by_stem[stem] = aug
 
     dangling_fixtures = set(fixtures) - used_fixtures
     if dangling_fixtures:
-        warnings.append(f"corpus: fixtures with no augmentation labels: {sorted(dangling_fixtures)}")
+        warnings.append(
+            f"corpus: fixtures with no augmentation labels: {sorted(dangling_fixtures)}"
+        )
 
     return aug_data_by_stem, action_counts, basis_counts
 
@@ -505,7 +569,9 @@ def emit_fixtures_manifest(fixture_resource_summary):
     FIXTURES_MANIFEST.write_text(body + "\n", encoding="utf-8")
 
 
-def emit_manifest(pairs_data, code_ref_entries, fixtures, action_counts, basis_counts, aug_data_by_stem):
+def emit_manifest(
+    pairs_data, code_ref_entries, fixtures, action_counts, basis_counts, aug_data_by_stem
+):
     fact_cat_counts = Counter()
     trap_type_counts = Counter()
     total_facts = 0
@@ -543,7 +609,9 @@ def emit_manifest(pairs_data, code_ref_entries, fixtures, action_counts, basis_c
         "code_reference_size": len(code_ref_entries),
         "license": "CC-BY-4.0 (synthetic notes; no PHI)",
         "labeled_by": "Anamnesis project team",
-        "code_systems_used": sorted({e.get("system_short") for e in code_ref_entries if e.get("system_short")}),
+        "code_systems_used": sorted(
+            {e.get("system_short") for e in code_ref_entries if e.get("system_short")}
+        ),
         "total_fixtures": len(fixtures),
         "augmentation_labels_count": len(aug_data_by_stem),
         "action_distribution": dict(action_counts),
@@ -559,10 +627,14 @@ def emit_manifest(pairs_data, code_ref_entries, fixtures, action_counts, basis_c
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--only", help="Validate only the given note_id (e.g. C1)")
-    parser.add_argument("--strict-completeness", action="store_true",
-                        help="Fail if corpus has fewer than 18 notes")
-    parser.add_argument("--skip-augmentation", action="store_true",
-                        help="Skip fixture + augmentation_label validation")
+    parser.add_argument(
+        "--strict-completeness", action="store_true", help="Fail if corpus has fewer than 18 notes"
+    )
+    parser.add_argument(
+        "--skip-augmentation",
+        action="store_true",
+        help="Skip fixture + augmentation_label validation",
+    )
     args = parser.parse_args()
 
     errors = []
@@ -587,18 +659,27 @@ def main():
         fixtures, fixture_index, fixture_codes, fixture_summary = load_fixtures(errors, warnings)
         if not args.only:
             aug_data_by_stem, action_counts, basis_counts = check_augmentation_layer(
-                pairs_data, fixtures, fixture_index, code_ref_codes, errors, warnings,
+                pairs_data,
+                fixtures,
+                fixture_index,
+                code_ref_codes,
+                errors,
+                warnings,
             )
 
     if not args.only:
-        check_corpus_level(pairs_data, code_ref_codes, code_ref_entries, fixture_codes, errors, warnings)
+        check_corpus_level(
+            pairs_data, code_ref_codes, code_ref_entries, fixture_codes, errors, warnings
+        )
 
     if args.strict_completeness and len(pairs_data) != 18:
         errors.append(f"corpus: {len(pairs_data)} notes found, expected 18")
 
     manifest = None
     if not args.only and pairs_data:
-        manifest = emit_manifest(pairs_data, code_ref_entries, fixtures, action_counts, basis_counts, aug_data_by_stem)
+        manifest = emit_manifest(
+            pairs_data, code_ref_entries, fixtures, action_counts, basis_counts, aug_data_by_stem
+        )
         if not args.skip_augmentation:
             emit_fixtures_manifest(fixture_summary)
 

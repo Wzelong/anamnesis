@@ -14,6 +14,7 @@ With --runs N (N>1), runs the full corpus N times with stage2/3 caches cleared
 between runs. Reports per-fact stability (stable-right / stable-wrong / flaky)
 to distinguish real bugs from reasoning-model variance.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -22,22 +23,25 @@ import json
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent.parent
 sys.path.insert(0, str(REPO / "backend"))
 
 from config import settings
-from core.llm import build_client
-from core.augment import assemble_proposals
 from core.cache import JsonCache
 from core.code_candidates import code_candidates
 from core.doc_guardrails import screen_documents
 from core.extraction import extract_candidates_batch, merge_across_notes
+from core.llm import build_client
 from core.preprocess import preprocess_documents
-from core.reconcile import reconcile, _normalize_ingredient
+from core.reconcile import _normalize_ingredient, reconcile
 from fhir.local_bundle import load_demo_data
 from fhir.models import Document
+
+if TYPE_CHECKING:
+    from usage_tracker import UsageTracker
 
 NOTES_DIR = ROOT / "notes"
 LABELS_DIR = ROOT / "labels"
@@ -72,16 +76,24 @@ async def execute_pipeline(patient_context, documents, client, tracker=None):
     rejected: list = []
     if settings.doc_guardrail_enabled and documents:
         documents, rejected = await screen_documents(
-            documents, client, model=settings.gemini_model_nano,
+            documents,
+            client,
+            model=settings.gemini_model_nano,
             cache=JsonCache(CACHE_ROOT / "doc_guardrail"),
         )
 
     notes = preprocess_documents(documents)
     stage2 = await extract_candidates_batch(
-        notes, client, model=model, cache=JsonCache(CACHE_ROOT / "stage2_output"),
+        notes,
+        client,
+        model=model,
+        cache=JsonCache(CACHE_ROOT / "stage2_output"),
     )
     stage3 = await merge_across_notes(
-        stage2, client, model=model, cache=JsonCache(CACHE_ROOT / "stage3"),
+        stage2,
+        client,
+        model=model,
+        cache=JsonCache(CACHE_ROOT / "stage3"),
     )
     stage4 = await code_candidates(stage3, client, model=model)
     stage5 = await reconcile(stage4, patient_context, client, model=model)
@@ -101,7 +113,9 @@ def candidate_codes(candidate) -> set[tuple[str, str]]:
 
 
 def fact_codes(fact) -> set[tuple[str, str]]:
-    return {(c.get("system"), c.get("code")) for c in fact.get("expected_codes", []) if c.get("code")}
+    return {
+        (c.get("system"), c.get("code")) for c in fact.get("expected_codes", []) if c.get("code")
+    }
 
 
 def candidate_spans(candidate, notes_by_doc) -> list[tuple[int, int]]:
@@ -146,14 +160,21 @@ def map_candidate_to_fact(candidate, notes_by_doc, ext_facts, note_text) -> str 
     return None
 
 
-async def run_one(stem, aug, ext, note_path, bundle_path, client, tracker: UsageTracker | None = None):
+async def run_one(
+    stem, aug, ext, note_path, bundle_path, client, tracker: UsageTracker | None = None
+):
     note_text = note_path.read_text(encoding="utf-8")
     pc, _ = load_demo_data(bundle_path)
-    docs = [Document(
-        id=aug["note_id"], type="Progress note",
-        date="2026-04-01", author="bench",
-        text=note_text, encounter_id=None,
-    )]
+    docs = [
+        Document(
+            id=aug["note_id"],
+            type="Progress note",
+            date="2026-04-01",
+            author="bench",
+            text=note_text,
+            encounter_id=None,
+        )
+    ]
     notes, stage5, _ = await execute_pipeline(pc, docs, client, tracker=tracker)
     notes_by_doc = {n.document_id: n for n in notes}
 
@@ -245,22 +266,24 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client, tracker: Usage
                 for sr in getattr(result.candidate, "source_refs", []) or []
             )
 
-        expected_systems = sorted({
-            c.get("system") for c in ext_fact.get("expected_codes", []) if c.get("code")
-        })
+        expected_systems = sorted(
+            {c.get("system") for c in ext_fact.get("expected_codes", []) if c.get("code")}
+        )
 
-        rows.append({
-            "note": stem,
-            "tier": tier,
-            "category": ext_fact.get("category"),
-            "fact_id": fid,
-            "expected": expected,
-            "actual": actual,
-            "hit": actual == expected,
-            "expected_systems": expected_systems,
-            "code_matched": code_matched,
-            "provenance_count": provenance_count,
-        })
+        rows.append(
+            {
+                "note": stem,
+                "tier": tier,
+                "category": ext_fact.get("category"),
+                "fact_id": fid,
+                "expected": expected,
+                "actual": actual,
+                "hit": actual == expected,
+                "expected_systems": expected_systems,
+                "code_matched": code_matched,
+                "provenance_count": provenance_count,
+            }
+        )
 
     non_fact_by_id = {nf["id"]: nf for nf in ext.get("expected_non_facts", [])}
     trap_results = []
@@ -277,12 +300,14 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client, tracker: Usage
                 if any(overlap(cs, trap_span) for cs in cand_spans):
                     rejected = False
                     break
-        trap_results.append({
-            "note": stem,
-            "non_fact_id": nf_id,
-            "trap_type": nf.get("trap_type"),
-            "rejected": rejected,
-        })
+        trap_results.append(
+            {
+                "note": stem,
+                "non_fact_id": nf_id,
+                "trap_type": nf.get("trap_type"),
+                "rejected": rejected,
+            }
+        )
 
     extracted_fact_ids = set(actual_by_fact.keys())
     expected_fact_ids = {a["fact_id"] for a in aug["expected_actions"]}
@@ -291,7 +316,9 @@ async def run_one(stem, aug, ext, note_path, bundle_path, client, tracker: Usage
     return rows, spurious, trap_results
 
 
-async def run_full_pass(only, client, tracker: UsageTracker | None = None) -> tuple[list[dict], dict, list[dict]]:
+async def run_full_pass(
+    only, client, tracker: UsageTracker | None = None
+) -> tuple[list[dict], dict, list[dict]]:
     rows = []
     spurious = {}
     traps = []
@@ -306,6 +333,7 @@ async def run_full_pass(only, client, tracker: UsageTracker | None = None) -> tu
 
 def clear_pipeline_caches() -> None:
     import shutil
+
     for sub in ("stage2_output", "stage3"):
         target = CACHE_ROOT / sub
         if target.exists():
@@ -317,12 +345,15 @@ def summarize_runs(per_run_rows: list[list[dict]]) -> dict:
     for run_idx, rows in enumerate(per_run_rows):
         for row in rows:
             key = (row["note"], row["fact_id"])
-            rec = fact_records.setdefault(key, {
-                "note": row["note"],
-                "fact_id": row["fact_id"],
-                "expected": row["expected"],
-                "classifications": Counter(),
-            })
+            rec = fact_records.setdefault(
+                key,
+                {
+                    "note": row["note"],
+                    "fact_id": row["fact_id"],
+                    "expected": row["expected"],
+                    "classifications": Counter(),
+                },
+            )
             rec["classifications"][row["actual"]] += 1
 
     n_runs = len(per_run_rows)
@@ -338,17 +369,21 @@ def summarize_runs(per_run_rows: list[list[dict]]) -> dict:
             stability = "stable_wrong"
         else:
             stability = "flaky"
-        facts_summary.append({
-            "note": note,
-            "fact_id": fid,
-            "expected": rec["expected"],
-            "most_common_actual": most_common,
-            "agreement": round(agreement, 2),
-            "hits_over_runs": f"{hits}/{n_runs}",
-            "distribution": dict(c),
-            "stability": stability,
-        })
-    facts_summary.sort(key=lambda x: (x["stability"] != "stable_wrong", x["stability"] != "flaky", x["fact_id"]))
+        facts_summary.append(
+            {
+                "note": note,
+                "fact_id": fid,
+                "expected": rec["expected"],
+                "most_common_actual": most_common,
+                "agreement": round(agreement, 2),
+                "hits_over_runs": f"{hits}/{n_runs}",
+                "distribution": dict(c),
+                "stability": stability,
+            }
+        )
+    facts_summary.sort(
+        key=lambda x: (x["stability"] != "stable_wrong", x["stability"] != "flaky", x["fact_id"])
+    )
 
     counts = Counter(f["stability"] for f in facts_summary)
 
@@ -373,8 +408,7 @@ def summarize_runs(per_run_rows: list[list[dict]]) -> dict:
         }
 
     overall_per_run = [
-        sum(1 for r in rows if r["hit"]) / len(rows) if rows else 0.0
-        for rows in per_run_rows
+        sum(1 for r in rows if r["hit"]) / len(rows) if rows else 0.0 for rows in per_run_rows
     ]
     overall = {
         "mean": round(sum(overall_per_run) / len(overall_per_run), 3),
@@ -396,9 +430,13 @@ async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--only", help="Comma-separated note IDs (e.g. C1,E1)")
     parser.add_argument("--output", help="Write full report JSON here")
-    parser.add_argument("--runs", type=int, default=1,
-                        help="Number of full-corpus passes for stability analysis (default 1). "
-                             "When >1, clears stage2/3 caches between runs.")
+    parser.add_argument(
+        "--runs",
+        type=int,
+        default=1,
+        help="Number of full-corpus passes for stability analysis (default 1). "
+        "When >1, clears stage2/3 caches between runs.",
+    )
     args = parser.parse_args()
 
     only = {x.strip() for x in args.only.split(",")} if args.only else None
@@ -421,7 +459,11 @@ async def main():
 
         overall_hits = sum(1 for r in rows if r["hit"])
         summary = {
-            "totals": {"facts": len(rows), "hits": overall_hits, "misses": len(rows) - overall_hits},
+            "totals": {
+                "facts": len(rows),
+                "hits": overall_hits,
+                "misses": len(rows) - overall_hits,
+            },
             "confusion": {k: dict(v) for k, v in confusion.items()},
             "per_tier": {k: dict(v) for k, v in per_tier.items()},
             "spurious_per_note": spurious,
@@ -448,22 +490,28 @@ async def main():
 
     print()
     print(f"=== Stability report (N={stability['n_runs']} runs) ===")
-    print(f"\nOverall accuracy: mean={stability['overall_accuracy']['mean']:.1%}  "
-          f"range={stability['overall_accuracy']['min']:.1%}-{stability['overall_accuracy']['max']:.1%}  "
-          f"per-run={stability['overall_accuracy']['per_run']}")
+    print(
+        f"\nOverall accuracy: mean={stability['overall_accuracy']['mean']:.1%}  "
+        f"range={stability['overall_accuracy']['min']:.1%}-{stability['overall_accuracy']['max']:.1%}  "
+        f"per-run={stability['overall_accuracy']['per_run']}"
+    )
     print(f"\nStability counts: {stability['stability_counts']}")
-    print(f"\nPer-classification accuracy across runs:")
+    print("\nPer-classification accuracy across runs:")
     for cls, s in stability["per_class_accuracy"].items():
         print(f"  {cls:12} mean={s['mean']:.1%}  range={s['min']:.1%}-{s['max']:.1%}")
 
-    print(f"\nStable-wrong (always miss expected — real bugs):")
+    print("\nStable-wrong (always miss expected — real bugs):")
     for f in stability["facts"]:
         if f["stability"] == "stable_wrong":
-            print(f"  {f['fact_id']:8}  expected={f['expected']:12}  always={f['most_common_actual']:12}  dist={f['distribution']}")
-    print(f"\nFlaky (variance):")
+            print(
+                f"  {f['fact_id']:8}  expected={f['expected']:12}  always={f['most_common_actual']:12}  dist={f['distribution']}"
+            )
+    print("\nFlaky (variance):")
     for f in stability["facts"]:
         if f["stability"] == "flaky":
-            print(f"  {f['fact_id']:8}  expected={f['expected']:12}  hits={f['hits_over_runs']}  dist={f['distribution']}")
+            print(
+                f"  {f['fact_id']:8}  expected={f['expected']:12}  hits={f['hits_over_runs']}  dist={f['distribution']}"
+            )
 
     if args.output:
         Path(args.output).write_text(json.dumps(stability, indent=2) + "\n", encoding="utf-8")

@@ -7,6 +7,7 @@ realistic messy-input + LLM-variant comparison is bench_retrieval_variants.py.
 
 Usage:  UMLS_API_KEY=... python benchmarks/eval-corpus-v1/bench_retrieval.py [--top-k 10] [--api-only]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -88,8 +89,10 @@ def report(name, hits, totals, misses, elapsed):
     tot_t = sum(totals.values())
     for sysk in ("snomed", "icd10", "rxnorm", "loinc"):
         if totals[sysk]:
-            print(f"  {sysk:<8} {hits[sysk]:>2}/{totals[sysk]:<2}  {hits[sysk]/totals[sysk]*100:5.1f}%")
-    print(f"  {'TOTAL':<8} {tot_h:>2}/{tot_t:<2}  {tot_h/tot_t*100:5.1f}%")
+            print(
+                f"  {sysk:<8} {hits[sysk]:>2}/{totals[sysk]:<2}  {hits[sysk] / totals[sysk] * 100:5.1f}%"
+            )
+    print(f"  {'TOTAL':<8} {tot_h:>2}/{tot_t:<2}  {tot_h / tot_t * 100:5.1f}%")
     if misses:
         print(f"  misses ({len(misses)}):")
         for s, c, d, why in misses[:25]:

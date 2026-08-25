@@ -11,10 +11,10 @@ Observation candidate:
 Run from repo root:
   python benchmarks/eval-corpus-v1/trace_observations.py
 """
+
 from __future__ import annotations
 
 import asyncio
-import json
 import sys
 from pathlib import Path
 
@@ -23,13 +23,13 @@ REPO = ROOT.parent.parent
 sys.path.insert(0, str(REPO / "backend"))
 
 from openai import AsyncOpenAI
+
 from config import settings
-from core.augment import assemble_proposals
 from core.cache import JsonCache
 from core.code_candidates import (
+    _observation_systems,
     code_candidates,
     match_us_core_fixed,
-    _observation_systems,
 )
 from core.extraction import extract_candidates_batch, merge_across_notes
 from core.preprocess import preprocess_documents
@@ -49,23 +49,29 @@ async def run_case(stem: str, fixture_id: str, client) -> dict:
     note_path = ROOT / "notes" / f"{stem}.txt"
     bundle_path = ROOT / "fixtures" / f"{fixture_id}.json"
     pc, _ = load_demo_data(bundle_path)
-    docs = [Document(
-        id=stem.split("-")[0],
-        type="Progress note",
-        date="2026-04-01",
-        author="trace",
-        text=note_path.read_text(encoding="utf-8"),
-        encounter_id=None,
-    )]
+    docs = [
+        Document(
+            id=stem.split("-")[0],
+            type="Progress note",
+            date="2026-04-01",
+            author="trace",
+            text=note_path.read_text(encoding="utf-8"),
+            encounter_id=None,
+        )
+    ]
     notes = preprocess_documents(docs)
     model = settings.openai_model_fast
 
     s2 = await extract_candidates_batch(
-        notes, client, model=model,
+        notes,
+        client,
+        model=model,
         cache=JsonCache(CACHE_ROOT / "stage2_output"),
     )
     s3 = await merge_across_notes(
-        s2, client, model=model,
+        s2,
+        client,
+        model=model,
         cache=JsonCache(CACHE_ROOT / "stage3"),
     )
     s4 = await code_candidates(s3, client, model=model)
@@ -77,18 +83,20 @@ async def run_case(stem: str, fixture_id: str, client) -> dict:
             continue
         item = result.candidate.item
         fixed = match_us_core_fixed("Observation", item)
-        rows.append({
-            "name": item.get("name"),
-            "full_name": item.get("full_name"),
-            "value": item.get("value"),
-            "codeset_hint": item.get("codeset_hint"),
-            "category": item.get("category"),
-            "routed_systems": _observation_systems(item),
-            "us_core_fixed_coding": fixed,
-            "final_coding": item.get("coding"),
-            "classification": result.classification,
-            "reasoning": result.reasoning,
-        })
+        rows.append(
+            {
+                "name": item.get("name"),
+                "full_name": item.get("full_name"),
+                "value": item.get("value"),
+                "codeset_hint": item.get("codeset_hint"),
+                "category": item.get("category"),
+                "routed_systems": _observation_systems(item),
+                "us_core_fixed_coding": fixed,
+                "final_coding": item.get("coding"),
+                "classification": result.classification,
+                "reasoning": result.reasoning,
+            }
+        )
     return {"note": stem, "fixture": fixture_id, "observations": rows}
 
 

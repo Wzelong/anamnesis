@@ -2,6 +2,7 @@
 
 Independent of the Anamnesis backend — pure FHIR/JSON checks.
 """
+
 import base64
 import json
 from collections import Counter
@@ -34,13 +35,18 @@ def main() -> int:
     coding_count = 0
     for e in entries:
         res = e.get("resource", {})
-        if e.get("fullUrl") != f"urn:uuid:{__import__('uuid').uuid5(__import__('uuid').UUID('00000000-0000-0000-0000-000000000002'), '')}":
+        if (
+            e.get("fullUrl")
+            != f"urn:uuid:{__import__('uuid').uuid5(__import__('uuid').UUID('00000000-0000-0000-0000-000000000002'), '')}"
+        ):
             pass
         for r in walk_refs(res):
             if r.startswith("urn:uuid:"):
                 ref_count += 1
                 if r not in full_urls:
-                    errors.append(f"{res.get('resourceType')}/{res.get('id')}: unresolved reference {r}")
+                    errors.append(
+                        f"{res.get('resourceType')}/{res.get('id')}: unresolved reference {r}"
+                    )
 
         def count_codings(o):
             nonlocal coding_count
@@ -52,6 +58,7 @@ def main() -> int:
             elif isinstance(o, list):
                 for v in o:
                     count_codings(v)
+
         count_codings(res)
 
         if res.get("resourceType") == "DocumentReference":

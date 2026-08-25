@@ -4,6 +4,7 @@ Wraps an AsyncOpenAI client so every responses.parse / responses.create call
 is intercepted, attributed to the current stage (via a contextvar), and rolled
 up by stage. Pricing comes from core.pricing so cost numbers match production.
 """
+
 from __future__ import annotations
 
 import time
@@ -65,7 +66,10 @@ class UsageTracker:
         s.reasoning_tokens += reasoning
         s.wall_ms += wall_ms
         s.usd += estimate_cost(
-            model=model, input_tokens=in_t, cached_tokens=cached, output_tokens=out_t,
+            model=model,
+            input_tokens=in_t,
+            cached_tokens=cached,
+            output_tokens=out_t,
         )
         s.by_model[model] += 1
 

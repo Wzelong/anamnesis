@@ -18,8 +18,10 @@ from base64 import b64decode
 from collections import defaultdict
 from pathlib import Path
 
-PATH = sys.argv[1] if len(sys.argv) > 1 else str(
-    Path(__file__).resolve().parent / "anamnesis-demo-bundle.json"
+PATH = (
+    sys.argv[1]
+    if len(sys.argv) > 1
+    else str(Path(__file__).resolve().parent / "anamnesis-demo-bundle.json")
 )
 with open(PATH) as f:
     bundle = json.load(f)
@@ -27,10 +29,14 @@ with open(PATH) as f:
 errors = []
 warnings = []
 
+
 def err(msg):
     errors.append(msg)
+
+
 def warn(msg):
     warnings.append(msg)
+
 
 # ---------------------------------------------------------------------------
 # 1. Bundle structure
@@ -58,6 +64,7 @@ for i, e in enumerate(entries):
     if not req or req.get("method") != "POST" or not req.get("url"):
         err(f"Entry {fu} has bad request element")
 
+
 # ---------------------------------------------------------------------------
 # 2. Reference integrity
 # ---------------------------------------------------------------------------
@@ -72,6 +79,7 @@ def find_refs(obj, path=""):
     elif isinstance(obj, list):
         for i, item in enumerate(obj):
             yield from find_refs(item, f"{path}[{i}]")
+
 
 ref_targets = defaultdict(list)
 for e in entries:
@@ -91,8 +99,14 @@ for target, paths in ref_targets.items():
 # 3. US Core profile must-haves (selected critical checks)
 # ---------------------------------------------------------------------------
 
+
 def get_resources(resource_type):
-    return [(e["fullUrl"], e["resource"]) for e in entries if e["resource"]["resourceType"] == resource_type]
+    return [
+        (e["fullUrl"], e["resource"])
+        for e in entries
+        if e["resource"]["resourceType"] == resource_type
+    ]
+
 
 # Patient
 for full_url, p in get_resources("Patient"):
@@ -138,8 +152,12 @@ for full_url, c in get_resources("Condition"):
         err(f"{full_url} Condition missing verificationStatus")
     cats = c.get("category", [])
     cat_codes = [coding.get("code") for cat in cats for coding in cat.get("coding", [])]
-    if not any(code in {"problem-list-item", "health-concern", "encounter-diagnosis"} for code in cat_codes):
-        err(f"{full_url} Condition category not valid (expected problem-list-item / health-concern / encounter-diagnosis)")
+    if not any(
+        code in {"problem-list-item", "health-concern", "encounter-diagnosis"} for code in cat_codes
+    ):
+        err(
+            f"{full_url} Condition category not valid (expected problem-list-item / health-concern / encounter-diagnosis)"
+        )
     if not c.get("code"):
         err(f"{full_url} Condition missing code")
     if not c.get("subject"):
@@ -191,6 +209,8 @@ EXPECTED_SYSTEMS = {
     "icd10": "http://hl7.org/fhir/sid/icd-10-cm",
     "rxnorm": "http://www.nlm.nih.gov/research/umls/rxnorm",
 }
+
+
 def collect_codings(obj):
     """Yield all Coding-like dicts."""
     if isinstance(obj, dict):
@@ -201,6 +221,7 @@ def collect_codings(obj):
     elif isinstance(obj, list):
         for item in obj:
             yield from collect_codings(item)
+
 
 all_codings = list(collect_codings(bundle))
 systems_used = {c["system"] for c in all_codings if "system" in c}
@@ -250,16 +271,28 @@ patient_resources = get_resources("Patient")
 if patient_resources:
     p = patient_resources[0][1]
     mo = p.get("managingOrganization", {}).get("reference", "")
-    bayside_url = next((u for u, e in by_url.items()
-                        if e["resource"]["resourceType"] == "Organization"
-                        and e["resource"].get("name") == "Bayside Health"), None)
+    bayside_url = next(
+        (
+            u
+            for u, e in by_url.items()
+            if e["resource"]["resourceType"] == "Organization"
+            and e["resource"].get("name") == "Bayside Health"
+        ),
+        None,
+    )
     if mo != bayside_url:
         warn(f"Patient.managingOrganization should reference Bayside Health, got {mo}")
 
 # ED encounter should reference Riverside; cardio/neuro should reference Bayside
-riverside_url = next((u for u, e in by_url.items()
-                      if e["resource"]["resourceType"] == "Organization"
-                      and e["resource"].get("name") == "Riverside Hospital"), None)
+riverside_url = next(
+    (
+        u
+        for u, e in by_url.items()
+        if e["resource"]["resourceType"] == "Organization"
+        and e["resource"].get("name") == "Riverside Hospital"
+    ),
+    None,
+)
 for full_url, enc in get_resources("Encounter"):
     sp = enc.get("serviceProvider", {}).get("reference", "")
     rtype = enc["type"][0]["text"] if enc.get("type") else ""
@@ -286,7 +319,9 @@ for full_url, d in docs:
     enc_practitioner = enc["participant"][0]["individual"]["reference"]
     doc_author = d["author"][0]["reference"]
     if enc_practitioner != doc_author:
-        warn(f"{full_url} document author ({doc_author}) ≠ encounter practitioner ({enc_practitioner})")
+        warn(
+            f"{full_url} document author ({doc_author}) ≠ encounter practitioner ({enc_practitioner})"
+        )
 
 # ---------------------------------------------------------------------------
 # Report
@@ -295,7 +330,7 @@ print(f"Bundle: {PATH}")
 print(f"Total entries: {len(entries)}")
 print(f"Total Reference targets: {len(ref_targets)}")
 print(f"Total Codings: {len(all_codings)}")
-print(f"Code systems used:")
+print("Code systems used:")
 for s in sorted(systems_used):
     print(f"  - {s}")
 print()

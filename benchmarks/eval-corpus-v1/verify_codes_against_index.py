@@ -14,6 +14,7 @@ Usage:
   python benchmarks/eval-corpus-v1/verify_codes_against_index.py --top-k 20 --skip-retrieval
   python benchmarks/eval-corpus-v1/verify_codes_against_index.py --output report.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -90,20 +91,28 @@ def main():
         for e in items:
             norm = normalize_code(short, e["code"])
             present = norm in meta["code_to_indices"]
-            presence_results.append({
-                "system": short, "code": e["code"], "display": e["display"], "present": present,
-            })
+            presence_results.append(
+                {
+                    "system": short,
+                    "code": e["code"],
+                    "display": e["display"],
+                    "present": present,
+                }
+            )
             presence_counter[("present" if present else "missing")] += 1
             if not present:
                 print(f"  MISSING in index: {short}:{e['code']}  '{e['display']}'")
 
-    print(f"\nPresence: {presence_counter['present']} present, {presence_counter['missing']} missing")
+    print(
+        f"\nPresence: {presence_counter['present']} present, {presence_counter['missing']} missing"
+    )
 
     retrieval_results = []
     if args.skip_retrieval:
         print("\nSkipping retrieval pass.")
     else:
         from core.coding import EmbeddingModel, IndexStore
+
         print(f"\nRetrieval pass (top-{args.top_k}):")
         model = EmbeddingModel()
         store = IndexStore()
@@ -117,18 +126,30 @@ def main():
             terms = [e["display"] for e in items]
             embeddings = model.encode(terms)
             ranks = []
-            for e, vec in zip(items, embeddings):
+            for e, vec in zip(items, embeddings, strict=True):
                 results = store.search(np.array([vec]), sysname, top_k=args.top_k)
                 target = normalize_code(short, e["code"])
                 rank = next((r.rank for r in results if r.code == target), None)
-                ranks.append({
-                    "system": short, "code": e["code"], "display": e["display"],
-                    "rank": rank,
-                    "top_match": {"code": results[0].code, "display": results[0].display, "score": results[0].score} if results else None,
-                })
+                ranks.append(
+                    {
+                        "system": short,
+                        "code": e["code"],
+                        "display": e["display"],
+                        "rank": rank,
+                        "top_match": {
+                            "code": results[0].code,
+                            "display": results[0].display,
+                            "score": results[0].score,
+                        }
+                        if results
+                        else None,
+                    }
+                )
             per_system_rank_counter[short] = Counter(
-                "top1" if r["rank"] == 1
-                else f"top{args.top_k}" if r["rank"] is not None
+                "top1"
+                if r["rank"] == 1
+                else f"top{args.top_k}"
+                if r["rank"] is not None
                 else "miss"
                 for r in ranks
             )
@@ -137,15 +158,21 @@ def main():
             topk = per_system_rank_counter[short].get(f"top{args.top_k}", 0) + top1
             miss = per_system_rank_counter[short].get("miss", 0)
             n = len(ranks)
-            print(f"  {short:6} top-1 {top1}/{n} ({top1/n*100:5.1f}%)  top-{args.top_k} {topk}/{n} ({topk/n*100:5.1f}%)  miss {miss}")
+            print(
+                f"  {short:6} top-1 {top1}/{n} ({top1 / n * 100:5.1f}%)  top-{args.top_k} {topk}/{n} ({topk / n * 100:5.1f}%)  miss {miss}"
+            )
 
         misses = [r for r in retrieval_results if r["rank"] is None]
         if misses:
-            print(f"\n{len(misses)} retrieval misses (display didn't surface canonical code in top-{args.top_k}):")
+            print(
+                f"\n{len(misses)} retrieval misses (display didn't surface canonical code in top-{args.top_k}):"
+            )
             for r in misses[:30]:
                 top = r.get("top_match") or {}
                 print(f"  {r['system']:6} {r['code']:12}  expected '{r['display'][:50]}'")
-                print(f"           top1={top.get('code'):>12} '{top.get('display', '')[:60]}' (score={top.get('score', 0):.3f})")
+                print(
+                    f"           top1={top.get('code'):>12} '{top.get('display', '')[:60]}' (score={top.get('score', 0):.3f})"
+                )
             if len(misses) > 30:
                 print(f"  ... and {len(misses) - 30} more")
 
