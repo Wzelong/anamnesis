@@ -25,6 +25,10 @@ All notable changes to this project are documented here. The format is based on
 
 - `backend/.env.example` now matches the code: the dev scripts under `backend/scripts/`
   read `DEV_FHIR_BASE_URL` / `DEV_FHIR_TOKEN`, which were undocumented.
+- Stage-2 regression tests no longer abort collection on a clean checkout. They called
+  `pytest.skip()` from `@pytest.mark.parametrize`, which runs at collection time, so a
+  clone without the gitignored `backend/.cache/stage2_output/` failed the whole suite
+  instead of skipping those tests.
 
 ### Removed
 

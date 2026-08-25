@@ -23,11 +23,12 @@ Prerequisites: Python 3.12 (3.11 supported), Node 20+, and [uv](https://docs.ast
 cd backend
 uv sync --extra dev            # or: python -m venv .venv && pip install -e ".[dev]"
 cp .env.example .env           # set GEMINI_API_KEY and CONFIG_SECRET_KEY
-uv run pytest                  # 300+ tests, fully offline, ~2s
+uv run pytest                  # 260+ tests, fully offline, no API keys, ~5s
 uv run python po_main.py       # serves http://0.0.0.0:8042/mcp
 ```
 
-The test suite needs no network and no API keys. `curl http://localhost:8042/healthz` should return `{"status":"ok"}`.
+The test suite needs no network and no API keys. The Stage-2 regression tests skip
+unless `backend/.cache/stage2_output/` holds output from a live run. `curl http://localhost:8042/healthz` should return `{"status":"ok"}`.
 
 ### Review app
 
