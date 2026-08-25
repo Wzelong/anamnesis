@@ -13,6 +13,10 @@ All notable changes to this project are documented here. The format is based on
   unchanged from the 90% measured on the retired OpenAI stack.
 - The augmentation benchmark now runs inside a telemetry run, so per-call tokens, cost,
   and latency are recorded instead of silently discarded.
+- Gemini cost/latency benchmark (`benchmarks/eval-corpus-v1/results/20260825T060000Z/`):
+  $3.61 and 368 s per run over the 18-note corpus, against $0.81 and 1547 s on the
+  retired OpenAI stack — 4.5x more expensive, 4.2x faster. Stage cost shares are
+  within a point of the previous run.
 
 ### Changed
 

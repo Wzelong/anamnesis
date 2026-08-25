@@ -232,13 +232,13 @@
     <p class="dek">A trace of the seven-stage augmentation pipeline against its own telemetry and the 2024–2026 state of the art — narrowing the roadmap to the moves that touch the 94% of errors and 95% of spend that actually matter.</p>
     <div class="meta-row">
       <span class="tag">7-stage pipeline</span>
-      <span class="tag">~800 LLM calls / run</span>
+      <span class="tag">940 LLM calls / run</span>
       <span class="tag">Gemini flash-class · BYOK</span>
       <span class="tag">clinical note → FHIR</span>
     </div>
     <div class="caveat">
       <span class="k">Caveat</span>
-      <span><b>Accuracy re-measured on Gemini (2026-08-25):</b> 89.4% overall [87.0%–92.2%], 88.3% of facts correct in &ge;4 of 5 runs &mdash; statistically unchanged from the 90% on the old stack, despite both the model and the Stage-4 retrieval backend changing. <b>Cost/latency figures below are still from the OpenAI run</b> (<span class="mono">gpt-5.4-mini/nano</span>); the generator for those is still OpenAI-coupled. Relative stage proportions are expected to hold; absolute dollars/seconds do not.</span>
+      <span><b>Accuracy re-measured on Gemini (2026-08-25):</b> 89.4% overall [87.0%–92.2%], 88.3% of facts correct in &ge;4 of 5 runs &mdash; statistically unchanged from the 90% on the old stack, despite both the model and the Stage-4 retrieval backend changing. <b>Cost/latency re-measured too:</b> $3.61/run and 368 s/run, against $0.81 and 1547 s on OpenAI &mdash; <b>4.5&times; more expensive, 4.2&times; faster</b>. Stage shares barely moved; the absolute dollars did. The rise is almost entirely lost prompt caching.</span>
     </div>
 
     <div class="hero-grid">
@@ -246,15 +246,15 @@
         <h3>Cost share by stage</h3>
         <p class="sub">Two LLM-heavy stages carry ~95% of cost and wall-clock. Everything downstream of coding is nearly free.</p>
         <div class="chart" id="chart">
-          <div class="bar-col"><span class="bar-val">&lt;1</span><div class="bar-track"><div class="bar" data-h="3"></div></div><div class="bar-lab">0.5<br>guard</div></div>
+          <div class="bar-col"><span class="bar-val">n/m</span><div class="bar-track"><div class="bar" data-h="3"></div></div><div class="bar-lab">0.5<br>guard</div></div>
           <div class="bar-col"><span class="bar-val">0</span><div class="bar-track"><div class="bar" data-h="2"></div></div><div class="bar-lab">1<br>prep</div></div>
-          <div class="bar-col hot"><span class="bar-val">57%</span><div class="bar-track"><div class="bar hot" data-h="130"></div></div><div class="bar-lab">2<br>extract</div></div>
-          <div class="bar-col"><span class="bar-val">5%</span><div class="bar-track"><div class="bar" data-h="13"></div></div><div class="bar-lab">3<br>merge</div></div>
-          <div class="bar-col hot"><span class="bar-val">38%</span><div class="bar-track"><div class="bar hot" data-h="88"></div></div><div class="bar-lab">4<br>code</div></div>
-          <div class="bar-col"><span class="bar-val">&lt;1</span><div class="bar-track"><div class="bar" data-h="3"></div></div><div class="bar-lab">5<br>recon</div></div>
+          <div class="bar-col hot"><span class="bar-val">54.9%</span><div class="bar-track"><div class="bar hot" data-h="130"></div></div><div class="bar-lab">2<br>extract</div></div>
+          <div class="bar-col"><span class="bar-val">5.1%</span><div class="bar-track"><div class="bar" data-h="13"></div></div><div class="bar-lab">3<br>merge</div></div>
+          <div class="bar-col hot"><span class="bar-val">39.8%</span><div class="bar-track"><div class="bar hot" data-h="94"></div></div><div class="bar-lab">4<br>code</div></div>
+          <div class="bar-col"><span class="bar-val">0.2%</span><div class="bar-track"><div class="bar" data-h="3"></div></div><div class="bar-lab">5<br>recon</div></div>
           <div class="bar-col"><span class="bar-val">0</span><div class="bar-track"><div class="bar" data-h="2"></div></div><div class="bar-lab">6<br>assmbl</div></div>
         </div>
-        <p class="chart-cap">Extract fans out per note × type × sentence-group (~366 calls). Code fans out per candidate (~435 calls) and adds live-API retrieval that telemetry never records.</p>
+        <p class="chart-cap">Measured on Gemini, mean of 3 cold passes. Extract fans out per note × type × sentence-group (380 calls). Code fans out per candidate (518 calls) and adds live-API retrieval that telemetry still never records. Guardrail served from cache, so not measured &mdash; it was &lt;1% before.</p>
       </div>
 
       <div class="panel">
@@ -276,9 +276,9 @@
     <div class="wrap" style="padding:0"></div>
     <div class="kpis">
       <div class="kpi"><div class="n">94%</div><div class="l">of errors live in extract + code</div></div>
-      <div class="kpi"><div class="n">~800</div><div class="l">LLM calls/run, reusing large fixed prompts</div></div>
-      <div class="kpi"><div class="n">0–2</div><div class="l">LLM calls the reconciler typically needs</div></div>
-      <div class="kpi"><div class="n">~$0.13</div><div class="l">per 3-note chart prep (old stack)</div></div>
+      <div class="kpi"><div class="n">940</div><div class="l">LLM calls/run, reusing large fixed prompts</div></div>
+      <div class="kpi"><div class="n">0.1%</div><div class="l">of input tokens hit a prompt cache</div></div>
+      <div class="kpi"><div class="n">$0.60</div><div class="l">per 3-note chart prep (was $0.13)</div></div>
     </div>
   </div>
 </header>
@@ -294,9 +294,9 @@
           <tbody>
             <tr><td><div class="stage-cell"><span class="stripe cool"></span>0.5 · Guardrail</div></td><td><span class="st llm">LLM</span></td><td class="num">~3</td><td class="num">&lt;1%</td><td>Cheap, cached, parallel</td></tr>
             <tr><td><div class="stage-cell"><span class="stripe cool"></span>1 · Preprocess</div></td><td><span class="st det">deterministic</span></td><td class="num">0</td><td class="num">0</td><td>Regex sentence split</td></tr>
-            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>2 · Extract</div></td><td><span class="st llm">LLM</span></td><td class="num">~366</td><td class="num">~57%</td><td>Scan → parse → clean, per note</td></tr>
+            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>2 · Extract</div></td><td><span class="st llm">LLM</span></td><td class="num">380</td><td class="num">54.9%</td><td>Scan → parse → clean, per note</td></tr>
             <tr><td><div class="stage-cell"><span class="stripe mid"></span>3 · Merge</div></td><td><span class="st det">det + sparse LLM</span></td><td class="num">~0–2</td><td class="num">~5%</td><td>Exact-match first</td></tr>
-            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>4 · Code</div></td><td><span class="st llm">LLM + live API</span></td><td class="num">~435</td><td class="num">~38%</td><td>Retrieval untracked in telemetry</td></tr>
+            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>4 · Code</div></td><td><span class="st llm">LLM + live API</span></td><td class="num">518</td><td class="num">39.8%</td><td>Retrieval untracked in telemetry</td></tr>
             <tr><td><div class="stage-cell"><span class="stripe cool"></span>5 · Reconcile</div></td><td><span class="st det">det + sparse LLM</span></td><td class="num">~0–2</td><td class="num">&lt;1%</td><td>The "brain" — and it is cheap</td></tr>
             <tr><td><div class="stage-cell"><span class="stripe cool"></span>6 · Assemble</div></td><td><span class="st det">deterministic</span></td><td class="num">0</td><td class="num">0</td><td>FHIR build + citations</td></tr>
           </tbody>
@@ -374,8 +374,8 @@
         <details class="srow">
           <summary>Efficiency <span class="stag">— the most certain win</span></summary>
           <div class="sbody">
-            <b>Prompt/prefix caching</b> is the biggest, most certain lever for an ~800-call/run pipeline reusing shared instructions. Gemini implicit caching is on by default (~75% realized); explicit caching bills cached input at 10%. Batch API is 50% off but ≤24h SLA. BYOK blocks neither. Speculative decoding and distillation do <em>not</em> transfer to BYOK/API.
-            <div class="apply"><b>Us →</b> restructure prompts invariant-block-first so caching applies; add explicit caching on the shared Stage-2/4 blocks. This hits the 57% / 38% cost buckets and de-risks the added cost of union-sampling.</div>
+            <b>Prompt/prefix caching</b> is the biggest, most certain lever for a 940-call/run pipeline reusing shared instructions. Gemini implicit caching is on by default (~75% realized); explicit caching bills cached input at 10%. Batch API is 50% off but ≤24h SLA. BYOK blocks neither. Speculative decoding and distillation do <em>not</em> transfer to BYOK/API.
+            <div class="apply"><b>Us →</b> restructure prompts invariant-block-first so caching applies; add explicit caching on the shared Stage-2/4 blocks. This hits the 54.9% / 39.8% cost buckets and de-risks the added cost of union-sampling.</div>
           </div>
         </details>
         <details class="srow">
@@ -399,11 +399,11 @@
         <table>
           <thead><tr><th>Move</th><th>Attacks</th><th>Effort</th></tr></thead>
           <tbody>
-            <tr><td>Re-instrument the cost/latency benchmark for Gemini <span class="mono" style="color:var(--ink-3)">(accuracy done)</span></td><td><span class="chips"><span class="chip eff">measurement</span></span></td><td><span class="chip eff">S–M</span></td></tr>
+            <tr><td>Port <span class="mono">run_demo_benchmark.py</span> off OpenAI <span class="mono" style="color:var(--ink-3)">(charts + provenance)</span></td><td><span class="chips"><span class="chip eff">measurement</span></span></td><td><span class="chip eff">S–M</span></td></tr>
             <tr><td>Meter terminology-API latency/errors in telemetry <span class="mono" style="color:var(--ink-3)">(B)</span></td><td><span class="chips"><span class="chip lat">latency visibility</span></span></td><td><span class="chip eff">S</span></td></tr>
             <tr><td>Wire the dead concurrency cap + global in-flight limit <span class="mono" style="color:var(--ink-3)">(A)</span></td><td><span class="chips"><span class="chip lat">latency</span></span></td><td><span class="chip eff">S</span></td></tr>
             <tr><td>Parallelize allergy + family-history coding sub-loops <span class="mono" style="color:var(--ink-3)">(C)</span></td><td><span class="chips"><span class="chip lat">latency</span></span></td><td><span class="chip eff">S</span></td></tr>
-            <tr><td>Turn on Gemini prefix caching (invariant-block-first prompts)</td><td><span class="chips"><span class="chip cost">cost</span><span class="chip lat">latency</span></span></td><td><span class="chip eff">S–M</span></td></tr>
+            <tr><td><b>Turn on Gemini prefix caching</b> — quantified: saves ~$1.37/run ($3.61 &rarr; ~$2.24)</td><td><span class="chips"><span class="chip cost">cost</span></span></td><td><span class="chip eff">S–M</span></td></tr>
           </tbody>
         </table>
       </div>

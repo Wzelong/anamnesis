@@ -4,23 +4,32 @@ A working document for the Prompt Opinion (PO) hand-off discussion. It maps wher
 
 > **Measurement status.** Accuracy has been re-measured on the current Gemini stack (`benchmarks/eval-corpus-v1/results/20260825T050000Z/`, `gemini-3.5-flash` + `gemini-3.1-flash-lite`, 5 runs, 18 notes x 13 charts x 77 facts): **89.4% overall [87.0%, 92.2%], 88.3% of facts correct in >=4 of 5 runs** — statistically unchanged from the 90% measured on the earlier OpenAI stack, despite both the model and the Stage-4 retrieval backend changing since.
 >
-> **The cost and latency figures below are still from the OpenAI run** (`results/20260504T015004Z/`, `gpt-5.4-mini`/`nano`). Relative stage proportions are expected to hold; absolute dollars and seconds do not. The report generator for those figures (`run_demo_benchmark.py`) is still OpenAI-coupled and does not run against the current config — see the quick-wins table.
+> **Cost and latency have also been re-measured** (`results/20260825T060000Z/`, 3 cold passes, captured from `core.telemetry`): **$3.61/run and 368 s/run, against $0.81 and 1547 s on the OpenAI stack — 4.5x more expensive and 4.2x faster.** Stage cost shares barely moved, so the proportions below were sound; the absolute dollars were not. The cost rise is almost entirely lost prompt caching — see §1.
 
 ---
 
 ## 1. Where the pipeline actually spends
 
-The pipeline is a **many-small-LLM-calls** architecture: ~800 model calls per run, almost all reusing large fixed system prompts for small structured outputs.
+The pipeline is a **many-small-LLM-calls** architecture: ~940 model calls per run, almost all reusing large fixed system prompts for small structured outputs — which is exactly why the missing prompt cache costs so much.
 
-| Stage | Nature | Calls/run | Share of cost | Notes |
-|---|---|---:|---:|---|
-| 0.5 Guardrail | LLM (nano), parallel | ~3 | <1% | Cheap, cached, not a bottleneck |
-| 1 Preprocess | Deterministic | 0 | 0 | Regex sentence split; negligible |
-| **2 Extract** | LLM (scan+parse+clean), parallel | **~366** | **~57%** | **Top cost.** Fan-out = notes x types x sentence-groups |
-| 3 Merge | Deterministic + sparse LLM | ~0-2 | ~5% | Exact-match first; LLM only for fuzzy dups |
-| **4 Code** | Live-API retrieval + LLM selector | **~435** | **~38%** | **Second cost; likely top wall-clock** (see below) |
-| 5 Reconcile | Deterministic + sparse LLM | ~0-2 | <1% | Chart-size-insensitive; the "brain," and it is cheap |
-| 6 Assemble | Deterministic | 0 | 0 | FHIR build + citations; negligible |
+Measured on Gemini, mean of 3 cold passes (`results/20260825T060000Z/`). Calls are per run over the 18-note corpus.
+
+| Stage | Nature | Calls/run | $/run | Share of cost | Notes |
+|---|---|---:|---:|---:|---|
+| 0.5 Guardrail | LLM (nano), parallel | not measured | — | — | Served from `.cache/doc_guardrail`; <1% on the prior stack |
+| 1 Preprocess | Deterministic | 0 | 0 | 0 | Regex sentence split; negligible |
+| **2 Extract** | LLM (scan+parse+clean), parallel | **380** | **1.98** | **54.9%** | **Top cost.** Fan-out = notes x types x sentence-groups |
+| 3 Merge | Deterministic + sparse LLM | 40 | 0.18 | 5.1% | Exact-match first; LLM only for fuzzy dups (~2/note) |
+| **4 Code** | Live-API retrieval + LLM selector | **518** | **1.44** | **39.8%** | **Second cost.** Terminology round-trips still unmetered |
+| 5 Reconcile | Deterministic + sparse LLM | 2 | 0.01 | 0.2% | Chart-size-insensitive; the "brain," and it is cheap |
+| 6 Assemble | Deterministic | 0 | 0 | 0 | FHIR build + citations; negligible |
+| **Total** | | **940** | **3.61** | 100% | 368 s wall clock per run |
+
+**Cost rose 4.5x while latency fell 4.2x.** The rise tracks a collapse in reported cache hits: the OpenAI run recorded 1,892,864 cached input tokens per run; this one records **1,116**, roughly 0.1% of the 1,017,552 input tokens sent. Repricing cache-eligible input at $0.15/M instead of $1.50/M would save ~$1.37/run, or $3.61 -> ~$2.24.
+
+> **Read this figure with care.** The dollar amounts are token counts priced against the published rates in `core/pricing.py`, not a billing statement. The cached-token count comes from Gemini's `cached_content_token_count`, which reports *explicit* context caching; if implicit caching is applying without surfacing in that field, real billing is lower than $3.61 and the cache lever is smaller than it looks. The field is populated (it is non-zero), so the plumbing works — but **confirming $3.61 against an actual Gemini bill is a prerequisite before acting on the caching win.**
+
+That does not close the gap by itself. Stage-2 output alone is $1.11/run (123,594 tokens x $9.00/M) and output is never cacheable, so completion pricing sets the floor — returning to OpenAI-era cost needs shorter or fewer completions, not just caching.
 
 **Two stages (Extract + Code) are ~95% of both cost and LLM wall-clock.** Everything downstream of coding is nearly free.
 
@@ -96,12 +105,12 @@ These are concrete, low-ambiguity issues found while tracing the current code. T
 
 ### 3.5 Cross-cutting efficiency — the most certain win
 
-- **Prompt/prefix/context caching** is the biggest, most certain lever for a ~800-call/run pipeline reusing shared instructions. Gemini 2.5 **implicit caching is on by default (~75% realized savings)**; **explicit caching bills cached input at 10% of standard** [Gemini caching docs 2025/2026]. BYOK does not block it.
+- **Prompt/prefix/context caching** is the biggest, most certain lever for a ~940-call/run pipeline reusing shared instructions. Gemini 2.5 **implicit caching is on by default (~75% realized savings)**; **explicit caching bills cached input at 10% of standard** [Gemini caching docs 2025/2026]. BYOK does not block it.
 - **Batch API: 50% off** with a <=24h SLA, combinable with caching — good for non-interactive processing, unusable while a clinician waits [Gemini Batch 2026].
 - **Model cascades** (cheap-first, escalate on low confidence) cut cost 35-85% on benchmarks [FrugalGPT 2023; RouteLLM 2024] — but unvalidated on clinical extraction; treat as experimental.
 - **Does not transfer to BYOK/API:** speculative decoding (serving-side), distillation (needs a hosted fine-tuned model, not the user's stock Gemini key).
 
-**Us:** restructure prompts **invariant-block-first, variable content last** so caching applies; add explicit caching on the shared Stage-2/4 blocks. This directly attacks the 57%/38% cost buckets and de-risks the added cost of union-sampling (§3.1).
+**Us:** restructure prompts **invariant-block-first, variable content last** so caching applies; add explicit caching on the shared Stage-2/4 blocks. This directly attacks the 54.9%/39.8% cost buckets and de-risks the added cost of union-sampling (§3.1).
 
 ### 3.6 Evaluation practices
 
@@ -119,11 +128,11 @@ Two buckets. **Quick wins** are low-risk, mostly code-level, and should land fir
 
 | Move | Attacks | Effort | Notes |
 |---|---|---|---|
-| **Re-instrument the cost/latency benchmark for Gemini** | measurement | S-M | Accuracy is done (2026-08-25, unchanged at 89.4%). Cost/latency are not: `run_demo_benchmark.py` still builds an `AsyncOpenAI` client and reads `settings.openai_*` fields that no longer exist. `core/telemetry.py` + `core/pricing.py` already cover Gemini, so wiring `start_run()` into the benchmark is the cheaper path than porting `usage_tracker.py` |
+| **Port `run_demo_benchmark.py` off OpenAI** (charts, provenance coverage) | measurement | S-M | Accuracy and cost/latency are both re-measured as of 2026-08-25 via `core.telemetry`. What is still missing is the report/chart generator and the provenance-coverage metric: it builds an `AsyncOpenAI` client and reads `settings.openai_*` fields that no longer exist. Also make `clear_pipeline_caches()` clear the guardrail cache |
 | **Meter terminology-API latency/errors in telemetry** (finding B) | latency visibility | S | Make the hidden Stage-4 wall-clock measurable before optimizing it |
 | **Wire the dead concurrency cap + a global in-flight limit** (finding A) | latency (429 tail) | S | Removes rate-limit-induced retries on dense charts |
 | **Parallelize allergy + FMH coding sub-loops** (finding C) | latency | S | Free; `asyncio.gather` the sub-jobs |
-| **Turn on Gemini prefix/context caching** (invariant-block-first prompts) | cost + latency | S-M | Biggest certain efficiency win; hits the 57%/38% buckets |
+| **Turn on Gemini prefix/context caching** (invariant-block-first prompts) | cost | S-M | **Now quantified: only 1,116 of 1,017,552 input tokens/run report as cached. Repricing cache-eligible input saves ~$1.37/run, $3.61 -> ~$2.24.** Biggest single cost lever — but reconcile against an actual bill first (see §1) |
 
 ### Strategic (needs design + eval, discuss with PO)
 

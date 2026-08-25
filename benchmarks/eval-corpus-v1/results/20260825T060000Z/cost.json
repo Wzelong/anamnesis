@@ -1,0 +1,171 @@
+{
+  "n_runs": 3,
+  "models": {
+    "pipeline": "gemini-3.5-flash",
+    "guardrail": "gemini-3.1-flash-lite"
+  },
+  "corpus": "eval-corpus-v1 (18 notes x 13 charts)",
+  "mean_usd_per_run": 3.6126,
+  "mean_wall_seconds_per_run": 367.6,
+  "mean_calls_per_run": 939.7,
+  "mean_by_stage": {
+    "stage2": {
+      "calls": 379.7,
+      "input_tokens": 582435.7,
+      "output_tokens": 123593.7,
+      "cached_tokens": 1116.0,
+      "usd": 1.984482,
+      "llm_ms": 761838.0
+    },
+    "stage3": {
+      "calls": 40.0,
+      "input_tokens": 33061.3,
+      "output_tokens": 14815.0,
+      "cached_tokens": 0.0,
+      "usd": 0.182926,
+      "llm_ms": 84325.3
+    },
+    "stage4": {
+      "calls": 518.0,
+      "input_tokens": 435115.7,
+      "output_tokens": 87192.7,
+      "cached_tokens": 0.0,
+      "usd": 1.437407,
+      "llm_ms": 769543.3
+    },
+    "stage5": {
+      "calls": 2.0,
+      "input_tokens": 989.0,
+      "output_tokens": 697.3,
+      "cached_tokens": 0.0,
+      "usd": 0.007759,
+      "llm_ms": 4078.0
+    }
+  },
+  "per_run": [
+    {
+      "run_id": "run_b3j33knb",
+      "wall_seconds": 471.3,
+      "total_usd": 3.930344,
+      "total_calls": 915,
+      "by_stage": {
+        "stage2": {
+          "calls": 381,
+          "input_tokens": 583517,
+          "output_tokens": 165979,
+          "cached_tokens": 0,
+          "usd": 2.369079,
+          "llm_ms": 867749
+        },
+        "stage3": {
+          "calls": 39,
+          "input_tokens": 32254,
+          "output_tokens": 14758,
+          "cached_tokens": 0,
+          "usd": 0.181202,
+          "llm_ms": 83341
+        },
+        "stage4": {
+          "calls": 493,
+          "input_tokens": 415692,
+          "output_tokens": 83164,
+          "cached_tokens": 0,
+          "usd": 1.372019,
+          "llm_ms": 715015
+        },
+        "stage5": {
+          "calls": 2,
+          "input_tokens": 1001,
+          "output_tokens": 727,
+          "cached_tokens": 0,
+          "usd": 0.008044,
+          "llm_ms": 4201
+        }
+      }
+    },
+    {
+      "run_id": "run_h44pa7dz",
+      "wall_seconds": 326.0,
+      "total_usd": 3.512471,
+      "total_calls": 961,
+      "by_stage": {
+        "stage2": {
+          "calls": 383,
+          "input_tokens": 591229,
+          "output_tokens": 104062,
+          "cached_tokens": 1674,
+          "usd": 1.821132,
+          "llm_ms": 746927
+        },
+        "stage3": {
+          "calls": 41,
+          "input_tokens": 33775,
+          "output_tokens": 15025,
+          "cached_tokens": 0,
+          "usd": 0.185885,
+          "llm_ms": 87684
+        },
+        "stage4": {
+          "calls": 535,
+          "input_tokens": 448259,
+          "output_tokens": 91714,
+          "cached_tokens": 0,
+          "usd": 1.497823,
+          "llm_ms": 857412
+        },
+        "stage5": {
+          "calls": 2,
+          "input_tokens": 1001,
+          "output_tokens": 681,
+          "cached_tokens": 0,
+          "usd": 0.007631,
+          "llm_ms": 3965
+        }
+      }
+    },
+    {
+      "run_id": "run_ncm5n6z7",
+      "wall_seconds": 305.6,
+      "total_usd": 3.394908,
+      "total_calls": 943,
+      "by_stage": {
+        "stage2": {
+          "calls": 375,
+          "input_tokens": 572561,
+          "output_tokens": 100740,
+          "cached_tokens": 1674,
+          "usd": 1.763236,
+          "llm_ms": 670838
+        },
+        "stage3": {
+          "calls": 40,
+          "input_tokens": 33155,
+          "output_tokens": 14662,
+          "cached_tokens": 0,
+          "usd": 0.181691,
+          "llm_ms": 81951
+        },
+        "stage4": {
+          "calls": 526,
+          "input_tokens": 441396,
+          "output_tokens": 86700,
+          "cached_tokens": 0,
+          "usd": 1.442378,
+          "llm_ms": 736203
+        },
+        "stage5": {
+          "calls": 2,
+          "input_tokens": 965,
+          "output_tokens": 684,
+          "cached_tokens": 0,
+          "usd": 0.007603,
+          "llm_ms": 4068
+        }
+      }
+    }
+  ],
+  "caveats": [
+    "Stage 0.5 guardrail served entirely from its JsonCache (.cache/doc_guardrail); zero LLM calls recorded. Was <1% of cost on the prior stack.",
+    "Stage-2/3 caches cleared before every pass."
+  ]
+}
