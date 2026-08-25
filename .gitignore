@@ -45,6 +45,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Local machine-specific Claude Code settings (skills under .claude/ stay tracked)
+.claude/settings.local.json
+
 # Embeddings & indexes
 embeddings/
 data/indexes/

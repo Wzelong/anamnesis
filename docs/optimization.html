@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+<title>Anamnesis — Pipeline Bottlenecks & Next Steps</title>
+<style>
+  :root {
+    --ground:#F6F7F9; --surface:#FFFFFF; --surface-2:#EEF1F5;
+    --ink:#14181F; --ink-2:#48535F; --ink-3:#7A8590;
+    --line:#DBE0E7; --line-2:#C7CED7;
+    --accent:#0B6E7A; --accent-2:#0E8494; --accent-soft:rgba(11,110,122,.10);
+    --crit:#B23B33; --crit-soft:rgba(178,59,51,.12);
+    --warn:#A2670F; --warn-soft:rgba(162,103,15,.13);
+    --good:#2E7D57; --good-soft:rgba(46,125,87,.12);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    --maxw:1060px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#0D1015; --surface:#141922; --surface-2:#1B222D;
+      --ink:#E7EBF0; --ink-2:#A6B1BF; --ink-3:#6C7887;
+      --line:#252D39; --line-2:#333D4B;
+      --accent:#34B4C2; --accent-2:#4FC7D3; --accent-soft:rgba(52,180,194,.13);
+      --crit:#E0736A; --crit-soft:rgba(224,115,106,.15);
+      --warn:#D29B4A; --warn-soft:rgba(210,155,74,.15);
+      --good:#54B487; --good-soft:rgba(84,180,135,.15);
+    }
+  }
+  :root[data-theme="light"]{
+    --ground:#F6F7F9; --surface:#FFFFFF; --surface-2:#EEF1F5;
+    --ink:#14181F; --ink-2:#48535F; --ink-3:#7A8590;
+    --line:#DBE0E7; --line-2:#C7CED7;
+    --accent:#0B6E7A; --accent-2:#0E8494; --accent-soft:rgba(11,110,122,.10);
+    --crit:#B23B33; --crit-soft:rgba(178,59,51,.12);
+    --warn:#A2670F; --warn-soft:rgba(162,103,15,.13);
+    --good:#2E7D57; --good-soft:rgba(46,125,87,.12);
+  }
+  :root[data-theme="dark"]{
+    --ground:#0D1015; --surface:#141922; --surface-2:#1B222D;
+    --ink:#E7EBF0; --ink-2:#A6B1BF; --ink-3:#6C7887;
+    --line:#252D39; --line-2:#333D4B;
+    --accent:#34B4C2; --accent-2:#4FC7D3; --accent-soft:rgba(52,180,194,.13);
+    --crit:#E0736A; --crit-soft:rgba(224,115,106,.15);
+    --warn:#D29B4A; --warn-soft:rgba(210,155,74,.15);
+    --good:#54B487; --good-soft:rgba(84,180,135,.15);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:16.5px; line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 clamp(20px,5vw,48px)}
+  a{color:var(--accent); text-underline-offset:2px}
+
+  /* ---- eyebrow / labels ---- */
+  .eyebrow{
+    font-family:var(--mono); font-size:12px; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent); font-weight:600;
+  }
+  .mono{font-family:var(--mono)}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* ---- header ---- */
+  header{
+    border-bottom:1px solid var(--line);
+    background:
+      radial-gradient(120% 140% at 88% -10%, var(--accent-soft), transparent 60%),
+      var(--surface);
+  }
+  .head-inner{padding:clamp(40px,7vw,76px) 0 clamp(30px,4vw,44px)}
+  h1{
+    font-family:var(--serif); font-weight:600; letter-spacing:-.01em;
+    font-size:clamp(30px,5.4vw,52px); line-height:1.05; margin:.5rem 0 0;
+    text-wrap:balance; max-width:20ch;
+  }
+  .dek{
+    font-size:clamp(16px,2.2vw,19px); color:var(--ink-2);
+    max-width:64ch; margin:1.1rem 0 0; line-height:1.55;
+  }
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:8px 10px; margin-top:1.5rem;
+    font-family:var(--mono); font-size:12px; color:var(--ink-3);
+  }
+  .tag{
+    border:1px solid var(--line-2); border-radius:999px;
+    padding:3px 11px; color:var(--ink-2); background:var(--surface);
+  }
+
+  /* ---- caveat banner ---- */
+  .caveat{
+    display:flex; gap:12px; align-items:flex-start;
+    background:var(--warn-soft); border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);
+    border-radius:10px; padding:14px 16px; margin:26px 0 0;
+    font-size:14.5px; color:var(--ink); line-height:1.5;
+  }
+  .caveat .k{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--warn); font-weight:700; white-space:nowrap; padding-top:2px}
+
+  /* ---- hero panels ---- */
+  .hero-grid{
+    display:grid; grid-template-columns:1.35fr 1fr; gap:22px;
+    margin:34px 0 8px;
+  }
+  @media (max-width:760px){ .hero-grid{grid-template-columns:1fr} }
+  .panel{
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; padding:22px 22px 20px;
+  }
+  .panel h3{
+    margin:0 0 4px; font-family:var(--mono); font-size:12px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-3); font-weight:600;
+  }
+  .panel .sub{font-size:13px; color:var(--ink-3); margin:0 0 18px}
+
+  /* cost bar chart */
+  .chart{display:grid; grid-template-columns:repeat(7,1fr); gap:8px; align-items:end; height:176px}
+  .bar-col{display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:8px}
+  .bar-track{width:100%; height:132px; display:flex; align-items:flex-end; justify-content:center}
+  .bar{
+    width:74%; max-width:34px; border-radius:5px 5px 2px 2px;
+    background:var(--surface-2); border:1px solid var(--line-2);
+    min-height:3px; transition:height .9s cubic-bezier(.2,.7,.2,1);
+  }
+  .bar.hot{background:linear-gradient(180deg,var(--accent-2),var(--accent)); border-color:transparent;
+    box-shadow:0 0 0 1px var(--accent-soft), 0 6px 18px -8px var(--accent)}
+  .bar-lab{font-family:var(--mono); font-size:10.5px; color:var(--ink-3); text-align:center; line-height:1.25}
+  .bar-val{font-family:var(--mono); font-size:11px; font-weight:700; color:var(--ink-2)}
+  .bar-col.hot .bar-val{color:var(--accent)}
+  .chart-cap{font-size:12.5px; color:var(--ink-3); margin:16px 0 0; line-height:1.45}
+
+  /* error split */
+  .split{display:flex; height:40px; border-radius:8px; overflow:hidden; border:1px solid var(--line)}
+  .seg{display:flex; align-items:center; justify-content:center; color:#fff; font-family:var(--mono); font-size:12.5px; font-weight:700}
+  .seg.e{background:var(--crit)} .seg.c{background:var(--warn)} .seg.r{background:var(--good)}
+  .legend{display:flex; flex-direction:column; gap:12px; margin-top:18px}
+  .leg-row{display:flex; gap:11px; align-items:baseline; font-size:14px}
+  .dot{width:10px; height:10px; border-radius:3px; flex:none; position:relative; top:2px}
+  .dot.e{background:var(--crit)} .dot.c{background:var(--warn)} .dot.r{background:var(--good)}
+  .leg-row b{font-family:var(--mono); font-variant-numeric:tabular-nums; font-weight:700}
+  .leg-row .lx{color:var(--ink-2)}
+
+  .kpis{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap}
+  .kpi{flex:1; min-width:120px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
+  .kpi .n{font-family:var(--mono); font-size:23px; font-weight:700; letter-spacing:-.02em; color:var(--ink)}
+  .kpi .l{font-size:12.5px; color:var(--ink-3); margin-top:3px; line-height:1.35}
+
+  /* ---- sections ---- */
+  section{padding:clamp(38px,6vw,62px) 0; border-bottom:1px solid var(--line)}
+  .sec-head{display:flex; gap:14px; align-items:baseline; margin:0 0 6px}
+  .sec-num{font-family:var(--mono); font-size:13px; color:var(--accent); font-weight:700}
+  h2{font-family:var(--serif); font-weight:600; font-size:clamp(22px,3.4vw,31px); letter-spacing:-.01em; margin:0; line-height:1.15; text-wrap:balance}
+  .lead{font-size:16.5px; color:var(--ink-2); max-width:70ch; margin:12px 0 26px; line-height:1.6}
+  .lead b{color:var(--ink); font-weight:600}
+
+  /* ---- tables ---- */
+  .scroll{overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:var(--surface)}
+  table{border-collapse:collapse; width:100%; font-size:14px; min-width:520px}
+  th,td{text-align:left; padding:12px 15px; border-bottom:1px solid var(--line); vertical-align:top}
+  thead th{font-family:var(--mono); font-size:11px; letter-spacing:.07em; text-transform:uppercase; color:var(--ink-3); font-weight:600; background:var(--surface-2); position:sticky; top:0}
+  tbody tr:last-child td{border-bottom:none}
+  td.num{font-family:var(--mono); font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap}
+  .stage-cell{display:flex; align-items:center; gap:10px}
+  .stripe{width:4px; height:20px; border-radius:2px; flex:none; background:var(--line-2)}
+  .stripe.hot{background:var(--crit)} .stripe.mid{background:var(--warn)} .stripe.cool{background:var(--good)}
+  tr.hot td{background:var(--crit-soft)}
+  .st{font-family:var(--mono); font-size:11px; padding:2px 8px; border-radius:5px; font-weight:600; white-space:nowrap; display:inline-block}
+  .st.det{background:var(--surface-2); color:var(--ink-3); border:1px solid var(--line)}
+  .st.llm{background:var(--accent-soft); color:var(--accent); border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+
+  /* ---- findings cards ---- */
+  .cards{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  @media (max-width:720px){ .cards{grid-template-columns:1fr} }
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:18px 19px; border-left:3px solid var(--line-2)}
+  .card.warn{border-left-color:var(--warn)} .card.crit{border-left-color:var(--crit)}
+  .card .cid{font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent)}
+  .card h4{margin:6px 0 8px; font-size:16px; font-weight:650; line-height:1.3}
+  .card p{margin:0; font-size:14px; color:var(--ink-2); line-height:1.55}
+  .card .ev{display:block; margin-top:11px; font-family:var(--mono); font-size:11.5px; color:var(--ink-3); word-break:break-word}
+
+  /* ---- SOTA blocks ---- */
+  .sota{display:flex; flex-direction:column; gap:14px}
+  .srow{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:0; overflow:hidden}
+  .srow summary{
+    list-style:none; cursor:pointer; padding:16px 19px; display:flex; gap:14px; align-items:baseline;
+    font-weight:600; font-size:16px;
+  }
+  .srow summary::-webkit-details-marker{display:none}
+  .srow summary::after{content:"+"; margin-left:auto; font-family:var(--mono); color:var(--ink-3); font-size:18px; font-weight:400}
+  .srow[open] summary::after{content:"–"}
+  .srow summary:focus-visible{outline:2px solid var(--accent); outline-offset:-2px}
+  .stag{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+  .sbody{padding:0 19px 18px; font-size:14.5px; color:var(--ink-2); line-height:1.6}
+  .sbody .apply{margin-top:10px; padding:12px 14px; background:var(--accent-soft); border-radius:9px; color:var(--ink); font-size:14px}
+  .sbody .apply b{color:var(--accent)}
+
+  /* ---- ranked moves ---- */
+  .chips{display:flex; gap:6px; flex-wrap:wrap}
+  .chip{font-family:var(--mono); font-size:10.5px; letter-spacing:.03em; padding:2px 8px; border-radius:5px; font-weight:600; white-space:nowrap}
+  .chip.acc{background:var(--good-soft); color:var(--good)}
+  .chip.lat{background:var(--accent-soft); color:var(--accent)}
+  .chip.cost{background:var(--warn-soft); color:var(--warn)}
+  .chip.eff{background:var(--surface-2); color:var(--ink-2); border:1px solid var(--line)}
+  .grp-label{display:flex; align-items:center; gap:10px; margin:0 0 14px; font-family:var(--mono); font-size:12px; letter-spacing:.08em; text-transform:uppercase; font-weight:700}
+  .grp-label.q{color:var(--good)} .grp-label.s{color:var(--accent)}
+  .grp-label .ln{height:1px; background:var(--line); flex:1}
+
+  /* ---- questions ---- */
+  ol.q{counter-reset:q; list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:14px}
+  ol.q li{counter-increment:q; position:relative; padding-left:46px; font-size:15.5px; color:var(--ink-2); line-height:1.55}
+  ol.q li::before{content:"Q"counter(q); position:absolute; left:0; top:1px; font-family:var(--mono); font-size:12px; font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:7px; padding:4px 8px}
+  ol.q li b{color:var(--ink); font-weight:600}
+
+  /* ---- footer ---- */
+  footer{padding:34px 0 60px; color:var(--ink-3); font-size:13px; line-height:1.6}
+  footer .src{font-size:12.5px; margin-top:10px}
+  footer code{font-family:var(--mono); font-size:12px; background:var(--surface-2); padding:2px 6px; border-radius:5px; color:var(--ink-2)}
+
+  @media (prefers-reduced-motion:reduce){ .bar{transition:none} }
+</style>
+
+<header>
+  <div class="wrap head-inner">
+    <div class="eyebrow">Anamnesis · engineering brief for the PO team</div>
+    <h1>Where the pipeline spends, where it fails, and what to do next</h1>
+    <p class="dek">A trace of the seven-stage augmentation pipeline against its own telemetry and the 2024–2026 state of the art — narrowing the roadmap to the moves that touch the 94% of errors and 95% of spend that actually matter.</p>
+    <div class="meta-row">
+      <span class="tag">7-stage pipeline</span>
+      <span class="tag">~800 LLM calls / run</span>
+      <span class="tag">Gemini flash-class · BYOK</span>
+      <span class="tag">clinical note → FHIR</span>
+    </div>
+    <div class="caveat">
+      <span class="k">Caveat</span>
+      <span>Absolute cost/latency figures come from the checked-in benchmark on the <b>earlier OpenAI stack</b> (<span class="mono">gpt-5.4-mini/nano</span>). Relative stage proportions and the error split still hold; absolute dollars/seconds do not. <b>A Gemini re-run is next-step #1.</b></span>
+    </div>
+
+    <div class="hero-grid">
+      <div class="panel">
+        <h3>Cost share by stage</h3>
+        <p class="sub">Two LLM-heavy stages carry ~95% of cost and wall-clock. Everything downstream of coding is nearly free.</p>
+        <div class="chart" id="chart">
+          <div class="bar-col"><span class="bar-val">&lt;1</span><div class="bar-track"><div class="bar" data-h="3"></div></div><div class="bar-lab">0.5<br>guard</div></div>
+          <div class="bar-col"><span class="bar-val">0</span><div class="bar-track"><div class="bar" data-h="2"></div></div><div class="bar-lab">1<br>prep</div></div>
+          <div class="bar-col hot"><span class="bar-val">57%</span><div class="bar-track"><div class="bar hot" data-h="130"></div></div><div class="bar-lab">2<br>extract</div></div>
+          <div class="bar-col"><span class="bar-val">5%</span><div class="bar-track"><div class="bar" data-h="13"></div></div><div class="bar-lab">3<br>merge</div></div>
+          <div class="bar-col hot"><span class="bar-val">38%</span><div class="bar-track"><div class="bar hot" data-h="88"></div></div><div class="bar-lab">4<br>code</div></div>
+          <div class="bar-col"><span class="bar-val">&lt;1</span><div class="bar-track"><div class="bar" data-h="3"></div></div><div class="bar-lab">5<br>recon</div></div>
+          <div class="bar-col"><span class="bar-val">0</span><div class="bar-track"><div class="bar" data-h="2"></div></div><div class="bar-lab">6<br>assmbl</div></div>
+        </div>
+        <p class="chart-cap">Extract fans out per note × type × sentence-group (~366 calls). Code fans out per candidate (~435 calls) and adds live-API retrieval that telemetry never records.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Where accuracy is lost</h3>
+        <p class="sub">The reconciliation "brain" is the least error-prone stage. The front half owns the failures.</p>
+        <div class="split" role="img" aria-label="Error attribution: 62% extraction miss, 32% coding miss, 5% reconcile">
+          <div class="seg e" style="flex:62">62%</div>
+          <div class="seg c" style="flex:32">32%</div>
+          <div class="seg r" style="flex:5" title="Reconcile 5%"></div>
+        </div>
+        <div class="legend">
+          <div class="leg-row"><span class="dot e"></span><span><b>62%</b> <span class="lx">— extraction miss · fact never reached the pipeline · Stage 2</span></span></div>
+          <div class="leg-row"><span class="dot c"></span><span><b>32%</b> <span class="lx">— coding miss · right fact, wrong code · Stage 4</span></span></div>
+          <div class="leg-row"><span class="dot r"></span><span><b>5%</b> <span class="lx">— reconciler miss · right fact & code, wrong class · Stage 5</span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="wrap" style="padding:0"></div>
+    <div class="kpis">
+      <div class="kpi"><div class="n">94%</div><div class="l">of errors live in extract + code</div></div>
+      <div class="kpi"><div class="n">~800</div><div class="l">LLM calls/run, reusing large fixed prompts</div></div>
+      <div class="kpi"><div class="n">0–2</div><div class="l">LLM calls the reconciler typically needs</div></div>
+      <div class="kpi"><div class="n">~$0.13</div><div class="l">per 3-note chart prep (old stack)</div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">01</span><h2>Where the pipeline actually spends</h2></div>
+      <p class="lead">It is a <b>many-small-LLM-calls</b> architecture. The deterministic stages (preprocess, merge, reconcile, assemble) are effectively free; the two that call the model per-item dominate everything.</p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Stage</th><th>Nature</th><th class="num">Calls/run</th><th class="num">Cost share</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td><div class="stage-cell"><span class="stripe cool"></span>0.5 · Guardrail</div></td><td><span class="st llm">LLM</span></td><td class="num">~3</td><td class="num">&lt;1%</td><td>Cheap, cached, parallel</td></tr>
+            <tr><td><div class="stage-cell"><span class="stripe cool"></span>1 · Preprocess</div></td><td><span class="st det">deterministic</span></td><td class="num">0</td><td class="num">0</td><td>Regex sentence split</td></tr>
+            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>2 · Extract</div></td><td><span class="st llm">LLM</span></td><td class="num">~366</td><td class="num">~57%</td><td>Scan → parse → clean, per note</td></tr>
+            <tr><td><div class="stage-cell"><span class="stripe mid"></span>3 · Merge</div></td><td><span class="st det">det + sparse LLM</span></td><td class="num">~0–2</td><td class="num">~5%</td><td>Exact-match first</td></tr>
+            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>4 · Code</div></td><td><span class="st llm">LLM + live API</span></td><td class="num">~435</td><td class="num">~38%</td><td>Retrieval untracked in telemetry</td></tr>
+            <tr><td><div class="stage-cell"><span class="stripe cool"></span>5 · Reconcile</div></td><td><span class="st det">det + sparse LLM</span></td><td class="num">~0–2</td><td class="num">&lt;1%</td><td>The "brain" — and it is cheap</td></tr>
+            <tr><td><div class="stage-cell"><span class="stripe cool"></span>6 · Assemble</div></td><td><span class="st det">deterministic</span></td><td class="num">0</td><td class="num">0</td><td>FHIR build + citations</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">02</span><h2>Code-level findings, verified against source</h2></div>
+      <p class="lead">Concrete, low-ambiguity issues found tracing the current code. These are the cheapest wins — land them before any architectural change.</p>
+      <div class="cards">
+        <div class="card crit">
+          <span class="cid">A · dead concurrency cap</span>
+          <h4>Extraction has no backpressure</h4>
+          <p><span class="mono">extract_candidates_batch</span> takes <span class="mono">max_concurrent=50</span> and its docstring claims a semaphore bound — but the body is a bare <span class="mono">asyncio.gather</span>. On dense charts, hundreds of Gemini calls burst at once → 429s → retry tail.</p>
+          <span class="ev">core/extraction.py:558–577 · config.py:18 unused</span>
+        </div>
+        <div class="card crit">
+          <span class="cid">B · blind spot</span>
+          <h4>Terminology-API latency is invisible</h4>
+          <p>Telemetry wraps only LLM calls. Stage 4's live UMLS/RxNav/NLM round-trips — globally throttled to 6 concurrent, 25s timeouts, multi-variant + backoff — are never recorded. The likely top wall-clock sink is unmeasured.</p>
+          <span class="ev">core/telemetry.py record_call · core/retrieval.py concurrency=6</span>
+        </div>
+        <div class="card warn">
+          <span class="cid">C · serial sub-loops</span>
+          <h4>Allergy &amp; family-history coding run sequentially</h4>
+          <p>AllergyIntolerance codes substance then reaction in sequence; FamilyMemberHistory codes each condition in an <span class="mono">await</span> loop. The Condition/Med/Procedure path already parallelizes — these don't.</p>
+          <span class="ev">core/code_candidates.py — allergy + FMH paths</span>
+        </div>
+        <div class="card warn">
+          <span class="cid">D · nominal tiering</span>
+          <h4>The "stronger model" is never wired</h4>
+          <p><span class="mono">gemini_model_smart == gemini_model_fast</span>. The design point of routing a stronger model to ambiguous reconciliation is nominal only. No harm today, but no quality headroom on the hardest calls either.</p>
+          <span class="ev">config.py:11–12 · services/proposals.py</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">03</span><h2>How each stage compares to the state of the art</h2></div>
+      <p class="lead">2024–2026 SOTA, mapped onto our error profile. Expand a stage for the evidence and the takeaway. Every claim is cited in <span class="mono">docs/OPTIMIZATION.md</span>.</p>
+      <div class="sota">
+        <details class="srow" open>
+          <summary>Extraction <span class="stag">— our #1 error source (62%)</span></summary>
+          <div class="sbody">
+            Honest cross-domain strict-span F1 for GPT-4o-class models is <b>~53–57</b> (NCER), not the 0.9+ narrow studies report. The field's recall lever is <b>multi-sample then take the UNION</b> — majority-vote self-consistency adds ~0.7pp at 5× cost and is fading. Structured decoding guarantees output <em>shape</em>, not <em>coverage</em>.
+            <div class="apply"><b>Us →</b> the 62% "never extracted" is almost certainly the per-note scan step dropping/misrouting a sentence before any parse sees it — not long-context loss (our inputs are short). Highest-leverage fix: union-sample scan/parse at temp&gt;0 and let the clean pass absorb precision.</div>
+          </div>
+        </details>
+        <details class="srow">
+          <summary>Coding / entity linking <span class="stag">— our #2 error source (32%)</span></summary>
+          <div class="sbody">
+            The field converged on exactly our shape — <b>retrieve candidates, LLM disambiguates</b>. Hard caveat: the reranker is capped by candidate recall — it can't pick a code retrieval never surfaced. Plain lexical retrieval is a surprisingly strong candidate generator; no decisive SapBERT successor, though BioLORD-2023 modestly beats it. LOINC/lab normalization is the hardest area.
+            <div class="apply"><b>Us →</b> diagnose the 32% as <b>retrieval-recall vs rerank failure</b> (opposite fixes) with a recall@K ablation on our own error set. If retrieval is the gap, add a hybrid lexical+dense index — not a swap; BioLORD-2023 if an encoder returns.</div>
+          </div>
+        </details>
+        <details class="srow">
+          <summary>Reconciliation <span class="stag">— correctly low priority (5%)</span></summary>
+          <div class="sbody">
+            No paper frames the exact NEW/DUPLICATE/UPDATING/CONFLICTING task — itself a finding. The closest analogue, VeriFact ("decompose → retrieve patient facts → LLM-judge"), beats inter-clinician agreement. Our deterministic-match-then-LLM design is aligned with, and arguably ahead of, published med-rec work.
+            <div class="apply"><b>Us →</b> at 5% of errors, leave it. If it ever climbs, look at temporal update-vs-conflict edge cases first — and that's the natural place to finally wire the stronger model (finding D).</div>
+          </div>
+        </details>
+        <details class="srow">
+          <summary>LLM → FHIR assembly <span class="stag">— our design is validated</span></summary>
+          <div class="sbody">
+            Element extraction is accurate, but <b>profile conformance of directly-emitted FHIR is where LLMs fail</b>: a frontier model emitting raw FHIR produced 248 validation errors across one patient vs zero for a deterministic converter. Infherno moved the LLM off raw-JSON emission for the same reason.
+            <div class="apply"><b>Us →</b> our LLM-candidates → deterministic-assembly choice is the supported one. Add FHIR <span class="mono">$validate</span> against US Core 6.1.0 + mCODE STU4 in CI (slicing + bindings, not just base schema) — it lines up with the <span class="mono">validate_before_write</span> gate already stubbed.</div>
+          </div>
+        </details>
+        <details class="srow">
+          <summary>Efficiency <span class="stag">— the most certain win</span></summary>
+          <div class="sbody">
+            <b>Prompt/prefix caching</b> is the biggest, most certain lever for an ~800-call/run pipeline reusing shared instructions. Gemini implicit caching is on by default (~75% realized); explicit caching bills cached input at 10%. Batch API is 50% off but ≤24h SLA. BYOK blocks neither. Speculative decoding and distillation do <em>not</em> transfer to BYOK/API.
+            <div class="apply"><b>Us →</b> restructure prompts invariant-block-first so caching applies; add explicit caching on the shared Stage-2/4 blocks. This hits the 57% / 38% cost buckets and de-risks the added cost of union-sampling.</div>
+          </div>
+        </details>
+        <details class="srow">
+          <summary>Evaluation <span class="stag">— sharpen the measuring stick</span></summary>
+          <div class="sbody">
+            Field norm: per-type P/R/F1 (exact + relaxed, micro + macro), <b>granularity-tolerant hierarchical code metrics (hF1)</b> instead of flat exact-code accuracy, ≥2-clinician adjudication with reported κ, TRIPOD-LLM reporting.
+            <div class="apply"><b>Us →</b> 77 facts is under-powered for stable per-type F1 (bootstrap the CIs). 5-run consistency is above field median but is the floor. hF1 closes the "inconclusive by construction" gap our own DIRECTION appendix already flags.</div>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">04</span><h2>Ranked next steps</h2></div>
+      <p class="lead">Two buckets. <b>Quick wins</b> are low-risk and mostly code-level — land them first. <b>Strategic</b> moves need design and eval, and are where the PO conversation matters. Priority follows the errors: moves touching extract + code win.</p>
+
+      <div class="grp-label q"><span>Quick wins · this sprint · high certainty</span><span class="ln"></span></div>
+      <div class="scroll" style="margin-bottom:26px">
+        <table>
+          <thead><tr><th>Move</th><th>Attacks</th><th>Effort</th></tr></thead>
+          <tbody>
+            <tr><td>Re-run the benchmark on the Gemini stack</td><td><span class="chips"><span class="chip eff">measurement</span></span></td><td><span class="chip eff">S</span></td></tr>
+            <tr><td>Meter terminology-API latency/errors in telemetry <span class="mono" style="color:var(--ink-3)">(B)</span></td><td><span class="chips"><span class="chip lat">latency visibility</span></span></td><td><span class="chip eff">S</span></td></tr>
+            <tr><td>Wire the dead concurrency cap + global in-flight limit <span class="mono" style="color:var(--ink-3)">(A)</span></td><td><span class="chips"><span class="chip lat">latency</span></span></td><td><span class="chip eff">S</span></td></tr>
+            <tr><td>Parallelize allergy + family-history coding sub-loops <span class="mono" style="color:var(--ink-3)">(C)</span></td><td><span class="chips"><span class="chip lat">latency</span></span></td><td><span class="chip eff">S</span></td></tr>
+            <tr><td>Turn on Gemini prefix caching (invariant-block-first prompts)</td><td><span class="chips"><span class="chip cost">cost</span><span class="chip lat">latency</span></span></td><td><span class="chip eff">S–M</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grp-label s"><span>Strategic · needs design + eval · discuss with PO</span><span class="ln"></span></div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Move</th><th>Attacks</th><th>Effort</th><th>Evidence</th></tr></thead>
+          <tbody>
+            <tr><td>Union multi-sampling of scan/parse (dedup absorbs precision)</td><td><span class="chips"><span class="chip acc">62% extract miss</span></span></td><td><span class="chip eff">M</span></td><td>Pilot-measure</td></tr>
+            <tr><td>Recall@K ablation of Stage 4 → hybrid lexical+dense retrieval</td><td><span class="chips"><span class="chip acc">32% coding miss</span></span></td><td><span class="chip eff">M–H</span></td><td>Strong / measure</td></tr>
+            <tr><td>Structured decoding (schema / function calling) on extract + code</td><td><span class="chips"><span class="chip acc">reliability</span></span></td><td><span class="chip eff">L–M</span></td><td>Verified</td></tr>
+            <tr><td>FHIR <span class="mono">$validate</span> (US Core + mCODE) + terminology check in CI</td><td><span class="chips"><span class="chip acc">conformance</span></span></td><td><span class="chip eff">L–M</span></td><td>Strong</td></tr>
+            <tr><td>Eval upgrade: hF1 + grow gold set ~200+ + per-type F1 + ≥2-clinician κ</td><td><span class="chips"><span class="chip eff">measurement</span></span></td><td><span class="chip eff">L–M</span></td><td>Strong</td></tr>
+            <tr><td>Batch API (50% off) for offline paths; Flash-Lite→Flash cascade</td><td><span class="chips"><span class="chip cost">cost</span></span></td><td><span class="chip eff">M</span></td><td>Batch certain / cascade exp.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><span class="sec-num">05</span><h2>Open questions for the discussion</h2></div>
+      <p class="lead">The calls that shape the roadmap and aren't ours to make alone.</p>
+      <ol class="q">
+        <li><b>Retrieval end-state.</b> Commit to live-API-only (zero hosting, always-current, but network-bound and unmetered), or fund a hybrid with a local dense index (better recall, but staleness + hosting)? The recall@K ablation decides this — not intuition.</li>
+        <li><b>Latency budget.</b> Chart prep is interactive, so the 50%-off Batch API only helps offline paths. Is a pre-fetch / pre-visit path worth building?</li>
+        <li><b>Model policy under BYOK.</b> Wire a cheap→strong cascade (and own the clinical-validation cost), or keep a single model for auditability?</li>
+        <li><b>Eval investment.</b> Who annotates the larger gold set, and do we adopt TRIPOD-LLM reporting for clinical-stakeholder credibility?</li>
+        <li><b>The <span class="mono">validate_before_write</span> gate.</b> Ship the <span class="mono">$validate</span> hard-gate on by default, or keep it opportunistic — attach conformance, never block?</li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    Full analysis with inline citations lives in the repo at <code>docs/OPTIMIZATION.md</code>. Benchmark source: <code>benchmarks/eval-corpus-v1/results/20260504T015004Z/</code>.
+    <div class="src">Sources span NCER 2024 · JAMIA 2025 · VeriFact 2025 · Infherno 2025 · John Snow Labs 2026 · Gemini caching 2025/26 · TRIPOD-LLM (Nature Medicine 2025) — see the markdown for the full list.</div>
+  </div>
+</footer>
+
+<script>
+  // Animate bars from zero once, respecting reduced motion.
+  (function(){
+    var bars = document.querySelectorAll('#chart .bar');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    bars.forEach(function(b){
+      var h = b.getAttribute('data-h') + 'px';
+      if (reduce){ b.style.height = h; return; }
+      b.style.height = '3px';
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ b.style.height = h; }); });
+    });
+  })();
+</script>
+
+</body>
+</html>

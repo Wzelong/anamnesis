@@ -102,7 +102,7 @@ A `RunContext` is established in a `ContextVar` at `start_run` and torn down at 
 
 ### Tests (`tests/`)
 
-Stage- and unit-level tests run without network: `test_extraction.py`, `test_preprocess.py`, `test_stage2_regression.py`, `test_coding_warmup.py`, `test_doc_guardrails.py`, `test_byok.py`, `test_usage.py`.
+Stage- and unit-level tests run without network: `test_extraction.py`, `test_preprocess.py`, `test_stage2_regression.py`, `test_doc_guardrails.py`, `test_byok.py`, `test_usage.py`, and 30+ more (`uv run pytest`).
 
 ## Review app (`mcp-app/`)
 

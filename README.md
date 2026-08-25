@@ -2,7 +2,7 @@
 
 > The data wasn't missing — it was unstructured. Now it's not.
 
-A FHIR augmentation **MCP server** for the **Agents Assemble: The Healthcare AI Endgame** hackathon (Option 1: Build a Superpower). Anamnesis reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them.
+A FHIR augmentation **MCP server**. Anamnesis reads clinical notes against an existing FHIR record, proposes additions and corrections with full source provenance, and writes them back to the FHIR server only after a clinician approves them. It is an open-source, configurable clinical-extraction framework (see [DIRECTION.md](DIRECTION.md)); it began as a submission to the *Agents Assemble: The Healthcare AI Endgame* hackathon (Option 1: Build a Superpower).
 
 The MCP is the substantive deliverable — invokable by any agent in the Prompt Opinion (PO) ecosystem. The provider-facing review workspace ships **inside the same server** as a standard MCP App, rendered in the PO host iframe — no separate frontend deploy.
 
@@ -61,11 +61,9 @@ Prerequisites: Python 3.11+ (3.12 in prod), Node 20+, ngrok, a Gemini API key.
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
+uv sync --extra dev                # recommended; or: python -m venv .venv && pip install -e ".[dev]"
 cp .env.example .env               # set GEMINI_API_KEY and CONFIG_SECRET_KEY
-python po_main.py                  # serves http://0.0.0.0:8042/mcp
+uv run python po_main.py           # serves http://0.0.0.0:8042/mcp
 ```
 
 Sanity check: `curl http://localhost:8042/healthz` → `{"status":"ok"}`.
@@ -132,3 +130,5 @@ anamnesis/
 - [DIRECTION.md](DIRECTION.md) — the configurable extraction-framework direction (IG layering, presets, BYOK, usage ledger)
 - [PIPELINE.md](PIPELINE.md) — six-stage augmentation pipeline + write-back, confidence scoring
 - [benchmarks/eval-corpus-v1/README.md](benchmarks/eval-corpus-v1/README.md) — eval corpus design, label schema, reproducibility
+- [CONTRIBUTING.md](CONTRIBUTING.md) — dev setup, test/lint commands, coding conventions
+- [SECURITY.md](SECURITY.md) — security posture and vulnerability disclosure

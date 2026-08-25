@@ -2,7 +2,7 @@
 
 The deep-dive on how a clinical note becomes a clinician-reviewable, provenance-stamped FHIR write. Every stage is a pure function over typed Pydantic schemas; LLM calls are wrapped in telemetry; nothing here is demo-specific.
 
-For the system shape (MCP surface, REST API, frontend, persistence) see [Architecture.md](Architecture.md). For benchmarked accuracy see [benchmarks/eval-corpus-v1/](benchmarks/eval-corpus-v1/).
+For the system shape (MCP surface, in-host review app, persistence) see [Architecture.md](Architecture.md). For benchmarked accuracy see [benchmarks/eval-corpus-v1/](benchmarks/eval-corpus-v1/).
 
 ![Pipeline](pipeline.png)
 
@@ -38,7 +38,7 @@ Per-document gate that runs *before* the expensive Stage 2 spend. Two-tier: dete
 
 - Per-doc rejection, never per-run. One bad note doesn't kill the run.
 - API failure → fail-open (doc is accepted, rejection telemetry records the error).
-- Result persisted on `PipelineRun.meta_json["guardrail"] = {"accepted": N, "rejected": [{document_id, reason, category, detail}]}` so the review UI can badge skipped docs.
+- Result returned with the run as `{"accepted": N, "rejected": [{document_id, reason, category, detail}]}` so the review UI can badge skipped docs. Nothing is persisted.
 
 **Cost & latency** (gemini-3.5-flash, `thinking_level="minimal"`):
 
@@ -48,7 +48,7 @@ Per-document gate that runs *before* the expensive Stage 2 spend. Two-tier: dete
 
 **Caching.** Hash `(model, prompt_version, sha256(text))`. Re-runs of the same note (retries, demo bundle in tests) hit the cache and skip the API call entirely.
 
-**Telemetry.** Recorded as `stage="stage0"` / `call_type="doc_guardrail"` on `LLMCall`, so guardrail spend rolls up in the standard run summary alongside the other stages.
+**Telemetry.** Recorded in the in-memory telemetry buffer as `stage="stage0"` / `call_type="doc_guardrail"`, so guardrail spend rolls up in the standard run summary alongside the other stages.
 
 Disable via `DOC_GUARDRAIL_ENABLED=false` in `.env` if needed.
 
@@ -105,28 +105,28 @@ Merges duplicate candidates across notes into single items with multi-document `
 - `encounter_key` (for encounter-level items, None for patient-level)
 - `merge_reasoning` (audit trail)
 
-## Stage 4 — Terminology coding (`backend/core/coding.py`, `backend/core/code_candidates.py`)
+## Stage 4 — Terminology coding (`backend/core/code_candidates.py`, `backend/core/retrieval.py`)
 
-FAISS vector search + LLM CodeSelector + US Core fixed-code short-circuits. Model: `gemini-3.5-flash` at `thinking_level="low"`.
+Live authoritative-API retrieval + LLM CodeSelector + US Core / mCODE fixed-code short-circuits. Model: `gemini-3.5-flash` at `thinking_level="low"`.
 
-**Infrastructure:** Pre-computed SapBERT embeddings (dim 768) stored in four FAISS indexes under `data/indexes/`:
+**Retrieval backend (`core/retrieval.py`):** a pluggable `Retriever` seam. The default `ApiRetriever` routes each system to its authoritative service and merges results behind a shared concurrency limiter:
 
-| System | Rows | Index type |
-|--------|------|------------|
-| SNOMED | 527K | IndexIVFPQ |
-| RxNorm | 449K | IndexIVFPQ |
-| LOINC | 95K | IndexFlatIP |
-| ICD-10 | 23K | IndexFlatIP |
+| System | Backend | Key |
+|--------|---------|-----|
+| SNOMED | UMLS UTS | `UMLS_API_KEY` required |
+| RxNorm | RxNav `approximateTerm` | none |
+| ICD-10 | NLM Clinical Tables | none |
+| LOINC | NLM Clinical Tables | none |
 
-Indexes and the embedding model load lazily on first use, and backend startup runs `core.coding.warmup()` by default and blocks until the model and all indexes are ready. Disable with `WARMUP_CODING_ON_STARTUP=false`. `EmbeddingModel` and `IndexStore` are thread-safe singletons in `core/coding.py`.
+No local index or embedding model is required and codes are always current, so there is no warmup step on the default path. A local SapBERT + FAISS adapter exists behind the same seam as a non-default option (see [DIRECTION.md](DIRECTION.md), "terminology retrieval benchmark").
 
 **Per candidate flow:**
 
-1. **Fixed-code short-circuit.** Observations matching known vital signs or smoking status get fixed LOINC codes instantly (BP → 85354-9, tobacco → 72166-2, body weight → 29463-7, etc.). FamilyMemberHistory relationship gets a fixed v3-RoleCode (`father→FTH`, `mother→MTH`, …). No vector search, no LLM.
+1. **Fixed-code short-circuit.** Preset term→code overrides win first; then mCODE concepts (when active); then US Core vitals / smoking status get fixed LOINC codes instantly (BP → 85354-9, tobacco → 72166-2, body weight → 29463-7, etc.). FamilyMemberHistory relationship gets a fixed v3-RoleCode (`father→FTH`, `mother→MTH`, …). No retrieval, no LLM.
 2. **Search-term extraction.** Per resource type, extract one or more `(term, [systems])` jobs from the item (Condition/MedicationRequest/Procedure → name; AllergyIntolerance → substance + reaction separately; FamilyMemberHistory → each `conditions[].name` separately).
-3. **Query-variant expansion.** For each term, generate up to ~7 variants: original, strip laterality (`left/right/bilateral`), strip trailing parens, strip dose tokens (`10 mg`, `5 mcg`, …), strip leading severity (`severe/moderate/mild/acute/chronic/...`), strip trailing qualifiers (`NOS`, `unspecified`), and abbreviation expansion via a built-in map (`htn→hypertension`, `dm2→type 2 diabetes mellitus`, `cad→coronary artery disease`, ~25 entries).
-4. **Batched embedding + FAISS.** All variants across all jobs collected into one set, encoded in a single SapBERT call. Per job, each variant queries FAISS top-5; results merged by code keeping max score, re-ranked, kept top-10. Inner-product on unit vectors = cosine.
-5. **LLM CodeSelector.** Picks the best code from the top-10, or returns a `refined_search_term` for one retry (re-embed → re-search → re-select).
+3. **Query-variant expansion.** For each term, generate several variants: original, strip laterality (`left/right/bilateral`), strip trailing parens, strip dose tokens (`10 mg`, `5 mcg`, …), strip leading severity (`severe/moderate/mild/acute/chronic/...`), strip trailing qualifiers (`NOS`, `unspecified`), and abbreviation expansion via a built-in map (`htn→hypertension`, `dm2→type 2 diabetes mellitus`, `cad→coronary artery disease`, ~25 entries). Variant emission is the decisive recall lever (see DIRECTION.md appendix).
+4. **Union retrieval.** Every variant for a job is queried against the routed system(s) via the `Retriever`; results are merged by code keeping the best score, re-ranked, kept top-10. On a total miss the job retries with broader backoff variants.
+5. **LLM CodeSelector.** Picks the best code from the top-10, or returns a `refined_search_term` for one retry (re-query → re-select).
 6. **Fallback.** Text-only coding `[{"text": term}]` if all attempts fail.
 
 **Resource → code system routing:**
@@ -142,7 +142,7 @@ Indexes and the embedding model load lazily on first use, and backend startup ru
 
 All candidates processed in parallel via `asyncio.gather`; within a candidate, every `(term, system)` pair runs as its own task in parallel too.
 
-**No term-level cache by design.** A `(term, system) → code` cache could silently re-apply a code that a clinician corrected via the HITL review surface, so it was removed in favor of correctness. With model + indexes warm, the full stage runs in ~6–7s for 50 candidates — the latency cost of skipping the cache is acceptable.
+**No term-level cache by design.** A `(term, system) → code` cache could silently re-apply a code that a clinician corrected via the HITL review surface, so it is deliberately omitted in favor of correctness. This is the one stage with no warm-cache path: every run re-queries the live terminology APIs. A production deployment could add a HITL-invalidating cache — see the optimization notes for the latency tradeoff.
 
 Output: `StageFourOutput` — same `MergedCandidate` list with `coding` field injected into each item dict. Structure mirrors FHIR `CodeableConcept.coding[]`: `[{system, code, display}]`. AllergyIntolerance also writes `reaction_coding` separately; FamilyMemberHistory writes per-condition `conditions[i].coding`.
 
@@ -201,20 +201,19 @@ Pure deterministic transform — no LLM calls, no I/O. Converts `StageFiveOutput
 - `conflict_group_id` (shared ID linking inter-proposal conflicts, null if none)
 - `classification_reasoning`, `extraction_reasoning`, `merge_reasoning`
 
-No FHIR write happens here. The resource JSON is pre-assembled and valid but sits in the working DB (via `ProposalRecord` ORM model) until a clinician acts.
+No FHIR write happens here. The assembled proposals are returned to the caller and held only in an in-process TTL cache (`services/session_cache.py`) so an accept can resolve them by `run_id`; nothing is persisted to disk.
 
 ## Stage 7 — Review hand-off (`backend/services/proposals.py`)
 
-The pipeline's terminal stage from the augmentation engine's perspective: persist proposals, mint a review token, return a deep link. The interactive review (MCP tools, REST endpoints, frontend) is documented in [Architecture.md](Architecture.md).
+The pipeline's terminal stage from the engine's perspective. `run_extraction_ephemeral` is **stateless**: it returns proposals + source notes to the caller (the in-host MCP app) and holds them briefly in an in-process TTL cache (`services/session_cache.py`) keyed by `run_id`, so a later `AcceptAugmentation` can resolve the full proposal without re-running. **No PHI is persisted** — there is no `ProposalRecord`, `PipelineRun`, or `ReviewToken` table; those were removed when the stack went stateless.
 
 What this stage emits:
 
-- One `ProposalRecord` per Stage-6 `Proposal`, with `resource_json`, `citations_json`, `classification`, `confidence_tier`, `confidence_score`, and audit columns.
-- One `PipelineRun` row aggregating status, timing, token totals, and triggering surface (`api`, `mcp`, `api:inline`).
-- One run snapshot at `.cache/runs/{run_id}.json` so the review surface can render notes and chart context without re-fetching FHIR.
-- One `ReviewToken` (short opaque `rev_xxxxxxxx`) aliased to the clinician's identity, returned in the deep link.
+- The proposal list + source documents, returned over MCP and cached in-process (TTL) for the accept path.
+- One `UsageRun` row — a non-PHI usage-ledger aggregate (model, token counts, cost, duration, doc count; no patient id, no clinical content) via `services/usage.py`.
+- Telemetry: per-call token/cost rows in the in-memory buffer and a JSONL file under `.cache/telemetry/` (non-PHI).
 
-**Pipeline caching:** if pending proposals already exist for a patient, the service returns them without re-running. Avoids redundant ~25s pipeline executions.
+The interactive review surface (MCP tools, the in-host React app) is documented in [Architecture.md](Architecture.md).
 
 ## Stage 8 — Write-back (`backend/fhir/write.py`)
 
@@ -236,7 +235,7 @@ On accept, `apply_augmentation(client, proposal)` writes to the FHIR server atom
 
 **Write result:** `WriteResult(resource_ref, provenance_ref, superseded_ref)` returned to the service layer, stored in the proposal audit trail.
 
-Rejections and edits are audited in the working DB — every decision is recoverable.
+Rejections are recorded as a non-PHI structured log line (`record_decision`); no clinical content and no working DB are involved.
 
 ---
 
@@ -250,8 +249,8 @@ backend/core/
   extraction_merge.py      # Stage 3: cross-note dedupe (deterministic + LLM adjudication)
   validation.py            # post-parse validators for Stage 2 output
   schemas.py               # Stage 2 Pydantic schemas (source_sentences + reasoning)
-  coding.py                # Stage 4: FAISS index store + SapBERT embedding model
-  code_candidates.py       # Stage 4: US Core fixed codes + LLM CodeSelector
+  retrieval.py             # Stage 4: pluggable Retriever seam (default ApiRetriever over live terminology APIs)
+  code_candidates.py       # Stage 4: fixed codes (preset/mCODE/US Core) + variant retrieval + LLM CodeSelector
   reconcile.py             # Stage 5: deterministic match + LLM adjudication → NEW/DUPLICATE/UPDATING/CONFLICTING
   reconcile_match_rules.py # Stage 5: per-resource-type matchers (ChartIndex)
   augment/
@@ -267,14 +266,15 @@ backend/core/
     stage4_coding.py       # CodeSelector prompt
     stage5_reconcile.py    # reconciliation adjudication prompt
   cache.py                 # content-addressed JSON cache shared across stages
-  ids.py                   # short Crockford-base32 IDs (run_, prop_, rev_)
+  ids.py                   # short Crockford-base32 IDs (run_, prop_, aug_)
   telemetry.py             # RunContext + LLM call wrapper (token + cost accounting)
   pricing.py               # per-model token pricing for USD cost computation
 
 backend/services/
-  proposals.py             # proposal lifecycle: run pipeline, list, accept, reject, edit
-  run_snapshot.py          # per-run snapshot of source docs + chart context for the review surface
-  chat.py                  # per-run streaming chat over the Responses API with tool dispatch
+  proposals.py             # stateless entry points: run pipeline (ephemeral), accept, record decision
+  session_cache.py         # in-process TTL cache of a run's proposals + docs for the accept path
+  usage.py                 # non-PHI usage-ledger writes/reads (UsageRun)
+  users.py                 # per-clinician config (AppUser) read/merge
 
 backend/fhir/
   client.py                # async FhirClient (read, search, transaction)
@@ -297,27 +297,27 @@ Every `ReconciliationResult` carries three confidence outputs:
 
 ### Why not LLM confidence scores?
 
-LLMs are poorly calibrated at self-reported numeric confidence. They say 0.85 whether they're right or wrong. Instead, we use one LLM **label** at extraction time (`certainty: definite | probable | uncertain` — the LLM *is* good at categorical language classification) and combine it with four **deterministic signals** from downstream stages that are more trustworthy.
+LLMs are poorly calibrated at self-reported numeric confidence. They say 0.85 whether they're right or wrong. Instead, we use one LLM **label** at extraction time (`certainty: definite | probable | uncertain` — the LLM *is* good at categorical language classification) and combine it with a **deterministic coding-quality signal** from Stage 4 that is more trustworthy than any self-reported number.
 
-### Five factors
+### Two factors
 
 | # | Factor | Weight | Source | Signal |
 |---|--------|--------|--------|--------|
-| 1 | Source evidence | 0.25 | Stage 3 | How many notes corroborate this fact (1→0.4, 2→0.7, 3+→1.0) |
-| 2 | Extraction certainty | 0.20 | Stage 2 | LLM label (definite→1.0, probable→0.6, uncertain→0.2) |
-| 3 | Coding quality | 0.25 | Stage 4 | Real terminology codes vs text-only fallback; multi-system bonus |
-| 4 | Reconciliation match | 0.20 | Stage 5 | Match type quality (exact_code > ingredient > display_text) |
-| 5 | Classification override | 0.10 | Stage 5 | Type penalty (CONFLICTING→0.0, ensures double-zero with factor 4) |
+| 1 | Extraction certainty | 0.50 | Stage 2 (+ Stage 3) | LLM label `definite/probable/uncertain`, promoted one level when ≥2 notes corroborate the fact |
+| 2 | Coding quality | 0.50 | Stage 4 | Real terminology code found (1.0; text-only fallback → 0.3), with the display naming how many systems agree |
 
-**Source evidence** is the strongest signal: a fact in 3 independent notes is almost certainly real. **Coding quality** is next: if FAISS can't find a match from 1M+ terminology concepts, either the extraction is wrong or the concept is unusual. **Certainty** at 0.20 gives the LLM a voice without letting it dominate — if 3 notes mention something with real SNOMED codes, an "uncertain" label shouldn't override that.
+`composite = 0.5·certainty + 0.5·coding`. Source corroboration folds into the certainty factor (a `probable` fact seen in two notes is promoted toward `definite`) rather than scoring as its own axis. The reconciliation classification does not enter the numeric score — it drives hard tier overrides instead (below).
+
+**Coding quality** is the strongest independent check: if the retriever cannot ground the mention in any terminology system, either the extraction is wrong or the concept is unusual, so the text-only fallback halves that axis. **Certainty** carries the LLM's own read of how assertively the source states the fact, promoted when multiple notes corroborate — so a single hedged mention scores lower than the same fact stated plainly across three notes.
 
 ### Tier thresholds
 
 ```
-CONFLICTING → ATTENTION  (hard override, no exceptions)
-composite ≥ 0.70 → CONFIDENT
-composite ≥ 0.40 → REVIEW
-composite < 0.40 → ATTENTION
+CONFLICTING                                                  → ATTENTION  (hard override, no exceptions)
+AllergyIntolerance with uncertain certainty or no real code  → ATTENTION
+composite ≥ 0.80                                             → CONFIDENT  (downgraded to REVIEW if no real code)
+composite ≥ 0.40                                             → REVIEW
+composite < 0.40                                             → ATTENTION
 ```
 
 CONFLICTING always forces ATTENTION regardless of score. This is a safety invariant — a clinical contradiction must never be auto-approved.
@@ -337,7 +337,7 @@ The tier tells the clinician *how much attention* to pay. The flags tell them *w
 ## Design invariants
 
 - **Sentence numbers are the universal address.** Every LLM call references sentences by `[N]`; source spans are derived from `sentence_positions`.
-- **Two-tier model routing.** Cheap model for scan/parse/clean; stronger model reserved for ambiguous reconciliation calls. Configurable per call.
+- **Single-model default, tier-ready.** All stages currently run on one flash-class model (`gemini_model_fast`). The `core/llm.py` wrapper takes a per-call model, so a stronger model can be routed to ambiguous reconciliation/merge calls without structural change — `gemini_model_smart` is a distinct setting, presently pinned to the same model (see the optimization notes).
 - **Pluggable terminology + embeddings.** No vendor endpoint is hardcoded.
 - **Stage-2 extraction is cached by `(note_hash, model, prompt_version)`** so dev re-runs over the same notes are free. Stage 4 (terminology coding) is intentionally **not** cached — a stale cache could silently re-apply a code that a clinician corrected via HITL.
 - **Provenance is non-negotiable.** A proposal without `source_refs` is a bug; a write without a `Provenance` resource is a bug.

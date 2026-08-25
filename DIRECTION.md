@@ -197,8 +197,8 @@ End users never touch this; they pick the IG by name.
 
 ## Appendix: terminology retrieval benchmark
 
-Built as a drop-in behind a `Retriever` seam (`core/retrieval.py`) with an LLM search-term
-step (`core/code_search_terms.py`), measured against `benchmarks/eval-corpus-v1/`.
+Built as a drop-in behind a `Retriever` seam (`core/retrieval.py`) with the query-variant
+search-term step (in `core/code_candidates.py`), measured against `benchmarks/eval-corpus-v1/`.
 
 **API landscape** — no single API covers all systems; `ApiRetriever` is a best-of-breed router:
 

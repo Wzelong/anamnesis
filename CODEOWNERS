@@ -1,0 +1,8 @@
+# Default owners for everything in the repo.
+# Replace with the Prompt Opinion team handle(s) on hand-off.
+*                   @Wzelong
+
+# Backend pipeline and FHIR write path — high-review-sensitivity areas.
+/backend/core/      @Wzelong
+/backend/fhir/      @Wzelong
+/backend/context/   @Wzelong
