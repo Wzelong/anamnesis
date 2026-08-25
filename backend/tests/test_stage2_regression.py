@@ -25,13 +25,11 @@ RECONCILIATION_HEADERS = re.compile(r"(?i)(HOME MEDICATIONS|Medication reconcili
 
 def _load_outputs() -> list[dict]:
     if not STAGE2_DIR.exists():
-        pytest.skip("no stage2 cache present")
-    out = []
-    for p in STAGE2_DIR.glob("*.json"):
-        out.append(json.loads(p.read_text(encoding="utf-8")))
-    if not out:
-        pytest.skip("stage2 cache is empty")
-    return out
+        return []
+    return [json.loads(p.read_text(encoding="utf-8")) for p in STAGE2_DIR.glob("*.json")]
+
+
+CACHED_OUTPUTS = _load_outputs()
 
 
 def _note_year(data: dict) -> int | None:
@@ -55,7 +53,7 @@ def _iter_dates(data: dict):
             yield ("Procedure", "performed", item["performed"])
 
 
-@pytest.mark.parametrize("data", _load_outputs())
+@pytest.mark.parametrize("data", CACHED_OUTPUTS)
 def test_no_ancient_dates(data):
     ref_year = _note_year(data)
     for where, field, value in _iter_dates(data):
@@ -67,14 +65,14 @@ def test_no_ancient_dates(data):
             )
 
 
-@pytest.mark.parametrize("data", _load_outputs())
+@pytest.mark.parametrize("data", CACHED_OUTPUTS)
 def test_no_empty_family_history(data):
     for item in (data.get("candidates") or {}).get("FamilyMemberHistory", []):
         assert item.get("conditions"), f"empty FMH item: {item}"
 
 
 def test_partial_date_preserved_for_month_year():
-    for data in _load_outputs():
+    for data in CACHED_OUTPUTS:
         for _, _, value in _iter_dates(data):
             if re.match(r"^\d{4}-\d{2}$", value):
                 return
