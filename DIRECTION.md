@@ -29,7 +29,7 @@ These were "planned" in earlier drafts and are now done:
   decrypted in-process only, redacted (`{set,last4}`) to the iframe (`core/byok.py`).
 - **In-host review via MCP App.** The review UI ships as a standard MCP App served by the
   backend and rendered in PO's iframe (`mcp-app/`), no separate deploy.
-- **Gemini LLM stack.** `gemini-3.5-flash` (guardrail on `gemini-3.1-flash-lite`) via the
+- **Gemini LLM stack.** `gemini-3.7-flash` (guardrail on `gemini-3.1-flash-lite`) via the
   single `core/llm.py` wrapper. BYOK is **required** — the pipeline runs on the clinician's
   key, never a shared one.
 

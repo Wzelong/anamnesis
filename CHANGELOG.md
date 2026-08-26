@@ -6,6 +6,15 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+
+- Default pipeline model is now `gemini-3.7-flash` (was `gemini-3.5-flash`). Measured over
+  5 cold passes: **$1.62/run against $3.61, for 90.6% accuracy against 92.6%.** The saving
+  is promotional — 3.7 reverts to standard rates on 2027-01-01, about $3.24/run.
+  Two facts regressed from flaky to deterministically wrong (`N1-F2`, `N1-F4`).
+- `core/pricing.py` carries promotional rates in a separate table with their own expiry
+  date, so they revert automatically instead of silently under-reporting cost from 2027.
+
 ### Added
 
 - Gemini accuracy benchmark (`benchmarks/eval-corpus-v1/results/20260825T050000Z/`):
@@ -53,6 +62,9 @@ corpus (`benchmarks/eval-corpus-v1/results/20260504T015004Z/`).
 
 ### Fixed
 
+- `estimate_cost` returning 0 for an unpriced model is now caught in CI:
+  `test_configured_models_are_priced` asserts every model in `settings` has a rate entry.
+  Previously a model bump would silently record $0 spend in the BYOK usage ledger.
 - `backend/.env.example` now matches the code: the dev scripts under `backend/scripts/`
   read `DEV_FHIR_BASE_URL` / `DEV_FHIR_TOKEN`, which were undocumented.
 - Stage-2 regression tests no longer abort collection on a clean checkout. They called

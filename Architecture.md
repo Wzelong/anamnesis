@@ -54,7 +54,7 @@ The `ui://` shell, the `/app/{filename}` asset routes (serving `review.js` / `re
 
 ### The pipeline (`core/`, `services/proposals.py`)
 
-Six stages from chart load to clinician-reviewable proposal, plus an input guardrail before Stage 2 and a deterministic write-back stage on accept. Each stage is a pure function over typed Pydantic schemas; LLM calls go through the single `core/llm.py` Gemini wrapper (`gemini-3.5-flash`; guardrail on `gemini-3.1-flash-lite`) and are wrapped in telemetry. The service layer composes them:
+Six stages from chart load to clinician-reviewable proposal, plus an input guardrail before Stage 2 and a deterministic write-back stage on accept. Each stage is a pure function over typed Pydantic schemas; LLM calls go through the single `core/llm.py` Gemini wrapper (`gemini-3.7-flash`; guardrail on `gemini-3.1-flash-lite`) and are wrapped in telemetry. The service layer composes them:
 
 - `services.proposals.run_extraction_ephemeral(patient_id, fhir_client, …)` — loads `PatientContext` + chart `DocumentReference`s (or the local demo bundle when no FHIR client is bound), runs the stages, records a usage row, caches the run in an in-process TTL cache, and returns proposals + notes. **Persists no PHI** (`use_cache=False`: no extracted clinical data touches disk).
 - Inline notes are supported in the same entry point (`inline_notes: list[str]`): `_documents_from_notes` builds `Document`s with deterministic `inline_<sha256[:12]>` ids. Inline source text only enters the chart on accept, minted as a US Core `DocumentReference` in the same transaction.

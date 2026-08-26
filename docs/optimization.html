@@ -232,13 +232,13 @@
     <p class="dek">A trace of the seven-stage augmentation pipeline against its own telemetry and the 2024–2026 state of the art — narrowing the roadmap to the moves that touch the 94% of errors and 95% of spend that actually matter.</p>
     <div class="meta-row">
       <span class="tag">7-stage pipeline</span>
-      <span class="tag">940 LLM calls / run</span>
-      <span class="tag">Gemini flash-class · BYOK</span>
+      <span class="tag">1,054 LLM calls / run</span>
+      <span class="tag">gemini-3.7-flash · BYOK</span>
       <span class="tag">clinical note → FHIR</span>
     </div>
     <div class="caveat">
-      <span class="k">Caveat</span>
-      <span><b>Accuracy re-measured on Gemini (2026-08-25):</b> 89.4% overall [87.0%–92.2%], 88.3% of facts correct in &ge;4 of 5 runs &mdash; statistically unchanged from the 90% on the old stack, despite both the model and the Stage-4 retrieval backend changing. <b>Cost/latency re-measured too:</b> $3.61/run and 368 s/run, against $0.81 and 1547 s on OpenAI &mdash; <b>4.5&times; more expensive, 4.2&times; faster</b>. Stage shares barely moved; the absolute dollars did. The rise is almost entirely lost prompt caching.</span>
+      <span class="k">Status</span>
+      <span><b>Now on gemini-3.7-flash</b> (2026-08-25, 5 cold passes): <b>90.6%</b> accuracy, <b>$1.62/run</b>, 373 s/run. Against 3.5-flash (92.6%, $3.61) that is <b>55% cheaper for ~2 points of accuracy and two newly deterministic failures</b>; latency is a wash. <b>The 55% is promotional</b> — 3.7 reverts to $1.50/$7.50 per 1M on 2027-01-01, about $3.24/run. Budget on $3.24.</span>
     </div>
 
     <div class="hero-grid">
@@ -248,18 +248,18 @@
         <div class="chart" id="chart">
           <div class="bar-col"><span class="bar-val">n/m</span><div class="bar-track"><div class="bar" data-h="3"></div></div><div class="bar-lab">0.5<br>guard</div></div>
           <div class="bar-col"><span class="bar-val">0</span><div class="bar-track"><div class="bar" data-h="2"></div></div><div class="bar-lab">1<br>prep</div></div>
-          <div class="bar-col hot"><span class="bar-val">54.9%</span><div class="bar-track"><div class="bar hot" data-h="130"></div></div><div class="bar-lab">2<br>extract</div></div>
-          <div class="bar-col"><span class="bar-val">5.1%</span><div class="bar-track"><div class="bar" data-h="13"></div></div><div class="bar-lab">3<br>merge</div></div>
-          <div class="bar-col hot"><span class="bar-val">39.8%</span><div class="bar-track"><div class="bar hot" data-h="94"></div></div><div class="bar-lab">4<br>code</div></div>
+          <div class="bar-col hot"><span class="bar-val">53.2%</span><div class="bar-track"><div class="bar hot" data-h="130"></div></div><div class="bar-lab">2<br>extract</div></div>
+          <div class="bar-col"><span class="bar-val">3.9%</span><div class="bar-track"><div class="bar" data-h="10"></div></div><div class="bar-lab">3<br>merge</div></div>
+          <div class="bar-col hot"><span class="bar-val">42.7%</span><div class="bar-track"><div class="bar hot" data-h="104"></div></div><div class="bar-lab">4<br>code</div></div>
           <div class="bar-col"><span class="bar-val">0.2%</span><div class="bar-track"><div class="bar" data-h="3"></div></div><div class="bar-lab">5<br>recon</div></div>
           <div class="bar-col"><span class="bar-val">0</span><div class="bar-track"><div class="bar" data-h="2"></div></div><div class="bar-lab">6<br>assmbl</div></div>
         </div>
-        <p class="chart-cap">Measured on Gemini, mean of 3 cold passes. Extract fans out per note × type × sentence-group (380 calls). Code fans out per candidate (518 calls) and adds live-API retrieval that telemetry still never records. Guardrail served from cache, so not measured &mdash; it was &lt;1% before.</p>
+        <p class="chart-cap">Measured on gemini-3.7-flash, mean of 5 cold passes. Extract fans out per note × type × sentence-group (431 calls). Code fans out per candidate (577 calls) and adds live-API retrieval that telemetry still never records. Guardrail served from cache, so not measured &mdash; it was &lt;1% before.</p>
       </div>
 
       <div class="panel">
         <h3>Where accuracy is lost</h3>
-        <p class="sub">The reconciliation "brain" is the least error-prone stage by volume. The front half owns the failures &mdash; but see the determinism split below.</p>
+        <p class="sub">The reconciliation "brain" is the least error-prone stage by volume &mdash; but it owns every reproducible failure.</p>
         <div class="split" role="img" aria-label="Error attribution: 62% extraction miss, 32% coding miss, 5% reconcile">
           <div class="seg e" style="flex:62">62%</div>
           <div class="seg c" style="flex:32">32%</div>
@@ -270,15 +270,15 @@
           <div class="leg-row"><span class="dot c"></span><span><b>32%</b> <span class="lx">— coding miss · right fact, wrong code · Stage 4</span></span></div>
           <div class="leg-row"><span class="dot r"></span><span><b>5%</b> <span class="lx">— reconciler miss · right fact & code, wrong class · Stage 5</span></span></div>
         </div>
-        <p class="sub" style="margin-top:14px"><b>2026-08-25 Gemini run.</b> Of 77 facts &times; 5 runs: 61 stable-right, 12 flaky, 4 stable-wrong. The flaky misses are mostly <span class="mono">MISSING</span> (never extracted) &mdash; variance. But <b>all 4 deterministic failures are classification errors</b>, three of them chart content called <span class="mono">NEW</span>. Fewest errors by volume, but the only reproducible ones.</p>
+        <p class="sub" style="margin-top:14px"><b>2026-08-25, gemini-3.7-flash.</b> Of 77 facts &times; 5 cold runs: 69 stable-right, 2 flaky, <b>6 stable-wrong</b>. The flaky misses are mostly <span class="mono">MISSING</span> (never extracted) &mdash; variance. But <b>all 6 deterministic failures are classification errors</b>. Four survive two vendors and three model generations &mdash; pipeline logic, not model capability. Two (<span class="mono">N1-F2</span>, <span class="mono">N1-F4</span>) are regressions the 3.7 upgrade introduced, and are the cost side of the 55% saving.</p>
       </div>
     </div>
     <div class="wrap" style="padding:0"></div>
     <div class="kpis">
-      <div class="kpi"><div class="n">94%</div><div class="l">of errors live in extract + code</div></div>
+      <div class="kpi"><div class="n">6</div><div class="l">facts that fail in every single run</div></div>
       <div class="kpi"><div class="n">940</div><div class="l">LLM calls/run, reusing large fixed prompts</div></div>
       <div class="kpi"><div class="n">0.1%</div><div class="l">of input tokens hit a prompt cache</div></div>
-      <div class="kpi"><div class="n">$0.60</div><div class="l">per 3-note chart prep (was $0.13)</div></div>
+      <div class="kpi"><div class="n">$0.27</div><div class="l">per 3-note chart prep (promo; $0.54 from 2027)</div></div>
     </div>
   </div>
 </header>
@@ -294,9 +294,9 @@
           <tbody>
             <tr><td><div class="stage-cell"><span class="stripe cool"></span>0.5 · Guardrail</div></td><td><span class="st llm">LLM</span></td><td class="num">~3</td><td class="num">&lt;1%</td><td>Cheap, cached, parallel</td></tr>
             <tr><td><div class="stage-cell"><span class="stripe cool"></span>1 · Preprocess</div></td><td><span class="st det">deterministic</span></td><td class="num">0</td><td class="num">0</td><td>Regex sentence split</td></tr>
-            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>2 · Extract</div></td><td><span class="st llm">LLM</span></td><td class="num">380</td><td class="num">54.9%</td><td>Scan → parse → clean, per note</td></tr>
+            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>2 · Extract</div></td><td><span class="st llm">LLM</span></td><td class="num">431</td><td class="num">53.2%</td><td>Scan → parse → clean, per note</td></tr>
             <tr><td><div class="stage-cell"><span class="stripe mid"></span>3 · Merge</div></td><td><span class="st det">det + sparse LLM</span></td><td class="num">~0–2</td><td class="num">~5%</td><td>Exact-match first</td></tr>
-            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>4 · Code</div></td><td><span class="st llm">LLM + live API</span></td><td class="num">518</td><td class="num">39.8%</td><td>Retrieval untracked in telemetry</td></tr>
+            <tr class="hot"><td><div class="stage-cell"><span class="stripe hot"></span>4 · Code</div></td><td><span class="st llm">LLM + live API</span></td><td class="num">577</td><td class="num">42.7%</td><td>Retrieval untracked in telemetry</td></tr>
             <tr><td><div class="stage-cell"><span class="stripe cool"></span>5 · Reconcile</div></td><td><span class="st det">det + sparse LLM</span></td><td class="num">~0–2</td><td class="num">&lt;1%</td><td>The "brain" — and it is cheap</td></tr>
             <tr><td><div class="stage-cell"><span class="stripe cool"></span>6 · Assemble</div></td><td><span class="st det">deterministic</span></td><td class="num">0</td><td class="num">0</td><td>FHIR build + citations</td></tr>
           </tbody>
@@ -374,8 +374,8 @@
         <details class="srow">
           <summary>Efficiency <span class="stag">— the most certain win</span></summary>
           <div class="sbody">
-            <b>Prompt/prefix caching</b> is the biggest, most certain lever for a 940-call/run pipeline reusing shared instructions. Gemini implicit caching is on by default (~75% realized); explicit caching bills cached input at 10%. Batch API is 50% off but ≤24h SLA. BYOK blocks neither. Speculative decoding and distillation do <em>not</em> transfer to BYOK/API.
-            <div class="apply"><b>Us →</b> restructure prompts invariant-block-first so caching applies; add explicit caching on the shared Stage-2/4 blocks. This hits the 54.9% / 39.8% cost buckets and de-risks the added cost of union-sampling.</div>
+            <b>Prompt/prefix caching</b> is the biggest, most certain lever for a 1,050-call/run pipeline reusing shared instructions. Gemini implicit caching is on by default (~75% realized); explicit caching bills cached input at 10%. Batch API is 50% off but ≤24h SLA. BYOK blocks neither. Speculative decoding and distillation do <em>not</em> transfer to BYOK/API.
+            <div class="apply"><b>Us →</b> restructure prompts invariant-block-first so caching applies; add explicit caching on the shared Stage-2/4 blocks. This hits the 53.2% / 42.7% cost buckets and de-risks the added cost of union-sampling.</div>
           </div>
         </details>
         <details class="srow">

@@ -2,28 +2,32 @@
 
 A working document for the Prompt Opinion (PO) hand-off discussion. It maps where the augmentation pipeline spends time, money, and accuracy; compares each stage to the 2024-2026 state of the art; and ranks concrete next steps. Every SOTA claim is cited in the [sources](#sources).
 
-> **Measurement status.** Accuracy has been re-measured on the current Gemini stack (`benchmarks/eval-corpus-v1/results/20260825T050000Z/`, `gemini-3.5-flash` + `gemini-3.1-flash-lite`, 5 runs, 18 notes x 13 charts x 77 facts): **89.4% overall [87.0%, 92.2%], 88.3% of facts correct in >=4 of 5 runs** — statistically unchanged from the 90% measured on the earlier OpenAI stack, despite both the model and the Stage-4 retrieval backend changing since.
+> **Measurement status (2026-08-25).** The stack now runs **`gemini-3.7-flash`** (guardrail on `gemini-3.1-flash-lite`). Measured over 5 cold passes (`results/20260825T070000Z/`): **90.6% accuracy [89.6–90.9], $1.62/run, 373 s/run, 1,054 LLM calls.**
 >
-> **Cost and latency have also been re-measured** (`results/20260825T060000Z/`, 3 cold passes, captured from `core.telemetry`): **$3.61/run and 368 s/run, against $0.81 and 1547 s on the OpenAI stack — 4.5x more expensive and 4.2x faster.** Stage cost shares barely moved, so the proportions below were sound; the absolute dollars were not. The cost rise is almost entirely lost prompt caching — see §1.
+> Against `gemini-3.5-flash` (`results/20260825T060000Z/`, 3 cold passes: 92.6%, $3.61/run, 368 s/run) the switch buys **55% lower cost** and costs **~2 points of accuracy plus two newly deterministic failures**. Latency is a wash.
+>
+> **The 55% is promotional.** 3.7-flash is $0.75/$3.75 per 1M through 2026-12-31, then $1.50/$7.50 — about **$3.24/run**, a 10% saving. `core/pricing.py` carries the expiry and reverts automatically. Budget on $3.24.
+>
+> Historical: the original benchmark (`results/20260504T015004Z/`) ran on `gpt-5.4-mini`/`nano` with local FAISS retrieval at 90% accuracy, $0.81/run, 1547 s/run.
 
 ---
 
 ## 1. Where the pipeline actually spends
 
-The pipeline is a **many-small-LLM-calls** architecture: ~940 model calls per run, almost all reusing large fixed system prompts for small structured outputs — which is exactly why the missing prompt cache costs so much.
+The pipeline is a **many-small-LLM-calls** architecture: ~1,050 model calls per run, almost all reusing large fixed system prompts for small structured outputs — which is exactly why the missing prompt cache costs so much.
 
-Measured on Gemini, mean of 3 cold passes (`results/20260825T060000Z/`). Calls are per run over the 18-note corpus.
+Measured on `gemini-3.7-flash`, mean of 5 cold passes (`results/20260825T070000Z/`), promotional rates. Calls are per run over the 18-note corpus.
 
 | Stage | Nature | Calls/run | $/run | Share of cost | Notes |
 |---|---|---:|---:|---:|---|
 | 0.5 Guardrail | LLM (nano), parallel | not measured | — | — | Served from `.cache/doc_guardrail`; <1% on the prior stack |
 | 1 Preprocess | Deterministic | 0 | 0 | 0 | Regex sentence split; negligible |
-| **2 Extract** | LLM (scan+parse+clean), parallel | **380** | **1.98** | **54.9%** | **Top cost.** Fan-out = notes x types x sentence-groups |
-| 3 Merge | Deterministic + sparse LLM | 40 | 0.18 | 5.1% | Exact-match first; LLM only for fuzzy dups (~2/note) |
-| **4 Code** | Live-API retrieval + LLM selector | **518** | **1.44** | **39.8%** | **Second cost.** Terminology round-trips still unmetered |
-| 5 Reconcile | Deterministic + sparse LLM | 2 | 0.01 | 0.2% | Chart-size-insensitive; the "brain," and it is cheap |
+| **2 Extract** | LLM (scan+parse+clean), parallel | **431** | **0.86** | **53.2%** | **Top cost.** Fan-out = notes x types x sentence-groups |
+| 3 Merge | Deterministic + sparse LLM | 43 | 0.06 | 3.9% | Exact-match first; LLM only for fuzzy dups (~2/note) |
+| **4 Code** | Live-API retrieval + LLM selector | **577** | **0.69** | **42.7%** | **Second cost.** Terminology round-trips still unmetered |
+| 5 Reconcile | Deterministic + sparse LLM | 2 | 0.00 | 0.2% | Chart-size-insensitive; the "brain," and it is cheap |
 | 6 Assemble | Deterministic | 0 | 0 | 0 | FHIR build + citations; negligible |
-| **Total** | | **940** | **3.61** | 100% | 368 s wall clock per run |
+| **Total** | | **1,054** | **1.62** | 100% | 373 s wall clock per run (promo rates; $3.24 from 2027) |
 
 **Cost rose 4.5x while latency fell 4.2x.** The rise tracks a collapse in reported cache hits: the OpenAI run recorded 1,892,864 cached input tokens per run; this one records **1,116**, roughly 0.1% of the 1,017,552 input tokens sent. Repricing cache-eligible input at $0.15/M instead of $1.50/M would save ~$1.37/run, or $3.61 -> ~$2.24.
 
@@ -45,7 +49,7 @@ From the benchmark error attribution:
 
 The reconciliation stage — the capability that differentiates Anamnesis — is the *least* error-prone. **94% of errors live in the extract and code stages.** Optimization effort should follow.
 
-**Update (2026-08-25 Gemini run).** The front-loaded picture holds overall, but the two error kinds separate cleanly by determinism. Of 77 facts across 5 runs, 61 were stable-right, 12 flaky, and 4 stable-wrong. Sixteen of the flaky misses are `MISSING` — the fact was never extracted — consistent with extraction being the dominant error source. But **all 4 deterministic failures are classification errors, not extraction or coding**:
+**Update (2026-08-25, `gemini-3.7-flash`).** The front-loaded picture holds overall, but the two error kinds separate cleanly by determinism. Of 77 facts across 5 cold runs: 69 stable-right, 2 flaky, **6 stable-wrong**. Sixteen of the flaky misses are `MISSING` — the fact was never extracted — consistent with extraction being the dominant error source. But **all 4 deterministic failures are classification errors, not extraction or coding**:
 
 | Fact | Expected | Always classified |
 |---|---|---|
@@ -53,8 +57,14 @@ The reconciliation stage — the capability that differentiates Anamnesis — is
 | `C2-F2` | UPDATING | NEW |
 | `N4-F2` | UPDATING | NEW |
 | `N6-F1` | DUPLICATE | UPDATING |
+| `N1-F2` | DUPLICATE | UPDATING — *regressed on 3.7; flaky on 3.5* |
+| `N1-F4` | NEW | MISSING — *regressed on 3.7; never extracted* |
 
-Three of the four are the same failure mode: content already present in the chart classified as `NEW`. Two of the three `UPDATING` facts fail this way in every run, which is the entire reason that column reads 33.3% with zero variance. So while the reconciler contributes the fewest errors by volume, it contributes the ones that are reproducible and therefore actually fixable — the extraction misses are variance, these are logic.
+The first four are model-independent: they fail identically on `gpt-5.4-mini`, `gemini-3.5-flash`, and `gemini-3.7-flash`. Three share one failure mode — content already in the chart classified as `NEW` — and two of the three `UPDATING` facts fail this way in every run, which is the entire reason that column reads 33.3% with zero variance. Because they survive two vendors and three model generations, they are **pipeline logic, not model capability**, and they are the highest-confidence items on this list.
+
+`N1-F2` and `N1-F4` are different: they are a **regression introduced by the 3.7 upgrade**, flaky under 3.5 and reliably wrong under 3.7. They are the cost side of the 55% saving and should be the first thing revisited if the accuracy trade proves unacceptable.
+
+So while the reconciler contributes the fewest errors by volume, it contributes the ones that are reproducible and therefore actually fixable — the extraction misses are variance, these are logic.
 
 ---
 

@@ -85,3 +85,23 @@ def test_record_call_no_active_run_is_noop():
         )
 
     asyncio.run(run())
+
+
+def test_promotional_rate_reverts_on_expiry():
+    from datetime import date
+
+    intro = estimate_cost("gemini-3.7-flash", 1_000_000, 0, 1_000_000, on=date(2026, 12, 31))
+    standard = estimate_cost("gemini-3.7-flash", 1_000_000, 0, 1_000_000, on=date(2027, 1, 1))
+    assert intro == Decimal("4.500000")
+    assert standard == Decimal("9.000000")
+
+
+def test_configured_models_are_priced():
+    from config import settings
+
+    for model in (
+        settings.gemini_model_fast,
+        settings.gemini_model_smart,
+        settings.gemini_model_nano,
+    ):
+        assert estimate_cost(model, 1000, 0, 100) > 0, f"{model} has no pricing entry"

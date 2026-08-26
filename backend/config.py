@@ -9,8 +9,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     gemini_api_key: str = ""
     umls_api_key: str = ""
-    gemini_model_fast: str = "gemini-3.5-flash"
-    gemini_model_smart: str = "gemini-3.5-flash"
+    gemini_model_fast: str = "gemini-3.7-flash"
+    gemini_model_smart: str = "gemini-3.7-flash"
     gemini_model_nano: str = "gemini-3.1-flash-lite"
     doc_guardrail_enabled: bool = True
     database_url: str = "sqlite+aiosqlite:///./anamnesis.db"
