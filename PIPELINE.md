@@ -20,7 +20,7 @@ Output is the only ground truth the pipeline uses. Nothing else re-reads FHIR un
 
 ## Stage 0.5 — Input guardrail (`backend/core/doc_guardrails.py`)
 
-Per-document gate that runs *before* the expensive Stage 2 spend. Two-tier: deterministic checks first (free, instant), then a parallel `gemini-3.7-flash` semantic classification at `thinking_level="minimal"`. All notes screen concurrently via `asyncio.gather`.
+Per-document gate that runs *before* the expensive Stage 2 spend. Two-tier: deterministic checks first (free, instant), then a parallel `gemini-3.1-flash-lite` semantic classification at `thinking_level="minimal"`. All notes screen concurrently via `asyncio.gather`.
 
 **Why here.** Stage 2 fans out 1 + N parse calls per note; a single bad input costs real money. The gate filters obvious garbage, non-clinical text, and prompt-injection attempts before that fan-out begins.
 
@@ -40,11 +40,15 @@ Per-document gate that runs *before* the expensive Stage 2 spend. Two-tier: dete
 - API failure → fail-open (doc is accepted, rejection telemetry records the error).
 - Result returned with the run as `{"accepted": N, "rejected": [{document_id, reason, category, detail}]}` so the review UI can badge skipped docs. Nothing is persisted.
 
-**Cost & latency** (gemini-3.7-flash, `thinking_level="minimal"`):
+**Cost & latency** (`gemini-3.1-flash-lite`, `thinking_level="minimal"`):
 
 - Per-call: ~1087 input tokens, ~73 output tokens, p50 ~1.5s, p95 ~2.5s.
 - Per-call cost: ~$0.0003 — trivially cheap.
 - 25 docs in parallel: 2.6s wall-clock.
+
+> These figures predate the Gemini benchmark runs and are not re-verified. The guardrail
+> caches on `(model, prompt_version, sha256(text))` and `clear_pipeline_caches()` does not
+> clear it, so Stage 0.5 made zero LLM calls during the 2026-08-25 measurements.
 
 **Caching.** Hash `(model, prompt_version, sha256(text))`. Re-runs of the same note (retries, demo bundle in tests) hit the cache and skip the API call entirely.
 

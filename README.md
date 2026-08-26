@@ -31,19 +31,29 @@ See [Architecture.md](Architecture.md) for the system shape, [DIRECTION.md](DIRE
 
 ## Benchmark headline
 
+Measured on the current stack (`gemini-3.7-flash`, live terminology APIs), 5 cold passes over 18 notes x 13 charts x 77 labeled facts.
+
 | Metric | Value |
 |---|---|
-| Augmentation accuracy | 90% [87%, 95%] |
-| Consistency (correct in ≥4/5 runs) | 88% |
-| Provenance coverage | 100% |
-| Cost per chart prep (3 notes) | ~$0.13 |
+| Augmentation accuracy | 90.6% [89.6%, 90.9%] |
+| Consistency (correct in >=4/5 runs) | 89.6% (69/77) |
+| Cost per chart prep (3 notes) | ~$0.27 (promotional; ~$0.54 from 2027) |
 | End-to-end latency per chart prep | ~20-25s wall-clock (notes processed in parallel) |
 
-![Per-class accuracy](benchmarks/eval-corpus-v1/results/20260504T015004Z/per_class_accuracy.png)
+| Class | Facts | Accuracy |
+|---|---:|---:|
+| NEW | 47 | 95.3% |
+| DUPLICATE | 26 | 88.5% |
+| UPDATING | 3 | 33.3% |
+| CONFLICTING | 1 | 100% |
 
-NEW (93%) and DUPLICATE (92%) — the bulk of real clinical findings — both clear 90% with tight variance. UPDATING and CONFLICTING are thin slices (n=3 and n=1); the wide error bars are honest sample-size acknowledgment, not hidden failures.
+NEW and DUPLICATE — the bulk of real clinical findings — carry the corpus. UPDATING (n=3) and CONFLICTING (n=1) are thin slices where a single fact moves the column by tens of points; they are honest sample-size limits, not hidden failures. Six facts miss in **every** run and are tracked as open defects in [docs/OPTIMIZATION.md](docs/OPTIMIZATION.md).
 
-> The headline run was captured on the earlier pipeline (`gpt-5.4-mini` / `gpt-5.4-nano`, 5 runs · 18 notes × 13 fixtures × 77 facts). The live stack has since migrated to Gemini + BYOK; a re-run on the Gemini models is pending. Full per-class accuracy, confusion matrix, stability buckets, per-stage cost breakdown, and reproducibility instructions are in the latest [REPORT.md](benchmarks/eval-corpus-v1/results/20260504T015004Z/REPORT.md).
+> **Cost is promotional.** `gemini-3.7-flash` bills $0.75/$3.75 per 1M tokens through 2026-12-31, then $1.50/$7.50. Budget on the standard rate. `core/pricing.py` reverts automatically on the expiry date.
+>
+> **Provenance coverage is not re-measured.** The prior stack reported 100%, but that metric comes from `run_demo_benchmark.py`, which is still OpenAI-coupled and does not run against the current config. Treat it as unverified until that script is ported.
+>
+> Full per-fact records, per-stage cost, and raw telemetry: [results/20260825T070000Z/](benchmarks/eval-corpus-v1/results/20260825T070000Z/). The original `gpt-5.4-mini` run, with charts, is preserved at [results/20260504T015004Z/](benchmarks/eval-corpus-v1/results/20260504T015004Z/REPORT.md).
 
 ## Demo flow
 
@@ -101,11 +111,11 @@ For UI development, `npm run dev` serves the app standalone (pinned to PO's 800�
 ### Reproduce the benchmark
 
 ```bash
-cd benchmarks/eval-corpus-v1
-python run_demo_benchmark.py --runs 5
+cd backend
+uv run python ../benchmarks/eval-corpus-v1/run_augmentation_benchmark.py --runs 5
 ```
 
-Re-render the report from a prior run (no API spend): `python run_demo_benchmark.py --rerender results/<timestamp>`.
+Accuracy, per-fact stability, and per-stage cost land in the run output and in `backend/.cache/telemetry/`. The chart/report generator (`run_demo_benchmark.py`) is still OpenAI-coupled and does not currently run.
 
 ## Deployment
 

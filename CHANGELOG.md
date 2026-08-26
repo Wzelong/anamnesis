@@ -62,6 +62,11 @@ corpus (`benchmarks/eval-corpus-v1/results/20260504T015004Z/`).
 
 ### Fixed
 
+- README's benchmark headline was still the OpenAI run: 90% accuracy, ~$0.13/chart, and an
+  embedded per-class chart from `results/20260504T015004Z/`. Replaced with the measured
+  `gemini-3.7-flash` figures, and the reproduce command now points at the runner that works.
+- PIPELINE.md attributed the Stage 0.5 guardrail to the pipeline model; it runs on
+  `gemini_model_nano` (`gemini-3.1-flash-lite`).
 - `estimate_cost` returning 0 for an unpriced model is now caught in CI:
   `test_configured_models_are_priced` asserts every model in `settings` has a rate entry.
   Previously a model bump would silently record $0 spend in the BYOK usage ledger.
